@@ -1,0 +1,6 @@
+﻿id,name_ja,name_en,description_ja,description_en,base_turn_cd,base_skill_cd,mana_cost,attribute,logic_id
+skill_fire_bite,ファイアバイト,Fire Bite,先頭の敵に炎ダメージを与える,Deal fire damage to the front enemy,100,80,0,fire,skill_fire_bite
+skill_water_shot,ウォーターショット,Water Shot,先頭の敵に水ダメージを与える,Deal water damage to the front enemy,100,90,2,water,skill_water_shot
+skill_quick_sting,クイックスティング,Quick Sting,素早く攻撃する,Fast strike attack,70,60,0,electric,skill_quick_sting
+skill_guard_stance,ガードスタンス,Guard Stance,自分にシールドを張る,Gain shield on self,100,120,3,earth,skill_guard_stance
+skill_mana_burst,マナバースト,Mana Burst,現在MNの全てを使って放つ,Consume all current MN to burst,100,150,all,dragon,skill_mana_burst

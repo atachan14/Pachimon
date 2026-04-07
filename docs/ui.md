@@ -1,4 +1,7 @@
 # UI
+
+このファイルは初期UIメモとして残す。
+現行の骨組み仕様は `ui-skeleton-plan.md` と `ui-class-design.md` を優先する。
 ## Top
 右上
 - 言語切替トグル(jp/en)

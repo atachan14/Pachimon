@@ -1,0 +1,4 @@
+﻿id,name_ja,name_en,stat_list,ratio_list
+mod_fire_plus,炎強化,Fire Boost,fire,100
+mod_speed_plus,加速,Speed Boost,speed,100
+mod_all_element,全属性強化,All Element Boost,fire|water|leaf|electric|poison|earth|ice|dragon,12.5|12.5|12.5|12.5|12.5|12.5|12.5|12.5

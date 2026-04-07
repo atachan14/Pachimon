@@ -11,31 +11,46 @@
 ### 生成前データ
 - まだrunに存在していない定義データ
 - マスターデータとして保持する
+- 基本は `DefinitionTable` として保持する
+
+### 処理データ
+- 定義データとは別に、個別挙動を C# 側で保持する
+- 主に skill / passive の発動処理や条件判定を担当する
+
+### 紐づけ
+- `id` を使って Definition と Logic を紐づける
+- battle中は `id -> Logic` を引く仕組みを使う
 
 ### 実行時データ
 - run中に生成された個体データ
 - 成長、取得報酬、並び順などを保持する
 
-## Pachimon Master
+## Pachimon DefinitionTable
 ### 役割
 - 生成前のパチモン定義
 
 ### 保持したい項目
 - id
 - name
-- ステータス重み
+- ステータスweight
 - 初期skill2つ(固定)
 - ユニークpassive1つ(固定)
-- グラフィック
 - 説明文
 
-### ステータス重み
+### ステータスweight
 - ランダム生成時に利用する
-- 属性値の出やすさに加え、その他ステータスを含めて制御する
+- ステータス抽選時の選ばれやすさを表す
+- gain値そのものは全Pachimon共通のテーブルとして別管理する
+- 抽選回数や総量は Map生成側の row / node種別 / 難易度側で管理する
+
+### 共通gain
+- 全Pachimon共通で使うステータス増加量テーブルを別管理する
+- 抽選で選ばれたステータスに対応する `gain` 値だけ上昇させる
+- `draw_count` は PachimonDefinition ではなく Map生成側が持つ
 
 ### グラフィック
-- 前向き表示用
-- 後ろ向き表示用
+- CSV では保持しない
+- Unity側の `PachimonGraphicTable.asset` で `id -> front/back` を解決する
 
 ## Pachimon Instance
 ### 役割
@@ -66,27 +81,36 @@
 - 隊列index
     > 親の配列順での管理のほうが楽かも。(pachimonlist)
 
-## Skill Master
+## Skill DefinitionTable
 ### 役割
-- skillの元定義
+- skillの共通定義データ
 
 ### 保持したい項目
 - id
 - name
-- 対象
 - baseTurnCD
 - baseSkillCD
 - manaCost
 - 属性
-- エフェクトグラフィック
 - 説明文
 
->以下は共通のパラメーターとせず、テンプレをいくつか用意し、スキルごとに個別処理として実装したほうがいいかも。（baseDamageのないスキルや、シールドや、buff,debuff、それらの複合や、その他のユニークなスキル対応）
-    - baseDamage
-    - 参照属性
-    - 係数
-    - 効果種別
-    - 付属効果
+### 方針
+- 共通項目は DefinitionTable に持たせる
+- 発動処理や条件判定は個別の C# Logic に持たせる
+- `id` を使って Definition と Logic を紐づける
+- 画像や演出参照も基本は Logic 側で持たせる
+- `manaCost` は数値なら固定消費、文字列なら特殊仕様として解釈する
+
+### Logic 側へ寄せるもの
+- 対象
+- baseDamage
+- 参照属性
+- 係数
+- 効果種別
+- 付属効果
+- 複数主効果の解決順
+- 特殊なCD計算
+- 特殊なMN仕様
 
 ### 付属効果候補
 - 貫通
@@ -96,49 +120,56 @@
 - バフ
 - デバフ
 
-### 要決定
-- 1skillに複数の主効果を持たせるか
-    > 持たせる
-    > 極端な例）
-    """
-    [200*(1 + fire/80)]のダメージを[対象:先頭の敵]に与え（[貫通:50% * (1 + water / 100) + 貫通ボーナス,貫通:25% * (1 + leaf / 100) + 貫通ボーナス]）、[対象:自身]は[200*(1 + elec/50)]のシールドを獲得し、[対象:後衛]に[200*(1+poison/50)]のシールドを付与する。
-    このスキルのskillCDはearthに応じて減少する[skillCD = baseSkillCD / (1 + earth / 100)]。
-
-    """
-- 演出用パラメーターをここに持つか
-    > 持たせる
-
-## Passive Master
+### Skill Logic
 ### 役割
-- passiveの元定義
+- skillごとの個別処理を担当する C# コード
+
+### 担当すること
+- 発動条件判定
+- 対象確定
+- 効果解決
+- ダメージやシールド計算
+- 特殊CD計算
+- 複数主効果の解決
+
+### 方針
+- 1skillに複数の主効果を持たせる
+- 極端に特殊なskillも Logic 側で吸収する
+- 演出用パラメーターは必要に応じて DefinitionTable 側に持たせる
+
+### Skill Logic Registry
+### 役割
+- `skillId` から対応する Skill Logic を取得する
+- battle側が `id` を渡すだけで処理を呼べるようにする
+
+## Passive DefinitionTable
+### 役割
+- passiveの共通定義データ
 
 ### 保持したい項目
 - id
 - name
-- trigger
-- エフェクトグラフィック
 - 説明文
 
-> 以下もパッシブごとに個別に処理を書くべきかも
-    - effect
-    - value
+### 方針
+- triggerや条件判定も Logic 側に持たせる
+- 効果本体は個別の C# Logic に持たせる
 
+### Passive Logic
+### 役割
+- passiveごとの個別処理を担当する C# コード
 
-### trigger候補
-- battle開始時
-- turn開始時
-- turn終了時
-- 攻撃時
-- ダメージ計算時
-- 被弾時
-- 撃破時
-- 死亡時
-- 〇〇属性ダメージ付与時
-- 〇〇属性ダメージ被弾時
-- 〇〇属性のスキルが発動したとき（敵味方問わず）
-- その他たくさん
+### 担当すること
+- trigger監視
+- 発動条件判定
+- 効果解決
+- battleイベントへの応答
 
-## Mod Master
+### Passive Logic Registry
+### 役割
+- `passiveId` から対応する Passive Logic を取得する
+
+## Mod DefinitionTable
 ### 役割
 - 通常戦などで取得する強化定義
 
@@ -151,7 +182,7 @@
 Modはステータスの変動のみなので
 生成後は対象ステータスと値とアイコンのみを保持すれば十分そう
 また、値は範囲付きランダムかつ、行に応じて（敵に適用時のみ）増加されるので、ModMasterとは別でステータスに応じた値の範囲のみをテーブルで保持し、
-ModMasterではそのテーブルを使用したデータを保持するのはどうか
+ModDefinitionTableではそのテーブルを使用したデータを保持するのはどうか
 
 Modテーブル
 - 対象ステータス(1つ)
@@ -162,7 +193,7 @@ water:20~30
 最大HP:200-300
 )
 
-ModMaster
+ModDefinition
 - id
 - name
 - icon
@@ -180,7 +211,7 @@ icon:.png
 list:[fire,12.5][water,12.5]...
 )
 
-## Trainer Master
+## Trainer DefinitionTable
 ### 役割
 - 通常敵トレーナーの定義
 
@@ -189,26 +220,32 @@ list:[fire,12.5][water,12.5]...
 - 肩書
 - name
     > 生成時にnameプールからランダムに設定するため要らない
-- グラフィック
 - 得意属性
 - goldレンジ
 - 出現ルール
     > 全て同等にランダムなので要らない
 
-## Gym Leader Master
+### グラフィック
+- CSV では保持しない
+- Unity側の `TrainerGraphicTable.asset` で `id -> graphic` を解決する
+
+## GymLeader DefinitionTable
 ### 役割
 - ジム戦の定義
 
 ### 保持したい項目
 - id
 - name
-    > 生成時にnameプールからランダムに設定
-- グラフィック
-- badge
+    > 生成時にnameプールからランダムに設定するため要らない
 - 得意属性
+    > badge属性と一致するため、favorite_attribute のみ持てばよい
 - goldレンジ
 - 固有ルール
     > 無い
+
+### グラフィック
+- CSV では保持しない
+- Unity側の `GymLeaderGraphicTable.asset` で `id -> graphic` を解決する
 
 ## Enemy Generation Rule
 <!-- ### 入力
@@ -246,7 +283,7 @@ Map生成時に全ての敵や補正を配置するため、MapGenerationに移�
 - candidateCount
 - selectableCount -->
 ちょっとよくわからない。
-報酬は全て受け取ることができて、受け取った後は保存する情報はなさそう。
+報酬は全て受け取ることができるから、受け取った後に保存する情報はなさそう。
 
 
 ## Ghost Data
@@ -275,13 +312,20 @@ Map生成時に全ての敵や補正を配置するため、MapGenerationに移�
 - 進行状況
 
 ## Unity実装メモ
-### マスターデータ向き
-- Pachimon Master
-- Skill Master
-- Passive Master
-- Mod Master
-- Trainer Master
-- Gym Leader Master
+### DefinitionTable向き
+- Pachimon DefinitionTable
+- GlobalStatGainTable
+- Skill DefinitionTable
+- Passive DefinitionTable
+- Mod DefinitionTable
+- Trainer DefinitionTable
+- GymLeader DefinitionTable
+
+### Logic向き
+- Skill Logic
+- Passive Logic
+- Skill Logic Registry
+- Passive Logic Registry
 
 ### 実行時データ向き
 - Pachimon Instance
@@ -293,5 +337,24 @@ Map生成時に全ての敵や補正を配置するため、MapGenerationに移�
 - ローカライズ文言の持ち方
     > 案1. それぞれの[name]等の表示項目を[jp_name][en_name]みたいに持たせる
 - グラフィック参照方法
-    > 毎回masterから引っ張ってくるのが軽いかな？
+    > GraphicTable.asset で `id -> 参照` を解決する方針
 - セーブデータのversion管理
+
+## 2026-04-07 �ύX����
+### ����skill�\��
+- �e pachimon �͌Œ� skill �� 1 ����
+- ���� skill ���v�� 3 �Ƃ���
+- �c�� 2 �� row:0 �� StartNode �ŁA���� run �p�� skill �ꗗ���烉���_���Ɍ��肷��
+
+### Skill�Ɋւ���⑫
+- �g�p�\ skill �� 1 ���Ȃ��ꍇ�� `��邠����` ���g�p����
+- `��邠����` �� DefinitionTable ��̒ʏ� skill �Ƃ͕ʘg�̓���s���Ƃ��Ĉ����Ă悢
+
+### Mod��V
+- mod ��V�́A�I������ 1 �̂ł͂Ȃ��S���� pachimon �ɓK�p����Ă��̗p���Ƃ���
+- �ΏۑI�����K�v�Ȃ̂� skill / passive �݂̂Ƃ���
+
+### Reward��item
+- item �����͌�񂵂ł悢
+- �����������I�ɂ́A����v�[�����烉���_���� item �� 1 �A����� reward �ɕK��������Ă�����
+- item �� Header ����g�p����O��Ƃ���
