@@ -4,9 +4,9 @@
 
 ## 方針
 - `View` はレイアウト領域や部品を表す
-- `Screen` は `MainPane` 内で切り替わる node 画面を表す
-- `Overlay` は `Screen` と別レイヤーの表示として扱う
-- battle 専用の overlay は `BattleScreen` 配下に持たせる
+- `Screen` は `GraphicWindow` 内で切り替わる node 画面を表す
+- `LogWindow` は `MainPane` 共通のログ / 選択 UI として扱う
+- `RewardOverlay` は battle 専用 overlay のまま `BattleScreen` 配下に持たせる
 
 ## Core View
 ### GameRootView
@@ -41,8 +41,21 @@
 
 ### MainPaneView
 役割:
-- `NodeScreen` を登録して切り替える
-- 現在表示中の screen を 1 つだけ active にする
+- `GraphicWindow` 内の `NodeScreen` を登録して切り替える
+- `LogWindowView` を共通ログ領域として保持する
+
+主な参照:
+- `GraphicWindow`
+- `LogWindowView`
+
+### LogWindowView
+役割:
+- `MainPane` 共通のログ / 説明文表示を担当する
+- `SelectGrid` の button 群を動的生成する
+
+主な参照:
+- `TextLogText`
+- `SelectGridRoot`
 
 ## Overlay View
 ### MapOverlayView
@@ -61,18 +74,17 @@
 役割:
 - battle node の画面本体
 - `BattleMainView` と `RewardOverlayView` を持つ
+- battle 中のログ / 選択 UI は `LogWindowView` に流す
 
 ### BattleMainView
 役割:
-- battle 画面の本体表示
-- 味方・敵の表示とログ入力 UI の領域を持つ
+- battle 画面のグラフィック領域を担当する
+- 味方・敵の表示だけを持つ
 
 主な参照:
 - `GraphicWindow`
 - `EnemyArea`
 - `AllyArea`
-- `BattleLogRoot`
-- `SkillSelectorRoot`
 
 ### BattleUnitAreaView
 役割:
@@ -80,6 +92,10 @@
 - `BarsRoot` と `GraphicsRoot` を持つ
 
 ## Screen
+### NodeScreen
+- `GraphicWindow` 内で切り替わる画面の基底
+
+### 個別 Screen
 - `StartScreen`
 - `BattleScreen`
 - `CityScreen`
@@ -88,13 +104,26 @@
 - `DefeatScreen`
 - `HallOfFameScreen`
 
-## BattleLogWindow の扱い
-battle では `BattleLogWindow` を 2 領域に分ける。
+## MainPane の構造
+```text
+MainPane
+  GraphicWindow
+    StartScreen
+    BattleScreen
+    CityScreen
+    RestSpotScreen
+    LeagueGateScreen
+    DefeatScreen
+    HallOfFameScreen
+  LogWindow
+    TextLog
+    SelectGrid
+```
 
-- `BattleLog`: 行動ログの表示
-- `SkillSelector`: Turn 時の skill 選択 UI
-
-この構造により、Turn が来たら直接 skill 一覧を出す現在仕様と揃えやすくする。
+## LogWindow の扱い
+- `TextLog` は battle log も node 説明文もここに流す
+- `SelectGrid` は battle の skill 選択が本命
+- ただし当面は `次へ進む` などの仮導線にも使う
 
 ## LayoutMode
 ### Compact

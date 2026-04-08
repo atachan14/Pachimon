@@ -52,11 +52,6 @@
 - `TopSceneInstaller`
 - Scene 上の参照を束ねて接続する役割
 
-### `Assets/Scripts/Runtime/UI/Bootstrap`
-- 旧 `UISkeletonBootstrap` の置き場
-- `GameScene` は現在、常設 UI 前提で動く
-- 必要なら将来デバッグ専用に整理する
-
 ### `Assets/Scripts/Runtime/Battle`
 - `BattleController`
 - `BattleResolver`

@@ -52,6 +52,7 @@ namespace Pachimon.UI
                 && _headerView != null
                 && _leftPaneView != null
                 && _mainPaneView != null
+                && _mainPaneView.LogWindowView != null
                 && _rightPaneView != null
                 && _mapOverlayView != null
                 && _startScreen != null
@@ -172,6 +173,7 @@ namespace Pachimon.UI
             if (_headerView == null) missing.Add(nameof(_headerView));
             if (_leftPaneView == null) missing.Add(nameof(_leftPaneView));
             if (_mainPaneView == null) missing.Add(nameof(_mainPaneView));
+            if (_mainPaneView != null && _mainPaneView.LogWindowView == null) missing.Add("MainPaneView.LogWindowView");
             if (_rightPaneView == null) missing.Add(nameof(_rightPaneView));
             if (_mapOverlayView == null) missing.Add(nameof(_mapOverlayView));
             if (_startScreen == null) missing.Add(nameof(_startScreen));

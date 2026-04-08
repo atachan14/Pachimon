@@ -1,3 +1,4 @@
+using System.Text;
 using Pachimon.Map;
 using Pachimon.UI;
 
@@ -94,23 +95,108 @@ namespace Pachimon.Run
             {
                 case NodeType.Start:
                     _mainPaneView.Show(_startScreen);
+                    ApplyStartNode(currentNode);
                     break;
                 case NodeType.Battle:
                     _mainPaneView.Show(_battleScreen);
+                    _battleScreen.ConfigureLogWindow(_mainPaneView.LogWindowView, TryAdvanceRun);
                     break;
                 case NodeType.City:
                     _mainPaneView.Show(_cityScreen);
+                    ApplyCityNode(currentNode);
                     break;
                 case NodeType.RestSpot:
                     _mainPaneView.Show(_restSpotScreen);
+                    ApplyRestSpotNode(currentNode);
                     break;
                 case NodeType.LeagueGate:
                     _mainPaneView.Show(_leagueGateScreen);
+                    ApplyLeagueGateNode(currentNode);
                     break;
                 default:
                     _mainPaneView.Show(_startScreen);
+                    ApplyFallbackNode(currentNode);
                     break;
             }
+        }
+
+        private void ApplyStartNode(MapNode node)
+        {
+            if (node.Content is not StartNodeContent content)
+            {
+                _mainPaneView.LogWindowView?.SetLogText("row:0 の開始ノード");
+                _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+                return;
+            }
+
+            var builder = new StringBuilder();
+            builder.AppendLine("初期パチモン候補");
+
+            foreach (var candidate in content.CandidatePachimonIds)
+            {
+                builder.Append("- ").AppendLine(candidate);
+            }
+
+            builder.AppendLine();
+            builder.Append("この run では ")
+                .Append(content.SelectionCount)
+                .Append(" 体を初期 skill 付きで選ぶ想定");
+
+            _mainPaneView.LogWindowView?.SetLogText(builder.ToString().TrimEnd());
+            _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+        }
+
+        private void ApplyCityNode(MapNode node)
+        {
+            if (node.Content is not CityNodeContent content)
+            {
+                _mainPaneView.LogWindowView?.SetLogText("シティノード");
+                _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+                return;
+            }
+
+            _mainPaneView.LogWindowView?.SetLogText(
+                $"City Node\nショップ seed: {content.ShopSeed}\nここでは今後、shop inventory を表示する。");
+            _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+        }
+
+        private void ApplyRestSpotNode(MapNode node)
+        {
+            if (node.Content is not RestSpotNodeContent content)
+            {
+                _mainPaneView.LogWindowView?.SetLogText("回復ノード");
+                _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+                return;
+            }
+
+            _mainPaneView.LogWindowView?.SetLogText(
+                $"Rest Spot\n最大体力の {content.HealValue}% 回復する仮仕様。");
+            _mainPaneView.LogWindowView?.ShowSingleOption("回復して進む", TryAdvanceRun);
+        }
+
+        private void ApplyLeagueGateNode(MapNode node)
+        {
+            if (node.Content is not LeagueGateNodeContent content)
+            {
+                _mainPaneView.LogWindowView?.SetLogText("リーグゲート");
+                _mainPaneView.LogWindowView?.ShowSingleOption("挑戦する", TryAdvanceRun);
+                return;
+            }
+
+            _mainPaneView.LogWindowView?.SetLogText(
+                $"League Gate\n必要 badge 数: {content.RequiredBadgeCount}\n未達時: {content.FailureMode}");
+            _mainPaneView.LogWindowView?.ShowSingleOption("挑戦する", TryAdvanceRun);
+        }
+
+        private void ApplyFallbackNode(MapNode node)
+        {
+            _mainPaneView.LogWindowView?.SetLogText($"未定義ノード: {node.NodeType}");
+            _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", TryAdvanceRun);
+        }
+
+        private void TryAdvanceRun()
+        {
+            TryMoveToNextNode();
         }
     }
 }

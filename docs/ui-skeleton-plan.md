@@ -4,7 +4,8 @@
 
 ## 目的
 - `Header + Main + Overlay` の土台を安定させる
-- `NodeScreen` を差し替えるだけで進行できる構造にする
+- `GraphicWindow` を差し替えるだけで進行できる構造にする
+- `LogWindow` を `MainPane` 共通にして、battle と node 説明を同じ導線で扱う
 - `Compact / Expanded` の両レイアウトを早めに確認できるようにする
 
 ## 画面の役割
@@ -20,23 +21,28 @@
 - 味方情報表示
 
 ### MainPane
-- node 画面の本体表示
+- `GraphicWindow` に node 画面を表示する
+- `LogWindow` にログ / 説明 / 選択 UI を表示する
 
 ### RightPane
 - 敵情報または node 詳細表示
 
-## MainPane 配下の Screen
-- `StartScreen`
-- `BattleScreen`
-- `CityScreen`
-- `RestSpotScreen`
-- `LeagueGateScreen`
-- `DefeatScreen`
-- `HallOfFameScreen`
+## MainPane 配下の構造
+- `GraphicWindow`
+  - `StartScreen`
+  - `BattleScreen`
+  - `CityScreen`
+  - `RestSpotScreen`
+  - `LeagueGateScreen`
+  - `DefeatScreen`
+  - `HallOfFameScreen`
+- `LogWindow`
+  - `TextLog`
+  - `SelectGrid`
 
 ## Overlay
 ### MapOverlay
-- MainPane をほぼ覆う別表示
+- Main をほぼ覆う別表示
 - 開閉は Header の `MapButton` が担当
 
 ### RewardOverlay
@@ -53,17 +59,12 @@
 - `EnemyArea`
 - `Space`
 - `AllyArea`
-- `BattleLogWindow`
-
-### BattleLogWindow の最小構造
-- `Outer`
-- `BattleLog`
-- `SkillSelector`
 
 ## View クラス
 - `HeaderView`
 - `LeftPaneView`
 - `MainPaneView`
+- `LogWindowView`
 - `RightPaneView`
 - `MapOverlayView`
 - `RewardOverlayView`
@@ -82,7 +83,8 @@
 ## 実装メモ
 - View は表示と参照保持に集中する
 - Screen は node 単位の表示切替単位として扱う
-- battle の入力 UI は `SkillSelector` に寄せる
+- `TextLog` は battle log も node 説明文も受け持つ
+- `SelectGrid` は battle の skill 選択が本命だが、当面は仮の `次へ進む` ボタンにも使う
 - `たたかう / アイテム` の分岐は battle 内では持たない
 
 ## Compact / Expanded

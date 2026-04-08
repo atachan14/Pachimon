@@ -1,13 +1,22 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Pachimon.UI
 {
     public sealed class MainPaneView : MonoBehaviour
     {
+        [field: SerializeField] public RectTransform GraphicWindow { get; private set; }
+        [field: SerializeField] public LogWindowView LogWindowView { get; private set; }
+
         private readonly List<NodeScreen> _screens = new();
 
         public NodeScreen CurrentScreen { get; private set; }
+
+        public void Initialize(RectTransform graphicWindow, LogWindowView logWindowView)
+        {
+            GraphicWindow = graphicWindow;
+            LogWindowView = logWindowView;
+        }
 
         public void RegisterScreen(NodeScreen screen)
         {

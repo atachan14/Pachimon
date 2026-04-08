@@ -7,7 +7,7 @@
 - Scene: `Assets/Scenes/GameScene.unity`
 - Installer script: `Pachimon.UI.GameSceneInstaller`
 - `GameScene` は Scene 常設 UI 前提で動かす
-- まずは `BattleScreen` を初期表示として組む
+- `MainPane` は `GraphicWindow + LogWindow` の構成で組む
 
 ## 1. ルート構成
 ### 1-1. Scene root に置くもの
@@ -40,6 +40,10 @@
 - `MapOverlay`
 
 ### 2-2. `MainPane` の子
+- `GraphicWindow`
+- `LogWindow`
+
+### 2-3. `GraphicWindow` の子
 - `StartScreen`
 - `BattleScreen`
 - `CityScreen`
@@ -48,31 +52,29 @@
 - `DefeatScreen`
 - `HallOfFameScreen`
 
-### 2-3. `BattleScreen` の子
+### 2-4. `LogWindow` の子
+- `TextLog`
+- `SelectGrid`
+
+### 2-5. `BattleScreen` の子
 - `BattleMain`
 - `RewardOverlay`
 
-### 2-4. `BattleMain` の子
+### 2-6. `BattleMain` の子
 - `GraphicWindow`
 - `EnemyArea`
 - `Space`
 - `AllyArea`
-- `BattleLogWindow`
 
-### 2-5. `BattleLogWindow` の子
-- `Outer`
-- `BattleLog`
-- `SkillSelector`
-
-### 2-6. `EnemyArea` / `AllyArea` の子
+### 2-7. `EnemyArea` / `AllyArea` の子
 - `Bars`
 - `Graphics`
 
-### 2-7. `RewardOverlay` の子
+### 2-8. `RewardOverlay` の子
 - `RewardTitle`
 - `RewardBody`
 
-### 2-8. `Header` の子
+### 2-9. `Header` の子
 - `GoldArea`
 - `StageArea`
 - `BadgeArea`
@@ -87,6 +89,7 @@
 - `Header`: `HeaderView`
 - `LeftPane`: `LeftPaneView`
 - `MainPane`: `MainPaneView`
+- `LogWindow`: `LogWindowView`
 - `RightPane`: `RightPaneView`
 - `MapOverlay`: `MapOverlayView`
 
@@ -131,7 +134,7 @@
 
 ### 4-3. Layout
 - `Compact Breakpoint`: `1100`
-- `Initial Screen`: まずは `BattleScreen`
+- `Initial Screen`: 任意。通常は `StartScreen` でも `BattleScreen` でもよい
 
 ## 5. 各 View / Screen の初期化に必要な参照
 ### 5-1. `HeaderView`
@@ -154,31 +157,37 @@
 - `TitleText`
 - `BodyText`
 
-### 5-5. `BattleScreen`
+### 5-5. `MainPaneView`
+- `GraphicWindow`
+- `LogWindowView`
+
+### 5-6. `LogWindowView`
+- `TextLogText`
+- `SelectGridRoot`
+
+### 5-7. `BattleScreen`
 - `BattleMainView`
 - `RewardOverlayView`
 
-### 5-6. `BattleMainView`
+### 5-8. `BattleMainView`
 - `GraphicWindow`
 - `EnemyArea`
 - `AllyArea`
-- `BattleLogRoot`
-- `SkillSelectorRoot`
 
-### 5-7. `BattleUnitAreaView`
+### 5-9. `BattleUnitAreaView`
 - `BarsRoot`
 - `GraphicsRoot`
 
-### 5-8. `RewardOverlayView`
+### 5-10. `RewardOverlayView`
 - `TitleText`
 - `BodyText`
 
 ## 6. 最初の確認ポイント
 1. `GameScene` 再生で Scene 常設 UI が正しく初期化される
-2. GameView 幅変更で `Compact / Expanded` が切り替わる
-3. `MapButton` で `MapOverlay` が開閉する
-4. `BattleScreen` の `BattleLog` と `SkillSelector` が見える
-5. `SampleScene` では何も変わっていない
+2. `StartScreen` が `GraphicWindow` に表示される
+3. `TextLog` に開始ノード情報が表示される
+4. `SelectGrid` のボタンで `BattleScreen` へ進める
+5. `BattleScreen` に切り替わったとき、`TextLog` が battle log に置き換わる
 
 ## 7. まだ後回しでよいもの
 - ItemPanel 実体
@@ -191,4 +200,4 @@
 - まずは docs の名前に合わせてそのまま置く
 - `RectTransform` はざっくりでよい。あとで詰める
 - 参照を刺し終わってから崩れを直す
-- `BattleScreen` と `RewardOverlay` を先に通すと確認しやすい
+- `MainPane > GraphicWindow / LogWindow` の構造を先に固めると、あとがかなり楽

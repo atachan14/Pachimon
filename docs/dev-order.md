@@ -1,81 +1,113 @@
-# Dev Order
+ï»¿# Dev Order
 
-‚±‚ÌƒvƒƒWƒFƒNƒg‚ÍA`BattleÅ¬À‘•æs` ‚Å‚Í‚È‚­A`Run / Map æs` ‚Åi‚ß‚éB
-——R‚ÍA`row:0 ‚Ì‰Šúƒpƒ`ƒ‚ƒ“‘I‘ğ`A`Map¶¬‚ÌNode“à—eŠm’è`A`csv“Ç‚İ‚İ‚©‚çRunŠJn‚Ü‚Å‚Ì—¬‚ê` ‚ğæ‚ÉŒÅ‚ß‚½‚Ù‚¤‚ªAŒã‚Ìè–ß‚è‚ª­‚È‚¢‚½‚ßB
+ã“ã®ãƒ—ãƒ­ã‚¸ã‚§ã‚¯ãƒˆã¯ã€å½“é¢ `DefinitionTable -> Run / Map -> Node -> Battle` ã®é †ã§é€²ã‚ã‚‹ã€‚
+ç†ç”±ã¯ã€`MapGenerator` ãŒ `Pachimon / Mod / Trainer / GymLeader` ã®å®šç¾©ã‚’å‰æã«ã™ã‚‹ãŸã‚ã€‚
+ç‰¹ã« `row:0 ã®åˆæœŸãƒ‘ãƒãƒ¢ãƒ³é¸æŠ` ã‚’å«ã‚ã‚‹ãªã‚‰ã€å…ˆã«ãƒ‡ãƒ¼ã‚¿è²¬å‹™ã‚’å›ºã‚ãŸã»ã†ãŒå¾Œã®æ‰‹æˆ»ã‚ŠãŒå°‘ãªã„ã€‚
 
-## •ûj
-- `TopScene -> GameScene` ‚Ì—¬‚ê‚ğæ‚É’Ê‚·
-- `GameScene` ŠJn‚É `Run` ‚ğ‰Šú‰»‚·‚é
-- `DefinitionTable` ‚Ì“Ç‚İ‚İ“üŒû‚ğæ‚Éì‚é
-- `Map¶¬` ‚Í–{À‘•Šñ‚è‚ÌœŠi‚Åi‚ß‚é
-- `row:0 StartNode` ‚ğŠÜ‚ß‚Ä `NodeˆÚ“®` ‚ğì‚é
-- ŠeNode‚ÍÅ‰ƒXƒPƒ‹ƒgƒ“‚Å‚æ‚¢
-- ‚»‚ÌŒã `BattleNode` ‚ğ–{À‘•‰»‚·‚é
+## æ–¹é‡
+- `TopScene -> GameScene` ã®æµã‚Œã¯ç¶­æŒã™ã‚‹
+- ãã®ä¸Šã§ã€å…ˆã« `DefinitionTable` ã¨ `RunState` ã®è²¬å‹™å¢ƒç•Œã‚’å›ºã‚ã‚‹
+- `DefinitionTable` ã® schema ã¨åˆ¶ä½œã‚’å…ˆã«é€²ã‚ã‚‹
+- `Mapç”Ÿæˆ` ã¯ Definition ã‚’ä½¿ã†å‰æã§æœ¬å®Ÿè£…å¯„ã‚Šã«é€²ã‚ã‚‹
+- `row:0 StartNode` ã‚’å«ã‚ã¦ `Nodeç§»å‹•` ã‚’ä½œã‚‹
+- å„Nodeã¯æœ€åˆã‚¹ã‚±ãƒ«ãƒˆãƒ³ã§ã‚ˆã„
+- ãã®å¾Œ `BattleNode` ã‚’æœ¬å®Ÿè£…åŒ–ã™ã‚‹
 
-## ‘åŒ´‘¥
-- ƒf[ƒ^\‘¢‚Í–{À‘•Šñ‚è‚É‚·‚é
-- ‚½‚¾‚µŠe‹@”\‚ÌŠ®¬“x‚Í’iŠK“I‚Éã‚°‚é
-- `Map¶¬‚Ì‘S•”“ü‚è` ‚ğÅ‰‚©‚ç‘_‚í‚¸A`–{À‘•‚ÌœŠi` ‚ğ—Dæ‚·‚é
-- `Battle` ‚ÍŒÇ—§‚µ‚Äì‚ç‚¸A`Run / Map / Node‹N“®` ‚Ì—¬‚ê‚Éæ‚¹‚Ä‚©‚çˆç‚Ä‚é
+## å¤§åŸå‰‡
+- ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã¯æœ¬å®Ÿè£…å¯„ã‚Šã«ã™ã‚‹
+- ãŸã ã—å„æ©Ÿèƒ½ã®å®Œæˆåº¦ã¯æ®µéšçš„ã«ä¸Šã’ã‚‹
+- `Mapç”Ÿæˆã®å…¨éƒ¨å…¥ã‚Š` ã‚’æœ€åˆã‹ã‚‰ç‹™ã‚ãšã€`æœ¬å®Ÿè£…ã®éª¨æ ¼` ã‚’å„ªå…ˆã™ã‚‹
+- `Battle` ã¯å­¤ç«‹ã—ã¦ä½œã‚‰ãšã€`Run / Map / Nodeèµ·å‹•` ã®æµã‚Œã«ä¹—ã›ã¦ã‹ã‚‰è‚²ã¦ã‚‹
 
-## Phase 0: Data / UI “y‘ä
-–Ú“I:
-- Šù‚Éì‚Á‚½ docs ‚Æ UIœ‘g‚İ‚ğÀ‘•“üŒû‚Æ‚µ‚Äg‚¦‚éó‘Ô‚É‚·‚é
+## Phase 0: Domain Boundary
+ç›®çš„:
+- `DefinitionTable` ã¨ `RunState` ã®è²¬å‹™å¢ƒç•Œã‚’å›ºå®šã™ã‚‹
 
-‚â‚é‚±‚Æ:
-- `DefinitionTable / Logic / Registry / GraphicTable` •ûj‚ÌˆÛ
-- `GameScene` ‚Ìíİ UI ˆÛ
-- `TopScene` ‚ğ’Ç‰Á‚·‚é‘O’ñ®—
+ã‚„ã‚‹ã“ã¨:
+- `Definition` / `Instance` / `RunState` / `RunContext` ã®å½¹å‰²æ•´ç†
+- player ã®ç¾åœ¨ãƒ‘ãƒ¼ãƒ†ã‚£ã‚’ `RunState` ã«æŒãŸã›ã‚‹å‰æã‚’å›ºå®š
+- `SkillDefinitionTable` / `PassiveDefinitionTable` ã‚’æœ¬å½“ã«æŒã¤ã‹å†æ•´ç†
+- [domain-boundaries.md](./domain-boundaries.md) ã‚’æ­£ã¨ã™ã‚‹
 
-## Phase 1: TopScene
-–Ú“I:
-- ƒQ[ƒ€ŠJn‚Ì“üŒû‚ğŒÅ’è‚·‚é
+å®Œäº†æ¡ä»¶:
+- `èª°ãŒä½•ã‚’æŒã¤ã‹` ãŒ docs ä¸Šã§è¿·ã‚ãªã„
 
-‚â‚é‚±‚Æ:
-- `TopScene` ‚ğ’Ç‰Á
-- `TopSceneInstaller` ‚ğì‚é
-- `Start` ƒ{ƒ^ƒ“‚©‚ç `GameScene` ‚Ö‘JˆÚ‚·‚é
-- •K—v‚È‚ç `Settings` / `Quit` ‚ÌƒvƒŒ[ƒXƒzƒ‹ƒ_‚ğ’u‚­
+## Phase 1: DefinitionTable æ§‹é€ æ§‹æƒ³
+ç›®çš„:
+- `MapGenerator` ã®å‰æã¨ãªã‚‹é™çš„ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’æ±ºã‚ã‚‹
 
-Š®—¹ğŒ:
-- `TopScene` ‚©‚ç `GameScene` ‚Ö‘JˆÚ‚Å‚«‚é
+ã‚„ã‚‹ã“ã¨:
+- `PachimonDefinitionTable`
+- `ModDefinitionTable`
+- `TrainerDefinitionTable`
+- `GymLeaderDefinitionTable`
+- `GlobalStatGainTable`
+- `Skill / Passive` ã¯ C# å®šç¾©ã§æŒã¤å‰æã‚’æ•´ç†
 
-## Phase 2: Run ‹N“®œŠi
-–Ú“I:
-- `GameScene` ŠJn‚É Run ‚ª—§‚¿ã‚ª‚é—¬‚ê‚ğì‚é
+å®Œäº†æ¡ä»¶:
+- CSV åˆ—æ¡ˆã¨ Unity å´ã® row / table å½¢ãŒæ±ºã¾ã£ã¦ã„ã‚‹
 
-‚â‚é‚±‚Æ:
+## Phase 2: DefinitionTable åˆ¶ä½œ
+ç›®çš„:
+- å®Ÿéš›ã«æ‰±ã†å®šç¾©ãƒ‡ãƒ¼ã‚¿ã‚’ä½œã‚Šå§‹ã‚ã‚‹
+
+ã‚„ã‚‹ã“ã¨:
+- `pachimon.csv`
+- `mod.csv`
+- `trainer.csv`
+- `gym_leader.csv`
+- `global_stat_gain.csv`
+
+å®Œäº†æ¡ä»¶:
+- Map ç”Ÿæˆã«å¿…è¦ãªæœ€å°ãƒ‡ãƒ¼ã‚¿ãŒæƒã£ã¦ã„ã‚‹
+
+## Phase 3: TopScene
+ç›®çš„:
+- ã‚²ãƒ¼ãƒ é–‹å§‹ã®å…¥å£ã‚’å›ºå®šã™ã‚‹
+
+ã‚„ã‚‹ã“ã¨:
+- `TopScene` ã‚’è¿½åŠ 
+- `TopSceneInstaller` ã‚’ä½œã‚‹
+- `Start` ãƒœã‚¿ãƒ³ã‹ã‚‰ `GameScene` ã¸é·ç§»ã™ã‚‹
+- å¿…è¦ãªã‚‰ `Settings` / `Quit` ã®ãƒ—ãƒ¬ãƒ¼ã‚¹ãƒ›ãƒ«ãƒ€ã‚’ç½®ã
+
+å®Œäº†æ¡ä»¶:
+- `TopScene` ã‹ã‚‰ `GameScene` ã¸é·ç§»ã§ãã‚‹
+
+## Phase 4: Run èµ·å‹•éª¨æ ¼
+ç›®çš„:
+- `GameScene` é–‹å§‹æ™‚ã« Run ãŒç«‹ã¡ä¸ŠãŒã‚‹æµã‚Œã‚’ä½œã‚‹
+
+ã‚„ã‚‹ã“ã¨:
 - `RunBootstrap`
 - `RunState`
 - `RunContext`
 - `MapRunController`
-- `GameSceneInstaller` ‚©‚ç Run ‹N“®
+- `GameSceneInstaller` ã‹ã‚‰ Run èµ·å‹•
 
-Š®—¹ğŒ:
-- `GameScene` ŠJn‚É Run ‰Šú‰»‚ªŒÄ‚Î‚ê‚é
+å®Œäº†æ¡ä»¶:
+- `GameScene` é–‹å§‹æ™‚ã« Run åˆæœŸåŒ–ãŒå‘¼ã°ã‚Œã‚‹
 
-## Phase 3: Definition “Ç‚İ‚İ“üŒû
-–Ú“I:
-- `csv -> DefinitionTable` ‚ğg‚¤‘O’ñ‚Ì“üŒû‚ğì‚é
+## Phase 5: Definition èª­ã¿è¾¼ã¿å…¥å£
+ç›®çš„:
+- `csv -> DefinitionTable` ã‚’ä½¿ã†å‰æã®å…¥å£ã‚’ä½œã‚‹
 
-‚â‚é‚±‚Æ:
-- “Ç‚İ‚İÏ‚İ `DefinitionTable.asset` ‚ÌQÆ“üŒû‚ğì‚é
+ã‚„ã‚‹ã“ã¨:
+- èª­ã¿è¾¼ã¿æ¸ˆã¿ `DefinitionTable.asset` ã®å‚ç…§å…¥å£ã‚’ä½œã‚‹
 - `PachimonDefinitionTable`
-- `SkillDefinitionTable`
-- `PassiveDefinitionTable`
 - `ModDefinitionTable`
 - `TrainerDefinitionTable`
 - `GymLeaderDefinitionTable`
 - `GlobalStatGainTable`
 
-Š®—¹ğŒ:
-- Run ‰Šú‰»‚É’è‹`ƒf[ƒ^‚ÖƒAƒNƒZƒX‚Å‚«‚é
+å®Œäº†æ¡ä»¶:
+- Run åˆæœŸåŒ–æ™‚ã«å®šç¾©ãƒ‡ãƒ¼ã‚¿ã¸ã‚¢ã‚¯ã‚»ã‚¹ã§ãã‚‹
 
-## Phase 4: RunMap / MapNode \‘¢
-–Ú“I:
-- 1run ’†‚Ég‚¤ map ƒf[ƒ^\‘¢‚ğ–{À‘•Šñ‚è‚ÅŒÅ‚ß‚é
+## Phase 6: RunMap / MapNode æ§‹é€ 
+ç›®çš„:
+- 1run ä¸­ã«ä½¿ã† map ãƒ‡ãƒ¼ã‚¿æ§‹é€ ã‚’æœ¬å®Ÿè£…å¯„ã‚Šã§å›ºã‚ã‚‹
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `RunMap`
 - `MapRow`
 - `MapNode`
@@ -87,117 +119,117 @@
 - `CityNodeContent`
 - `LeagueGateNodeContent`
 
-Š®—¹ğŒ:
-- RunMap ‚ª `rowIndex / nodeType / node content` ‚ğ•Û‚Å‚«‚é
+å®Œäº†æ¡ä»¶:
+- RunMap ãŒ `rowIndex / nodeType / node content` ã‚’ä¿æŒã§ãã‚‹
 
-## Phase 5: Map¶¬ –{À‘•Šñ‚èœŠi
-–Ú“I:
-- `map-generation.md` ‚É‰ˆ‚¤¶¬œŠi‚ğæ‚É’Ê‚·
+## Phase 7: Mapç”Ÿæˆ æœ¬å®Ÿè£…å¯„ã‚Šéª¨æ ¼
+ç›®çš„:
+- `map-generation.md` ã«æ²¿ã†ç”Ÿæˆéª¨æ ¼ã‚’å…ˆã«é€šã™
 
-‚â‚é‚±‚Æ:
-- `RunSeed` ƒx[ƒX¶¬
-- `row:0` ‚ğŠÜ‚Ş¶¬
+ã‚„ã‚‹ã“ã¨:
+- `RunSeed` ãƒ™ãƒ¼ã‚¹ç”Ÿæˆ
+- `row:0` ã‚’å«ã‚€ç”Ÿæˆ
 - `row:36 LeagueGateZone`
-- `row:37~40 EliteNodeŒQ`
-- `row:41+ GhostNodeŒQ` ‚Ö‚ÌŠg’£—]’n
-- `NormalArea“à‚Å“¯íd•¡‚È‚µ` ‚Ì‘O’ñ‚ğ•Û‚Ä‚é\‘¢
-- ŠeNode‚Ö‚Ì“à—e”z’u
+- `row:37~40 EliteNodeç¾¤`
+- `row:41+ GhostNodeç¾¤` ã¸ã®æ‹¡å¼µä½™åœ°
+- `NormalAreaå†…ã§åŒç¨®é‡è¤‡ãªã—` ã®å‰æã‚’ä¿ã¦ã‚‹æ§‹é€ 
+- å„Nodeã¸ã®å†…å®¹é…ç½®
 
-‚ ‚Æ‰ñ‚µ‚Å‚æ‚¢‚à‚Ì:
-- Ú‘±ƒAƒ‹ƒSƒŠƒYƒ€‚ÌÅ“K‰»
-- ƒWƒ€8ƒ‹[ƒg•ÛØ‚ÌŒµ–§”»’è
-- ƒoƒ‰ƒ“ƒX‚Ì×•”’²®
+ã‚ã¨å›ã—ã§ã‚ˆã„ã‚‚ã®:
+- æ¥ç¶šã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã®æœ€é©åŒ–
+- ã‚¸ãƒ 8ãƒ«ãƒ¼ãƒˆä¿è¨¼ã®å³å¯†åˆ¤å®š
+- ãƒãƒ©ãƒ³ã‚¹ã®ç´°éƒ¨èª¿æ•´
 
-Š®—¹ğŒ:
-- 1run —p map ‚ğ¶¬‚µ‚Ä•Û‚Å‚«‚é
+å®Œäº†æ¡ä»¶:
+- 1run ç”¨ map ã‚’ç”Ÿæˆã—ã¦ä¿æŒã§ãã‚‹
 
-## Phase 6: row:0 StartNode
-–Ú“I:
-- ‰Šúƒpƒ`ƒ‚ƒ“‘I‘ğ‚ğ–{À‘•Šñ‚è‚É’Ê‚·
+## Phase 8: row:0 StartNode
+ç›®çš„:
+- åˆæœŸãƒ‘ãƒãƒ¢ãƒ³é¸æŠã‚’æœ¬å®Ÿè£…å¯„ã‚Šã«é€šã™
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `StartNodeController`
-- ‰Šú‘I‘ğŒó•â‚Ì¶¬
-- ‘I‘ğŒ‹‰Ê‚ğ `RunState` ‚É”½‰f
-- `PlayerData` / `PartyState` ‚Ö”½‰f
+- åˆæœŸé¸æŠå€™è£œã®ç”Ÿæˆ
+- é¸æŠçµæœã‚’ `RunState.party` ã«åæ˜ 
 
-Š®—¹ğŒ:
-- row:0 ‚ğ’Ê‰ß‚µ‚Ä‰Šú•Ò¬‚ªŒˆ‚Ü‚é
+å®Œäº†æ¡ä»¶:
+- row:0 ã‚’é€šéã—ã¦åˆæœŸç·¨æˆãŒæ±ºã¾ã‚‹
 
-## Phase 7: NodeˆÚ“®
-–Ú“I:
-- Mapã‚ÅŸNode‚Öi‚ß‚éó‘Ô‚ğì‚é
+## Phase 9: Nodeç§»å‹•
+ç›®çš„:
+- Mapä¸Šã§æ¬¡Nodeã¸é€²ã‚ã‚‹çŠ¶æ…‹ã‚’ä½œã‚‹
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `MapRunController.SelectNode()`
-- Œ»İnode / Ÿnode ‚ÌŠÇ—
-- is‰Â”\ó‘Ô‚ÌŠÇ—
-- `MapOverlay` ‚©‚ç node ‚ğ‘I‚×‚é—¬‚ê
+- ç¾åœ¨node / æ¬¡node ã®ç®¡ç†
+- é€²è¡Œå¯èƒ½çŠ¶æ…‹ã®ç®¡ç†
+- `MapOverlay` ã‹ã‚‰ node ã‚’é¸ã¹ã‚‹æµã‚Œ
 
-Š®—¹ğŒ:
-- StartNode ‚ÌŒã‚ÉŸNode‚ÖˆÚ“®‚Å‚«‚é
+å®Œäº†æ¡ä»¶:
+- StartNode ã®å¾Œã«æ¬¡Nodeã¸ç§»å‹•ã§ãã‚‹
 
-## Phase 8: Node‹N“®ƒXƒPƒ‹ƒgƒ“
-–Ú“I:
-- ŠeNodeí•Ê‚ªÅ’áŒÀ‹N“®‚·‚é
+## Phase 10: Nodeèµ·å‹•ã‚¹ã‚±ãƒ«ãƒˆãƒ³
+ç›®çš„:
+- å„Nodeç¨®åˆ¥ãŒæœ€ä½é™èµ·å‹•ã™ã‚‹
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `NodeControllerBase`
 - `BattleNodeController`
 - `RestSpotNodeController`
 - `CityNodeController`
 - `LeagueGateNodeController`
-- Å‰‚ÍŠeNode‚É `Ÿ‚Éi‚Ş` ‘Š“–‚Ì‰¼“±ü‚¾‚¯’u‚­
+- æœ€åˆã¯å„Nodeã« `æ¬¡ã«é€²ã‚€` ç›¸å½“ã®ä»®å°ç·šã ã‘ç½®ã
 
-Š®—¹ğŒ:
-- Nodeí•Ê‚²‚Æ‚É‰æ–Ê‚ªØ‚è‘Ö‚í‚é
+å®Œäº†æ¡ä»¶:
+- Nodeç¨®åˆ¥ã”ã¨ã«ç”»é¢ãŒåˆ‡ã‚Šæ›¿ã‚ã‚‹
 
-## Phase 9: BattleNode –{À‘•‰»
-–Ú“I:
-- isœŠi‚Ìã‚Å Battle ‚ğ–{À‘•‰»‚·‚é
+## Phase 11: BattleNode æœ¬å®Ÿè£…åŒ–
+ç›®çš„:
+- é€²è¡Œéª¨æ ¼ã®ä¸Šã§ Battle ã‚’æœ¬å®Ÿè£…åŒ–ã™ã‚‹
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `BattleState`
 - `BattleController`
 - `BattleResolver`
 - `BattleLog`
 - `SkillSelector`
-- Ÿ”s”»’è
-- `BattleI—¹ -> RewardOverlay•\¦`
+- å‹æ•—åˆ¤å®š
+- `Battleçµ‚äº† -> RewardOverlayè¡¨ç¤º`
 
-Š®—¹ğŒ:
-- BattleNode ‚ğ’Ê‰ß‚µ‚ÄŒ‹‰Ê‚ğ RunState ‚É–ß‚¹‚é
+å®Œäº†æ¡ä»¶:
+- BattleNode ã‚’é€šéã—ã¦çµæœã‚’ RunState ã«æˆ»ã›ã‚‹
 
-## Phase 10: Reward / Rest / City / LeagueGate
-–Ú“I:
-- battle ˆÈŠO‚Ì node ˆ—‚à‡‚É–{À‘•‰»‚·‚é
+## Phase 12: Reward / Rest / City / LeagueGate
+ç›®çš„:
+- battle ä»¥å¤–ã® node å‡¦ç†ã‚‚é †ã«æœ¬å®Ÿè£…åŒ–ã™ã‚‹
 
-‚â‚é‚±‚Æ:
+ã‚„ã‚‹ã“ã¨:
 - `RewardResolver`
-- `RestSpotController` –{À‘•
-- `CityController` –{À‘•
-- `LeagueGateController` –{À‘•
+- `RestSpotController` æœ¬å®Ÿè£…
+- `CityController` æœ¬å®Ÿè£…
+- `LeagueGateController` æœ¬å®Ÿè£…
 
-## Phase 11: Map¶¬ ¸–§‰»
-–Ú“I:
-- ¡‚Ü‚ÅœŠi‚Å~‚ß‚Ä‚¢‚½¶¬ƒ‹[ƒ‹‚ğ–{d—l‚É‹ß‚Ã‚¯‚é
+## Phase 13: Mapç”Ÿæˆ ç²¾å¯†åŒ–
+ç›®çš„:
+- ä»Šã¾ã§éª¨æ ¼ã§æ­¢ã‚ã¦ã„ãŸç”Ÿæˆãƒ«ãƒ¼ãƒ«ã‚’æœ¬ä»•æ§˜ã«è¿‘ã¥ã‘ã‚‹
 
-‚â‚é‚±‚Æ:
-- Ú‘±ƒAƒ‹ƒSƒŠƒYƒ€‰ü‘P
-- ƒVƒeƒB“‡
-- ƒZƒ“ƒ^[”z’u
-- ƒWƒ€”z’u
-- ƒ‹[ƒg•ÛØ
-- GhostNodeŒQÚ×
+ã‚„ã‚‹ã“ã¨:
+- æ¥ç¶šã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ æ”¹å–„
+- ã‚·ãƒ†ã‚£çµ±åˆ
+- ã‚»ãƒ³ã‚¿ãƒ¼é…ç½®
+- ã‚¸ãƒ é…ç½®
+- ãƒ«ãƒ¼ãƒˆä¿è¨¼
+- GhostNodeç¾¤è©³ç´°
 
-## ‚¢‚Ü‚Ì—Dæ‡ˆÊ
-1. `TopScene`
-2. `Top -> Game` ‘JˆÚ
-3. `RunBootstrap / RunState / MapRunController`
-4. `DefinitionTable` “Ç‚İ‚İ“üŒû
-5. `RunMap / MapNode / NodeContent`
-6. `Map¶¬`
-7. `row:0 StartNode`
-8. `NodeˆÚ“®`
-9. `NodeƒXƒPƒ‹ƒgƒ“`
-10. `BattleNode` –{À‘•
+## ã„ã¾ã®å„ªå…ˆé †ä½
+1. `Domain Boundary`
+2. `DefinitionTable` æ§‹é€ æ§‹æƒ³
+3. `DefinitionTable` åˆ¶ä½œ
+4. `DefinitionTable` èª­ã¿è¾¼ã¿å…¥å£
+5. `RunBootstrap / RunState / MapRunController`
+6. `RunMap / MapNode / NodeContent`
+7. `Mapç”Ÿæˆ`
+8. `row:0 StartNode`
+9. `Nodeç§»å‹•`
+10. `Nodeã‚¹ã‚±ãƒ«ãƒˆãƒ³`
+11. `BattleNode` æœ¬å®Ÿè£…

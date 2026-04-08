@@ -106,7 +106,7 @@ namespace Pachimon.UI
             label.alignment = alignment;
             label.fontSize = fontSize;
             label.color = Color.white;
-            label.enableWordWrapping = true;
+            label.textWrappingMode = TextWrappingModes.Normal;
             label.overflowMode = TextOverflowModes.Overflow;
 
             var rect = label.rectTransform;

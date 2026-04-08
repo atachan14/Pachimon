@@ -1,13 +1,14 @@
-# Run Map Class Design
+ï»¿# Run Map Class Design
 
-`Run / Map æs` ‚ÅÀ‘•‚ği‚ß‚é‚½‚ß‚ÌAÅ¬‚©‚Â–{À‘•Šñ‚è‚ÌƒNƒ‰ƒXİŒvƒƒ‚B
+`Run / Map å…ˆè¡Œ` ã§å®Ÿè£…ã‚’é€²ã‚ã‚‹ãŸã‚ã®ã€æœ€å°ã‹ã¤æœ¬å®Ÿè£…å¯„ã‚Šã®ã‚¯ãƒ©ã‚¹è¨­è¨ˆãƒ¡ãƒ¢ã€‚
 
-## –Ú“I
-- `TopScene -> GameScene -> RunŠJn -> Map¶¬ -> row:0 StartNode -> NodeˆÚ“®` ‚ğˆÀ’è‚µ‚Ä’Ê‚·
-- `Battle` ‚ğŒã‚©‚çÀ‘•‚µ‚Ä‚à•ö‚ê‚É‚­‚¢\‘¢‚É‚·‚é
+## ç›®çš„
+- `TopScene -> GameScene -> Runé–‹å§‹ -> Mapç”Ÿæˆ -> row:0 StartNode -> Nodeç§»å‹•` ã‚’å®‰å®šã—ã¦é€šã™
+- `Battle` ã‚’å¾Œã‹ã‚‰å®Ÿè£…ã—ã¦ã‚‚å´©ã‚Œã«ãã„æ§‹é€ ã«ã™ã‚‹
+- player ã®ç¾åœ¨ãƒ‘ãƒ¼ãƒ†ã‚£ã‚’ã©ã“ã«æŒã¤ã‹ã‚’å…ˆã«å›ºå®šã™ã‚‹
 
-## ‚¢‚Ü‚ÌÅ¬À‘•
-Œ»İ‚ÍA‚Ü‚¸ŒÅ’è‚Ì’¼ü map ‚Å‚±‚Ì—¬‚ê‚ğ’Ê‚µ‚Ä‚¢‚éB
+## ã„ã¾ã®æœ€å°å®Ÿè£…
+ç¾åœ¨ã¯ã€ã¾ãšå›ºå®šã®ç›´ç·š map ã§ã“ã®æµã‚Œã‚’é€šã—ã¦ã„ã‚‹ã€‚
 
 - `row:0 Start`
 - `row:1 Battle`
@@ -15,54 +16,64 @@
 - `row:3 City`
 - `row:36 LeagueGate`
 
-Ú‘±ƒAƒ‹ƒSƒŠƒYƒ€‚ÍŒã‚©‚ç–{d—l‚É‹ß‚Ã‚¯‚éB
+æ¥ç¶šã‚¢ãƒ«ã‚´ãƒªã‚ºãƒ ã¯å¾Œã‹ã‚‰æœ¬ä»•æ§˜ã«è¿‘ã¥ã‘ã‚‹ã€‚
 
-## \‘¢
+## æ§‹é€ 
 ### RunContext
-–ğŠ„:
-- `GameScene` Às’†‚É‹¤—L‚·‚é“üŒûƒRƒ“ƒeƒi
+å½¹å‰²:
+- `GameScene` å®Ÿè¡Œä¸­ã«å…±æœ‰ã™ã‚‹å…¥å£ã‚³ãƒ³ãƒ†ãƒŠ
 
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `RunState`
 - `RunMap`
 - `MapRunController`
-- ’è‹`ƒf[ƒ^QÆ
+- å®šç¾©ãƒ‡ãƒ¼ã‚¿å‚ç…§
+
+è£œè¶³:
+- player ã®ç¾åœ¨ãƒ‘ãƒ¼ãƒ†ã‚£æœ¬ä½“ã¯ `RunContext` ã§ã¯ãªã `RunState` ã«æŒã¤
+- `RunContext` ã¯é•·æœŸä¿å­˜ãƒ‡ãƒ¼ã‚¿ã§ã¯ãªãã€å®Ÿè¡Œæ™‚ã®æŸã­å½¹
 
 ### RunState
-–ğŠ„:
-- 1run ’†‚Ìisó‘Ô‚ğ•Û‚·‚é
+å½¹å‰²:
+- 1run ä¸­ã®é€²è¡ŒçŠ¶æ…‹ã‚’ä¿æŒã™ã‚‹
 
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `runSeed`
 - `gold`
 - `badgeCount`
 - `currentNodeId`
-- `playerParty`
+- `party`
+- `inventory`
 - `resolvedNodeIds`
 - `isRunFinished`
 
-### RunMap
-–ğŠ„:
-- 1run —p‚É¶¬‚³‚ê‚½ map ‘S‘Ì‚ğ•Û‚·‚é
+è£œè¶³:
+- ã“ã®ã‚²ãƒ¼ãƒ ã§ã¯ player ã®æ‰€æŒ pachimon ã¯ `party` ã®ã¿
+- `ownedPachimon` ã¯æŒãŸãªã„
+- `row:0` ã®åˆæœŸé¸æŠçµæœã‚‚ `RunState.party` ã«åæ˜ ã™ã‚‹
 
-•ÛŒó•â:
+### RunMap
+å½¹å‰²:
+- 1run ç”¨ã«ç”Ÿæˆã•ã‚ŒãŸ map å…¨ä½“ã‚’ä¿æŒã™ã‚‹
+
+ä¿æŒå€™è£œ:
 - `rows`
 - `nodes`
 - `startNodeId`
 
 ### MapRow
-–ğŠ„:
-- “¯‚¶ row ‚É‘®‚·‚é node ŒQ‚ğ‚Ü‚Æ‚ß‚é
+å½¹å‰²:
+- åŒã˜ row ã«å±ã™ã‚‹ node ç¾¤ã‚’ã¾ã¨ã‚ã‚‹
 
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `rowIndex`
 - `nodeIds`
 
 ### MapNode
-–ğŠ„:
-- 1‚Â‚Ì node î•ñ‚ğ•Û‚·‚é
+å½¹å‰²:
+- 1ã¤ã® node æƒ…å ±ã‚’ä¿æŒã™ã‚‹
 
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `nodeId`
 - `rowIndex`
 - `columnIndex`
@@ -72,7 +83,7 @@
 - `isResolved`
 
 ## NodeType
-Œó•â:
+å€™è£œ:
 - `Start`
 - `Battle`
 - `RestSpot`
@@ -82,62 +93,67 @@
 - `Ghost`
 
 ## NodeContent
-•ûj:
-- `MapNode` –{‘Ì‚É‘S•”‚ğ‹l‚ß‚¸Aí•Ê‚²‚Æ‚Ì content ‚ğ‚½‚¹‚é
+æ–¹é‡:
+- `MapNode` æœ¬ä½“ã«å…¨éƒ¨ã‚’è©°ã‚ãšã€ç¨®åˆ¥ã”ã¨ã® content ã‚’æŒãŸã›ã‚‹
 
 ### StartNodeContent
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `candidatePachimonIds`
 - `selectionCount`
 
 ### BattleNodeContent
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `enemyPartySeed`
 - `goldReward`
 
 ### RestSpotNodeContent
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `healValue`
 
 ### CityNodeContent
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `shopSeed`
 
 ### LeagueGateNodeContent
-•ÛŒó•â:
+ä¿æŒå€™è£œ:
 - `requiredBadgeCount`
 - `failureMode`
 
 ## RunBootstrap
-–ğŠ„:
-- `GameScene` ŠJn‚É Run ‚ğ‰Šú‰»‚·‚é
+å½¹å‰²:
+- `GameScene` é–‹å§‹æ™‚ã« Run ã‚’åˆæœŸåŒ–ã™ã‚‹
 
-Ó–±:
-- runSeed Œˆ’è
-- `RunMap` ¶¬
-- `RunState` ¶¬
-- `MapRunController` ‹N“®
+è²¬å‹™:
+- runSeed æ±ºå®š
+- `RunMap` ç”Ÿæˆ
+- `RunState` ç”Ÿæˆ
+- `MapRunController` èµ·å‹•
 
 ## MapGenerator
-–ğŠ„:
-- `map-generation.md` ‚É‰ˆ‚Á‚Ä `RunMap` ‚ğ¶¬‚·‚é
+å½¹å‰²:
+- `map-generation.md` ã«æ²¿ã£ã¦ `RunMap` ã‚’ç”Ÿæˆã™ã‚‹
 
-Œ»İ‚ÌÓ–±:
-- Å¬‚ÌŒÅ’è map ‚ğ¶¬‚·‚é
-- `row:0` Œó•âƒpƒ`ƒ‚ƒ“‚ğ•Û‚·‚é
-- Œã‚©‚ç–{À‘•Šñ‚è‚Ì¶¬‚Ö·‚µ‘Ö‚¦‚ç‚ê‚é“üŒû‚É‚È‚é
+ç¾åœ¨ã®è²¬å‹™:
+- æœ€å°ã®å›ºå®š map ã‚’ç”Ÿæˆã™ã‚‹
+- `row:0` å€™è£œãƒ‘ãƒãƒ¢ãƒ³ã‚’ä¿æŒã™ã‚‹
+- å¾Œã‹ã‚‰æœ¬å®Ÿè£…å¯„ã‚Šã®ç”Ÿæˆã¸å·®ã—æ›¿ãˆã‚‰ã‚Œã‚‹å…¥å£ã«ãªã‚‹
+
+ä»Šå¾Œã®å‰æ:
+- `MapGenerator` ã¯ `DefinitionTable` å‚ç…§ã‚’ä½¿ã£ã¦ node å†…å®¹ã‚’ç”Ÿæˆã™ã‚‹
+- å…ˆã«æƒãˆã‚‹ã®ã¯ `Pachimon / Mod / Trainer / GymLeader / GlobalStatGain`
+- `Skill / Passive` ã¯ã„ã£ãŸã‚“ C# å®šç¾©ã¨ Logic å´ã§æ‰±ã†
 
 ## MapRunController
-–ğŠ„:
-- map / node ‚ÌÚ‘±‚Æis‚ğŠÇ—‚·‚é
+å½¹å‰²:
+- map / node ã®æ¥ç¶šã¨é€²è¡Œã‚’ç®¡ç†ã™ã‚‹
 
-Œ»İ‚ÌÓ–±:
-- Œ»İ node ‚Ì•Û
-- Ÿ node ‚Ö‚ÌˆÚ“®
-- `HeaderView` ‚Ì stage / gold / badges •\¦XV
-- `MainPaneView` ‚Ì `Screen` Ø‚è‘Ö‚¦
+ç¾åœ¨ã®è²¬å‹™:
+- ç¾åœ¨ node ã®ä¿æŒ
+- æ¬¡ node ã¸ã®ç§»å‹•
+- `HeaderView` ã® stage / gold / badges è¡¨ç¤ºæ›´æ–°
+- `MainPaneView` ã® `Screen` åˆ‡ã‚Šæ›¿ãˆ
 
-## ‰ŠúÀ‘•‚Å‚â‚é”ÍˆÍ
+## åˆæœŸå®Ÿè£…ã§ã‚„ã‚‹ç¯„å›²
 - `RunContext`
 - `RunState`
 - `RunMap`
@@ -150,10 +166,10 @@
 - `MapRunController`
 - `RunBootstrap`
 
-## ‚ ‚Æ‚©‚çL‚°‚é”ÍˆÍ
+## ã‚ã¨ã‹ã‚‰åºƒã’ã‚‹ç¯„å›²
 - save / load
-- ghost Ú×
-- ƒWƒ€8ƒ‹[ƒg•ÛØ‚ÌŒµ–§”»’è
-- ‚“x‚È reward ¶¬
-- ƒm[ƒh‚²‚Æ‚Ì‰‰o·•ª
-- –{d—l‚Ì node controller ŒQ
+- ghost è©³ç´°
+- ã‚¸ãƒ 8ãƒ«ãƒ¼ãƒˆä¿è¨¼ã®å³å¯†åˆ¤å®š
+- é«˜åº¦ãª reward ç”Ÿæˆ
+- ãƒãƒ¼ãƒ‰ã”ã¨ã®æ¼”å‡ºå·®åˆ†
+- æœ¬ä»•æ§˜ã® node controller ç¾¤
