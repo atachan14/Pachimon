@@ -1,26 +1,75 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using Pachimon.Items;
+using Pachimon.Reward;
 
 namespace Pachimon.Run
 {
     public sealed class RunState
     {
-        public RunState(int runSeed)
+        public const int PartySize = 3;
+
+        private readonly List<string> _playerPachimonIds = new();
+
+        public RunState(int runSeed, string playerName)
         {
             RunSeed = runSeed;
+            PlayerName = string.IsNullOrWhiteSpace(playerName) ? "ゲスト" : playerName.Trim();
         }
 
         public int RunSeed { get; }
 
+        public string PlayerName { get; }
+
         public int Gold { get; set; }
 
-        public int BadgeCount { get; set; }
+        public int BadgeCount { get; private set; }
+
+        public TrainerModifierSet PlayerModifiers { get; } = new();
+
+        public ItemInventory ItemInventory { get; } = new();
 
         public string CurrentNodeId { get; set; }
 
         public bool IsRunFinished { get; set; }
 
-        public List<string> PlayerPachimonIds { get; } = new();
+        public IReadOnlyList<string> PlayerPachimonIds => _playerPachimonIds;
+
+        public bool IsPartyConfirmed => _playerPachimonIds.Count == PartySize;
 
         public HashSet<string> ResolvedNodeIds { get; } = new();
+
+        public HashSet<string> RevealedNodeIds { get; } = new();
+
+        public bool TrySetInitialParty(IEnumerable<string> pachimonIds)
+        {
+            if (IsPartyConfirmed || pachimonIds == null)
+            {
+                return false;
+            }
+
+            var ids = pachimonIds.ToArray();
+            if (ids.Length != PartySize
+                || ids.Any(string.IsNullOrWhiteSpace)
+                || ids.Distinct(StringComparer.Ordinal).Count() != PartySize)
+            {
+                return false;
+            }
+
+            _playerPachimonIds.AddRange(ids);
+            return true;
+        }
+
+        public int GetBadgeCount(PachimonAttribute attribute)
+        {
+            return PlayerModifiers.GetBadgeCount(attribute);
+        }
+
+        public void AddBadge(PachimonAttribute attribute)
+        {
+            PlayerModifiers.AddBadge(attribute);
+            BadgeCount = checked(BadgeCount + 1);
+        }
     }
 }

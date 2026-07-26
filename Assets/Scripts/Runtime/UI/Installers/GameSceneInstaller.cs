@@ -1,6 +1,11 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Pachimon.App;
 using Pachimon.Battle;
+using Pachimon.Data;
+using Pachimon.Items;
 using Pachimon.Run;
+using Pachimon.Skills;
+using Pachimon.Trainer;
 using UnityEngine;
 
 namespace Pachimon.UI
@@ -24,6 +29,13 @@ namespace Pachimon.UI
         [SerializeField] private DefeatScreen _defeatScreen;
         [SerializeField] private HallOfFameScreen _hallOfFameScreen;
 
+        [Header("Data")]
+        [SerializeField] private PachimonCatalog _pachimonCatalog;
+        [SerializeField] private SkillCatalog _skillCatalog;
+        [SerializeField] private ItemCatalog _itemCatalog;
+        [SerializeField] private TrainerStyleCatalog _trainerStyleCatalog;
+        [SerializeField] private TrainerNameCatalog _trainerNameCatalog;
+
         [Header("Layout")]
         [SerializeField] private float _compactBreakpoint = 1100f;
         [SerializeField] private NodeScreen _initialScreen;
@@ -31,6 +43,8 @@ namespace Pachimon.UI
         [Header("Debug")]
         [SerializeField] private bool _initializeRun = true;
         [SerializeField] private bool _initializeDemoBattle = true;
+        [SerializeField] private bool _grantDebugPotion = true;
+        [SerializeField, Min(0)] private int _grantDebugStoneCount = 2;
 
         public RunContext CurrentRunContext { get; private set; }
 
@@ -59,11 +73,18 @@ namespace Pachimon.UI
                 && _battleScreen != null
                 && _cityScreen != null
                 && _restSpotScreen != null
-                && _leagueGateScreen != null;
+                && _leagueGateScreen != null
+                && _pachimonCatalog != null
+                && _skillCatalog != null
+                && _itemCatalog != null
+                && _trainerStyleCatalog != null
+                && _trainerNameCatalog != null;
         }
 
         private void InitializeSceneHierarchy()
         {
+            _leftPaneView.EnsurePartyWindow(_rightPaneView.NodeSelectionWindow?.BattleWindow);
+
             var headerRect = _headerView.GetComponent<RectTransform>();
             var contentRect = _mainPaneView.transform.parent as RectTransform;
             var leftPaneRect = _leftPaneView.GetComponent<RectTransform>();
@@ -82,6 +103,7 @@ namespace Pachimon.UI
                 mainPaneRect,
                 rightPaneRect,
                 _compactBreakpoint);
+            _gameRootView.BindAbilityDetails(_skillCatalog);
 
             RegisterScreens();
             WireButtons();
@@ -137,6 +159,11 @@ namespace Pachimon.UI
             {
                 Debug.LogWarning($"{nameof(GameSceneInstaller)} on '{name}' is missing HeaderView.ItemButton.", this);
             }
+            else
+            {
+                _headerView.ItemButton.onClick.RemoveAllListeners();
+                _headerView.ItemButton.onClick.AddListener(_gameRootView.ToggleItemPanel);
+            }
 
             if (_headerView.SettingsButton == null)
             {
@@ -156,13 +183,108 @@ namespace Pachimon.UI
         {
             var runBootstrap = new RunBootstrap();
             CurrentRunContext = runBootstrap.CreateContext(
+                _gameRootView,
                 _headerView,
+                _leftPaneView,
                 _mainPaneView,
+                _rightPaneView,
+                _mapOverlayView,
                 _startScreen,
                 _battleScreen,
                 _cityScreen,
                 _restSpotScreen,
-                _leagueGateScreen);
+                _leagueGateScreen,
+                _pachimonCatalog,
+                _skillCatalog,
+                _itemCatalog,
+                _trainerStyleCatalog,
+                _trainerNameCatalog,
+                NewGameRequest.ConsumePlayerName());
+            if (_grantDebugPotion
+                && _itemCatalog.Get(ItemIds.Potion) != null
+                && !CurrentRunContext.RunState.ItemInventory.IsFull)
+            {
+                CurrentRunContext.RunState.ItemInventory.TryAdd(
+                    ItemIds.Potion,
+                    out _,
+                    out _);
+            }
+
+            if (_itemCatalog.Get(ItemIds.Stone) != null)
+            {
+                for (var index = 0;
+                     index < _grantDebugStoneCount
+                     && !CurrentRunContext.RunState.ItemInventory.IsFull;
+                     index++)
+                {
+                    CurrentRunContext.RunState.ItemInventory.TryAdd(
+                        ItemIds.Stone,
+                        out _,
+                        out _);
+                }
+            }
+
+            _gameRootView.BindItemPanel(
+                CurrentRunContext.RunState.ItemInventory,
+                _itemCatalog);
+            _leftPaneView.ConfigureItemDrop(
+                CurrentRunContext.MapRunController.TryUseItemOnPlayer);
+            _rightPaneView.ConfigureItemDrop(
+                CurrentRunContext.MapRunController.TryUseItemOnEnemy);
+            _battleScreen.BattleMainView?.ConfigureItemDrops(
+                CurrentRunContext.MapRunController.TryUseItemOnPlayer,
+                CurrentRunContext.MapRunController.TryUseItemOnBattleEnemy);
+            _battleScreen.BattleMainView?.ConfigureUnitClicks(
+                CurrentRunContext.MapRunController.FocusPlayerBattleUnit,
+                CurrentRunContext.MapRunController.FocusEnemyBattleUnit);
+        }
+
+        public bool ConfigureTrainerCatalogs(
+            TrainerStyleCatalog trainerStyleCatalog,
+            TrainerNameCatalog trainerNameCatalog)
+        {
+            if (_trainerStyleCatalog == trainerStyleCatalog
+                && _trainerNameCatalog == trainerNameCatalog)
+            {
+                return false;
+            }
+
+            _trainerStyleCatalog = trainerStyleCatalog;
+            _trainerNameCatalog = trainerNameCatalog;
+            return true;
+        }
+
+        public bool ConfigurePachimonCatalog(PachimonCatalog pachimonCatalog)
+        {
+            if (_pachimonCatalog == pachimonCatalog)
+            {
+                return false;
+            }
+
+            _pachimonCatalog = pachimonCatalog;
+            return true;
+        }
+
+        public bool ConfigureSkillCatalog(SkillCatalog skillCatalog)
+        {
+            if (_skillCatalog == skillCatalog)
+            {
+                return false;
+            }
+
+            _skillCatalog = skillCatalog;
+            return true;
+        }
+
+        public bool ConfigureItemCatalog(ItemCatalog itemCatalog)
+        {
+            if (_itemCatalog == itemCatalog)
+            {
+                return false;
+            }
+
+            _itemCatalog = itemCatalog;
+            return true;
         }
 
         private void LogMissingInstallerReferences()
@@ -181,6 +303,11 @@ namespace Pachimon.UI
             if (_cityScreen == null) missing.Add(nameof(_cityScreen));
             if (_restSpotScreen == null) missing.Add(nameof(_restSpotScreen));
             if (_leagueGateScreen == null) missing.Add(nameof(_leagueGateScreen));
+            if (_pachimonCatalog == null) missing.Add(nameof(_pachimonCatalog));
+            if (_skillCatalog == null) missing.Add(nameof(_skillCatalog));
+            if (_itemCatalog == null) missing.Add(nameof(_itemCatalog));
+            if (_trainerStyleCatalog == null) missing.Add(nameof(_trainerStyleCatalog));
+            if (_trainerNameCatalog == null) missing.Add(nameof(_trainerNameCatalog));
 
             if (missing.Count == 0)
             {

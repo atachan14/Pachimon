@@ -1,0 +1,21 @@
+﻿%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Name: Skill_115
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  _skillId: 115
+  _displayName: はっぱスライサー
+  _allocationType: 3
+  _isMapAssignable: 1
+  _baseTurnCostTicks: 100
+  _baseCooldownTicks: 200
+  _description: v0.3 basic attribute damage Skill placeholder.

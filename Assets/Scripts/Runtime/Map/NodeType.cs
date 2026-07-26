@@ -4,10 +4,12 @@ namespace Pachimon.Map
     {
         Start = 0,
         Battle = 1,
-        RestSpot = 2,
-        City = 3,
-        LeagueGate = 4,
-        Elite = 5,
-        Ghost = 6,
+        Gym = 2,
+        RestSpot = 3,
+        City = 4,
+        Event = 5,
+        LeagueGate = 6,
+        Elite = 7,
+        Ghost = 8,
     }
 }

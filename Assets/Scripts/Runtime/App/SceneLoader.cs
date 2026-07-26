@@ -4,12 +4,12 @@ namespace Pachimon.App
 {
     public static class SceneLoader
     {
-        public const string TopSceneName = "TopScene";
+        public const string TitleSceneName = "TitleScene";
         public const string GameSceneName = "GameScene";
 
-        public static void LoadTopScene()
+        public static void LoadTitleScene()
         {
-            SceneManager.LoadScene(TopSceneName);
+            SceneManager.LoadScene(TitleSceneName);
         }
 
         public static void LoadGameScene()

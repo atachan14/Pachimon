@@ -1,0 +1,6 @@
+G:\source\repos\unity\Pachimon\tmp\obj\Debug\Phase1-Assembly-CSharp.csproj.AssemblyReference.cache
+G:\source\repos\unity\Pachimon\tmp\obj\Debug\Phase1-Assembly-CSharp.csproj.CoreCompileInputs.cache
+G:\source\repos\unity\Pachimon\tmp\bin\bin\Debug\Assembly-CSharp.dll
+G:\source\repos\unity\Pachimon\tmp\bin\bin\Debug\Assembly-CSharp.pdb
+G:\source\repos\unity\Pachimon\tmp\obj\Debug\Assembly-CSharp.dll
+G:\source\repos\unity\Pachimon\tmp\obj\Debug\Assembly-CSharp.pdb

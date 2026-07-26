@@ -1,4 +1,0 @@
-﻿id,name_ja,name_en,description_ja,description_en,logic_id
-passive_battle_focus,闘志,Battle Focus,戦闘中に火力を底上げする,Increase offensive power during battle,passive_battle_focus
-passive_cool_head,冷静沈着,Cool Head,行動回転を安定させる,Stabilize action cycle,passive_cool_head
-passive_fast_start,電光石火,Fast Start,戦闘開始直後に有利を取る,Gain advantage at battle start,passive_fast_start

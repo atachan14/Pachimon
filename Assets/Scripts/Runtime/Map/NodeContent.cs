@@ -1,3 +1,6 @@
+using Pachimon.Reward;
+using Pachimon.Trainer;
+
 namespace Pachimon.Map
 {
     public abstract class NodeContent
@@ -6,53 +9,111 @@ namespace Pachimon.Map
 
     public sealed class StartNodeContent : NodeContent
     {
-        public StartNodeContent(string[] candidatePachimonIds, int selectionCount)
+        public StartNodeContent(string[] candidatePachimonInstanceIds, int selectionCount)
         {
-            CandidatePachimonIds = candidatePachimonIds;
+            CandidatePachimonInstanceIds = candidatePachimonInstanceIds;
             SelectionCount = selectionCount;
         }
 
-        public string[] CandidatePachimonIds { get; }
+        public string[] CandidatePachimonInstanceIds { get; }
 
         public int SelectionCount { get; }
     }
 
     public sealed class BattleNodeContent : NodeContent
     {
-        public BattleNodeContent(int enemyPartySeed, int goldReward)
+        public BattleNodeContent(
+            string[] enemyPachimonInstanceIds,
+            NodeReward nodeReward,
+            TrainerProfile trainerProfile)
         {
-            EnemyPartySeed = enemyPartySeed;
-            GoldReward = goldReward;
+            EnemyPachimonInstanceIds = enemyPachimonInstanceIds;
+            NodeReward = nodeReward;
+            TrainerProfile = trainerProfile;
         }
 
-        public int EnemyPartySeed { get; }
+        public string[] EnemyPachimonInstanceIds { get; }
 
-        public int GoldReward { get; }
+        public NodeReward NodeReward { get; }
+
+        public TrainerProfile TrainerProfile { get; }
+    }
+
+    public sealed class GymNodeContent : NodeContent
+    {
+        public GymNodeContent(
+            string[] enemyPachimonInstanceIds,
+            NodeReward nodeReward,
+            TrainerProfile trainerProfile)
+        {
+            EnemyPachimonInstanceIds = enemyPachimonInstanceIds;
+            NodeReward = nodeReward;
+            TrainerProfile = trainerProfile;
+        }
+
+        public string[] EnemyPachimonInstanceIds { get; }
+
+        public NodeReward NodeReward { get; }
+
+        public TrainerProfile TrainerProfile { get; }
+    }
+
+    public sealed class EliteNodeContent : NodeContent
+    {
+        public EliteNodeContent(
+            string[] enemyPachimonInstanceIds,
+            TrainerProfile trainerProfile)
+        {
+            EnemyPachimonInstanceIds = enemyPachimonInstanceIds;
+            TrainerProfile = trainerProfile;
+        }
+
+        public string[] EnemyPachimonInstanceIds { get; }
+
+        public TrainerProfile TrainerProfile { get; }
     }
 
     public sealed class RestSpotNodeContent : NodeContent
     {
-        public RestSpotNodeContent(int healValue)
+        public RestSpotNodeContent(int healPercent)
         {
-            HealValue = healValue;
+            HealPercent = healPercent;
         }
 
-        public int HealValue { get; }
+        public int HealPercent { get; }
     }
 
     public sealed class CityNodeContent : NodeContent
     {
-        public CityNodeContent(int shopSeed)
+        public CityNodeContent(string cityGroupId, int shopSeed)
         {
+            CityGroupId = cityGroupId;
             ShopSeed = shopSeed;
         }
+
+        public string CityGroupId { get; }
 
         public int ShopSeed { get; }
     }
 
+    public sealed class EventNodeContent : NodeContent
+    {
+        public EventNodeContent(int eventSeed)
+        {
+            EventSeed = eventSeed;
+        }
+
+        public int EventSeed { get; }
+    }
+
+    public enum LeagueGateFailureMode
+    {
+        SpecialDefeat = 0,
+    }
+
     public sealed class LeagueGateNodeContent : NodeContent
     {
-        public LeagueGateNodeContent(int requiredBadgeCount, string failureMode)
+        public LeagueGateNodeContent(int requiredBadgeCount, LeagueGateFailureMode failureMode)
         {
             RequiredBadgeCount = requiredBadgeCount;
             FailureMode = failureMode;
@@ -60,6 +121,6 @@ namespace Pachimon.Map
 
         public int RequiredBadgeCount { get; }
 
-        public string FailureMode { get; }
+        public LeagueGateFailureMode FailureMode { get; }
     }
 }

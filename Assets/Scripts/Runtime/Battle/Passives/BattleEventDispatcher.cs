@@ -1,0 +1,95 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Pachimon.Battle
+{
+    public interface IPassiveLogic
+    {
+        BattleUnitState Owner { get; }
+        void Handle(IBattleEvent battleEvent);
+    }
+
+    public sealed class BattleEventDispatcher
+    {
+        private readonly List<IPassiveLogic> _passiveLogics = new();
+        private readonly Queue<IBattleEvent> _eventQueue = new();
+        private bool _isDispatching;
+        private bool _clearAfterDispatch;
+
+        public int RegisteredPassiveCount => _passiveLogics.Count;
+
+        public void Register(IPassiveLogic passiveLogic)
+        {
+            if (passiveLogic == null) throw new ArgumentNullException(nameof(passiveLogic));
+            _passiveLogics.Add(passiveLogic);
+        }
+
+        public void Publish(IBattleEvent battleEvent)
+        {
+            if (battleEvent == null) throw new ArgumentNullException(nameof(battleEvent));
+            _eventQueue.Enqueue(battleEvent);
+            if (_isDispatching)
+            {
+                return;
+            }
+
+            _isDispatching = true;
+            try
+            {
+                while (_eventQueue.Count > 0)
+                {
+                    Dispatch(_eventQueue.Dequeue());
+                }
+            }
+            catch
+            {
+                _eventQueue.Clear();
+                throw;
+            }
+            finally
+            {
+                _isDispatching = false;
+                if (_clearAfterDispatch)
+                {
+                    Clear();
+                }
+            }
+        }
+
+        public void PublishFinal(IBattleEvent battleEvent)
+        {
+            _clearAfterDispatch = true;
+            Publish(battleEvent);
+        }
+
+        public void Clear()
+        {
+            _passiveLogics.Clear();
+            _eventQueue.Clear();
+            _clearAfterDispatch = false;
+        }
+
+        private void Dispatch(IBattleEvent battleEvent)
+        {
+            foreach (var passiveLogic in _passiveLogics
+                         .OrderBy(logic => GetEventPriority(logic.Owner, battleEvent))
+                         .ThenBy(logic => logic.Owner.Side)
+                         .ThenBy(logic => logic.Owner.SlotIndex)
+                         .ThenBy(logic => logic.Owner.TiePriority)
+                         .ToArray())
+            {
+                passiveLogic.Handle(battleEvent);
+            }
+        }
+
+        private static int GetEventPriority(
+            BattleUnitState owner,
+            IBattleEvent battleEvent)
+        {
+            if (ReferenceEquals(owner, battleEvent.Target)) return 0;
+            if (ReferenceEquals(owner, battleEvent.Source)) return 1;
+            return 2;
+        }
+    }
+}

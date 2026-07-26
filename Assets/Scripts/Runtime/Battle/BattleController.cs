@@ -1,21 +1,28 @@
+using Pachimon.Run;
+
 namespace Pachimon.Battle
 {
     public sealed class BattleController
     {
         public BattleState CreateDemoState()
         {
-            var state = new BattleState
-            {
-                TurnNumber = 1,
-            };
-
-            state.Allies.Add(new BattleUnit("ally_1", "Mochi", 0, 120, 120, 18, false));
-            state.Allies.Add(new BattleUnit("ally_2", "Puka", 1, 100, 92, 14, false));
-            state.Allies.Add(new BattleUnit("ally_3", "Goro", 2, 140, 140, 9, false));
-
-            state.Enemies.Add(new BattleUnit("enemy_1", "Bitebug", 0, 90, 90, 10, true));
-            state.Enemies.Add(new BattleUnit("enemy_2", "Shelln", 1, 110, 110, 8, true));
-            state.Enemies.Add(new BattleUnit("enemy_3", "Zapmew", 2, 80, 80, 22, true));
+            var player = new BattleSideState(
+                BattleSide.Player,
+                new[]
+                {
+                    CreateDemoUnit("ally_1", "Mochi", BattleSide.Player, 0, 120, 120),
+                    CreateDemoUnit("ally_2", "Puka", BattleSide.Player, 1, 100, 92),
+                    CreateDemoUnit("ally_3", "Goro", BattleSide.Player, 2, 140, 140),
+                });
+            var enemy = new BattleSideState(
+                BattleSide.Enemy,
+                new[]
+                {
+                    CreateDemoUnit("enemy_1", "Bitebug", BattleSide.Enemy, 0, 90, 90),
+                    CreateDemoUnit("enemy_2", "Shelln", BattleSide.Enemy, 1, 110, 110),
+                    CreateDemoUnit("enemy_3", "Zapmew", BattleSide.Enemy, 2, 80, 80),
+                });
+            var state = new BattleState(12345, player, enemy);
 
             state.AddLog("Battle initialized.");
             state.AddLog("Enemy team spotted ahead.");
@@ -25,20 +32,48 @@ namespace Pachimon.Battle
 
         public void RunDemoOpeningExchange(BattleState state)
         {
-            if (state == null || state.Allies.Count == 0 || state.Enemies.Count == 0)
+            if (state == null)
             {
                 return;
             }
 
-            var allyFront = state.Allies[0];
-            var enemyFront = state.Enemies[0];
+            var allyFront = state.Player.GetFrontLiving();
+            var enemyFront = state.Enemy.GetFrontLiving();
+            if (allyFront == null || enemyFront == null)
+            {
+                return;
+            }
 
             enemyFront.ApplyDamage(18);
-            allyFront.ChangeMana(-4);
             state.AddLog($"{allyFront.DisplayName} used Ember Bite on {enemyFront.DisplayName} for 18 damage.");
 
             allyFront.ApplyDamage(11);
             state.AddLog($"{enemyFront.DisplayName} countered for 11 damage.");
+        }
+
+        private static BattleUnitState CreateDemoUnit(
+            string instanceId,
+            string displayName,
+            BattleSide side,
+            int slotIndex,
+            int maxHp,
+            int currentHp)
+        {
+            var values = new int[(int)PachimonStatType.Count];
+            values[(int)PachimonStatType.MaxHp] = maxHp;
+            values[(int)PachimonStatType.MaxMn] = 100;
+            var stats = new EffectivePachimonStats(new PachimonStats(values, 1, 1), null);
+            return new BattleUnitState(
+                instanceId,
+                slotIndex + 1,
+                displayName,
+                side,
+                slotIndex,
+                stats,
+                currentHp,
+                stats.MaxMn,
+                new[] { new PachimonSkillSlot(1, slotIndex + 1) },
+                new[] { slotIndex + 1 });
         }
     }
 }

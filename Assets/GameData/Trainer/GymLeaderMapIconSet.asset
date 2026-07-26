@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1812bc7a6a344f6a8761ade4bd14458, type: 3}
+  m_Name: GymLeaderMapIconSet
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Trainer.TrainerMapIconSet
+  _layers:
+    _base: {fileID: 21300000, guid: b1e1b126da3e1b24690b5671c05d2428, type: 3}
+    _primary: {fileID: 21300000, guid: f748eef19b852794c8f3f15be11cb7d1, type: 3}
+    _secondary: {fileID: 21300000, guid: 15ef8c28a24c0154dbcaeb33312f8490, type: 3}
+    _detail: {fileID: 21300000, guid: 497d4ba9376c52d4e9c0fa965f89e51a, type: 3}

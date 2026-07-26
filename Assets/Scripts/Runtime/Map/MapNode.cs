@@ -25,6 +25,5 @@ namespace Pachimon.Map
 
         public List<string> NextNodeIds { get; } = new();
 
-        public bool IsResolved { get; set; }
     }
 }

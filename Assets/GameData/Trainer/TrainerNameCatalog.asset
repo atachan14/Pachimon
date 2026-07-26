@@ -1,0 +1,399 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c87da015f9e840e2bd587eb5b2c79134, type: 3}
+  m_Name: TrainerNameCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Trainer.TrainerNameCatalog
+  _names:
+  - _nameId: male_01
+    _gender: 0
+    _displayName: "\u30BF\u30AF\u30E4"
+  - _nameId: male_02
+    _gender: 0
+    _displayName: "\u30B1\u30F3\u30BF"
+  - _nameId: male_03
+    _gender: 0
+    _displayName: "\u30B7\u30E7\u30A6"
+  - _nameId: male_04
+    _gender: 0
+    _displayName: "\u30E6\u30A6\u30BF"
+  - _nameId: male_05
+    _gender: 0
+    _displayName: "\u30EA\u30E7\u30A6"
+  - _nameId: male_06
+    _gender: 0
+    _displayName: "\u30C0\u30A4\u30AD"
+  - _nameId: male_07
+    _gender: 0
+    _displayName: "\u30CF\u30EB\u30C8"
+  - _nameId: male_08
+    _gender: 0
+    _displayName: "\u30BD\u30A6\u30BF"
+  - _nameId: male_09
+    _gender: 0
+    _displayName: "\u30B3\u30A6\u30BF"
+  - _nameId: male_10
+    _gender: 0
+    _displayName: "\u30EC\u30F3"
+  - _nameId: male_11
+    _gender: 0
+    _displayName: "\u30AB\u30BA\u30AD"
+  - _nameId: male_12
+    _gender: 0
+    _displayName: "\u30D2\u30ED\u30C8"
+  - _nameId: male_13
+    _gender: 0
+    _displayName: "\u30A2\u30AD\u30E9"
+  - _nameId: male_14
+    _gender: 0
+    _displayName: "\u30B7\u30F3\u30B8"
+  - _nameId: male_15
+    _gender: 0
+    _displayName: "\u30DE\u30B5\u30EB"
+  - _nameId: male_16
+    _gender: 0
+    _displayName: "\u30C4\u30E8\u30B7"
+  - _nameId: male_17
+    _gender: 0
+    _displayName: "\u30BF\u30B1\u30EB"
+  - _nameId: male_18
+    _gender: 0
+    _displayName: "\u30CA\u30AA\u30AD"
+  - _nameId: male_19
+    _gender: 0
+    _displayName: "\u30E6\u30A6\u30B8"
+  - _nameId: male_20
+    _gender: 0
+    _displayName: "\u30B3\u30A6\u30B8"
+  - _nameId: male_21
+    _gender: 0
+    _displayName: "\u30B1\u30F3\u30B8"
+  - _nameId: male_22
+    _gender: 0
+    _displayName: "\u30B7\u30B2\u30EB"
+  - _nameId: male_23
+    _gender: 0
+    _displayName: "\u30CE\u30DC\u30EB"
+  - _nameId: male_24
+    _gender: 0
+    _displayName: "\u30DF\u30CE\u30EB"
+  - _nameId: male_25
+    _gender: 0
+    _displayName: "\u30A4\u30B5\u30E0"
+  - _nameId: male_26
+    _gender: 0
+    _displayName: "\u30DE\u30B3\u30C8"
+  - _nameId: male_27
+    _gender: 0
+    _displayName: "\u30C8\u30AA\u30EB"
+  - _nameId: male_28
+    _gender: 0
+    _displayName: "\u30B8\u30E5\u30F3"
+  - _nameId: male_29
+    _gender: 0
+    _displayName: "\u30EC\u30AA"
+  - _nameId: male_30
+    _gender: 0
+    _displayName: "\u30AB\u30A4"
+  - _nameId: male_31
+    _gender: 0
+    _displayName: "\u30EA\u30AF"
+  - _nameId: male_32
+    _gender: 0
+    _displayName: "\u30BD\u30E9"
+  - _nameId: male_33
+    _gender: 0
+    _displayName: "\u30B2\u30F3"
+  - _nameId: male_34
+    _gender: 0
+    _displayName: "\u30B4\u30A6"
+  - _nameId: male_35
+    _gender: 0
+    _displayName: "\u30B8\u30E7\u30FC\u30B8"
+  - _nameId: male_36
+    _gender: 0
+    _displayName: "\u30DE\u30A4\u30B1\u30EB"
+  - _nameId: male_37
+    _gender: 0
+    _displayName: "\u30B8\u30E7\u30F3"
+  - _nameId: male_38
+    _gender: 0
+    _displayName: "\u30C8\u30E0"
+  - _nameId: male_39
+    _gender: 0
+    _displayName: "\u30DC\u30D6"
+  - _nameId: male_40
+    _gender: 0
+    _displayName: "\u30B1\u30D3\u30F3"
+  - _nameId: male_41
+    _gender: 0
+    _displayName: "\u30C7\u30A4\u30D3\u30C3\u30C9"
+  - _nameId: male_42
+    _gender: 0
+    _displayName: "\u30C0\u30CB\u30A8\u30EB"
+  - _nameId: male_43
+    _gender: 0
+    _displayName: "\u30EB\u30A4\u30B9"
+  - _nameId: male_44
+    _gender: 0
+    _displayName: "\u30AB\u30EB\u30ED\u30B9"
+  - _nameId: male_45
+    _gender: 0
+    _displayName: "\u30D1\u30D6\u30ED"
+  - _nameId: male_46
+    _gender: 0
+    _displayName: "\u30DE\u30EB\u30B3"
+  - _nameId: male_47
+    _gender: 0
+    _displayName: "\u30EB\u30AB"
+  - _nameId: male_48
+    _gender: 0
+    _displayName: "\u30CB\u30B3"
+  - _nameId: male_49
+    _gender: 0
+    _displayName: "\u30AA\u30B9\u30AB\u30FC"
+  - _nameId: male_50
+    _gender: 0
+    _displayName: "\u30A8\u30EA\u30C3\u30AF"
+  - _nameId: male_51
+    _gender: 0
+    _displayName: "\u30A2\u30EC\u30C3\u30AF\u30B9"
+  - _nameId: male_52
+    _gender: 0
+    _displayName: "\u30B5\u30E0"
+  - _nameId: male_53
+    _gender: 0
+    _displayName: "\u30ED\u30D3\u30F3"
+  - _nameId: male_54
+    _gender: 0
+    _displayName: "\u30AF\u30EA\u30B9"
+  - _nameId: male_55
+    _gender: 0
+    _displayName: "\u30DF\u30B2\u30EB"
+  - _nameId: male_56
+    _gender: 0
+    _displayName: "\u30E9\u30A6\u30EB"
+  - _nameId: male_57
+    _gender: 0
+    _displayName: "\u30A4\u30EF\u30F3"
+  - _nameId: male_58
+    _gender: 0
+    _displayName: "\u30E6\u30FC\u30EA"
+  - _nameId: male_59
+    _gender: 0
+    _displayName: "\u30A2\u30FC\u30ED\u30F3"
+  - _nameId: male_60
+    _gender: 0
+    _displayName: "\u30CE\u30A2"
+  - _nameId: male_61
+    _gender: 0
+    _displayName: "\u30EA\u30A2\u30E0"
+  - _nameId: male_62
+    _gender: 0
+    _displayName: "\u30D5\u30A3\u30F3"
+  - _nameId: male_63
+    _gender: 0
+    _displayName: "\u30C6\u30AA"
+  - _nameId: male_64
+    _gender: 0
+    _displayName: "\u30ED\u30A4\u30C9"
+  - _nameId: female_01
+    _gender: 1
+    _displayName: "\u30E8\u30B7\u30B3"
+  - _nameId: female_02
+    _gender: 1
+    _displayName: "\u30B5\u30E4\u30AB"
+  - _nameId: female_03
+    _gender: 1
+    _displayName: "\u30A2\u30E4\u30AB"
+  - _nameId: female_04
+    _gender: 1
+    _displayName: "\u30DF\u30B5\u30AD"
+  - _nameId: female_05
+    _gender: 1
+    _displayName: "\u30E6\u30A4"
+  - _nameId: female_06
+    _gender: 1
+    _displayName: "\u30A2\u30AA\u30A4"
+  - _nameId: female_07
+    _gender: 1
+    _displayName: "\u30B5\u30AF\u30E9"
+  - _nameId: female_08
+    _gender: 1
+    _displayName: "\u30CA\u30CA"
+  - _nameId: female_09
+    _gender: 1
+    _displayName: "\u30DF\u30AA"
+  - _nameId: female_10
+    _gender: 1
+    _displayName: "\u30EA\u30F3"
+  - _nameId: female_11
+    _gender: 1
+    _displayName: "\u30E1\u30A4"
+  - _nameId: female_12
+    _gender: 1
+    _displayName: "\u30D2\u30CA"
+  - _nameId: female_13
+    _gender: 1
+    _displayName: "\u30E6\u30CA"
+  - _nameId: female_14
+    _gender: 1
+    _displayName: "\u30AB\u30CA"
+  - _nameId: female_15
+    _gender: 1
+    _displayName: "\u30DE\u30EA"
+  - _nameId: female_16
+    _gender: 1
+    _displayName: "\u30A8\u30EA"
+  - _nameId: female_17
+    _gender: 1
+    _displayName: "\u30E6\u30EA"
+  - _nameId: female_18
+    _gender: 1
+    _displayName: "\u30EA\u30CA"
+  - _nameId: female_19
+    _gender: 1
+    _displayName: "\u30EC\u30A4"
+  - _nameId: female_20
+    _gender: 1
+    _displayName: "\u30A2\u30A4"
+  - _nameId: female_21
+    _gender: 1
+    _displayName: "\u30DE\u30A4"
+  - _nameId: female_22
+    _gender: 1
+    _displayName: "\u30CA\u30AA"
+  - _nameId: female_23
+    _gender: 1
+    _displayName: "\u30A2\u30AD"
+  - _nameId: female_24
+    _gender: 1
+    _displayName: "\u30CF\u30EB\u30AB"
+  - _nameId: female_25
+    _gender: 1
+    _displayName: "\u30C1\u30D2\u30ED"
+  - _nameId: female_26
+    _gender: 1
+    _displayName: "\u30AB\u30AA\u30EA"
+  - _nameId: female_27
+    _gender: 1
+    _displayName: "\u30DF\u30C9\u30EA"
+  - _nameId: female_28
+    _gender: 1
+    _displayName: "\u30A2\u30B9\u30AB"
+  - _nameId: female_29
+    _gender: 1
+    _displayName: "\u30CE\u30BE\u30DF"
+  - _nameId: female_30
+    _gender: 1
+    _displayName: "\u30DF\u30E9\u30A4"
+  - _nameId: female_31
+    _gender: 1
+    _displayName: "\u30EB\u30CA"
+  - _nameId: female_32
+    _gender: 1
+    _displayName: "\u30BD\u30E9"
+  - _nameId: female_33
+    _gender: 1
+    _displayName: "\u30A8\u30DE"
+  - _nameId: female_34
+    _gender: 1
+    _displayName: "\u30AA\u30EA\u30D3\u30A2"
+  - _nameId: female_35
+    _gender: 1
+    _displayName: "\u30BD\u30D5\u30A3\u30A2"
+  - _nameId: female_36
+    _gender: 1
+    _displayName: "\u30DF\u30A2"
+  - _nameId: female_37
+    _gender: 1
+    _displayName: "\u30A8\u30DF\u30EA\u30FC"
+  - _nameId: female_38
+    _gender: 1
+    _displayName: "\u30A2\u30EA\u30B9"
+  - _nameId: female_39
+    _gender: 1
+    _displayName: "\u30EB\u30FC\u30B7\u30FC"
+  - _nameId: female_40
+    _gender: 1
+    _displayName: "\u30A2\u30F3\u30CA"
+  - _nameId: female_41
+    _gender: 1
+    _displayName: "\u30DE\u30EA\u30A2"
+  - _nameId: female_42
+    _gender: 1
+    _displayName: "\u30ED\u30FC\u30E9"
+  - _nameId: female_43
+    _gender: 1
+    _displayName: "\u30B5\u30E9"
+  - _nameId: female_44
+    _gender: 1
+    _displayName: "\u30EA\u30EA\u30FC"
+  - _nameId: female_45
+    _gender: 1
+    _displayName: "\u30AF\u30ED\u30A8"
+  - _nameId: female_46
+    _gender: 1
+    _displayName: "\u30BE\u30FC\u30A4"
+  - _nameId: female_47
+    _gender: 1
+    _displayName: "\u30A8\u30E9"
+  - _nameId: female_48
+    _gender: 1
+    _displayName: "\u30B0\u30EC\u30FC\u30B9"
+  - _nameId: female_49
+    _gender: 1
+    _displayName: "\u30CF\u30F3\u30CA"
+  - _nameId: female_50
+    _gender: 1
+    _displayName: "\u30AF\u30EC\u30A2"
+  - _nameId: female_51
+    _gender: 1
+    _displayName: "\u30B8\u30E5\u30EA\u30A2"
+  - _nameId: female_52
+    _gender: 1
+    _displayName: "\u30A8\u30EC\u30CA"
+  - _nameId: female_53
+    _gender: 1
+    _displayName: "\u30AB\u30EB\u30E9"
+  - _nameId: female_54
+    _gender: 1
+    _displayName: "\u30CB\u30FC\u30CA"
+  - _nameId: female_55
+    _gender: 1
+    _displayName: "\u30CA\u30BF\u30EA\u30A2"
+  - _nameId: female_56
+    _gender: 1
+    _displayName: "\u30A4\u30EA\u30FC\u30CA"
+  - _nameId: female_57
+    _gender: 1
+    _displayName: "\u30EC\u30A4\u30E9"
+  - _nameId: female_58
+    _gender: 1
+    _displayName: "\u30A2\u30DF\u30E9"
+  - _nameId: female_59
+    _gender: 1
+    _displayName: "\u30CE\u30E9"
+  - _nameId: female_60
+    _gender: 1
+    _displayName: "\u30A8\u30F4\u30A1"
+  - _nameId: female_61
+    _gender: 1
+    _displayName: "\u30D5\u30EC\u30A4\u30E4"
+  - _nameId: female_62
+    _gender: 1
+    _displayName: "\u30B9\u30C6\u30E9"
+  - _nameId: female_63
+    _gender: 1
+    _displayName: "\u30C6\u30EC\u30B5"
+  - _nameId: female_64
+    _gender: 1
+    _displayName: "\u30EA\u30BF"

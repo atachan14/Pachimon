@@ -1,4 +1,0 @@
-﻿id,name_ja,name_en,description_ja,description_en,favorite_attribute,initial_skill_ids,unique_passive_id,weight_hp,weight_mn,weight_mnreg,weight_fire,weight_water,weight_leaf,weight_electric,weight_poison,weight_earth,weight_ice,weight_dragon,weight_speed,weight_skillheist,weight_pierce_bonus,weight_threat,weight_break,weight_crit_rate,weight_crit_damage
-pachimon_001,ヒノモン,Hinomon,炎寄りのバランス型パチモン,Fire leaning balanced pachimon,fire,skill_fire_bite|skill_guard_stance,passive_battle_focus,5,2,1,8,2,1,1,1,1,1,2,3,2,1,1,1,2,3
-pachimon_002,ミズモン,Mizumon,継戦寄りのパチモン,Sustain oriented pachimon,water,skill_water_shot|skill_guard_stance,passive_cool_head,5,3,2,1,8,2,1,2,1,1,1,2,2,1,1,1,1,2
-pachimon_003,ハヤモン,Hayamon,素早さ重視のパチモン,Speed focused pachimon,electric,skill_quick_sting|skill_guard_stance,passive_fast_start,3,2,1,2,1,2,5,1,1,1,1,8,4,1,1,1,3,2

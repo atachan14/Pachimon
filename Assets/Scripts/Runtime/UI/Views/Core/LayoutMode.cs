@@ -5,4 +5,11 @@
         Compact,
         Expanded,
     }
+
+    public enum CompactPane
+    {
+        Main,
+        Left,
+        Right,
+    }
 }

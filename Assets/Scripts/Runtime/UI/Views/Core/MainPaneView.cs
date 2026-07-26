@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Pachimon.UI
 {
@@ -11,6 +12,11 @@ namespace Pachimon.UI
         private readonly List<NodeScreen> _screens = new();
 
         public NodeScreen CurrentScreen { get; private set; }
+
+        private void Awake()
+        {
+            EnsureBackground();
+        }
 
         public void Initialize(RectTransform graphicWindow, LogWindowView logWindowView)
         {
@@ -37,6 +43,18 @@ namespace Pachimon.UI
             }
 
             CurrentScreen = screen;
+        }
+
+        private void EnsureBackground()
+        {
+            var background = GetComponent<Image>();
+            if (background == null)
+            {
+                background = gameObject.AddComponent<Image>();
+            }
+
+            background.color = GameUiPalette.MainPaneBackground;
+            background.raycastTarget = false;
         }
     }
 }
