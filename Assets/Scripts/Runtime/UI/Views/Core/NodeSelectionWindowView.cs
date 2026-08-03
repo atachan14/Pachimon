@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Pachimon.Items;
+using Pachimon.Map;
+using Pachimon.Run;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +17,7 @@ namespace Pachimon.UI
         [SerializeField] private Button _confirmButton;
         [SerializeField] private Button _cancelButton;
         private StartCandidateWindowView _startCandidateWindow;
+        private CityShopWindowView _cityWindow;
         private LayoutMode _layoutMode = LayoutMode.Expanded;
 
         private Action _onConfirm;
@@ -84,6 +88,30 @@ namespace Pachimon.UI
             ConfigureFooter(showFooter, onConfirm, onCancel, "決定", "キャンセル");
         }
 
+        public void ShowCity(
+            CityNodeContent city,
+            ItemCatalog itemCatalog,
+            RunState runState,
+            bool purchaseEnabled,
+            bool showFooter,
+            Action<int> onDetails,
+            Action<string> onPurchase,
+            Action onConfirm,
+            Action onCancel)
+        {
+            EnsureCityWindow();
+            gameObject.SetActive(true);
+            SetWindow(_cityWindow);
+            _cityWindow?.Bind(
+                city,
+                itemCatalog,
+                runState,
+                purchaseEnabled,
+                onDetails,
+                onPurchase);
+            ConfigureFooter(showFooter, onConfirm, onCancel, "決定", "キャンセル");
+        }
+
         public void Hide()
         {
             RemoveButtonListeners();
@@ -105,6 +133,10 @@ namespace Pachimon.UI
             if (_startCandidateWindow != null)
             {
                 _startCandidateWindow.gameObject.SetActive(activeWindow == _startCandidateWindow);
+            }
+            if (_cityWindow != null)
+            {
+                _cityWindow.gameObject.SetActive(activeWindow == _cityWindow);
             }
         }
 
@@ -150,6 +182,19 @@ namespace Pachimon.UI
             _startCandidateWindow = windowObject.GetComponent<StartCandidateWindowView>();
             _startCandidateWindow.Initialize(_battleWindow?.PachimonTabTemplate);
             _startCandidateWindow.ApplyLayoutMode(_layoutMode);
+        }
+
+        private void EnsureCityWindow()
+        {
+            if (_cityWindow != null)
+            {
+                return;
+            }
+
+            var windowParent = _battleWindow != null
+                ? _battleWindow.transform.parent
+                : transform;
+            _cityWindow = CityShopWindowView.CreateRuntime(windowParent);
         }
 
         private static void SetButtonLabel(Button button, string label)

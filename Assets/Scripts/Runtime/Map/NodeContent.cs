@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Pachimon.Items;
 using Pachimon.Reward;
 using Pachimon.Trainer;
 
@@ -85,15 +87,21 @@ namespace Pachimon.Map
 
     public sealed class CityNodeContent : NodeContent
     {
-        public CityNodeContent(string cityGroupId, int shopSeed)
+        public CityNodeContent(
+            string cityGroupId,
+            int shopSeed,
+            IReadOnlyList<CityStockEntry> stockEntries)
         {
             CityGroupId = cityGroupId;
             ShopSeed = shopSeed;
+            StockEntries = stockEntries;
         }
 
         public string CityGroupId { get; }
 
         public int ShopSeed { get; }
+
+        public IReadOnlyList<CityStockEntry> StockEntries { get; }
     }
 
     public sealed class EventNodeContent : NodeContent

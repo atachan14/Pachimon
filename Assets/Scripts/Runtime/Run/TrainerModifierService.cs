@@ -10,7 +10,8 @@ namespace Pachimon.Run
             TrainerModifierSet modifiers,
             IEnumerable<PachimonInstance> affectedPachimon,
             PachimonStatType statType,
-            int amount)
+            int amount,
+            PassiveStatModifierRegistry passiveStatModifierRegistry)
         {
             if (modifiers == null)
             {
@@ -20,6 +21,11 @@ namespace Pachimon.Run
             if (affectedPachimon == null)
             {
                 throw new ArgumentNullException(nameof(affectedPachimon));
+            }
+
+            if (passiveStatModifierRegistry == null)
+            {
+                throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
             }
 
             var instances = affectedPachimon
@@ -36,14 +42,22 @@ namespace Pachimon.Run
                 instance => instance,
                 instance =>
                 {
-                    var stats = modifiers.ApplyTo(instance.Stats);
+                    var stats = PachimonStatService.Calculate(
+                        instance.Stats,
+                        modifiers,
+                        instance.PassiveIds,
+                        passiveStatModifierRegistry);
                     return statType == PachimonStatType.MaxHp ? stats.MaxHp : stats.MaxMn;
                 });
             modifiers.AddStat(statType, amount);
 
             foreach (var instance in instances)
             {
-                var stats = modifiers.ApplyTo(instance.Stats);
+                var stats = PachimonStatService.Calculate(
+                    instance.Stats,
+                    modifiers,
+                    instance.PassiveIds,
+                    passiveStatModifierRegistry);
                 if (statType == PachimonStatType.MaxHp)
                 {
                     instance.ApplyEffectiveMaxHpChange(

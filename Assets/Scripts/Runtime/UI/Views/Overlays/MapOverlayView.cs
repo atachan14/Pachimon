@@ -47,6 +47,7 @@ namespace Pachimon.UI
         private readonly List<EdgeBinding> _edgeViews = new();
         private readonly HashSet<string> _selectableNodeIds = new();
         private string _selectedNodeId;
+        private ScrollEdgeIndicator _scrollIndicator;
 
         public bool IsOpen => _isOpen;
         public RectTransform EdgeLayer => _edgeLayer;
@@ -221,6 +222,7 @@ namespace Pachimon.UI
             _mapContent = mapContent;
             _edgeLayer = edgeLayer;
             _nodeLayer = nodeLayer;
+            _scrollIndicator = ScrollEdgeIndicator.GetOrCreate(_mapScrollRect);
             RefreshMapLayout();
         }
 
@@ -282,6 +284,7 @@ namespace Pachimon.UI
 
             _canvasGroup.alpha = 1f;
             SetInteractionEnabled(false);
+            _scrollIndicator = ScrollEdgeIndicator.GetOrCreate(_mapScrollRect);
             _isInitialized = true;
 
             Canvas.ForceUpdateCanvases();

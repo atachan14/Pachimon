@@ -140,9 +140,10 @@ Skill / PassiveのReward候補は保持せず、Reward表示時に`enemyPachimon
 ### CityNodeContent
 
 - `cityGroupId`
-- Shop内容、または再現可能な生成情報
+- `shopSeed`
+- `stockEntries`
 
-横並びの2つのCity Nodeは別々のMapNodeとして接続を持ち、同じ`cityGroupId`とCityNodeContentを参照する。現状は`shopSeed`だけを保持する仮実装。
+横並びの2つのCity Nodeは別々のMapNodeとして接続を持ち、同じ`cityGroupId`と`CityNodeContent`を参照する。`stockEntries`はMap生成時に確定した個別商品のItem ID、BasePrice、実売価格、購入状態を保持する。詳細は[`../v0.7/city-spec.md`](../v0.7/city-spec.md)を参照する。
 
 ### EventNodeContent
 
@@ -171,14 +172,13 @@ EliteNodeContentは3体の`enemyPachimonInstanceIds`と`trainerProfile`を持ち
 - Badge状態
 - `currentNodeId`
 - `resolvedNodeIds`
-- `revealedNodeIds`
 - `party`
 - `inventory`
 - `isRunFinished`
 
 現状の`PlayerPachimonIds`は仮実装。v0.2で`PachimonInstance` 3体を持つ`party`へ置き換える。
 
-`resolvedNodeIds`は攻略済みNode、`revealedNodeIds`はPachimon情報を公開済みのNodeを表す。一度進行可能になったNodeは`revealedNodeIds`へ残し、別ルートを進んだ後も公開状態を維持する。Cityの片側が公開された場合は同じGroupの2Nodeをまとめて公開する。EliteはRun開始時に全Nodeを公開済みへ登録する。
+`resolvedNodeIds`は攻略済みNodeを表す。Map上のBattle、Gym、Elite NodeのTrainer/Pachimon情報はRun開始時からすべて公開し、公開状態はRunStateに保持しない。進行可能かどうかと情報の閲覧可否は分離する。
 
 ## ID
 

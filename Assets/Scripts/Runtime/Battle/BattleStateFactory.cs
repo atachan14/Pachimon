@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Data;
 using Pachimon.Run;
+using Pachimon.Passives;
 
 namespace Pachimon.Battle
 {
@@ -10,13 +11,23 @@ namespace Pachimon.Battle
     {
         private readonly RunPachimonPool _pachimonPool;
         private readonly PachimonCatalog _pachimonCatalog;
+        private readonly PassiveStatModifierRegistry _passiveStatModifierRegistry;
+        private readonly PassiveCatalog _passiveCatalog;
 
-        public BattleStateFactory(RunPachimonPool pachimonPool, PachimonCatalog pachimonCatalog)
+        public BattleStateFactory(
+            RunPachimonPool pachimonPool,
+            PachimonCatalog pachimonCatalog,
+            PassiveCatalog passiveCatalog,
+            PassiveStatModifierRegistry passiveStatModifierRegistry)
         {
             _pachimonPool = pachimonPool
                 ?? throw new ArgumentNullException(nameof(pachimonPool));
             _pachimonCatalog = pachimonCatalog
                 ?? throw new ArgumentNullException(nameof(pachimonCatalog));
+            _passiveStatModifierRegistry = passiveStatModifierRegistry
+                ?? throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
+            _passiveCatalog = passiveCatalog
+                ?? throw new ArgumentNullException(nameof(passiveCatalog));
         }
 
         public BattleState Create(
@@ -37,7 +48,8 @@ namespace Pachimon.Battle
             return new BattleState(
                 battleSeed,
                 CreateSide(BattleSide.Player, playerIds, playerModifiers),
-                CreateSide(BattleSide.Enemy, enemyIds, enemyModifiers));
+                CreateSide(BattleSide.Enemy, enemyIds, enemyModifiers),
+                new PassiveLogicRegistry(_passiveCatalog));
         }
 
         private BattleSideState CreateSide(
@@ -63,7 +75,11 @@ namespace Pachimon.Battle
             var definition = _pachimonCatalog.Get(instance.SpeciesId)
                 ?? throw new InvalidOperationException(
                     $"Pachimon Species '{instance.SpeciesId}' was not found.");
-            var effectiveStats = new EffectivePachimonStats(instance.Stats, modifiers);
+            var effectiveStats = PachimonStatService.Calculate(
+                instance.Stats,
+                modifiers,
+                instance.PassiveIds,
+                _passiveStatModifierRegistry);
             var startingHp = Math.Min(instance.CurrentHp, effectiveStats.MaxHp);
             var startingMn = Math.Min(instance.CurrentMn, effectiveStats.MaxMn);
             return new BattleUnitState(

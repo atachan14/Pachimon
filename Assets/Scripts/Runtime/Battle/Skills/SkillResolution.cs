@@ -24,16 +24,25 @@ namespace Pachimon.Battle
         public SkillResolution(
             BattleUnitState user,
             SkillAsset skill,
-            IEnumerable<SkillEffectResult> effects)
+            IEnumerable<SkillEffectResult> effects,
+            BattlePresentationTimeline presentation = null)
         {
             User = user ?? throw new ArgumentNullException(nameof(user));
             Skill = skill ?? throw new ArgumentNullException(nameof(skill));
             Effects = effects?.ToArray() ?? Array.Empty<SkillEffectResult>();
+            Presentation = presentation ?? BattlePresentationTimeline.Empty;
         }
 
         public BattleUnitState User { get; }
         public SkillAsset Skill { get; }
         public IReadOnlyList<SkillEffectResult> Effects { get; }
+        public BattlePresentationTimeline Presentation { get; }
+
+        public SkillResolution WithPresentation(
+            BattlePresentationTimeline presentation)
+        {
+            return new SkillResolution(User, Skill, Effects, presentation);
+        }
     }
 
     public sealed class SkillPreviewEffect
@@ -58,16 +67,19 @@ namespace Pachimon.Battle
         public SkillPreview(
             BattleUnitState user,
             SkillAsset skill,
-            IEnumerable<SkillPreviewEffect> effects)
+            IEnumerable<SkillPreviewEffect> effects,
+            BattleSkillTimingPlan timing)
         {
             User = user ?? throw new ArgumentNullException(nameof(user));
             Skill = skill ?? throw new ArgumentNullException(nameof(skill));
             Effects = effects?.ToArray() ?? Array.Empty<SkillPreviewEffect>();
+            Timing = timing;
         }
 
         public BattleUnitState User { get; }
         public SkillAsset Skill { get; }
         public IReadOnlyList<SkillPreviewEffect> Effects { get; }
+        public BattleSkillTimingPlan Timing { get; }
     }
 
     public sealed class SkillExecutionContext
@@ -87,11 +99,30 @@ namespace Pachimon.Battle
         public BattleUnitState User { get; }
         public SkillAsset Skill { get; }
         public BattleTargetQuery Targets { get; }
+
+        public bool TrySpendAdditionalMn(int amount)
+        {
+            var before = User.CurrentMn;
+            if (!User.TrySpendMn(amount))
+            {
+                return false;
+            }
+
+            State.Presentation.RecordAdditionalManaSpent(
+                User,
+                before,
+                User.CurrentMn);
+            return true;
+        }
+
+        public void BeginNextPresentationBlock()
+        {
+            State.Presentation.BeginNextBlock();
+        }
     }
 
     public interface ISkillLogic
     {
-        SkillPreview Preview(SkillExecutionContext context);
         SkillResolution Resolve(SkillExecutionContext context);
     }
 }

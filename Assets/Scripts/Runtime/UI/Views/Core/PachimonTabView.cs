@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Pachimon.Run;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -63,7 +64,8 @@ namespace Pachimon.UI
             IEnumerable<PachimonStatPreview> stats,
             IEnumerable<string> statusEffects,
             IEnumerable<PachimonAbilityPreview> skills,
-            IEnumerable<PachimonAbilityPreview> passives)
+            IEnumerable<PachimonAbilityPreview> passives,
+            StatCalculationResult statCalculation = null)
         {
             IsRevealed = true;
             FrontSprite = frontSprite;
@@ -76,6 +78,7 @@ namespace Pachimon.UI
             StatusEffects = statusEffects?.ToArray() ?? Array.Empty<string>();
             Skills = skills?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
             Passives = passives?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
+            StatCalculation = statCalculation;
         }
 
         private PachimonPreviewContent()
@@ -96,6 +99,7 @@ namespace Pachimon.UI
         public IReadOnlyList<string> StatusEffects { get; }
         public IReadOnlyList<PachimonAbilityPreview> Skills { get; }
         public IReadOnlyList<PachimonAbilityPreview> Passives { get; }
+        public StatCalculationResult StatCalculation { get; }
         public static PachimonPreviewContent Hidden { get; } = new();
 
         public bool TryGetStat(PachimonDisplayStat stat, out int value)
@@ -286,7 +290,7 @@ namespace Pachimon.UI
             }
 
             var barObject = new GameObject(
-                "RuntimePaneHpBar",
+                "RuntimePaneHpGauge",
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
                 typeof(Image),
@@ -350,7 +354,7 @@ namespace Pachimon.UI
             }
 
             var barObject = new GameObject(
-                "RuntimePaneMnBar",
+                "RuntimePaneMnGauge",
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
                 typeof(Image),

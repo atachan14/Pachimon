@@ -15,8 +15,10 @@ namespace Pachimon.Battle
     public enum BattleFlowStepKind
     {
         PlayerInputRequired = 0,
-        ActionResolved = 1,
-        BattleCompleted = 2,
+        ActionStarted = 1,
+        ActionResolved = 2,
+        ActionCancelled = 3,
+        BattleCompleted = 4,
     }
 
     public sealed class BattleFlowStep
@@ -27,6 +29,7 @@ namespace Pachimon.Battle
             IReadOnlyList<BattleSkillChoice> skillChoices,
             SkillAsset struggleSkill,
             SkillResolution resolution,
+            PendingSkillAction pendingAction,
             BattleOutcome outcome,
             bool wasAutomaticallySelected)
         {
@@ -39,6 +42,7 @@ namespace Pachimon.Battle
                 .ToArray();
             StruggleSkill = struggleSkill;
             Resolution = resolution;
+            PendingAction = pendingAction;
             Outcome = outcome;
             WasAutomaticallySelected = wasAutomaticallySelected;
             RequiresStruggleConfirmation = StruggleSkill != null;
@@ -50,6 +54,7 @@ namespace Pachimon.Battle
         public IReadOnlyList<SkillAsset> UsableSkills { get; }
         public SkillAsset StruggleSkill { get; }
         public SkillResolution Resolution { get; }
+        public PendingSkillAction PendingAction { get; }
         public BattleOutcome Outcome { get; }
         public bool WasAutomaticallySelected { get; }
         public bool RequiresStruggleConfirmation { get; }
@@ -68,8 +73,25 @@ namespace Pachimon.Battle
                 choices,
                 struggleSkill,
                 null,
+                null,
                 BattleOutcome.Undecided,
                 false);
+        }
+
+        internal static BattleFlowStep StartAction(
+            PendingSkillAction pendingAction,
+            bool wasAutomaticallySelected)
+        {
+            if (pendingAction == null) throw new ArgumentNullException(nameof(pendingAction));
+            return new BattleFlowStep(
+                BattleFlowStepKind.ActionStarted,
+                pendingAction.User,
+                Array.Empty<BattleSkillChoice>(),
+                null,
+                null,
+                pendingAction,
+                BattleOutcome.Undecided,
+                wasAutomaticallySelected);
         }
 
         internal static BattleFlowStep ResolveAction(
@@ -84,7 +106,24 @@ namespace Pachimon.Battle
                 Array.Empty<BattleSkillChoice>(),
                 null,
                 resolution,
+                null,
                 outcome,
+                wasAutomaticallySelected);
+        }
+
+        internal static BattleFlowStep CancelAction(
+            PendingSkillAction pendingAction,
+            bool wasAutomaticallySelected)
+        {
+            if (pendingAction == null) throw new ArgumentNullException(nameof(pendingAction));
+            return new BattleFlowStep(
+                BattleFlowStepKind.ActionCancelled,
+                pendingAction.User,
+                Array.Empty<BattleSkillChoice>(),
+                null,
+                null,
+                pendingAction,
+                BattleOutcome.Undecided,
                 wasAutomaticallySelected);
         }
 
@@ -99,6 +138,7 @@ namespace Pachimon.Battle
                 BattleFlowStepKind.BattleCompleted,
                 null,
                 Array.Empty<BattleSkillChoice>(),
+                null,
                 null,
                 null,
                 outcome,

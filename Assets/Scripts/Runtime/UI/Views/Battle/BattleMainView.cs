@@ -74,6 +74,23 @@ namespace Pachimon.UI
             AllyArea?.ClearSkillPreview();
         }
 
+        public void PresentResourceSnapshot(
+            BattleResourceTransition transition)
+        {
+            if (transition?.Unit == null)
+            {
+                return;
+            }
+
+            var area = transition.Unit.Side == BattleSide.Player
+                ? AllyArea
+                : EnemyArea;
+            area?.PresentResourceSnapshot(
+                transition.Unit,
+                transition.HpAfter,
+                transition.MnAfter);
+        }
+
         public void ConfigureItemDrops(
             Func<ItemInstance, int, bool> tryUseOnAlly,
             Func<ItemInstance, int, bool> tryUseOnEnemy)

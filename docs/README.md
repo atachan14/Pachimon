@@ -1,20 +1,23 @@
 # Pachimon Documentation
 
-[`v0.6.5 Stat Refactor`](./v0.6.5/README.md)は実装・通し確認まで完了した。次の実装対象は着手前に決定する。
+[`v0.6.5 Stat Refactor`](./v0.6.5/README.md)まで実装・通し確認済み。
+現在の実装対象は[`v0.7 City`](./roadmap.md#milestones)。
 
 ## 読み始める場所
 
-1. [`v0.6.5/README.md`](./v0.6.5/README.md): 完了したStat Refactor
-2. [`v0.6.5/stat-refactor-plan.md`](./v0.6.5/stat-refactor-plan.md): Stat Refactorの実装手順
-3. [`v0.1/pachimon-stats.md`](./v0.1/pachimon-stats.md): Statと生成仕様の正本
-4. [`v0.1/map-generation.md`](./v0.1/map-generation.md): Map、Reward Deck、個体配置
-5. [`v0.3/battle-state.md`](./v0.3/battle-state.md): Run個体とBattle Stateの境界
-6. [`v0.3/battle-flow.md`](./v0.3/battle-flow.md): Tick、行動、勝敗の流れ
-7. [`v0.3/skill-runtime.md`](./v0.3/skill-runtime.md): Skill、Damage、自動対象
-8. [`v0.4/reward-flow.md`](./v0.4/reward-flow.md): Mod / Badge取得
-9. [`v0.5/rest-spot-flow.md`](./v0.5/rest-spot-flow.md): HP / MN回復
-10. [`v0.6/item-spec.md`](./v0.6/item-spec.md): Item仕様
-11. [`backlog.md`](./backlog.md): バージョンをまたぐ改善候補と保留事項
+1. [`roadmap.md`](./roadmap.md): 全体計画と現在地
+2. [`v0.6.5/README.md`](./v0.6.5/README.md): 完了したStat Refactor
+3. [`v0.6.5/stat-refactor-plan.md`](./v0.6.5/stat-refactor-plan.md): Stat Refactorの実装手順
+4. [`v0.1/pachimon-stats.md`](./v0.1/pachimon-stats.md): Statと生成仕様の正本
+5. [`v0.1/map-generation.md`](./v0.1/map-generation.md): Map、Reward Deck、個体配置
+6. [`v0.3/battle-state.md`](./v0.3/battle-state.md): Run個体とBattle Stateの境界
+7. [`v0.3/battle-flow.md`](./v0.3/battle-flow.md): Tick、行動、勝敗の流れ
+8. [`v0.3/skill-runtime.md`](./v0.3/skill-runtime.md): Skill、Damage、自動対象
+9. [`v0.4/reward-flow.md`](./v0.4/reward-flow.md): Mod / Badge取得
+10. [`v0.5/rest-spot-flow.md`](./v0.5/rest-spot-flow.md): HP / MN回復
+11. [`v0.6/item-spec.md`](./v0.6/item-spec.md): Item仕様
+12. [`v0.7/city-spec.md`](./v0.7/city-spec.md): City在庫、価格、購入仕様
+13. [`backlog.md`](./backlog.md): バージョンをまたぐ改善候補と保留事項
 
 ## Archive
 

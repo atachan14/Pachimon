@@ -20,6 +20,10 @@ namespace Pachimon.Items
                 {
                     _logicByItemId[item.ItemId] = new DirectDamageItemLogic();
                 }
+                else if (item is SkillMachineItemAsset)
+                {
+                    _logicByItemId[item.ItemId] = new SkillMachineItemLogic();
+                }
             }
         }
 

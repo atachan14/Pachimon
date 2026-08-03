@@ -67,13 +67,25 @@ namespace Pachimon.Items
 
         public static ItemUseContext ForBattle(
             BattleUnitState target,
-            ItemTargetAffiliation affiliation)
+            ItemTargetAffiliation affiliation,
+            PachimonInstance runTarget = null)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
+            if (runTarget != null
+                && !string.Equals(
+                    runTarget.InstanceId,
+                    target.InstanceId,
+                    StringComparison.Ordinal))
+            {
+                throw new ArgumentException(
+                    "Run and Battle targets must represent the same Pachimon.",
+                    nameof(runTarget));
+            }
+
             return new ItemUseContext(
                 ItemUseContextKind.Battle,
                 affiliation,
-                null,
+                runTarget,
                 target,
                 target.MaxHp);
         }

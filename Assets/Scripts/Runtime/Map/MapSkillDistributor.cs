@@ -43,7 +43,12 @@ namespace Pachimon.Map
                 instance.ResetAdditionalSkills();
             }
 
-            var mapAssignableSkills = _skillCatalog.GetMapAssignableSkills();
+            var participatingFixedSkillIds = pachimonPool.Instances
+                .Select(instance => instance.FixedSkillId)
+                .ToHashSet();
+            var mapAssignableSkills = _skillCatalog.GetMapAssignableSkills()
+                .Where(skill => participatingFixedSkillIds.Contains(skill.SkillId))
+                .ToArray();
             var usageCounts = mapAssignableSkills.ToDictionary(skill => skill.SkillId, _ => 0);
             foreach (var instance in pachimonPool.Instances)
             {
@@ -62,7 +67,13 @@ namespace Pachimon.Map
                 .ThenBy(node => node.ColumnIndex)
                 .ToArray();
 
-            AssignMatchingSkills(nodes, pachimonPool, usageCounts, random);
+            ValidateCandidatePool(mapAssignableSkills);
+            AssignMatchingSkills(
+                nodes,
+                pachimonPool,
+                mapAssignableSkills,
+                usageCounts,
+                random);
             AssignRandomSkills(nodes, pachimonPool, mapAssignableSkills, usageCounts, random);
             ValidateDistribution(nodes, pachimonPool);
         }
@@ -70,6 +81,7 @@ namespace Pachimon.Map
         private void AssignMatchingSkills(
             IEnumerable<MapNode> nodes,
             RunPachimonPool pachimonPool,
+            IReadOnlyList<SkillAsset> mapAssignableSkills,
             IDictionary<int, int> usageCounts,
             Random random)
         {
@@ -77,7 +89,9 @@ namespace Pachimon.Map
                          || node.NodeType == NodeType.Elite))
             {
                 var allocationType = GetLeagueAllocationType(node);
-                var candidates = _skillCatalog.GetMapAssignableSkills(allocationType);
+                var candidates = mapAssignableSkills
+                    .Where(skill => skill.AllocationType == allocationType)
+                    .ToArray();
                 var count = node.NodeType == NodeType.Gym
                     ? _settings.GymMatchingSkillCount
                     : _settings.EliteMatchingSkillCount;
@@ -87,6 +101,34 @@ namespace Pachimon.Map
                     var instance = GetRequiredInstance(pachimonPool, instanceId, node.NodeId);
                     AssignLeastUsedSkills(instance, candidates, count, usageCounts, random, node.NodeId);
                 }
+            }
+        }
+
+        private void ValidateCandidatePool(IReadOnlyList<SkillAsset> candidates)
+        {
+            var requiredPerType = _settings.EliteMatchingSkillCount + 1;
+            var errors = new List<string>();
+            foreach (AllocationType type in Enum.GetValues(typeof(AllocationType)))
+            {
+                if (type == AllocationType.Unassigned)
+                {
+                    continue;
+                }
+
+                var count = candidates.Count(skill => skill.AllocationType == type);
+                if (count < requiredPerType)
+                {
+                    errors.Add(
+                        $"{type} requires at least {requiredPerType} participating "
+                        + $"Map-assignable Skills, but has {count}.");
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                throw new MapGenerationException(
+                    "Participating Skill candidates are invalid:\n"
+                    + string.Join("\n", errors));
             }
         }
 

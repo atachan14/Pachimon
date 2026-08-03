@@ -15,6 +15,7 @@ namespace Pachimon.UI
         [SerializeField] private PachimonTabView[] _pachimonTabs = Array.Empty<PachimonTabView>();
         private readonly List<UnityAction> _tabActions = new();
         private readonly List<PaneTabNavigationView> _pageNavigations = new();
+        private readonly List<ScrollEdgeIndicator> _scrollIndicators = new();
         private bool _reverseVisualOrder;
 
         public PachimonTabView PachimonTabTemplate =>
@@ -173,6 +174,7 @@ namespace Pachimon.UI
         private void EnsurePageNavigation()
         {
             _pageNavigations.Clear();
+            _scrollIndicators.Clear();
             for (var index = 0; index < _tabPanels.Length; index++)
             {
                 var graphicRect = index == 0
@@ -186,6 +188,10 @@ namespace Pachimon.UI
                         graphicRect,
                         panelRect,
                         gameObject.layer));
+                _scrollIndicators.Add(index > 0
+                    ? ScrollEdgeIndicator.GetOrCreate(
+                        panelRect?.GetComponent<ScrollRect>())
+                    : null);
             }
 
             RefreshPageNavigation();

@@ -64,7 +64,7 @@ MN                    -> HP同様のRun永続Resourceとして追加
 1. `BattleUnitState`へCurrentMNを追加する
 2. Battle開始時にRunのPlayer CurrentMNをSnapshotへ引き継ぐ
 3. Battle ResultでPlayer CurrentHP / CurrentMNをRunへ戻す
-4. TurnCostへSpeedを適用する
+4. 発生と硬直へSpeedを適用する
 5. CooldownへHaste補正を適用する
 6. DamageをSkill指定攻撃Stat、DamageBonus、防御属性値、ResistBonusの順で計算する
 7. True Damageが上記補正をすべて無視することを検証する

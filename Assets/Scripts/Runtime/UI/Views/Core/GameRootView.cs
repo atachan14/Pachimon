@@ -1,11 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Pachimon.App;
 using Pachimon.Battle;
 using Pachimon.Data;
 using Pachimon.Items;
 using Pachimon.Reward;
+using Pachimon.Run;
 using Pachimon.Skills;
+using Pachimon.Passives;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -38,11 +41,11 @@ namespace Pachimon.UI
         private RectTransform _rightDrawerViewport;
         private RectTransform _mapViewport;
         private RectTransform _itemPanelViewport;
-        private RectTransform _abilityDetailViewport;
-        private ItemDetailView _itemDetailView;
-        private AbilityDetailOverlayView _abilityDetailOverlayView;
+        private RectTransform _contentDetailViewport;
+        private ContentDetailOverlayView _contentDetailOverlayView;
         private ItemCatalog _itemCatalog;
         private SkillCatalog _skillCatalog;
+        private PassiveCatalog _passiveCatalog;
         private CanvasGroup _leftDrawerCanvasGroup;
         private CanvasGroup _rightDrawerCanvasGroup;
         private HorizontalLayoutGroup _contentLayout;
@@ -127,7 +130,7 @@ namespace Pachimon.UI
 
             RefreshMapViewportGeometry();
             RefreshItemPanelGeometry();
-            RefreshAbilityDetailGeometry();
+            RefreshContentDetailGeometry();
         }
 
         private void OnDestroy()
@@ -149,7 +152,6 @@ namespace Pachimon.UI
             if (ItemPanelView != null)
             {
                 ItemPanelView.DetailsRequested -= HandleItemDetailsRequested;
-                ItemPanelView.Closed -= HandleItemPanelClosed;
             }
         }
 
@@ -184,19 +186,36 @@ namespace Pachimon.UI
             ItemPanelView?.Bind(inventory, itemCatalog);
         }
 
-        public void BindAbilityDetails(SkillCatalog skillCatalog)
+        public void BindAbilityDetails(
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog)
         {
             _skillCatalog = skillCatalog;
+            _passiveCatalog = passiveCatalog;
             WireAbilityDetailTabs();
         }
 
         public void RefreshItemPanel(bool hideDetails = false)
         {
             ItemPanelView?.Refresh();
-            if (hideDetails)
+            if (hideDetails
+                && _contentDetailOverlayView != null
+                && _contentDetailOverlayView.ShownKind == ContentDetailKind.Item)
             {
-                _itemDetailView?.Hide();
+                _contentDetailOverlayView.Close();
             }
+        }
+
+        public void ShowItemDetails(int itemId)
+        {
+            var item = _itemCatalog?.Get(itemId);
+            if (item == null || _contentDetailOverlayView == null)
+            {
+                return;
+            }
+
+            BringOverlayToFront(_contentDetailViewport);
+            _contentDetailOverlayView.Show(CreateItemDetail(item));
         }
 
         public void ToggleItemPanel()
@@ -417,15 +436,13 @@ namespace Pachimon.UI
             _itemPanelViewport = CreateLayer("ItemPanelViewport", _overlayLayer);
             ItemPanelView = ItemPanelView.CreateRuntime(_itemPanelViewport);
             ItemPanelView.DetailsRequested += HandleItemDetailsRequested;
-            ItemPanelView.Closed += HandleItemPanelClosed;
             ItemPanelView.Close();
-            _itemDetailView = ItemDetailView.CreateRuntime(_leftPaneRect);
-            _abilityDetailViewport = CreateLayer(
-                "AbilityDetailViewport",
+            _contentDetailViewport = CreateLayer(
+                "ContentDetailViewport",
                 _overlayLayer);
-            _abilityDetailOverlayView =
-                AbilityDetailOverlayView.CreateRuntime(_abilityDetailViewport);
-            _abilityDetailOverlayView.Close();
+            _contentDetailOverlayView =
+                ContentDetailOverlayView.CreateRuntime(_contentDetailViewport);
+            _contentDetailOverlayView.Close();
 
             _leftDrawerViewport.gameObject.SetActive(false);
             _rightDrawerViewport.gameObject.SetActive(false);
@@ -668,9 +685,9 @@ namespace Pachimon.UI
                 Mathf.Max(_bodyRect?.rect.height ?? 0f, size.y));
         }
 
-        private void RefreshAbilityDetailGeometry()
+        private void RefreshContentDetailGeometry()
         {
-            if (_abilityDetailViewport == null
+            if (_contentDetailViewport == null
                 || _overlayLayer == null
                 || _mainPaneRect == null)
             {
@@ -679,7 +696,7 @@ namespace Pachimon.UI
 
             if (LayoutMode == LayoutMode.Compact)
             {
-                SetStretch(_abilityDetailViewport);
+                SetStretch(_contentDetailViewport);
             }
             else
             {
@@ -690,19 +707,19 @@ namespace Pachimon.UI
                 var center = (bottomLeft + topRight) * 0.5f;
                 var size = topRight - bottomLeft;
 
-                _abilityDetailViewport.anchorMin = new Vector2(0.5f, 0.5f);
-                _abilityDetailViewport.anchorMax = new Vector2(0.5f, 0.5f);
-                _abilityDetailViewport.pivot = new Vector2(0.5f, 0.5f);
-                _abilityDetailViewport.anchoredPosition = center;
-                _abilityDetailViewport.sizeDelta = new Vector2(
+                _contentDetailViewport.anchorMin = new Vector2(0.5f, 0.5f);
+                _contentDetailViewport.anchorMax = new Vector2(0.5f, 0.5f);
+                _contentDetailViewport.pivot = new Vector2(0.5f, 0.5f);
+                _contentDetailViewport.anchoredPosition = center;
+                _contentDetailViewport.sizeDelta = new Vector2(
                     Mathf.Max(1f, size.x),
                     Mathf.Max(1f, size.y));
             }
 
-            _abilityDetailOverlayView?.SetSlideDistance(
+            _contentDetailOverlayView?.SetSlideDistance(
                 Mathf.Max(
                     _bodyRect?.rect.height ?? 0f,
-                    _abilityDetailViewport.rect.height));
+                    _contentDetailViewport.rect.height));
         }
 
         private void WireAbilityDetailTabs()
@@ -747,45 +764,58 @@ namespace Pachimon.UI
         {
             var content = ability.Kind == PachimonAbilityKind.Skill
                 ? CreateSkillDetail(ability, owner)
-                : CreatePassiveDetail(ability);
-            if (content == null || _abilityDetailOverlayView == null)
+                : CreatePassiveDetail(ability, owner);
+            if (content == null || _contentDetailOverlayView == null)
             {
                 return;
             }
 
-            BringOverlayToFront(_abilityDetailViewport);
-            _abilityDetailOverlayView.Show(content);
+            BringOverlayToFront(_contentDetailViewport);
+            _contentDetailOverlayView.Show(content);
         }
 
-        private AbilityDetailOverlayContent CreateSkillDetail(
+        private ContentDetailOverlayContent CreateSkillDetail(
             PachimonAbilityPreview ability,
             PachimonPreviewContent owner)
         {
             var skill = _skillCatalog?.Get(ability.Id);
             if (skill == null)
             {
-                return new AbilityDetailOverlayContent(
-                    "SKILL",
+                return new ContentDetailOverlayContent(
+                    ContentDetailKind.Skill,
                     ability.DisplayName,
                     $"ID  {ability.Id}",
                     "詳細データが見つかりません。",
                     GameUiPalette.SkillChip);
             }
 
-            return new AbilityDetailOverlayContent(
-                "SKILL",
+            var timing = skill.BaseStartupTicks > 0
+                ? $"発生  {skill.BaseStartupTicks}    硬直  {skill.BaseRecoveryTicks}"
+                : $"硬直  {skill.BaseRecoveryTicks}";
+            return new ContentDetailOverlayContent(
+                ContentDetailKind.Skill,
                 skill.DisplayName,
-                $"消費Tick  {skill.BaseTurnCostTicks}    CD  {skill.BaseCooldownTicks}",
+                $"{timing}    CD  {skill.BaseCooldownTicks}"
+                + $"    MN  {skill.BaseManaCost}",
                 SkillDetailDescriptionFormatter.Format(skill, owner),
                 GameUiPalette.SkillChip);
         }
 
-        private static AbilityDetailOverlayContent CreatePassiveDetail(
-            PachimonAbilityPreview ability)
+        private ContentDetailOverlayContent CreatePassiveDetail(
+            PachimonAbilityPreview ability,
+            PachimonPreviewContent owner)
         {
             var description = "説明未設定";
-            if (PassiveLogicRegistry.TryGetPlaceholderAttribute(
+            if (_passiveCatalog?.Get(ability.Id)
+                is DerivedAdditivePassiveAsset statDefinition)
+            {
+                description = CreateDerivedPassiveDescription(
+                    statDefinition,
+                    owner?.StatCalculation);
+            }
+            else if (PassiveLogicRegistry.TryGetPlaceholderAttribute(
                     ability.Id,
+                    _passiveCatalog,
                     out var attribute))
             {
                 var attributeLabel = GetAttributeLabel(attribute);
@@ -796,12 +826,59 @@ namespace Pachimon.UI
                     + $"{OutgoingAttributeDamagePassiveLogic.DamagePercent - 100}%増加する。";
             }
 
-            return new AbilityDetailOverlayContent(
-                "PASSIVE",
+            return new ContentDetailOverlayContent(
+                ContentDetailKind.Passive,
                 ability.DisplayName,
                 string.Empty,
                 description,
                 GameUiPalette.PassiveChip);
+        }
+
+        private static string CreateDerivedPassiveDescription(
+            DerivedAdditivePassiveAsset definition,
+            StatCalculationResult calculation)
+        {
+            var referenceLabel = GetStatLabel(definition.ReferenceStat);
+            var targetLabel = GetStatLabel(definition.TargetStat);
+            var contribution = calculation?
+                .GetContributions(definition.TargetStat)
+                .FirstOrDefault(item =>
+                    item.Source.SourceId == $"passive:{definition.PassiveId}")?
+                .Value;
+            var actualValue = contribution.HasValue
+                ? $"現在の加算値は{contribution.Value:0.##}。"
+                : string.Empty;
+            return $"{referenceLabel}の{definition.Percent}%を"
+                + $"{targetLabel}へ加算する。{actualValue}";
+        }
+
+        private static string GetStatLabel(PachimonStatType statType)
+        {
+            if (PachimonStatTypeUtility.TryGetAttribute(statType, out var attribute))
+            {
+                var allocationType = (AllocationType)((int)attribute + 1);
+                return AttributeRichText.GetIcon(allocationType)
+                    + GetAttributeLabel(attribute);
+            }
+
+            return statType.ToString();
+        }
+
+        private static ContentDetailOverlayContent CreateItemDetail(ItemAsset item)
+        {
+            var category = item.Category switch
+            {
+                ItemCategory.Pharmacy => "薬局",
+                ItemCategory.Other => "その他",
+                ItemCategory.SkillMachine => "技マシーン",
+                _ => "未分類",
+            };
+            return new ContentDetailOverlayContent(
+                ContentDetailKind.Item,
+                item.DisplayName,
+                $"カテゴリ  {category}    基準価格  {item.BasePrice} Gold",
+                item.Description,
+                GameUiPalette.ItemChip);
         }
 
         private static string GetAllocationTypeLabel(AllocationType type)
@@ -859,22 +936,12 @@ namespace Pachimon.UI
 
         private void HandleItemDetailsRequested(ItemInstance itemInstance)
         {
-            var item = itemInstance != null
-                ? _itemCatalog?.Get(itemInstance.ItemId)
-                : null;
-            _itemDetailView?.Show(item);
-            if (LayoutMode != LayoutMode.Compact || item == null)
+            if (itemInstance == null)
             {
                 return;
             }
 
-            ShowCompactPane(CompactPane.Left);
-            BringOverlayToFront(_itemPanelViewport);
-        }
-
-        private void HandleItemPanelClosed()
-        {
-            _itemDetailView?.Hide();
+            ShowItemDetails(itemInstance.ItemId);
         }
 
         private void ToggleCompactPane(CompactPane pane)
@@ -942,13 +1009,13 @@ namespace Pachimon.UI
                     _itemPanelViewport.GetSiblingIndex());
             }
 
-            if (_abilityDetailOverlayView != null
-                && _abilityDetailOverlayView.IsOpen
-                && _abilityDetailViewport != null)
+            if (_contentDetailOverlayView != null
+                && _contentDetailOverlayView.IsOpen
+                && _contentDetailViewport != null)
             {
                 highestSiblingIndex = Mathf.Max(
                     highestSiblingIndex,
-                    _abilityDetailViewport.GetSiblingIndex());
+                    _contentDetailViewport.GetSiblingIndex());
             }
 
             return candidate.GetSiblingIndex() == highestSiblingIndex;

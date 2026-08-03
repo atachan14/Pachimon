@@ -40,8 +40,6 @@ namespace Pachimon.Run
 
         public HashSet<string> ResolvedNodeIds { get; } = new();
 
-        public HashSet<string> RevealedNodeIds { get; } = new();
-
         public bool TrySetInitialParty(IEnumerable<string> pachimonIds)
         {
             if (IsPartyConfirmed || pachimonIds == null)

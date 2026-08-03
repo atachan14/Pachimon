@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e42cf10274b642a6905306de51225adc, type: 3}
+  m_Name: PassiveCatalog
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.PassiveCatalog
+  _passives:
+  - {fileID: 11400000, guid: 17e3554b105c4039a78ddf63353d3a8c, type: 2}
+  - {fileID: 11400000, guid: 45c47bf3830349108ed2907a9649cc03, type: 2}
+  - {fileID: 11400000, guid: c5d72d5868d24763afcd6034e6b5c156, type: 2}
+  - {fileID: 11400000, guid: 5aa1d4a0e6924359ab86c6db92052896, type: 2}
+  - {fileID: 11400000, guid: 8ed1968fd4a847e4ad793a11112ba374, type: 2}

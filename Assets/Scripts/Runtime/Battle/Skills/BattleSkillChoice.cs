@@ -9,7 +9,9 @@ namespace Pachimon.Battle
             int slotId,
             SkillAsset skill,
             bool isUsable,
-            long cooldownReadyTick)
+            long cooldownReadyTick,
+            bool isCooldownReady,
+            bool hasEnoughMn)
         {
             if (slotId <= 0)
             {
@@ -25,11 +27,15 @@ namespace Pachimon.Battle
             Skill = skill ?? throw new ArgumentNullException(nameof(skill));
             IsUsable = isUsable;
             CooldownReadyTick = cooldownReadyTick;
+            IsCooldownReady = isCooldownReady;
+            HasEnoughMn = hasEnoughMn;
         }
 
         public int SlotId { get; }
         public SkillAsset Skill { get; }
         public bool IsUsable { get; }
         public long CooldownReadyTick { get; }
+        public bool IsCooldownReady { get; }
+        public bool HasEnoughMn { get; }
     }
 }

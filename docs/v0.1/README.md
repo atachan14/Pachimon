@@ -55,7 +55,7 @@ StartNode の本処理は v0.2、Battle の本処理は v0.3 で扱う。ただ�
 
 ## 読む順番
 
-1. [`roadmap.md`](./roadmap.md)
+1. [`../roadmap.md`](../roadmap.md)
 2. [`run-flow.md`](./run-flow.md)
 3. [`map-generation.md`](./map-generation.md)
 4. [`map-data-model.md`](./map-data-model.md)

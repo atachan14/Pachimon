@@ -1,4 +1,5 @@
 using Pachimon.Items;
+using Pachimon.Skills;
 using Pachimon.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -13,6 +14,38 @@ namespace Pachimon.Editor.UI
         private const string CatalogPath = DataFolder + "/ItemCatalog.asset";
         private const string PotionPath = DataFolder + "/Item_001_Potion.asset";
         private const string StonePath = DataFolder + "/Item_002_Stone.asset";
+        private const string BackfireMachinePath =
+            DataFolder + "/Item_10009_TM_Backfire.asset";
+        private const string FireArrowMachinePath =
+            DataFolder + "/Item_10033_TM_FireArrow.asset";
+        private const string CombustionMachinePath =
+            DataFolder + "/Item_10041_TM_Combustion.asset";
+        private const string ElectricExplosionMachinePath =
+            DataFolder + "/Item_10020_TM_ElectricExplosion.asset";
+        private const string AquaShockMachinePath =
+            DataFolder + "/Item_10012_TM_AquaShock.asset";
+        private const string ElectricQuickAttackMachinePath =
+            DataFolder + "/Item_10028_TM_ElectricQuickAttack.asset";
+        private const string ElectromagneticCannonMachinePath =
+            DataFolder + "/Item_10044_TM_ElectromagneticCannon.asset";
+        private const string ChargeMachinePath =
+            DataFolder + "/Item_10036_TM_Charge.asset";
+        private const string BackfireSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_009.asset";
+        private const string FireArrowSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_033.asset";
+        private const string CombustionSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_041.asset";
+        private const string ElectricExplosionSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_020.asset";
+        private const string AquaShockSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_012.asset";
+        private const string ElectricQuickAttackSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_028.asset";
+        private const string ElectromagneticCannonSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_044.asset";
+        private const string ChargeSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_036.asset";
         private const string PotionIconPath = "Assets/Art/Items/Icons/Potion.png";
         private const string StoneIconPath = "Assets/Art/Items/Icons/Stone.png";
 
@@ -51,7 +84,9 @@ namespace Pachimon.Editor.UI
                 ItemIds.Potion,
                 "きずぐすり",
                 potionIcon,
-                "対象の味方パチモンのHPを300回復する。");
+                "対象の味方パチモンのHPを300回復する。",
+                ItemCategory.Pharmacy,
+                300);
             potion.ConfigureHealingForEditor(300, false);
             EditorUtility.SetDirty(potion);
 
@@ -67,12 +102,67 @@ namespace Pachimon.Editor.UI
                 ItemIds.Stone,
                 "石ころ",
                 stoneIcon,
-                "対象の敵パチモンに100の確定ダメージを与える。");
+                "対象の敵パチモンに100の確定ダメージを与える。",
+                ItemCategory.Other,
+                200);
             stone.ConfigureDamageForEditor(100);
             EditorUtility.SetDirty(stone);
 
+            var backfireMachine = ConfigureSkillMachine(
+                BackfireMachinePath,
+                BackfireSkillPath,
+                "技マシーン[バックファイア]",
+                stoneIcon);
+            var fireArrowMachine = ConfigureSkillMachine(
+                FireArrowMachinePath,
+                FireArrowSkillPath,
+                "技マシーン[ファイアアロー]",
+                stoneIcon);
+            var combustionMachine = ConfigureSkillMachine(
+                CombustionMachinePath,
+                CombustionSkillPath,
+                "技マシーン[燃焼]",
+                stoneIcon);
+            var aquaShockMachine = ConfigureSkillMachine(
+                AquaShockMachinePath,
+                AquaShockSkillPath,
+                "技マシーン[アクアショック]",
+                stoneIcon);
+            var electricExplosionMachine = ConfigureSkillMachine(
+                ElectricExplosionMachinePath,
+                ElectricExplosionSkillPath,
+                "技マシーン[電気爆発]",
+                stoneIcon);
+            var electricQuickAttackMachine = ConfigureSkillMachine(
+                ElectricQuickAttackMachinePath,
+                ElectricQuickAttackSkillPath,
+                "技マシーン[電光石火]",
+                stoneIcon);
+            var chargeMachine = ConfigureSkillMachine(
+                ChargeMachinePath,
+                ChargeSkillPath,
+                "技マシーン[充電]",
+                stoneIcon);
+            var electromagneticCannonMachine = ConfigureSkillMachine(
+                ElectromagneticCannonMachinePath,
+                ElectromagneticCannonSkillPath,
+                "技マシーン[電磁砲]",
+                stoneIcon);
+
             Undo.RecordObject(catalog, "Configure Item Catalog");
-            catalog.SetItemsForEditor(new ItemAsset[] { potion, stone });
+            catalog.SetItemsForEditor(new ItemAsset[]
+            {
+                potion,
+                stone,
+                backfireMachine,
+                fireArrowMachine,
+                combustionMachine,
+                aquaShockMachine,
+                electricExplosionMachine,
+                electricQuickAttackMachine,
+                chargeMachine,
+                electromagneticCannonMachine,
+            });
             EditorUtility.SetDirty(catalog);
             AssignCatalogToSceneInstaller(catalog);
             AssetDatabase.SaveAssets();
@@ -197,6 +287,41 @@ namespace Pachimon.Editor.UI
             importer.mipmapEnabled = false;
             importer.alphaIsTransparency = true;
             importer.SaveAndReimport();
+        }
+
+        private static SkillMachineItemAsset ConfigureSkillMachine(
+            string itemPath,
+            string skillPath,
+            string displayName,
+            Sprite icon)
+        {
+            var skill = AssetDatabase.LoadAssetAtPath<SkillAsset>(skillPath);
+            if (skill == null)
+            {
+                throw new System.InvalidOperationException(
+                    $"Skill Machine source Skill is missing: {skillPath}");
+            }
+
+            var item =
+                AssetDatabase.LoadAssetAtPath<SkillMachineItemAsset>(itemPath);
+            if (item == null)
+            {
+                item = ScriptableObject
+                    .CreateInstance<SkillMachineItemAsset>();
+                AssetDatabase.CreateAsset(item, itemPath);
+            }
+
+            Undo.RecordObject(item, "Configure Skill Machine Item");
+            item.ConfigureForEditor(
+                ItemIds.GetSkillMachineItemId(skill.SkillId),
+                displayName,
+                icon,
+                $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
+                ItemCategory.SkillMachine,
+                5000);
+            item.ConfigureSkillForEditor(skill);
+            EditorUtility.SetDirty(item);
+            return item;
         }
     }
 }

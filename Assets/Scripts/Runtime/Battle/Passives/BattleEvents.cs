@@ -54,23 +54,104 @@ namespace Pachimon.Battle
             BattleUnitState source,
             BattleUnitState target,
             PachimonAttribute attribute,
-            int damage)
+            decimal unroundedDamage)
             : base(state, source, target)
         {
-            if (damage <= 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            if (unroundedDamage < 0m)
+            {
+                throw new ArgumentOutOfRangeException(nameof(unroundedDamage));
+            }
+
             Attribute = attribute;
-            Damage = damage;
+            UnroundedDamage = unroundedDamage;
+        }
+
+        public BeforeAttributeDamageEvent(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            DamageCalculationResult calculation)
+            : this(
+                state,
+                source,
+                target,
+                calculation?.Context.Attribute
+                    ?? throw new ArgumentNullException(nameof(calculation)),
+                calculation.UnroundedDamage)
+        {
+            Calculation = calculation;
         }
 
         public PachimonAttribute Attribute { get; }
-        public int Damage { get; private set; }
+        public DamageCalculationResult Calculation { get; }
+        public decimal UnroundedDamage { get; private set; }
 
         public void MultiplyDamage(int percent)
         {
             if (percent < 0) throw new ArgumentOutOfRangeException(nameof(percent));
-            var multiplied = ((long)Damage * percent) / 100L;
-            Damage = (int)Math.Max(1L, Math.Min(multiplied, int.MaxValue));
+            UnroundedDamage *= percent / 100m;
         }
+    }
+
+    public sealed class AttributeDamageAppliedEvent : BattleEvent
+    {
+        public AttributeDamageAppliedEvent(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            DamageCalculationResult calculation,
+            int finalDamage,
+            int appliedDamage)
+            : base(state, source, target)
+        {
+            Calculation = calculation
+                ?? throw new ArgumentNullException(nameof(calculation));
+            if (finalDamage < 0) throw new ArgumentOutOfRangeException(nameof(finalDamage));
+            if (appliedDamage < 0) throw new ArgumentOutOfRangeException(nameof(appliedDamage));
+            FinalDamage = finalDamage;
+            AppliedDamage = appliedDamage;
+        }
+
+        public DamageCalculationResult Calculation { get; }
+        public PachimonAttribute Attribute => Calculation.Context.Attribute;
+        public int FinalDamage { get; }
+        public int AppliedDamage { get; }
+    }
+
+    public sealed class AttackReceivedEvent : BattleEvent
+    {
+        public AttackReceivedEvent(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            DamageOriginKind originKind,
+            int originId,
+            bool isTrueDamage,
+            PachimonAttribute? attribute,
+            int finalDamage,
+            int appliedDamage)
+            : base(state, source, target)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            if (originId <= 0) throw new ArgumentOutOfRangeException(nameof(originId));
+            if (finalDamage < 0) throw new ArgumentOutOfRangeException(nameof(finalDamage));
+            if (appliedDamage < 0) throw new ArgumentOutOfRangeException(nameof(appliedDamage));
+
+            OriginKind = originKind;
+            OriginId = originId;
+            IsTrueDamage = isTrueDamage;
+            Attribute = attribute;
+            FinalDamage = finalDamage;
+            AppliedDamage = appliedDamage;
+        }
+
+        public DamageOriginKind OriginKind { get; }
+        public int OriginId { get; }
+        public bool IsTrueDamage { get; }
+        public PachimonAttribute? Attribute { get; }
+        public int FinalDamage { get; }
+        public int AppliedDamage { get; }
     }
 
     public sealed class SkillResolvedEvent : BattleEvent

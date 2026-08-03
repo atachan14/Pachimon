@@ -19,13 +19,15 @@ RightPane
    │  │  └─ TabContent
    │  │     ├─ TrainerTab
    │  │     └─ PachimonTab x 3
+   │  ├─ CityNodeWindow
+   │  │  └─ Category Accordion
    │  └─ SimpleNodeWindow
    └─ SelectionFooter
       ├─ CancelButton
       └─ ConfirmButton
 ```
 
-`CityNodeWindow`や`EventNodeWindow`は、その表示内容が固まった段階で`WindowHost`へ追加する。現時点では`SimpleNodeWindow`で仮表示する。
+`CityNodeWindow`はMap上での事前閲覧とCity滞在中の購入に共用する。商品はCategoryごとのAccordionへまとめる。`EventNodeWindow`は表示内容が固まるまで`SimpleNodeWindow`で仮表示する。Cityの詳細は[`../v0.7/city-spec.md`](../v0.7/city-spec.md)を参照する。
 
 ## Footer
 
@@ -41,10 +43,9 @@ RightPane
 
 - Trainer: 肩書、名前、RewardElement 2枠、獲得Gold、グラフィック
 - Pachimon 1-3: グラフィック、CurrentHP / MaxHP、CurrentMN / MaxMN、8属性、Speed、DamageBonus、ResistBonus、Skill、Passive
-- Pachimon用の3つのTab名には各Pachimonの名前を表示し、未公開時は`?`とする
-- Pachimon情報は、現在Node、次に進行可能なNode、一度でも進行可能になったNode、通過済みNodeで公開する
-- 四天王NodeのPachimon情報はRun開始時から公開する
-- 未到達かつ進行候補ではないNodeのPachimon情報は`?`で表示する
+- Pachimon用の3つのTab名には各Pachimonの名前を表示する
+- Map上のBattle、Gym、Elite Nodeでは、到達状況にかかわらずTrainer/Pachimon情報を常に公開する
+- 進行できないNodeでも情報は閲覧できるが、決定操作は表示しない
 - 通過済みNodeは情報閲覧のみ可能とし、決定 / キャンセルFooterを表示しない
 
 各Tabの本文は個別の`ScrollRect`内に置く。TabBarとFooterはScroll対象に含めない。
@@ -105,13 +106,10 @@ PachimonTab (ScrollRect)
 - 状態異常は内容数と利用可能幅に応じて折り返す
 - PassiveはSkillと同じ要素サイズ・3columnとし、所持数に応じて行を追加する
 - 状態異常がない場合は`なし`を表示する
-- 未公開時は状態異常欄に`?`を表示する
 - SkillSectionとPassiveSectionは背景色とBorderで区切る
 - BattleState接続前はRun中のCurrentHP / CurrentMNを表示する
 
-未公開Pachimonは項目名を残し、値をすべて`?`にする。公開可否はViewで判断せず、Controller側から`PachimonPreviewContent.IsRevealed`として渡す。
-
-Map上の全Nodeは情報を閲覧できる。敵Pachimon情報は、一度でも進行可能になったNodeでは、その後に別ルートを選んでも公開状態を維持する。未到達かつ一度も進行可能になっていないNodeは3体とも非公開表示にする。ただし四天王Nodeは例外として最初から公開する。
+Map上の全Nodeは情報を閲覧できる。ControllerはBattle、Gym、Elite Nodeの敵Pachimonについて、常に公開済みの`PachimonPreviewContent`をViewへ渡す。
 
 進行可能でないNodeを閲覧している間はFooterを非表示にし、決定操作を受け付けない。Map上での仮選択強調は表示するが、`RunState.currentNodeId`は変更しない。
 

@@ -4,6 +4,7 @@ using Pachimon.Data;
 using Pachimon.Trainer;
 using Pachimon.Skills;
 using Pachimon.Items;
+using Pachimon.Passives;
 using UnityEngine;
 
 namespace Pachimon.Run
@@ -24,12 +25,15 @@ namespace Pachimon.Run
             LeagueGateScreen leagueGateScreen,
             PachimonCatalog pachimonCatalog,
             SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog,
             ItemCatalog itemCatalog,
             TrainerStyleCatalog trainerStyleCatalog,
             TrainerNameCatalog trainerNameCatalog,
             string playerName)
         {
             var runSeed = Random.Range(100000, 999999);
+            var passiveStatModifierRegistry =
+                new PassiveStatModifierRegistry(passiveCatalog);
 
             var runState = new RunState(runSeed, playerName)
             {
@@ -41,6 +45,7 @@ namespace Pachimon.Run
 
             var mapGenerator = new MapGenerator(
                 skillCatalog,
+                itemCatalog,
                 trainerStyleCatalog,
                 trainerNameCatalog);
             var runMap = mapGenerator.Generate(runSeed, pachimonPool);
@@ -64,6 +69,8 @@ namespace Pachimon.Run
                 runMap,
                 pachimonCatalog,
                 skillCatalog,
+                passiveCatalog,
+                passiveStatModifierRegistry,
                 itemCatalog,
                 trainerStyleCatalog,
                 trainerNameCatalog,

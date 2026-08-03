@@ -28,7 +28,9 @@ namespace Pachimon.Battle
         {
             if (battleEvent is not BeforeAttributeDamageEvent damageEvent
                 || !ReferenceEquals(damageEvent.Source, Owner)
-                || damageEvent.Attribute != _attribute)
+                || damageEvent.Attribute != _attribute
+                || damageEvent.Calculation?.Context.ApplyOutgoingModifiers
+                    == false)
             {
                 return;
             }

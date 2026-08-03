@@ -20,8 +20,8 @@
 
 ## 詳細表示
 
-- ExpandedではItem IconのClickでLeftPaneへ詳細を表示する
-- CompactではItem IconのLong PressでLeftPaneへ詳細を表示する
+- ExpandedではItem IconのClickで共通の詳細Overlayを表示する
+- CompactではItem IconのLong Pressで共通の詳細Overlayを表示する
 - CompactでDragを始めてもLeftPaneを自動展開しない
 - Compactでは使用前にLeftPaneの対象Pachimon Tabを選択しておく
 - Compact向けの別操作は、必要になった段階で詳細画面からの使用などを検討する
@@ -85,6 +85,14 @@ Battle中の効果は進行中の`BattleUnitState`へ反映し、Player側のHP�
 | いいきずぐすり | 味方Pachimon | HPを1000回復 |
 | 赤巻紙 | 味方Pachimon | Fireを恒久的に50増加 |
 | 赤ピーマン | 味方Pachimon | 統合後は赤巻紙と同じ効果になるため、別効果への変更または廃止を検討 |
-| 技マシーン[xx] | 味方Pachimon | 対象Skillを1Slot習得 |
 | 石ころ | Enemy Pachimon | 100の確定ダメージ |
 | 着火剤 | 味方側 | 500tickの間、与えるFireダメージを50%増加 |
+
+## 技マシーン
+
+- 対象の味方Pachimonが、技マシーンに設定されたSkillを1Slot習得する
+- 同じSkillの重複習得を許可する
+- Skill Slot上限は9
+- Battle外ではRun個体へ、Battle中はRun個体とBattle個体の両方へ反映する
+- Item IDは`10000 + Skill ID`とする
+- v0.8のSkill実働確認では、実装対象Skillの技マシーンを初期Itemとして配布できる

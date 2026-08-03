@@ -1,45 +1,100 @@
 using System;
+using Pachimon.Run;
 
 namespace Pachimon.Battle
 {
     public static class BattleTickMath
     {
-        public static int GetEffectiveTurnCost(int baseTurnCost, int speed)
+        public static decimal GetProgressPerTick(int timingStat)
         {
-            if (baseTurnCost <= 0)
+            return 1m / SignedStatMath.ReductionMultiplier(timingStat);
+        }
+
+        public static int GetTicksToComplete(
+            decimal remainingWork,
+            int timingStat)
+        {
+            if (remainingWork <= 0m)
             {
-                throw new ArgumentOutOfRangeException(nameof(baseTurnCost));
+                return 0;
             }
 
-            return ApplySpeed(baseTurnCost, speed);
+            return SignedStatMath.CeilPositive(
+                remainingWork / GetProgressPerTick(timingStat));
+        }
+
+        public static int GetEffectiveStartup(int baseStartup, int speed)
+        {
+            return GetEffectiveStartup(baseStartup, speed, 1m);
+        }
+
+        public static int GetEffectiveStartup(
+            int baseStartup,
+            int speed,
+            decimal skillMultiplier)
+        {
+            if (baseStartup < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(baseStartup));
+            }
+
+            return baseStartup == 0
+                ? 0
+                : ApplyTimingStat(baseStartup, speed, skillMultiplier);
+        }
+
+        public static int GetEffectiveRecovery(int baseRecovery, int speed)
+        {
+            return GetEffectiveRecovery(baseRecovery, speed, 1m);
+        }
+
+        public static int GetEffectiveRecovery(
+            int baseRecovery,
+            int speed,
+            decimal skillMultiplier)
+        {
+            if (baseRecovery <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(baseRecovery));
+            }
+
+            return ApplyTimingStat(baseRecovery, speed, skillMultiplier);
         }
 
         public static int GetEffectiveCooldown(int baseCooldown, int haste)
+        {
+            return GetEffectiveCooldown(baseCooldown, haste, 1m);
+        }
+
+        public static int GetEffectiveCooldown(
+            int baseCooldown,
+            int haste,
+            decimal skillMultiplier)
         {
             if (baseCooldown < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(baseCooldown));
             }
 
-            if (haste < 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(haste));
-            }
-
-            return baseCooldown == 0 ? 0 : ApplySpeed(baseCooldown, haste);
+            return baseCooldown == 0
+                ? 0
+                : ApplyTimingStat(baseCooldown, haste, skillMultiplier);
         }
 
-        private static int ApplySpeed(int baseTicks, int speed)
+        private static int ApplyTimingStat(
+            int baseTicks,
+            int stat,
+            decimal skillMultiplier)
         {
-            if (speed < 0)
+            if (skillMultiplier <= 0m)
             {
-                throw new ArgumentOutOfRangeException(nameof(speed));
+                throw new ArgumentOutOfRangeException(nameof(skillMultiplier));
             }
 
-            var denominator = 100L + speed;
-            var numerator = (long)baseTicks * 100L;
-            var result = (numerator + denominator - 1L) / denominator;
-            return (int)Math.Max(1L, Math.Min(result, int.MaxValue));
+            var unroundedTicks = baseTicks
+                * SignedStatMath.ReductionMultiplier(stat)
+                * skillMultiplier;
+            return SignedStatMath.CeilPositive(unroundedTicks);
         }
     }
 }

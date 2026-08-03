@@ -11,16 +11,19 @@ namespace Pachimon.Skills
         [SerializeField] private string _displayName;
         [SerializeField] private AllocationType _allocationType;
         [SerializeField] private bool _isMapAssignable;
-        [SerializeField, Min(0)] private int _baseTurnCostTicks;
+        [SerializeField, Min(0)] private int _baseRecoveryTicks;
         [SerializeField, Min(0)] private int _baseCooldownTicks;
+        [SerializeField, Min(0)] private int _baseManaCost;
         [SerializeField, TextArea] private string _description;
 
         public int SkillId => _skillId;
         public string DisplayName => _displayName;
         public AllocationType AllocationType => _allocationType;
         public bool IsMapAssignable => _isMapAssignable;
-        public int BaseTurnCostTicks => _baseTurnCostTicks;
+        public virtual int BaseStartupTicks => 0;
+        public int BaseRecoveryTicks => _baseRecoveryTicks;
         public int BaseCooldownTicks => _baseCooldownTicks;
+        public virtual int BaseManaCost => _baseManaCost;
         public virtual string Description => _description;
 
         public virtual void CollectValidationErrors(ICollection<string> errors)
@@ -38,14 +41,24 @@ namespace Pachimon.Skills
                 errors.Add($"Skill {_skillId}: Map-assignable Skill requires an Allocation Type.");
             }
 
-            if (_baseTurnCostTicks <= 0)
+            if (BaseStartupTicks < 0)
             {
-                errors.Add($"Skill {_skillId}: Turn Cost must be positive.");
+                errors.Add($"Skill {_skillId}: Startup cannot be negative.");
+            }
+
+            if (_baseRecoveryTicks <= 0)
+            {
+                errors.Add($"Skill {_skillId}: Recovery must be positive.");
             }
 
             if (_baseCooldownTicks < 0)
             {
                 errors.Add($"Skill {_skillId}: Cooldown cannot be negative.");
+            }
+
+            if (BaseManaCost < 0)
+            {
+                errors.Add($"Skill {_skillId}: MN Cost cannot be negative.");
             }
         }
 
@@ -55,16 +68,18 @@ namespace Pachimon.Skills
             string displayName,
             AllocationType allocationType,
             bool isMapAssignable,
-            int baseTurnCostTicks,
+            int baseRecoveryTicks,
             int baseCooldownTicks,
-            string description)
+            string description,
+            int baseManaCost = 0)
         {
             _skillId = skillId;
             _displayName = displayName;
             _allocationType = allocationType;
             _isMapAssignable = isMapAssignable;
-            _baseTurnCostTicks = baseTurnCostTicks;
+            _baseRecoveryTicks = baseRecoveryTicks;
             _baseCooldownTicks = baseCooldownTicks;
+            _baseManaCost = baseManaCost;
             _description = description;
         }
 #endif

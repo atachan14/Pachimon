@@ -15,6 +15,7 @@ namespace Pachimon.Data
         [SerializeField] private AllocationType _allocationType;
         [SerializeField] private int _fixedSkillId;
         [SerializeField] private int _passiveId;
+        [SerializeField] private bool _isRunEnabled = true;
 
         public PachimonSpeciesDefinition(
             int speciesId,
@@ -23,7 +24,8 @@ namespace Pachimon.Data
             Sprite backSprite,
             AllocationType allocationType,
             int fixedSkillId,
-            int passiveId)
+            int passiveId,
+            bool isRunEnabled = true)
         {
             _speciesId = speciesId;
             _displayName = displayName;
@@ -32,6 +34,7 @@ namespace Pachimon.Data
             _allocationType = allocationType;
             _fixedSkillId = fixedSkillId;
             _passiveId = passiveId;
+            _isRunEnabled = isRunEnabled;
         }
 
         public int SpeciesId => _speciesId;
@@ -41,6 +44,7 @@ namespace Pachimon.Data
         public AllocationType AllocationType => _allocationType;
         public int FixedSkillId => _fixedSkillId;
         public int PassiveId => _passiveId;
+        public bool IsRunEnabled => _isRunEnabled;
 
 #if UNITY_EDITOR
         public bool SetGraphicsForEditor(Sprite frontSprite, Sprite backSprite)
@@ -132,6 +136,17 @@ namespace Pachimon.Data
 
             const int typeCount = 8;
             _allocationType = (AllocationType)(((_speciesId - 1) % typeCount) + 1);
+            return true;
+        }
+
+        public bool SetRunEnabledForEditor(bool isRunEnabled)
+        {
+            if (_isRunEnabled == isRunEnabled)
+            {
+                return false;
+            }
+
+            _isRunEnabled = isRunEnabled;
             return true;
         }
 #endif

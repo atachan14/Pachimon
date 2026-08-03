@@ -158,12 +158,11 @@
 - ID帯は判定ロジックに使わず、技マシンは通常Skillも限定Skillも参照可能とする
 - `わるあがき`はID 2000のMap振り分け対象外Skillとする
 
-### D-020: NodeのPachimon情報公開状態をRunStateへ保持
+### D-020: Map上の全Node情報をRun開始時から公開
 
-- 一度でも進行可能になったNodeは、選択せずに別ルートへ進んだ後もPachimon情報を公開する
-- 公開済みNodeは`RunState.revealedNodeIds`へ保持し、攻略済みの`resolvedNodeIds`とは分離する
-- Cityの片側が公開された場合は、同じCity Groupの2Nodeをまとめて公開する
-- 四天王NodeはRun開始時からPachimon情報を公開する
+- Battle、Gym、Elite NodeのTrainer/Pachimon情報は、到達状況にかかわらず常に閲覧可能とする
+- 情報の閲覧可否とNodeへの進行可否は分離し、進行可能なNodeだけ決定操作を表示する
+- 公開状態は変化しないため、`RunState`に`revealedNodeIds`を保持しない
 
 ### D-021: Statを14種へ再構成する
 

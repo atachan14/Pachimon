@@ -4,7 +4,7 @@
 
 1. [完了] `RestSpotRecoveryService`を作る
 2. [要更新] Effective MaxHP / MaxMN基準の割合回復を実装する
-3. [完了] 端数切り上げと最大HP Clampを実装する
+3. [完了] 切り捨て後の最低1保証と最大HP Clampを実装する
 4. [完了] 復活数と回復量を結果として返す
 
 ## Phase 2: Node接続
@@ -18,7 +18,7 @@
 
 1. HPが減った3体をそれぞれ50%回復できる
 2. CurrentHPが0の個体が復活する
-3. Effective MaxHPが奇数なら回復量を切り上げる
+3. Effective MaxHPが奇数なら回復量を切り捨てる
 4. Effective MaxHPを超えて回復しない
 5. 全快状態でも進行できる
 6. 結果確認前にNodeが完了しない

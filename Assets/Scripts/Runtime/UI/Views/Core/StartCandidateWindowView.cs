@@ -49,6 +49,7 @@ namespace Pachimon.UI
         private Action<int> _onTabSelected;
         private int _selectedIndex;
         private PaneTabNavigationView _pageNavigation;
+        private ScrollEdgeIndicator _scrollIndicator;
 
         public void Initialize(PachimonTabView detailTemplate)
         {
@@ -70,6 +71,8 @@ namespace Pachimon.UI
             _detailView = Instantiate(detailTemplate, root, false);
             _detailView.name = "CandidateDetail";
             _detailView.gameObject.SetActive(true);
+            _scrollIndicator = ScrollEdgeIndicator.GetOrCreate(
+                _detailView.GetComponent<ScrollRect>());
             ApplyLayoutMode(LayoutMode.Expanded);
         }
 

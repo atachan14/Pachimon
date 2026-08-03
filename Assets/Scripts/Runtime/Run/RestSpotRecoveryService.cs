@@ -31,6 +31,7 @@ namespace Pachimon.Run
         public static RestSpotRecoveryResult RecoverPlayerParty(
             RunState runState,
             RunPachimonPool pachimonPool,
+            PassiveStatModifierRegistry passiveStatModifierRegistry,
             int healPercent)
         {
             if (runState == null)
@@ -41,6 +42,11 @@ namespace Pachimon.Run
             if (pachimonPool == null)
             {
                 throw new ArgumentNullException(nameof(pachimonPool));
+            }
+
+            if (passiveStatModifierRegistry == null)
+            {
+                throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
             }
 
             if (healPercent <= 0 || healPercent > 100)
@@ -63,7 +69,11 @@ namespace Pachimon.Run
             var totalRestoredMn = 0;
             foreach (var instance in party)
             {
-                var effectiveStats = runState.PlayerModifiers.ApplyTo(instance.Stats);
+                var effectiveStats = PachimonStatService.Calculate(
+                    instance.Stats,
+                    runState.PlayerModifiers,
+                    instance.PassiveIds,
+                    passiveStatModifierRegistry);
                 var effectiveMaxHp = effectiveStats.MaxHp;
                 var healAmount = CalculateHealAmount(effectiveMaxHp, healPercent);
                 var previousHp = Math.Min(instance.CurrentHp, effectiveMaxHp);
@@ -109,7 +119,12 @@ namespace Pachimon.Run
             }
 
             var numerator = checked((long)effectiveMaxHp * healPercent);
-            return checked((int)((numerator + 99L) / 100L));
+            if (numerator <= 0L)
+            {
+                return 0;
+            }
+
+            return checked((int)Math.Max(1L, numerator / 100L));
         }
     }
 }

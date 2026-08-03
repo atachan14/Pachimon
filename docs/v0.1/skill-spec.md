@@ -15,7 +15,7 @@ skillId
 displayName
 allocationType
 isMapAssignable
-baseTurnCostTicks
+baseRecoveryTicks
 baseCooldownTicks
 description
 ```
@@ -24,7 +24,9 @@ description
 - `isMapAssignable = true`はランダム振り分けとType一致振り分けの両方へ参加する
 - Map振り分け対象Skillは必ず`allocationType`を持つ
 - Map振り分け対象外Skillは`Unassigned`を許可する
-- `baseTurnCostTicks`は使用後、使用者が次のTurnを得るまでの基本Tickとする
+- `baseRecoveryTicks`は効果解決後、使用者が次のTurnを得るまでの基本Tickとする
+- 発生を持つSkillだけ、固有Assetで`baseStartupTicks`を定義する
+- 発生が0のSkillは即時解決し、仕様書とUIでは発生を省略する
 - `baseCooldownTicks`は同じSkillが再使用可能になるまでの基本Tickとする
 - MN消費量は共通Asset項目へ固定せず、必要なSkillの個別Logic / Assetで定義する
 - 現行の基本SkillはMNを消費しない

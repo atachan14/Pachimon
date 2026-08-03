@@ -26,7 +26,7 @@ BattleのDomainを先に完成させ、Presentationは後から接続する。�
 ## Phase 3: Timeline
 
 1. [完了] CurrentTickとNextTurnTickを実装する
-2. [完了] SpeedのEffective TurnCostを実装する
+2. [完了] SpeedのEffective Recoveryを実装する
 3. [完了] Hasteを個体Statとして追加し、Cooldownへ適用する
 4. [完了] Seed付きTie Priorityを実装する
 5. [完了] 戦闘不能Unitを行動Queueから除外する
@@ -47,6 +47,7 @@ BattleのDomainを先に完成させ、Presentationは後から接続する。�
 3. [完了] Skill解決とCooldown設定を接続する
 4. [完了] 戦闘不能と勝敗を判定する
 5. [完了] 3対3をDomainだけで最後まで進行できるようにする
+6. [完了] Startup予約、発生待ち、不発、Recovery予約を実装する
 
 ## Phase 6: Passive Event
 

@@ -8,7 +8,8 @@
 - Effective MaxHPはRun中に取得したModを含む
 - Effective MaxMNもRun中に取得したModを含む
 - Effective MaxHPを超えた分は切り捨てて全快で止める
-- 割合計算の端数は切り上げる
+- 割合計算の途中では端数を維持し、回復量の確定時に切り捨てる
+- 正の割合回復は最低1回復を保証する
 - CurrentHPが0のPachimonも同じ計算で復活する
 - Battle中だけの状態異常、Cooldown、Stat変化は対象外とする
 

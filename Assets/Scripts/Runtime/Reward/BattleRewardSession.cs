@@ -21,6 +21,7 @@ namespace Pachimon.Reward
         private readonly RunPachimonPool _pachimonPool;
         private readonly NodeReward _nodeReward;
         private readonly ModValueSettings _settings;
+        private readonly PassiveStatModifierRegistry _passiveStatModifierRegistry;
         private readonly PachimonInstance[] _playerParty;
         private readonly HashSet<BattleRewardSlot> _claimedSlots = new();
 
@@ -28,6 +29,7 @@ namespace Pachimon.Reward
             RunState runState,
             RunPachimonPool pachimonPool,
             NodeReward nodeReward,
+            PassiveStatModifierRegistry passiveStatModifierRegistry,
             ModValueSettings settings = null)
         {
             _runState = runState ?? throw new ArgumentNullException(nameof(runState));
@@ -35,6 +37,8 @@ namespace Pachimon.Reward
                 ?? throw new ArgumentNullException(nameof(pachimonPool));
             _nodeReward = nodeReward
                 ?? throw new ArgumentNullException(nameof(nodeReward));
+            _passiveStatModifierRegistry = passiveStatModifierRegistry
+                ?? throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
             _settings = settings != null ? settings : ModValueSettings.RuntimeDefault;
             _playerParty = runState.PlayerPachimonIds
                 .Select(GetRequiredPachimon)
@@ -182,14 +186,16 @@ namespace Pachimon.Reward
                         _runState.PlayerModifiers,
                         _playerParty,
                         PachimonStatType.MaxHp,
-                        amount);
+                        amount,
+                        _passiveStatModifierRegistry);
                     break;
                 case RewardElementKind.MaxMn:
                     TrainerModifierService.AddStatModifier(
                         _runState.PlayerModifiers,
                         _playerParty,
                         PachimonStatType.MaxMn,
-                        amount);
+                        amount,
+                        _passiveStatModifierRegistry);
                     break;
                 case RewardElementKind.BonusGold:
                     _runState.Gold = checked(_runState.Gold + amount);
@@ -208,7 +214,8 @@ namespace Pachimon.Reward
                 _runState.PlayerModifiers,
                 _playerParty,
                 statType,
-                amount);
+                amount,
+                _passiveStatModifierRegistry);
         }
 
         private static PachimonStatType GetAttributeStat(PachimonAttribute? attribute)

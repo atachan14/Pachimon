@@ -20,6 +20,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 1
     _passiveId: 1
+    _isRunEnabled: 1
   - _speciesId: 2
     _displayName: "\u30D1\u30C1\u30AC\u30E1"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -27,6 +28,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 2
     _passiveId: 2
+    _isRunEnabled: 1
   - _speciesId: 3
     _displayName: "\u30D1\u30C1\u30AE\u30C0\u30CD"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -34,6 +36,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 3
     _passiveId: 3
+    _isRunEnabled: 1
   - _speciesId: 4
     _displayName: "\u30D1\u30C1\u30C1\u30E5\u30A6"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -41,6 +44,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 4
     _passiveId: 4
+    _isRunEnabled: 1
   - _speciesId: 5
     _displayName: "\u30D1\u30C1\u30E0\u30B7"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -48,6 +52,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 5
     _passiveId: 5
+    _isRunEnabled: 1
   - _speciesId: 6
     _displayName: "\u30D1\u30C1\u30B4\u30AA\u30EA"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -55,6 +60,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 6
     _passiveId: 6
+    _isRunEnabled: 1
   - _speciesId: 7
     _displayName: "\u30D1\u30C1\u30AB\u30BC"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -62,6 +68,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 7
     _passiveId: 7
+    _isRunEnabled: 1
   - _speciesId: 8
     _displayName: "\u30D1\u30C1\u30EA\u30E5\u30A6"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -69,6 +76,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 8
     _passiveId: 8
+    _isRunEnabled: 1
   - _speciesId: 9
     _displayName: "\u708E002"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -76,6 +84,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 9
     _passiveId: 9
+    _isRunEnabled: 1
   - _speciesId: 10
     _displayName: "\u6C34002"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -83,6 +92,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 10
     _passiveId: 10
+    _isRunEnabled: 1
   - _speciesId: 11
     _displayName: "\u8349002"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -90,6 +100,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 11
     _passiveId: 11
+    _isRunEnabled: 1
   - _speciesId: 12
     _displayName: "\u96FB002"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -97,6 +108,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 12
     _passiveId: 12
+    _isRunEnabled: 1
   - _speciesId: 13
     _displayName: "\u6BD2002"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -104,6 +116,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 13
     _passiveId: 13
+    _isRunEnabled: 1
   - _speciesId: 14
     _displayName: "\u6C37002"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -111,6 +124,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 14
     _passiveId: 14
+    _isRunEnabled: 1
   - _speciesId: 15
     _displayName: "\u98A8002"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -118,6 +132,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 15
     _passiveId: 15
+    _isRunEnabled: 1
   - _speciesId: 16
     _displayName: "\u7ADC002"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -125,6 +140,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 16
     _passiveId: 16
+    _isRunEnabled: 1
   - _speciesId: 17
     _displayName: "\u708E003"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -132,6 +148,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 17
     _passiveId: 17
+    _isRunEnabled: 1
   - _speciesId: 18
     _displayName: "\u6C34003"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -139,6 +156,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 18
     _passiveId: 18
+    _isRunEnabled: 1
   - _speciesId: 19
     _displayName: "\u8349003"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -146,6 +164,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 19
     _passiveId: 19
+    _isRunEnabled: 1
   - _speciesId: 20
     _displayName: "\u96FB003"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -153,6 +172,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 20
     _passiveId: 20
+    _isRunEnabled: 1
   - _speciesId: 21
     _displayName: "\u6BD2003"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -160,6 +180,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 21
     _passiveId: 21
+    _isRunEnabled: 1
   - _speciesId: 22
     _displayName: "\u6C37003"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -167,6 +188,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 22
     _passiveId: 22
+    _isRunEnabled: 1
   - _speciesId: 23
     _displayName: "\u98A8003"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -174,6 +196,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 23
     _passiveId: 23
+    _isRunEnabled: 1
   - _speciesId: 24
     _displayName: "\u7ADC003"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -181,6 +204,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 24
     _passiveId: 24
+    _isRunEnabled: 1
   - _speciesId: 25
     _displayName: "\u708E004"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -188,6 +212,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 25
     _passiveId: 25
+    _isRunEnabled: 1
   - _speciesId: 26
     _displayName: "\u6C34004"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -195,6 +220,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 26
     _passiveId: 26
+    _isRunEnabled: 1
   - _speciesId: 27
     _displayName: "\u8349004"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -202,6 +228,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 27
     _passiveId: 27
+    _isRunEnabled: 1
   - _speciesId: 28
     _displayName: "\u96FB004"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -209,6 +236,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 28
     _passiveId: 28
+    _isRunEnabled: 1
   - _speciesId: 29
     _displayName: "\u6BD2004"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -216,6 +244,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 29
     _passiveId: 29
+    _isRunEnabled: 1
   - _speciesId: 30
     _displayName: "\u6C37004"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -223,6 +252,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 30
     _passiveId: 30
+    _isRunEnabled: 1
   - _speciesId: 31
     _displayName: "\u98A8004"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -230,6 +260,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 31
     _passiveId: 31
+    _isRunEnabled: 1
   - _speciesId: 32
     _displayName: "\u7ADC004"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -237,6 +268,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 32
     _passiveId: 32
+    _isRunEnabled: 1
   - _speciesId: 33
     _displayName: "\u708E005"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -244,6 +276,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 33
     _passiveId: 33
+    _isRunEnabled: 1
   - _speciesId: 34
     _displayName: "\u6C34005"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -251,6 +284,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 34
     _passiveId: 34
+    _isRunEnabled: 1
   - _speciesId: 35
     _displayName: "\u8349005"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -258,6 +292,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 35
     _passiveId: 35
+    _isRunEnabled: 1
   - _speciesId: 36
     _displayName: "\u96FB005"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -265,6 +300,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 36
     _passiveId: 36
+    _isRunEnabled: 1
   - _speciesId: 37
     _displayName: "\u6BD2005"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -272,6 +308,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 37
     _passiveId: 37
+    _isRunEnabled: 1
   - _speciesId: 38
     _displayName: "\u6C37005"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -279,6 +316,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 38
     _passiveId: 38
+    _isRunEnabled: 1
   - _speciesId: 39
     _displayName: "\u98A8005"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -286,6 +324,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 39
     _passiveId: 39
+    _isRunEnabled: 1
   - _speciesId: 40
     _displayName: "\u7ADC005"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -293,6 +332,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 40
     _passiveId: 40
+    _isRunEnabled: 1
   - _speciesId: 41
     _displayName: "\u708E006"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -300,6 +340,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 41
     _passiveId: 41
+    _isRunEnabled: 1
   - _speciesId: 42
     _displayName: "\u6C34006"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -307,6 +348,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 42
     _passiveId: 42
+    _isRunEnabled: 1
   - _speciesId: 43
     _displayName: "\u8349006"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -314,6 +356,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 43
     _passiveId: 43
+    _isRunEnabled: 1
   - _speciesId: 44
     _displayName: "\u96FB006"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -321,6 +364,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 44
     _passiveId: 44
+    _isRunEnabled: 1
   - _speciesId: 45
     _displayName: "\u6BD2006"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -328,6 +372,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 45
     _passiveId: 45
+    _isRunEnabled: 1
   - _speciesId: 46
     _displayName: "\u6C37006"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -335,6 +380,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 46
     _passiveId: 46
+    _isRunEnabled: 1
   - _speciesId: 47
     _displayName: "\u98A8006"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -342,6 +388,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 47
     _passiveId: 47
+    _isRunEnabled: 1
   - _speciesId: 48
     _displayName: "\u7ADC006"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -349,6 +396,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 48
     _passiveId: 48
+    _isRunEnabled: 1
   - _speciesId: 49
     _displayName: "\u708E007"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -356,6 +404,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 49
     _passiveId: 49
+    _isRunEnabled: 1
   - _speciesId: 50
     _displayName: "\u6C34007"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -363,6 +412,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 50
     _passiveId: 50
+    _isRunEnabled: 1
   - _speciesId: 51
     _displayName: "\u8349007"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -370,6 +420,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 51
     _passiveId: 51
+    _isRunEnabled: 1
   - _speciesId: 52
     _displayName: "\u96FB007"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -377,6 +428,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 52
     _passiveId: 52
+    _isRunEnabled: 1
   - _speciesId: 53
     _displayName: "\u6BD2007"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -384,6 +436,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 53
     _passiveId: 53
+    _isRunEnabled: 1
   - _speciesId: 54
     _displayName: "\u6C37007"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -391,6 +444,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 54
     _passiveId: 54
+    _isRunEnabled: 1
   - _speciesId: 55
     _displayName: "\u98A8007"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -398,6 +452,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 55
     _passiveId: 55
+    _isRunEnabled: 1
   - _speciesId: 56
     _displayName: "\u7ADC007"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -405,6 +460,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 56
     _passiveId: 56
+    _isRunEnabled: 1
   - _speciesId: 57
     _displayName: "\u708E008"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -412,6 +468,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 57
     _passiveId: 57
+    _isRunEnabled: 1
   - _speciesId: 58
     _displayName: "\u6C34008"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -419,6 +476,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 58
     _passiveId: 58
+    _isRunEnabled: 1
   - _speciesId: 59
     _displayName: "\u8349008"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -426,6 +484,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 59
     _passiveId: 59
+    _isRunEnabled: 1
   - _speciesId: 60
     _displayName: "\u96FB008"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -433,6 +492,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 60
     _passiveId: 60
+    _isRunEnabled: 1
   - _speciesId: 61
     _displayName: "\u6BD2008"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -440,6 +500,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 61
     _passiveId: 61
+    _isRunEnabled: 1
   - _speciesId: 62
     _displayName: "\u6C37008"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -447,6 +508,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 62
     _passiveId: 62
+    _isRunEnabled: 1
   - _speciesId: 63
     _displayName: "\u98A8008"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -454,6 +516,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 63
     _passiveId: 63
+    _isRunEnabled: 1
   - _speciesId: 64
     _displayName: "\u7ADC008"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -461,6 +524,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 64
     _passiveId: 64
+    _isRunEnabled: 1
   - _speciesId: 65
     _displayName: "\u708E009"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -468,6 +532,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 65
     _passiveId: 65
+    _isRunEnabled: 1
   - _speciesId: 66
     _displayName: "\u6C34009"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -475,6 +540,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 66
     _passiveId: 66
+    _isRunEnabled: 1
   - _speciesId: 67
     _displayName: "\u8349009"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -482,6 +548,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 67
     _passiveId: 67
+    _isRunEnabled: 1
   - _speciesId: 68
     _displayName: "\u96FB009"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -489,6 +556,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 68
     _passiveId: 68
+    _isRunEnabled: 1
   - _speciesId: 69
     _displayName: "\u6BD2009"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -496,6 +564,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 69
     _passiveId: 69
+    _isRunEnabled: 1
   - _speciesId: 70
     _displayName: "\u6C37009"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -503,6 +572,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 70
     _passiveId: 70
+    _isRunEnabled: 1
   - _speciesId: 71
     _displayName: "\u98A8009"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -510,6 +580,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 71
     _passiveId: 71
+    _isRunEnabled: 1
   - _speciesId: 72
     _displayName: "\u7ADC009"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -517,6 +588,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 72
     _passiveId: 72
+    _isRunEnabled: 1
   - _speciesId: 73
     _displayName: "\u708E010"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -524,6 +596,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 73
     _passiveId: 73
+    _isRunEnabled: 1
   - _speciesId: 74
     _displayName: "\u6C34010"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -531,6 +604,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 74
     _passiveId: 74
+    _isRunEnabled: 1
   - _speciesId: 75
     _displayName: "\u8349010"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -538,6 +612,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 75
     _passiveId: 75
+    _isRunEnabled: 1
   - _speciesId: 76
     _displayName: "\u96FB010"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -545,6 +620,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 76
     _passiveId: 76
+    _isRunEnabled: 1
   - _speciesId: 77
     _displayName: "\u6BD2010"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -552,6 +628,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 77
     _passiveId: 77
+    _isRunEnabled: 1
   - _speciesId: 78
     _displayName: "\u6C37010"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -559,6 +636,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 78
     _passiveId: 78
+    _isRunEnabled: 1
   - _speciesId: 79
     _displayName: "\u98A8010"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -566,6 +644,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 79
     _passiveId: 79
+    _isRunEnabled: 1
   - _speciesId: 80
     _displayName: "\u7ADC010"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -573,6 +652,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 80
     _passiveId: 80
+    _isRunEnabled: 1
   - _speciesId: 81
     _displayName: "\u708E011"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -580,6 +660,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 81
     _passiveId: 81
+    _isRunEnabled: 1
   - _speciesId: 82
     _displayName: "\u6C34011"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -587,6 +668,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 82
     _passiveId: 82
+    _isRunEnabled: 1
   - _speciesId: 83
     _displayName: "\u8349011"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -594,6 +676,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 83
     _passiveId: 83
+    _isRunEnabled: 1
   - _speciesId: 84
     _displayName: "\u96FB011"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -601,6 +684,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 84
     _passiveId: 84
+    _isRunEnabled: 1
   - _speciesId: 85
     _displayName: "\u6BD2011"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -608,6 +692,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 85
     _passiveId: 85
+    _isRunEnabled: 1
   - _speciesId: 86
     _displayName: "\u6C37011"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -615,6 +700,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 86
     _passiveId: 86
+    _isRunEnabled: 1
   - _speciesId: 87
     _displayName: "\u98A8011"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -622,6 +708,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 87
     _passiveId: 87
+    _isRunEnabled: 1
   - _speciesId: 88
     _displayName: "\u7ADC011"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -629,6 +716,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 88
     _passiveId: 88
+    _isRunEnabled: 1
   - _speciesId: 89
     _displayName: "\u708E012"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -636,6 +724,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 89
     _passiveId: 89
+    _isRunEnabled: 1
   - _speciesId: 90
     _displayName: "\u6C34012"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -643,6 +732,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 90
     _passiveId: 90
+    _isRunEnabled: 1
   - _speciesId: 91
     _displayName: "\u8349012"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -650,6 +740,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 91
     _passiveId: 91
+    _isRunEnabled: 1
   - _speciesId: 92
     _displayName: "\u96FB012"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -657,6 +748,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 92
     _passiveId: 92
+    _isRunEnabled: 1
   - _speciesId: 93
     _displayName: "\u6BD2012"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -664,6 +756,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 93
     _passiveId: 93
+    _isRunEnabled: 1
   - _speciesId: 94
     _displayName: "\u6C37012"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -671,6 +764,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 94
     _passiveId: 94
+    _isRunEnabled: 1
   - _speciesId: 95
     _displayName: "\u98A8012"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -678,6 +772,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 95
     _passiveId: 95
+    _isRunEnabled: 1
   - _speciesId: 96
     _displayName: "\u7ADC012"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -685,6 +780,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 96
     _passiveId: 96
+    _isRunEnabled: 1
   - _speciesId: 97
     _displayName: "\u708E013"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -692,6 +788,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 97
     _passiveId: 97
+    _isRunEnabled: 1
   - _speciesId: 98
     _displayName: "\u6C34013"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -699,6 +796,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 98
     _passiveId: 98
+    _isRunEnabled: 1
   - _speciesId: 99
     _displayName: "\u8349013"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -706,6 +804,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 99
     _passiveId: 99
+    _isRunEnabled: 1
   - _speciesId: 100
     _displayName: "\u96FB013"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -713,6 +812,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 100
     _passiveId: 100
+    _isRunEnabled: 1
   - _speciesId: 101
     _displayName: "\u6BD2013"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -720,6 +820,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 101
     _passiveId: 101
+    _isRunEnabled: 1
   - _speciesId: 102
     _displayName: "\u6C37013"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -727,6 +828,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 102
     _passiveId: 102
+    _isRunEnabled: 1
   - _speciesId: 103
     _displayName: "\u98A8013"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -734,6 +836,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 103
     _passiveId: 103
+    _isRunEnabled: 1
   - _speciesId: 104
     _displayName: "\u7ADC013"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -741,6 +844,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 104
     _passiveId: 104
+    _isRunEnabled: 1
   - _speciesId: 105
     _displayName: "\u708E014"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -748,6 +852,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 105
     _passiveId: 105
+    _isRunEnabled: 1
   - _speciesId: 106
     _displayName: "\u6C34014"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -755,6 +860,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 106
     _passiveId: 106
+    _isRunEnabled: 1
   - _speciesId: 107
     _displayName: "\u8349014"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -762,6 +868,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 107
     _passiveId: 107
+    _isRunEnabled: 1
   - _speciesId: 108
     _displayName: "\u96FB014"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -769,6 +876,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 108
     _passiveId: 108
+    _isRunEnabled: 1
   - _speciesId: 109
     _displayName: "\u6BD2014"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -776,6 +884,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 109
     _passiveId: 109
+    _isRunEnabled: 1
   - _speciesId: 110
     _displayName: "\u6C37014"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -783,6 +892,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 110
     _passiveId: 110
+    _isRunEnabled: 1
   - _speciesId: 111
     _displayName: "\u98A8014"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -790,6 +900,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 111
     _passiveId: 111
+    _isRunEnabled: 1
   - _speciesId: 112
     _displayName: "\u7ADC014"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -797,6 +908,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 112
     _passiveId: 112
+    _isRunEnabled: 1
   - _speciesId: 113
     _displayName: "\u708E015"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -804,6 +916,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 113
     _passiveId: 113
+    _isRunEnabled: 1
   - _speciesId: 114
     _displayName: "\u6C34015"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -811,6 +924,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 114
     _passiveId: 114
+    _isRunEnabled: 1
   - _speciesId: 115
     _displayName: "\u8349015"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -818,6 +932,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 115
     _passiveId: 115
+    _isRunEnabled: 1
   - _speciesId: 116
     _displayName: "\u96FB015"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -825,6 +940,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 116
     _passiveId: 116
+    _isRunEnabled: 1
   - _speciesId: 117
     _displayName: "\u6BD2015"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -832,6 +948,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 117
     _passiveId: 117
+    _isRunEnabled: 1
   - _speciesId: 118
     _displayName: "\u6C37015"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -839,6 +956,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 118
     _passiveId: 118
+    _isRunEnabled: 1
   - _speciesId: 119
     _displayName: "\u98A8015"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -846,6 +964,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 119
     _passiveId: 119
+    _isRunEnabled: 1
   - _speciesId: 120
     _displayName: "\u7ADC015"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -853,6 +972,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 120
     _passiveId: 120
+    _isRunEnabled: 1
   - _speciesId: 121
     _displayName: "\u708E016"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -860,6 +980,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 121
     _passiveId: 121
+    _isRunEnabled: 1
   - _speciesId: 122
     _displayName: "\u6C34016"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -867,6 +988,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 122
     _passiveId: 122
+    _isRunEnabled: 1
   - _speciesId: 123
     _displayName: "\u8349016"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -874,6 +996,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 123
     _passiveId: 123
+    _isRunEnabled: 1
   - _speciesId: 124
     _displayName: "\u96FB016"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -881,6 +1004,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 124
     _passiveId: 124
+    _isRunEnabled: 1
   - _speciesId: 125
     _displayName: "\u6BD2016"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -888,6 +1012,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 125
     _passiveId: 125
+    _isRunEnabled: 1
   - _speciesId: 126
     _displayName: "\u6C37016"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -895,6 +1020,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 126
     _passiveId: 126
+    _isRunEnabled: 1
   - _speciesId: 127
     _displayName: "\u98A8016"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -902,6 +1028,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 127
     _passiveId: 127
+    _isRunEnabled: 1
   - _speciesId: 128
     _displayName: "\u7ADC016"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -909,6 +1036,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 128
     _passiveId: 128
+    _isRunEnabled: 1
   - _speciesId: 129
     _displayName: "\u708E017"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -916,6 +1044,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 129
     _passiveId: 129
+    _isRunEnabled: 1
   - _speciesId: 130
     _displayName: "\u6C34017"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -923,6 +1052,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 130
     _passiveId: 130
+    _isRunEnabled: 1
   - _speciesId: 131
     _displayName: "\u8349017"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -930,6 +1060,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 131
     _passiveId: 131
+    _isRunEnabled: 1
   - _speciesId: 132
     _displayName: "\u96FB017"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -937,6 +1068,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 132
     _passiveId: 132
+    _isRunEnabled: 1
   - _speciesId: 133
     _displayName: "\u6BD2017"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -944,6 +1076,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 133
     _passiveId: 133
+    _isRunEnabled: 1
   - _speciesId: 134
     _displayName: "\u6C37017"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -951,6 +1084,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 134
     _passiveId: 134
+    _isRunEnabled: 1
   - _speciesId: 135
     _displayName: "\u98A8017"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -958,6 +1092,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 135
     _passiveId: 135
+    _isRunEnabled: 1
   - _speciesId: 136
     _displayName: "\u7ADC017"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -965,6 +1100,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 136
     _passiveId: 136
+    _isRunEnabled: 1
   - _speciesId: 137
     _displayName: "\u708E018"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -972,6 +1108,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 137
     _passiveId: 137
+    _isRunEnabled: 1
   - _speciesId: 138
     _displayName: "\u6C34018"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -979,6 +1116,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 138
     _passiveId: 138
+    _isRunEnabled: 1
   - _speciesId: 139
     _displayName: "\u8349018"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -986,6 +1124,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 139
     _passiveId: 139
+    _isRunEnabled: 1
   - _speciesId: 140
     _displayName: "\u96FB018"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -993,6 +1132,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 140
     _passiveId: 140
+    _isRunEnabled: 1
   - _speciesId: 141
     _displayName: "\u6BD2018"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -1000,6 +1140,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 141
     _passiveId: 141
+    _isRunEnabled: 1
   - _speciesId: 142
     _displayName: "\u6C37018"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -1007,6 +1148,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 142
     _passiveId: 142
+    _isRunEnabled: 1
   - _speciesId: 143
     _displayName: "\u98A8018"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -1014,6 +1156,7 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 143
     _passiveId: 143
+    _isRunEnabled: 1
   - _speciesId: 144
     _displayName: "\u7ADC018"
     _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
@@ -1021,6 +1164,7 @@ MonoBehaviour:
     _allocationType: 8
     _fixedSkillId: 144
     _passiveId: 144
+    _isRunEnabled: 1
   - _speciesId: 145
     _displayName: "\u708E019"
     _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
@@ -1028,6 +1172,7 @@ MonoBehaviour:
     _allocationType: 1
     _fixedSkillId: 145
     _passiveId: 145
+    _isRunEnabled: 1
   - _speciesId: 146
     _displayName: "\u6C34019"
     _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
@@ -1035,6 +1180,7 @@ MonoBehaviour:
     _allocationType: 2
     _fixedSkillId: 146
     _passiveId: 146
+    _isRunEnabled: 1
   - _speciesId: 147
     _displayName: "\u8349019"
     _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
@@ -1042,6 +1188,7 @@ MonoBehaviour:
     _allocationType: 3
     _fixedSkillId: 147
     _passiveId: 147
+    _isRunEnabled: 1
   - _speciesId: 148
     _displayName: "\u96FB019"
     _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
@@ -1049,6 +1196,7 @@ MonoBehaviour:
     _allocationType: 4
     _fixedSkillId: 148
     _passiveId: 148
+    _isRunEnabled: 1
   - _speciesId: 149
     _displayName: "\u6BD2019"
     _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
@@ -1056,6 +1204,7 @@ MonoBehaviour:
     _allocationType: 5
     _fixedSkillId: 149
     _passiveId: 149
+    _isRunEnabled: 1
   - _speciesId: 150
     _displayName: "\u6C37019"
     _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
@@ -1063,6 +1212,7 @@ MonoBehaviour:
     _allocationType: 6
     _fixedSkillId: 150
     _passiveId: 150
+    _isRunEnabled: 1
   - _speciesId: 151
     _displayName: "\u98A8019"
     _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
@@ -1070,3 +1220,4 @@ MonoBehaviour:
     _allocationType: 7
     _fixedSkillId: 151
     _passiveId: 151
+    _isRunEnabled: 1

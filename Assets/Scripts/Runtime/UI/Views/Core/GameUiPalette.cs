@@ -17,6 +17,7 @@ namespace Pachimon.UI
         public static Color SkillChip => FromRgb(0x2F, 0x75, 0x85);
         public static Color PassiveSection => FromRgb(0xF4, 0xE9, 0xD8);
         public static Color PassiveChip => FromRgb(0x9A, 0x6A, 0x2D);
+        public static Color ItemChip => FromRgb(0x3D, 0x7F, 0x6B);
         public static Color GoldCard => FromRgb(0xFF, 0xF0, 0xC2);
         public static Color PrimaryText => FromRgb(0x26, 0x32, 0x38);
         public static Color SecondaryText => FromRgb(0x66, 0x72, 0x77);

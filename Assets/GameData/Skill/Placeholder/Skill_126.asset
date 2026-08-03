@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -16,6 +16,6 @@ MonoBehaviour:
   _displayName: 冷たい手
   _allocationType: 6
   _isMapAssignable: 1
-  _baseTurnCostTicks: 100
+  _baseRecoveryTicks: 100
   _baseCooldownTicks: 200
   _description: v0.3 basic attribute damage Skill placeholder.

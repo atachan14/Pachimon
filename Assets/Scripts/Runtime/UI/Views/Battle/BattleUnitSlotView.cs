@@ -25,20 +25,37 @@ namespace Pachimon.UI
             new(0.20f, 0.52f, 0.86f, 1f);
         private static readonly Color PreviewColor =
             new(0.62f, 0.62f, 0.62f, 0.88f);
-        private const string PreviewDamageColorHex = "#E84B3C";
-        private const string PreviewRecoveryColorHex = "#2D75C7";
-
+        private static readonly Color InitialElapsedColor =
+            new(0.94f, 0.49f, 0.12f, 1f);
+        private static readonly Color InitialRemainingColor =
+            new(0.08f, 0.08f, 0.08f, 1f);
+        private static readonly Color StartupElapsedColor =
+            new(0.96f, 0.78f, 0.18f, 1f);
+        private static readonly Color StartupRemainingColor =
+            new(0.48f, 0.24f, 0.72f, 1f);
+        private static readonly Color RecoveryElapsedColor =
+            new(0.94f, 0.49f, 0.12f, 1f);
+        private static readonly Color RecoveryRemainingColor =
+            new(0.96f, 0.78f, 0.18f, 1f);
+        private static readonly Color TurnColor =
+            new(0.84f, 0.18f, 0.18f, 1f);
         [SerializeField] private RectTransform _infoRoot;
         [SerializeField] private RectTransform _graphicRoot;
 
-        private RectTransform _hpBarRoot;
+        private RectTransform _gaugeRoot;
         private TMP_Text _nameText;
         private Image _hpFill;
         private Image _hpPreview;
         private TMP_Text _hpValueText;
+        private ResourceGaugeView _hpGaugeView;
         private Image _mnFill;
         private Image _mnPreview;
         private TMP_Text _mnValueText;
+        private ResourceGaugeView _mnGaugeView;
+        private Image _actionElapsed;
+        private Image _actionRemaining;
+        private TMP_Text _actionValueText;
+        private ActionGaugeView _actionGaugeView;
         private Image _graphic;
         private RectTransform _interactionRoot;
         private BattleUnitState _renderedUnit;
@@ -99,61 +116,113 @@ namespace Pachimon.UI
                 unit.CurrentMn,
                 unit.MaxMn,
                 mnDelta);
-            RenderResourceValueTexts(unit, hpDelta, mnDelta);
+            _hpGaugeView?.SetPreviewDelta(hpDelta);
+            _mnGaugeView?.SetPreviewDelta(mnDelta);
         }
 
         public void ClearResourcePreview()
         {
             SetPreviewSegment(_hpPreview, 0, 0, 0);
             SetPreviewSegment(_mnPreview, 0, 0, 0);
+            _hpGaugeView?.SetPreviewDelta(0);
+            _mnGaugeView?.SetPreviewDelta(0);
             if (_renderedUnit != null)
             {
-                RenderResourceValueTexts(_renderedUnit, 0, 0);
+                RenderActionGauge(_renderedUnit);
             }
         }
 
-        private void EnsureResourceBars()
+        public void PresentResourceSnapshot(
+            BattleUnitState unit,
+            int currentHp,
+            int currentMn)
         {
-            if (_hpBarRoot != null || _infoRoot == null)
+            EnsureResourceBars();
+            if (unit == null || _hpGaugeView == null || _mnGaugeView == null)
             {
                 return;
             }
 
-            _hpBarRoot = _infoRoot.Find("RuntimeBattleHpBar") as RectTransform;
-            if (_hpBarRoot == null)
+            _renderedUnit = unit;
+            var safeHp = Mathf.Clamp(currentHp, 0, unit.MaxHp);
+            var hpRatio = unit.MaxHp > 0
+                ? Mathf.Clamp01((float)safeHp / unit.MaxHp)
+                : 0f;
+            var isDefeated = safeHp == 0;
+            _nameText.text = isDefeated
+                ? $"{unit.DisplayName}  DOWN"
+                : unit.DisplayName;
+            _nameText.color = isDefeated ? EmptyHpColor : Color.black;
+            _hpGaugeView.Present(
+                unit.InstanceId,
+                safeHp,
+                unit.MaxHp,
+                GetHpColor(hpRatio, isDefeated));
+
+            var safeMn = Mathf.Clamp(currentMn, 0, unit.MaxMn);
+            var mnRatio = unit.MaxMn > 0
+                ? Mathf.Clamp01((float)safeMn / unit.MaxMn)
+                : 0f;
+            _mnGaugeView.Present(
+                unit.InstanceId,
+                safeMn,
+                unit.MaxMn,
+                mnRatio <= 0f ? EmptyHpColor : MnColor);
+        }
+
+        private void EnsureResourceBars()
+        {
+            if (_gaugeRoot != null || _infoRoot == null)
+            {
+                return;
+            }
+
+            _gaugeRoot = _infoRoot.Find("RuntimeBattleGauges") as RectTransform;
+            if (_gaugeRoot == null)
+            {
+                var legacyRoot =
+                    _infoRoot.Find("RuntimeBattleHpBar") as RectTransform;
+                if (legacyRoot != null)
+                {
+                    legacyRoot.name = "RuntimeBattleGauges";
+                    _gaugeRoot = legacyRoot;
+                }
+            }
+
+            if (_gaugeRoot == null)
             {
                 var rootObject = new GameObject(
-                    "RuntimeBattleHpBar",
+                    "RuntimeBattleGauges",
                     typeof(RectTransform),
                     typeof(LayoutElement));
                 rootObject.layer = _infoRoot.gameObject.layer;
-                _hpBarRoot = rootObject.GetComponent<RectTransform>();
-                _hpBarRoot.SetParent(_infoRoot, false);
+                _gaugeRoot = rootObject.GetComponent<RectTransform>();
+                _gaugeRoot.SetParent(_infoRoot, false);
             }
 
-            var layout = _hpBarRoot.GetComponent<LayoutElement>()
-                ?? _hpBarRoot.gameObject.AddComponent<LayoutElement>();
+            var layout = _gaugeRoot.GetComponent<LayoutElement>()
+                ?? _gaugeRoot.gameObject.AddComponent<LayoutElement>();
             layout.ignoreLayout = true;
-            Stretch(_hpBarRoot);
+            Stretch(_gaugeRoot);
 
             _nameText = GetOrCreateLabel(
-                _hpBarRoot,
+                _gaugeRoot,
                 "Name",
                 TextAlignmentOptions.Bottom,
                 16f);
             _nameText.fontStyle = FontStyles.Bold;
             SetAnchors(
                 _nameText.rectTransform,
-                new Vector2(0f, 0.66f),
+                new Vector2(0f, 0.77f),
                 new Vector2(1f, 0.98f),
                 new Vector2(4f, 0f),
                 new Vector2(-4f, 0f));
 
-            var track = GetOrCreateImage(_hpBarRoot, "Track", HpTrackColor);
+            var track = GetOrCreateImage(_gaugeRoot, "HpGauge", HpTrackColor);
             SetAnchors(
                 track.rectTransform,
-                new Vector2(0.04f, 0.35f),
-                new Vector2(0.96f, 0.65f),
+                new Vector2(0.04f, 0.53f),
+                new Vector2(0.96f, 0.75f),
                 Vector2.zero,
                 Vector2.zero);
 
@@ -178,12 +247,15 @@ namespace Pachimon.UI
             _hpValueText.fontStyle = FontStyles.Bold;
             _hpValueText.overrideColorTags = false;
             Stretch(_hpValueText.rectTransform);
+            _hpGaugeView = track.GetComponent<ResourceGaugeView>()
+                ?? track.gameObject.AddComponent<ResourceGaugeView>();
+            _hpGaugeView.Configure("HP", _hpFill, _hpValueText);
 
-            var mnTrack = GetOrCreateImage(_hpBarRoot, "MnTrack", HpTrackColor);
+            var mnTrack = GetOrCreateImage(_gaugeRoot, "MnGauge", HpTrackColor);
             SetAnchors(
                 mnTrack.rectTransform,
-                new Vector2(0.04f, 0.03f),
-                new Vector2(0.96f, 0.32f),
+                new Vector2(0.04f, 0.28f),
+                new Vector2(0.96f, 0.50f),
                 Vector2.zero,
                 Vector2.zero);
 
@@ -208,8 +280,54 @@ namespace Pachimon.UI
             _mnValueText.fontStyle = FontStyles.Bold;
             _mnValueText.overrideColorTags = false;
             Stretch(_mnValueText.rectTransform);
+            _mnGaugeView = mnTrack.GetComponent<ResourceGaugeView>()
+                ?? mnTrack.gameObject.AddComponent<ResourceGaugeView>();
+            _mnGaugeView.Configure("MN", _mnFill, _mnValueText);
+
+            var actionTrack = GetOrCreateImage(
+                _gaugeRoot,
+                "ActionGauge",
+                HpTrackColor);
+            SetAnchors(
+                actionTrack.rectTransform,
+                new Vector2(0.04f, 0.10f),
+                new Vector2(0.72f, 0.17f),
+                Vector2.zero,
+                Vector2.zero);
+
+            _actionElapsed = GetOrCreateActionSegment(
+                actionTrack.rectTransform,
+                "Elapsed",
+                "Fill",
+                InitialElapsedColor);
+            _actionRemaining = GetOrCreateActionSegment(
+                actionTrack.rectTransform,
+                "Remaining",
+                "Preview",
+                InitialRemainingColor);
+
+            _actionValueText = GetOrCreateLabel(
+                _gaugeRoot,
+                "ActionGaugeValue",
+                TextAlignmentOptions.Left,
+                13f);
+            _actionValueText.color = InitialElapsedColor;
+            _actionValueText.fontStyle = FontStyles.Bold;
+            SetAnchors(
+                _actionValueText.rectTransform,
+                new Vector2(0.75f, 0.03f),
+                new Vector2(0.99f, 0.24f),
+                Vector2.zero,
+                Vector2.zero);
             _hpValueText.transform.SetAsLastSibling();
             _mnValueText.transform.SetAsLastSibling();
+            _actionValueText.transform.SetAsLastSibling();
+            _actionGaugeView = actionTrack.GetComponent<ActionGaugeView>()
+                ?? actionTrack.gameObject.AddComponent<ActionGaugeView>();
+            _actionGaugeView.Configure(
+                _actionElapsed,
+                _actionRemaining,
+                _actionValueText);
         }
 
         private void EnsureGraphic()
@@ -291,56 +409,118 @@ namespace Pachimon.UI
             {
                 _nameText.text = emptyLabel;
                 _nameText.color = EmptyHpColor;
-                _hpValueText.text = "---";
-                _mnValueText.text = "---";
-                SetHpFill(0f, EmptyHpColor);
-                SetMnFill(0f);
+                _hpGaugeView?.Clear();
+                _mnGaugeView?.Clear();
+                RenderActionGauge(null);
                 return;
             }
 
-            var ratio = unit.MaxHp > 0
-                ? Mathf.Clamp01((float)unit.CurrentHp / unit.MaxHp)
-                : 0f;
-            _nameText.text = unit.IsDefeated
-                ? $"{unit.DisplayName}  DOWN"
-                : unit.DisplayName;
-            _nameText.color = unit.IsDefeated ? EmptyHpColor : Color.black;
-            RenderResourceValueTexts(unit, 0, 0);
-            SetHpFill(ratio, GetHpColor(ratio, unit.IsDefeated));
-            var mnRatio = unit.MaxMn > 0
-                ? Mathf.Clamp01((float)unit.CurrentMn / unit.MaxMn)
-                : 0f;
-            SetMnFill(mnRatio);
+            PresentResourceSnapshot(unit, unit.CurrentHp, unit.CurrentMn);
+            RenderActionGauge(unit);
         }
 
-        private void RenderResourceValueTexts(
-            BattleUnitState unit,
-            int hpDelta,
-            int mnDelta)
+        private void RenderActionGauge(BattleUnitState unit)
         {
-            if (unit == null || _hpValueText == null || _mnValueText == null)
+            if (_actionElapsed == null
+                || _actionRemaining == null
+                || _actionValueText == null)
             {
                 return;
             }
 
-            _hpValueText.text =
-                $"HP  {unit.CurrentHp}{FormatPreviewDelta(hpDelta)} / {unit.MaxHp}";
-            _mnValueText.text =
-                $"MN  {unit.CurrentMn}{FormatPreviewDelta(mnDelta)} / {unit.MaxMn}";
-        }
-
-        private static string FormatPreviewDelta(int delta)
-        {
-            if (delta == 0)
+            if (unit == null || unit.IsDefeated)
             {
-                return string.Empty;
+                PresentActionGauge(
+                    BattleActionPhase.Defeated,
+                    0f,
+                    0,
+                    0,
+                    EmptyHpColor,
+                    InitialRemainingColor,
+                    EmptyHpColor,
+                    unit == null ? "---" : "DOWN",
+                    showRemaining: true);
+                return;
             }
 
-            var color = delta < 0
-                ? PreviewDamageColorHex
-                : PreviewRecoveryColorHex;
-            var sign = delta > 0 ? "+" : string.Empty;
-            return $" <color={color}>{sign}{delta}</color>";
+            var timing = unit.Timing;
+            var ratio = Mathf.Clamp01(timing.Progress);
+            if (timing.Phase == BattleActionPhase.Ready)
+            {
+                PresentActionGauge(
+                    timing.Phase,
+                    1f,
+                    0,
+                    0,
+                    TurnColor,
+                    TurnColor,
+                    TurnColor,
+                    "Turn",
+                    showRemaining: false);
+                return;
+            }
+
+            var elapsedColor = InitialElapsedColor;
+            var remainingColor = InitialRemainingColor;
+            var valueColor = InitialElapsedColor;
+            if (timing.Phase == BattleActionPhase.Startup)
+            {
+                elapsedColor = StartupElapsedColor;
+                remainingColor = StartupRemainingColor;
+                valueColor = StartupElapsedColor;
+            }
+            else if (timing.Phase == BattleActionPhase.Recovery)
+            {
+                elapsedColor = RecoveryElapsedColor;
+                remainingColor = RecoveryRemainingColor;
+                valueColor = RecoveryElapsedColor;
+            }
+
+            if (timing.IsPaused)
+            {
+                elapsedColor = PreviewColor;
+                remainingColor = EmptyHpColor;
+                valueColor = PreviewColor;
+            }
+
+            var remainingTicks = timing.IsPaused
+                ? timing.RemainingTicks
+                : unit.GetActionRemainingTicks();
+            PresentActionGauge(
+                timing.Phase,
+                ratio,
+                timing.TotalTicks,
+                remainingTicks,
+                elapsedColor,
+                remainingColor,
+                valueColor,
+                timing.IsPaused
+                ? $"{timing.RemainingTicks} 停止"
+                : remainingTicks.ToString(),
+                showRemaining: true);
+        }
+
+        private void PresentActionGauge(
+            BattleActionPhase phase,
+            float ratio,
+            int totalTicks,
+            int remainingTicks,
+            Color elapsedColor,
+            Color remainingColor,
+            Color valueColor,
+            string valueText,
+            bool showRemaining)
+        {
+            _actionGaugeView?.Present(
+                phase,
+                ratio,
+                totalTicks,
+                remainingTicks,
+                elapsedColor,
+                remainingColor,
+                valueColor,
+                valueText,
+                showRemaining);
         }
 
         private void RenderGraphic(
@@ -363,22 +543,6 @@ namespace Pachimon.UI
             _graphic.color = unit != null && unit.IsAlive
                 ? Color.white
                 : new Color(0.42f, 0.42f, 0.42f, 0.7f);
-        }
-
-        private void SetHpFill(float ratio, Color color)
-        {
-            _hpFill.color = color;
-            _hpFill.rectTransform.anchorMax = new Vector2(
-                Mathf.Clamp01(ratio),
-                1f);
-        }
-
-        private void SetMnFill(float ratio)
-        {
-            _mnFill.color = ratio <= 0f ? EmptyHpColor : MnColor;
-            _mnFill.rectTransform.anchorMax = new Vector2(
-                Mathf.Clamp01(ratio),
-                1f);
         }
 
         private static void SetPreviewSegment(
@@ -454,6 +618,25 @@ namespace Pachimon.UI
             image.color = color;
             image.raycastTarget = false;
             return image;
+        }
+
+        private static Image GetOrCreateActionSegment(
+            RectTransform parent,
+            string objectName,
+            string legacyObjectName,
+            Color color)
+        {
+            var image = parent.Find(objectName)?.GetComponent<Image>();
+            if (image == null)
+            {
+                image = parent.Find(legacyObjectName)?.GetComponent<Image>();
+                if (image != null)
+                {
+                    image.name = objectName;
+                }
+            }
+
+            return image ?? GetOrCreateImage(parent, objectName, color);
         }
 
         private static TextMeshProUGUI GetOrCreateLabel(

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Data;
+using Pachimon.Items;
 using Pachimon.Reward;
 using Pachimon.Run;
 using Pachimon.Skills;
@@ -17,16 +18,19 @@ namespace Pachimon.Map
 
         private readonly MapGenerationSettings _settings;
         private readonly SkillCatalog _skillCatalog;
+        private readonly ItemCatalog _itemCatalog;
         private readonly TrainerStyleCatalog _trainerStyleCatalog;
         private readonly TrainerNameCatalog _trainerNameCatalog;
 
         public MapGenerator(
             SkillCatalog skillCatalog,
+            ItemCatalog itemCatalog,
             TrainerStyleCatalog trainerStyleCatalog,
             TrainerNameCatalog trainerNameCatalog,
             MapGenerationSettings settings = null)
         {
             _skillCatalog = skillCatalog ?? throw new ArgumentNullException(nameof(skillCatalog));
+            _itemCatalog = itemCatalog ?? throw new ArgumentNullException(nameof(itemCatalog));
             _trainerStyleCatalog = trainerStyleCatalog
                 ?? throw new ArgumentNullException(nameof(trainerStyleCatalog));
             _trainerNameCatalog = trainerNameCatalog
@@ -253,9 +257,15 @@ namespace Pachimon.Map
                 }
 
                 var leftColumn = candidateLeftColumns[random.Next(candidateLeftColumns.Length)];
+                var cityGroupId = $"city_{cityIndex + 1:D2}";
+                var shopSeed = random.Next();
                 var cityContent = new CityNodeContent(
-                    $"city_{cityIndex + 1:D2}",
-                    random.Next());
+                    cityGroupId,
+                    shopSeed,
+                    new CityStockGenerator().Generate(
+                        cityGroupId,
+                        shopSeed,
+                        _itemCatalog));
 
                 for (var offset = 0; offset < 2; offset++)
                 {
@@ -567,17 +577,14 @@ namespace Pachimon.Map
             {
                 var type = GetLeagueAllocationType(node);
                 var aceSlot = remainingSlots.Single(slot => slot.Node == node && slot.Index == 0);
-                var ace = remainingInstances
-                    .Where(instance => CanAssign(
-                        instance,
-                        aceSlot,
-                        workingAssignments,
-                        pachimonPool,
-                        nodes,
-                        avoidAdjacentNodes: true))
-                    .OrderByDescending(instance => instance.Stats.GetValueUnits(GetAttributeStatType(type)))
-                    .ThenBy(_ => random.Next())
-                    .FirstOrDefault();
+                var ace = SelectAce(
+                    remainingInstances,
+                    aceSlot,
+                    type,
+                    workingAssignments,
+                    pachimonPool,
+                    nodes,
+                    random);
                 if (ace == null
                     || !CommitAssignment(aceSlot, ace, workingAssignments, remainingSlots, remainingInstances))
                 {
@@ -672,6 +679,38 @@ namespace Pachimon.Map
             return true;
         }
 
+        private static PachimonInstance SelectAce(
+            IEnumerable<PachimonInstance> instances,
+            PlacementSlot slot,
+            AllocationType type,
+            IEnumerable<KeyValuePair<PlacementSlot, string>> assignments,
+            RunPachimonPool pachimonPool,
+            IReadOnlyDictionary<string, NodeBuilder> nodes,
+            Random random)
+        {
+            foreach (var rule in SpeciesPlacementRules)
+            {
+                var selected = instances
+                    .Where(instance => CanAssign(
+                        instance,
+                        slot,
+                        assignments,
+                        pachimonPool,
+                        nodes,
+                        rule))
+                    .OrderByDescending(instance =>
+                        instance.Stats.GetValueUnits(GetAttributeStatType(type)))
+                    .ThenBy(_ => random.Next())
+                    .FirstOrDefault();
+                if (selected != null)
+                {
+                    return selected;
+                }
+            }
+
+            return null;
+        }
+
         private static bool TryAssignMatchingType(
             PlacementSlot slot,
             AllocationType type,
@@ -682,21 +721,9 @@ namespace Pachimon.Map
             IReadOnlyDictionary<string, NodeBuilder> nodes,
             Random random)
         {
-            var candidates = remainingInstances
-                .Where(instance => instance.AllocationType == type)
-                .Where(instance => CanAssign(
-                    instance,
-                    slot,
-                    assignments,
-                    pachimonPool,
-                    nodes,
-                    avoidAdjacentNodes: true))
-                .OrderBy(_ => random.Next())
-                .ToArray();
-            var selected = candidates.FirstOrDefault();
-            if (selected == null)
+            foreach (var rule in SpeciesPlacementRules)
             {
-                selected = remainingInstances
+                var selected = remainingInstances
                     .Where(instance => instance.AllocationType == type)
                     .Where(instance => CanAssign(
                         instance,
@@ -704,13 +731,21 @@ namespace Pachimon.Map
                         assignments,
                         pachimonPool,
                         nodes,
-                        avoidAdjacentNodes: false))
+                        rule))
                     .OrderBy(_ => random.Next())
                     .FirstOrDefault();
+                if (selected != null)
+                {
+                    return CommitAssignment(
+                        slot,
+                        selected,
+                        assignments,
+                        remainingSlots,
+                        remainingInstances);
+                }
             }
 
-            return selected != null
-                && CommitAssignment(slot, selected, assignments, remainingSlots, remainingInstances);
+            return false;
         }
 
         private static bool TryAssignRandomSlots(
@@ -726,20 +761,8 @@ namespace Pachimon.Map
             Shuffle(slots, random);
             foreach (var slot in slots)
             {
-                var candidates = remainingInstances
-                    .Where(instance => CanAssign(
-                        instance,
-                        slot,
-                        assignments,
-                        pachimonPool,
-                        nodes,
-                        avoidAdjacentNodes: true))
-                    .OrderByDescending(instance => assignments.Values.Any(
-                        id => pachimonPool.Get(id).SpeciesId == instance.SpeciesId))
-                    .ThenBy(_ => random.Next())
-                    .ToArray();
-                var selected = candidates.FirstOrDefault();
-                if (selected == null)
+                PachimonInstance selected = null;
+                foreach (var rule in SpeciesPlacementRules)
                 {
                     selected = remainingInstances
                         .Where(instance => CanAssign(
@@ -748,11 +771,15 @@ namespace Pachimon.Map
                             assignments,
                             pachimonPool,
                             nodes,
-                            avoidAdjacentNodes: false))
+                            rule))
                         .OrderByDescending(instance => assignments.Values.Any(
                             id => pachimonPool.Get(id).SpeciesId == instance.SpeciesId))
                         .ThenBy(_ => random.Next())
                         .FirstOrDefault();
+                    if (selected != null)
+                    {
+                        break;
+                    }
                 }
 
                 if (selected == null
@@ -771,7 +798,7 @@ namespace Pachimon.Map
             IEnumerable<KeyValuePair<PlacementSlot, string>> assignments,
             RunPachimonPool pachimonPool,
             IReadOnlyDictionary<string, NodeBuilder> nodes,
-            bool avoidAdjacentNodes)
+            SpeciesPlacementRule rule)
         {
             foreach (var assignment in assignments)
             {
@@ -781,8 +808,19 @@ namespace Pachimon.Map
                     continue;
                 }
 
-                if (assignment.Key.Node.RowIndex == slot.Node.RowIndex
-                    || avoidAdjacentNodes && AreAdjacent(assignment.Key.Node, slot.Node, nodes))
+                if (assignment.Key.Node == slot.Node)
+                {
+                    return false;
+                }
+
+                if (rule != SpeciesPlacementRule.AvoidSameNode
+                    && assignment.Key.Node.RowIndex == slot.Node.RowIndex)
+                {
+                    return false;
+                }
+
+                if (rule == SpeciesPlacementRule.AvoidAdjacentNodes
+                    && AreAdjacent(assignment.Key.Node, slot.Node, nodes))
                 {
                     return false;
                 }
@@ -992,6 +1030,8 @@ namespace Pachimon.Map
                         + $"{MinimumCityEdgeCount} distinct incoming and outgoing edges, but has "
                         + $"{incomingCount} incoming and {outgoingCount} outgoing.");
                 }
+
+                ValidateCityStock(cityGroup.GroupId, members);
             }
 
             var reachable = TraverseForward(map, map.StartNodeId);
@@ -1030,9 +1070,56 @@ namespace Pachimon.Map
                 throw new MapGenerationException("Pachimon assignment is incomplete or contains duplicates.");
             }
 
-            ValidateSpeciesRowSeparation(map, pachimonPool);
+            ValidateSpeciesNodeSeparation(map, pachimonPool);
             ValidatePachimonAllocation(map, pachimonPool);
             ValidateEnemyPartyOrder(map, pachimonPool);
+        }
+
+        private void ValidateCityStock(string cityGroupId, IReadOnlyList<MapNode> members)
+        {
+            var contents = members
+                .Select(node => node.Content as CityNodeContent)
+                .ToArray();
+            if (contents.Any(content => content == null)
+                || contents.Any(content => !ReferenceEquals(content, contents[0])))
+            {
+                throw new MapGenerationException(
+                    $"City group {cityGroupId} must share one CityNodeContent.");
+            }
+
+            var stock = contents[0].StockEntries;
+            var expectedCount = CityStockGenerator.SampleCopiesPerItem * 2;
+            if (stock == null
+                || stock.Count != expectedCount
+                || stock.Select(entry => entry.StockId).Distinct().Count() != expectedCount
+                || stock.Count(entry => entry.ItemId == ItemIds.Potion)
+                    != CityStockGenerator.SampleCopiesPerItem
+                || stock.Count(entry => entry.ItemId == ItemIds.Stone)
+                    != CityStockGenerator.SampleCopiesPerItem
+                || stock.Any(entry => entry.IsPurchased))
+            {
+                throw new MapGenerationException(
+                    $"City group {cityGroupId} stock entries are invalid.");
+            }
+
+            foreach (var entry in stock)
+            {
+                var item = _itemCatalog.Get(entry.ItemId);
+                if (item == null
+                    || entry.BasePrice != item.BasePrice
+                    || entry.Price < CityStockGenerator.GetMinimumPrice(entry.BasePrice)
+                    || entry.Price > CityStockGenerator.GetMaximumPrice(entry.BasePrice))
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} contains an invalid stock price.");
+                }
+            }
+
+            if (stock.Sum(entry => entry.Price) != stock.Sum(entry => entry.BasePrice))
+            {
+                throw new MapGenerationException(
+                    $"City group {cityGroupId} stock price total is invalid.");
+            }
         }
 
         private static void ValidateEnemyPartyOrder(
@@ -1338,25 +1425,21 @@ namespace Pachimon.Map
             return style;
         }
 
-        private static void ValidateSpeciesRowSeparation(RunMap map, RunPachimonPool pachimonPool)
+        private static void ValidateSpeciesNodeSeparation(
+            RunMap map,
+            RunPachimonPool pachimonPool)
         {
-            var rowsBySpecies = new Dictionary<int, HashSet<int>>();
-
             foreach (var node in map.Nodes.Values)
             {
+                var speciesIds = new HashSet<int>();
                 foreach (var instanceId in GetAssignedPachimonIds(node))
                 {
                     var instance = pachimonPool.Get(instanceId);
-                    if (!rowsBySpecies.TryGetValue(instance.SpeciesId, out var rows))
-                    {
-                        rows = new HashSet<int>();
-                        rowsBySpecies.Add(instance.SpeciesId, rows);
-                    }
-
-                    if (!rows.Add(node.RowIndex))
+                    if (!speciesIds.Add(instance.SpeciesId))
                     {
                         throw new MapGenerationException(
-                            $"Species {instance.SpeciesId} was assigned twice to row {node.RowIndex}.");
+                            $"Species {instance.SpeciesId} was assigned twice "
+                            + $"to node {node.NodeId}.");
                     }
                 }
             }
@@ -1584,5 +1667,19 @@ namespace Pachimon.Map
 
             public int Index { get; }
         }
+
+        private enum SpeciesPlacementRule
+        {
+            AvoidAdjacentNodes = 0,
+            AvoidSameRow = 1,
+            AvoidSameNode = 2,
+        }
+
+        private static readonly SpeciesPlacementRule[] SpeciesPlacementRules =
+        {
+            SpeciesPlacementRule.AvoidAdjacentNodes,
+            SpeciesPlacementRule.AvoidSameRow,
+            SpeciesPlacementRule.AvoidSameNode,
+        };
     }
 }

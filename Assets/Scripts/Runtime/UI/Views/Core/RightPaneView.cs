@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Pachimon.Items;
+using Pachimon.Map;
+using Pachimon.Run;
 using UnityEngine;
 
 namespace Pachimon.UI
@@ -94,6 +96,66 @@ namespace Pachimon.UI
         public void ShowSimpleNodePreview(string title, string details)
         {
             NodeSelectionWindow?.ShowSimple(title, details, false, null, null);
+            ContentShown?.Invoke();
+        }
+
+        public void ShowCityNodeSelection(
+            CityNodeContent city,
+            ItemCatalog itemCatalog,
+            RunState runState,
+            Action<int> onDetails,
+            Action onConfirm,
+            Action onCancel)
+        {
+            NodeSelectionWindow?.ShowCity(
+                city,
+                itemCatalog,
+                runState,
+                false,
+                true,
+                onDetails,
+                null,
+                onConfirm,
+                onCancel);
+            ContentShown?.Invoke();
+        }
+
+        public void ShowCityNodePreview(
+            CityNodeContent city,
+            ItemCatalog itemCatalog,
+            RunState runState,
+            Action<int> onDetails)
+        {
+            NodeSelectionWindow?.ShowCity(
+                city,
+                itemCatalog,
+                runState,
+                false,
+                false,
+                onDetails,
+                null,
+                null,
+                null);
+            ContentShown?.Invoke();
+        }
+
+        public void ShowCityShop(
+            CityNodeContent city,
+            ItemCatalog itemCatalog,
+            RunState runState,
+            Action<int> onDetails,
+            Action<string> onPurchase)
+        {
+            NodeSelectionWindow?.ShowCity(
+                city,
+                itemCatalog,
+                runState,
+                true,
+                false,
+                onDetails,
+                onPurchase,
+                null,
+                null);
             ContentShown?.Invoke();
         }
 

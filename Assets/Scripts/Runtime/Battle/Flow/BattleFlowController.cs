@@ -16,6 +16,7 @@ namespace Pachimon.Battle
         private readonly SeededEnemySkillSelector _enemySkillSelector;
         private BattleUnitState _awaitingPlayerUnit;
         private HashSet<int> _awaitingPlayerSkillSlotIds = new();
+        private readonly List<ScheduledFlowAction> _pendingActions = new();
 
         public BattleFlowController(BattleState state, BattleSkillRuntime skillRuntime)
         {
@@ -42,6 +43,71 @@ namespace Pachimon.Battle
                 return BattleFlowStep.Complete(outcome);
             }
 
+            var cancelledAction = _pendingActions
+                .FirstOrDefault(action => !action.Action.User.IsAlive);
+            if (cancelledAction != null)
+            {
+                _pendingActions.Remove(cancelledAction);
+                return BattleFlowStep.CancelAction(
+                    cancelledAction.Action,
+                    cancelledAction.WasAutomaticallySelected);
+            }
+
+            while (true)
+            {
+                var nextPending = _pendingActions
+                    .Where(action =>
+                        action.Action.User.IsAlive
+                        && !action.Action.User.Timing.IsPaused
+                        && action.Action.User.Timing.Phase
+                            == BattleActionPhase.Startup)
+                    .OrderBy(action =>
+                        action.Action.User.GetActionRemainingTicks())
+                    .ThenBy(action => action.Action.User.TiePriority)
+                    .FirstOrDefault();
+                var nextPendingTick = nextPending == null
+                    ? long.MaxValue
+                    : AddTicks(
+                        _state.CurrentTick,
+                        nextPending.Action.User.GetActionRemainingTicks());
+                var nextTurnTick = _state.Timeline.GetNextTurnTick();
+                var nextStatusTick =
+                    _state.Timeline.GetNextStatusExpirationTick();
+                if (nextStatusTick != long.MaxValue
+                    && nextStatusTick <= nextPendingTick
+                    && nextStatusTick <= nextTurnTick)
+                {
+                    _state.Timeline.AdvanceToTick(nextStatusTick);
+                    continue;
+                }
+
+                if (nextPending == null || nextPendingTick > nextTurnTick)
+                {
+                    break;
+                }
+
+                _pendingActions.Remove(nextPending);
+                _state.Timeline.AdvanceToTick(nextPendingTick);
+                if (!nextPending.Action.User.IsAlive)
+                {
+                    return BattleFlowStep.CancelAction(
+                        nextPending.Action,
+                        nextPending.WasAutomaticallySelected);
+                }
+
+                var pendingResolution = _skillRuntime.ExecutePending(
+                    _state,
+                    nextPending.Action);
+                outcome = _state.EvaluateOutcome();
+                Phase = outcome == BattleOutcome.Undecided
+                    ? BattleFlowPhase.Ready
+                    : BattleFlowPhase.Completed;
+                return BattleFlowStep.ResolveAction(
+                    pendingResolution,
+                    outcome,
+                    nextPending.WasAutomaticallySelected);
+            }
+
             if (!_state.Timeline.TryBeginNextTurn(out var actor))
             {
                 outcome = _state.EvaluateOutcome();
@@ -57,23 +123,9 @@ namespace Pachimon.Battle
 
             if (actor.Side == BattleSide.Player)
             {
-                var playerChoices = _skillRuntime.GetRegularSkillChoices(_state, actor);
-                var usableSkillSlotIds = playerChoices
-                    .Where(choice => choice.IsUsable)
-                    .Select(choice => choice.SlotId)
-                    .ToArray();
-                var struggleSkill = usableSkillSlotIds.Length == 0
-                    ? _skillRuntime.GetStruggleSkill()
-                    : null;
                 _awaitingPlayerUnit = actor;
-                _awaitingPlayerSkillSlotIds = struggleSkill == null
-                    ? new HashSet<int>(usableSkillSlotIds)
-                    : new HashSet<int> { 0 };
                 Phase = BattleFlowPhase.AwaitingPlayerSkill;
-                return BattleFlowStep.RequirePlayerInput(
-                    actor,
-                    playerChoices,
-                    struggleSkill);
+                return RefreshPlayerSkillChoices();
             }
 
             var usableChoices = _skillRuntime.GetUsableRegularSkillChoices(_state, actor);
@@ -81,7 +133,45 @@ namespace Pachimon.Battle
                 ? 0
                 : _enemySkillSelector.Select(
                     usableChoices.Select(choice => choice.SlotId).ToArray());
-            return ResolveAction(actor, selectedSkillSlotId, true);
+            return ResolveOrStartAction(actor, selectedSkillSlotId, true);
+        }
+
+        private static long AddTicks(long currentTick, int tickCount)
+        {
+            if (currentTick > long.MaxValue - tickCount)
+            {
+                throw new OverflowException("Battle Tick exceeded the Int64 range.");
+            }
+
+            return currentTick + tickCount;
+        }
+
+        public BattleFlowStep RefreshPlayerSkillChoices()
+        {
+            if (Phase != BattleFlowPhase.AwaitingPlayerSkill
+                || _awaitingPlayerUnit == null)
+            {
+                throw new InvalidOperationException(
+                    "The Battle is not awaiting a Player Skill.");
+            }
+
+            var playerChoices = _skillRuntime.GetRegularSkillChoices(
+                _state,
+                _awaitingPlayerUnit);
+            var usableSkillSlotIds = playerChoices
+                .Where(choice => choice.IsUsable)
+                .Select(choice => choice.SlotId)
+                .ToArray();
+            var struggleSkill = usableSkillSlotIds.Length == 0
+                ? _skillRuntime.GetStruggleSkill()
+                : null;
+            _awaitingPlayerSkillSlotIds = struggleSkill == null
+                ? new HashSet<int>(usableSkillSlotIds)
+                : new HashSet<int> { 0 };
+            return BattleFlowStep.RequirePlayerInput(
+                _awaitingPlayerUnit,
+                playerChoices,
+                struggleSkill);
         }
 
         public BattleFlowStep SubmitPlayerSkill(int skillSlotId)
@@ -99,7 +189,7 @@ namespace Pachimon.Battle
             }
 
             var actor = _awaitingPlayerUnit;
-            var step = ResolveAction(actor, skillSlotId, false);
+            var step = ResolveOrStartAction(actor, skillSlotId, false);
             _awaitingPlayerUnit = null;
             _awaitingPlayerSkillSlotIds = new HashSet<int>();
             return step;
@@ -125,11 +215,26 @@ namespace Pachimon.Battle
                 skillSlotId);
         }
 
-        private BattleFlowStep ResolveAction(
+        private BattleFlowStep ResolveOrStartAction(
             BattleUnitState actor,
             int skillSlotId,
             bool wasAutomaticallySelected)
         {
+            if (_skillRuntime.RequiresStartup(_state, actor, skillSlotId))
+            {
+                var pendingAction = _skillRuntime.BeginStartup(
+                    _state,
+                    actor,
+                    skillSlotId);
+                _pendingActions.Add(new ScheduledFlowAction(
+                    pendingAction,
+                    wasAutomaticallySelected));
+                Phase = BattleFlowPhase.Ready;
+                return BattleFlowStep.StartAction(
+                    pendingAction,
+                    wasAutomaticallySelected);
+            }
+
             var resolution = _skillRuntime.ExecuteCurrentTurn(_state, actor, skillSlotId);
             var outcome = _state.EvaluateOutcome();
             Phase = outcome == BattleOutcome.Undecided
@@ -139,6 +244,20 @@ namespace Pachimon.Battle
                 resolution,
                 outcome,
                 wasAutomaticallySelected);
+        }
+
+        private sealed class ScheduledFlowAction
+        {
+            public ScheduledFlowAction(
+                PendingSkillAction action,
+                bool wasAutomaticallySelected)
+            {
+                Action = action ?? throw new ArgumentNullException(nameof(action));
+                WasAutomaticallySelected = wasAutomaticallySelected;
+            }
+
+            public PendingSkillAction Action { get; }
+            public bool WasAutomaticallySelected { get; }
         }
     }
 }

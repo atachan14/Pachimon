@@ -5,6 +5,7 @@ using Pachimon.Battle;
 using Pachimon.Data;
 using Pachimon.Run;
 using Pachimon.Skills;
+using Pachimon.Passives;
 
 namespace Pachimon.UI
 {
@@ -14,7 +15,9 @@ namespace Pachimon.UI
             PachimonInstance instance,
             TrainerModifierSet modifiers,
             PachimonCatalog pachimonCatalog,
-            SkillCatalog skillCatalog)
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog,
+            PassiveStatModifierRegistry passiveStatModifierRegistry)
         {
             if (instance?.Stats == null)
             {
@@ -22,7 +25,11 @@ namespace Pachimon.UI
             }
 
             var definition = pachimonCatalog?.Get(instance.SpeciesId);
-            var stats = new EffectivePachimonStats(instance.Stats, modifiers);
+            var stats = PachimonStatService.Calculate(
+                instance.Stats,
+                modifiers,
+                instance.PassiveIds,
+                passiveStatModifierRegistry);
             return Create(
                 instance.SpeciesId,
                 definition,
@@ -31,13 +38,16 @@ namespace Pachimon.UI
                 stats,
                 instance.SkillIds,
                 instance.PassiveIds,
-                skillCatalog);
+                skillCatalog,
+                passiveCatalog,
+                statusEffects: null);
         }
 
         public static PachimonPreviewContent FromBattleUnit(
             BattleUnitState unit,
             PachimonCatalog pachimonCatalog,
-            SkillCatalog skillCatalog)
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog)
         {
             if (unit == null)
             {
@@ -49,10 +59,12 @@ namespace Pachimon.UI
                 pachimonCatalog?.Get(unit.SpeciesId),
                 unit.CurrentHp,
                 unit.CurrentMn,
-                unit.StartingStats,
+                unit.GetBattleStats(),
                 unit.SkillIds,
                 unit.PassiveIds,
-                skillCatalog);
+                skillCatalog,
+                passiveCatalog,
+                unit.Statuses.Select(status => status.DisplayName));
         }
 
         private static PachimonPreviewContent Create(
@@ -63,7 +75,9 @@ namespace Pachimon.UI
             EffectivePachimonStats stats,
             IEnumerable<int> skillIds,
             IEnumerable<int> passiveIds,
-            SkillCatalog skillCatalog)
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog,
+            IEnumerable<string> statusEffects)
         {
             var skills = skillIds
                 .Select(skillId => new PachimonAbilityPreview(
@@ -79,12 +93,22 @@ namespace Pachimon.UI
                 currentMn,
                 stats.MaxMn,
                 BuildStatPreviews(stats),
-                Array.Empty<string>(),
+                statusEffects?.ToArray() ?? Array.Empty<string>(),
                 skills,
                 passiveIds.Select(passiveId => new PachimonAbilityPreview(
                     PachimonAbilityKind.Passive,
                     passiveId,
-                    AttributePlaceholderName.FromCyclicId(passiveId))).ToArray());
+                    GetPassiveDisplayName(passiveId, passiveCatalog))).ToArray(),
+                stats.Calculation);
+        }
+
+        private static string GetPassiveDisplayName(
+            int passiveId,
+            PassiveCatalog passiveCatalog)
+        {
+            return passiveCatalog?.Get(passiveId) is { } definition
+                ? definition.DisplayName
+                : AttributePlaceholderName.FromCyclicId(passiveId);
         }
 
         private static IReadOnlyList<PachimonStatPreview> BuildStatPreviews(

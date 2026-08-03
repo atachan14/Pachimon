@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Data;
 using Pachimon.Skills;
@@ -7,9 +8,9 @@ namespace Pachimon.Run
 {
     public sealed class RunPachimonPoolGenerator
     {
-        public const int SpeciesCount = PachimonCatalog.RequiredSpeciesCount;
-        public const int InstancesPerSpecies = 2;
-        public const int PoolSize = (SpeciesCount - 1) * InstancesPerSpecies;
+        public const int PoolSize = 300;
+        public const int MaximumParticipatingSpecies = 150;
+        public const int MinimumSpeciesPerAllocationType = 4;
         private readonly PachimonCatalog _catalog;
         private readonly SkillCatalog _skillCatalog;
         private readonly PachimonStatsGenerator _statsGenerator;
@@ -41,15 +42,35 @@ namespace Pachimon.Run
                     "SkillCatalog is invalid:\n" + string.Join("\n", skillCatalogErrors));
             }
 
-            var species = _catalog.Species.OrderBy(definition => definition.SpeciesId).ToArray();
-            var excludedSpeciesId = species[random.Next(0, species.Length)].SpeciesId;
+            var enabledSpecies = _catalog.Species
+                .Where(definition => definition != null && definition.IsRunEnabled)
+                .OrderBy(definition => definition.SpeciesId)
+                .ToArray();
+            ValidateEnabledSpecies(enabledSpecies);
+
+            var participatingSpecies = enabledSpecies.ToList();
+            Shuffle(participatingSpecies, random);
+            var excludedSpeciesId = 0;
+            if (participatingSpecies.Count > MaximumParticipatingSpecies)
+            {
+                excludedSpeciesId = participatingSpecies[MaximumParticipatingSpecies].SpeciesId;
+                participatingSpecies.RemoveRange(
+                    MaximumParticipatingSpecies,
+                    participatingSpecies.Count - MaximumParticipatingSpecies);
+            }
+
+            var baseInstanceCount = PoolSize / participatingSpecies.Count;
+            var extraInstanceCount = PoolSize % participatingSpecies.Count;
             var pool = new RunPachimonPool
             {
                 ExcludedSpeciesId = excludedSpeciesId,
             };
 
-            foreach (var definition in species)
+            for (var speciesIndex = 0;
+                 speciesIndex < participatingSpecies.Count;
+                 speciesIndex++)
             {
+                var definition = participatingSpecies[speciesIndex];
                 var fixedSkill = _skillCatalog.Get(definition.FixedSkillId);
                 if (fixedSkill == null)
                 {
@@ -64,15 +85,12 @@ namespace Pachimon.Run
                 }
 
                 var speciesId = definition.SpeciesId;
-                if (speciesId == excludedSpeciesId)
-                {
-                    continue;
-                }
-
-                for (var copyIndex = 1; copyIndex <= InstancesPerSpecies; copyIndex++)
+                var instanceCount = baseInstanceCount
+                    + (speciesIndex < extraInstanceCount ? 1 : 0);
+                for (var copyIndex = 1; copyIndex <= instanceCount; copyIndex++)
                 {
                     pool.Add(new PachimonInstance(
-                        $"pachimon_{speciesId:D3}_{copyIndex}",
+                        $"pachimon_{speciesId:D3}_{copyIndex:D2}",
                         speciesId,
                         definition.AllocationType,
                         definition.FixedSkillId,
@@ -88,6 +106,72 @@ namespace Pachimon.Run
             }
 
             return pool;
+        }
+
+        private void ValidateEnabledSpecies(
+            IReadOnlyCollection<PachimonSpeciesDefinition> enabledSpecies)
+        {
+            if (enabledSpecies.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "PachimonCatalog has no Run-enabled Species.");
+            }
+
+            if (enabledSpecies.Count > PachimonCatalog.RequiredSpeciesCount)
+            {
+                throw new InvalidOperationException(
+                    $"PachimonCatalog has too many Run-enabled Species: {enabledSpecies.Count}.");
+            }
+
+            var errors = new List<string>();
+            foreach (AllocationType type in Enum.GetValues(typeof(AllocationType)))
+            {
+                if (type == AllocationType.Unassigned)
+                {
+                    continue;
+                }
+
+                var count = enabledSpecies.Count(species => species.AllocationType == type);
+                if (count < MinimumSpeciesPerAllocationType)
+                {
+                    errors.Add(
+                        $"{type} requires at least {MinimumSpeciesPerAllocationType} "
+                        + $"Run-enabled Species, but has {count}.");
+                }
+            }
+
+            foreach (var definition in enabledSpecies)
+            {
+                var fixedSkill = _skillCatalog.Get(definition.FixedSkillId);
+                if (fixedSkill == null)
+                {
+                    errors.Add(
+                        $"Pachimon species {definition.SpeciesId} references missing "
+                        + $"fixed Skill {definition.FixedSkillId}.");
+                }
+                else if (!fixedSkill.IsMapAssignable)
+                {
+                    errors.Add(
+                        $"Fixed Skill {definition.FixedSkillId} for Pachimon species "
+                        + $"{definition.SpeciesId} must be Map-assignable.");
+                }
+            }
+
+            if (errors.Count > 0)
+            {
+                throw new InvalidOperationException(
+                    "Run-enabled Pachimon content is invalid:\n"
+                    + string.Join("\n", errors));
+            }
+        }
+
+        private static void Shuffle<T>(IList<T> values, Random random)
+        {
+            for (var index = values.Count - 1; index > 0; index--)
+            {
+                var swapIndex = random.Next(index + 1);
+                (values[index], values[swapIndex]) = (values[swapIndex], values[index]);
+            }
         }
     }
 }

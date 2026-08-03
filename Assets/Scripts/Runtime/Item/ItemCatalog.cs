@@ -16,6 +16,13 @@ namespace Pachimon.Items
             return _items.FirstOrDefault(item => item != null && item.ItemId == itemId);
         }
 
+        public SkillMachineItemAsset GetSkillMachine(int skillId)
+        {
+            return _items
+                .OfType<SkillMachineItemAsset>()
+                .FirstOrDefault(item => item.SkillId == skillId);
+        }
+
         public IReadOnlyList<string> ValidateContent()
         {
             var errors = new List<string>();

@@ -87,5 +87,23 @@ namespace Pachimon.UI
                 slot?.ClearResourcePreview();
             }
         }
+
+        public void PresentResourceSnapshot(
+            BattleUnitState unit,
+            int currentHp,
+            int currentMn)
+        {
+            if (unit == null
+                || unit.SlotIndex < 0
+                || unit.SlotIndex >= _slots.Length)
+            {
+                return;
+            }
+
+            _slots[unit.SlotIndex]?.PresentResourceSnapshot(
+                unit,
+                currentHp,
+                currentMn);
+        }
     }
 }

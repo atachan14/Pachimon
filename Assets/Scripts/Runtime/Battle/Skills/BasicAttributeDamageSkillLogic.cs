@@ -1,5 +1,6 @@
 using System;
 using Pachimon.Reward;
+using Pachimon.Run;
 
 namespace Pachimon.Battle
 {
@@ -13,76 +14,120 @@ namespace Pachimon.Battle
             _attribute = attribute;
         }
 
-        public SkillPreview Preview(SkillExecutionContext context)
+        public SkillResolution Resolve(SkillExecutionContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
-            var target = GetTarget(context);
-            var damage = CalculatePreviewDamage(context, target);
-            return new SkillPreview(
+            var target = GetFrontTarget(context);
+            var result = BattleAttributeDamageService.Apply(
+                context.State,
+                context.User,
+                target,
+                new DamageContext(
+                    DamageOriginKind.Skill,
+                    context.Skill.SkillId,
+                    BaseDamage,
+                    context.User.GetBattleStats(),
+                    target.GetBattleStats(),
+                    _attribute,
+                    isAttack: true));
+            return new SkillResolution(
                 context.User,
                 context.Skill,
                 new[]
                 {
-                    new SkillPreviewEffect(
+                    new SkillEffectResult(
                         target,
-                        -Math.Min(target.CurrentHp, damage)),
+                        result.AppliedDamage,
+                        isTrueDamage: false),
                 });
         }
 
-        public SkillResolution Resolve(SkillExecutionContext context)
-        {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            var target = GetTarget(context);
-            var damage = AttributeDamageCalculator.Calculate(
-                BaseDamage,
-                context.User.StartingStats,
-                target.StartingStats,
-                _attribute);
-            var beforeDamage = new BeforeAttributeDamageEvent(
-                context.State,
-                context.User,
-                target,
-                _attribute,
-                damage);
-            context.State.Events.Publish(beforeDamage);
-            var appliedDamage = target.ApplyDamage(beforeDamage.Damage);
-            return new SkillResolution(
-                context.User,
-                context.Skill,
-                new[] { new SkillEffectResult(target, appliedDamage, false) });
-        }
-
-        private BattleUnitState GetTarget(SkillExecutionContext context)
+        internal static BattleUnitState GetFrontTarget(
+            SkillExecutionContext context)
         {
             return context.Targets.GetFrontEnemy()
                 ?? throw new InvalidOperationException("No living Enemy target was found.");
         }
 
-        private int CalculatePreviewDamage(
-            SkillExecutionContext context,
-            BattleUnitState target)
+    }
+
+    public sealed class ElectricShockSkillLogic : ISkillLogic
+    {
+        private readonly BasicAttributeDamageSkillLogic _damageLogic =
+            new(PachimonAttribute.Electric);
+
+        public SkillResolution Resolve(SkillExecutionContext context)
         {
-            var damage = AttributeDamageCalculator.Calculate(
-                BaseDamage,
-                context.User.StartingStats,
-                target.StartingStats,
-                _attribute);
-            foreach (var passiveId in context.User.PassiveIds)
-            {
-                if (!PassiveLogicRegistry.TryGetPlaceholderAttribute(
-                        passiveId,
-                        out var passiveAttribute)
-                    || passiveAttribute != _attribute)
-                {
-                    continue;
-                }
+            if (context == null) throw new ArgumentNullException(nameof(context));
 
-                var multiplied =
-                    ((long)damage * OutgoingAttributeDamagePassiveLogic.DamagePercent) / 100L;
-                damage = (int)Math.Max(1L, Math.Min(multiplied, int.MaxValue));
-            }
+            var resolution = _damageLogic.Resolve(context);
+            var target = BasicAttributeDamageSkillLogic.GetFrontTarget(context);
+            context.State.Statuses.ApplyStatus(
+                target,
+                new BattleStatusInstance(
+                    BattleStatusId.Paralysis,
+                    BattleStatusCategory.Slow,
+                    context.User,
+                    ElectricShockMath.CalculateSlowValue(context.User)));
+            return resolution;
+        }
+    }
 
-            return damage;
+    public static class ElectricShockMath
+    {
+        public const int ElectricBaseValue = 50;
+        public const int IceBaseValue = 25;
+
+        public static int CalculateSlowValue(BattleUnitState user)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            var electric = SignedStatMath.FloorNonNegative(
+                SignedStatMath.ScaleFromBase(
+                    ElectricBaseValue,
+                    user.GetBattleStatValue(PachimonStatType.Electric)));
+            var ice = SignedStatMath.FloorNonNegative(
+                SignedStatMath.ScaleFromBase(
+                    IceBaseValue,
+                    user.GetBattleStatValue(PachimonStatType.Ice)));
+            return checked(electric + ice);
+        }
+    }
+
+    public sealed class ColdHandSkillLogic : ISkillLogic
+    {
+        private readonly BasicAttributeDamageSkillLogic _damageLogic =
+            new(PachimonAttribute.Ice);
+
+        public SkillResolution Resolve(SkillExecutionContext context)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+
+            var resolution = _damageLogic.Resolve(context);
+            var target = BasicAttributeDamageSkillLogic.GetFrontTarget(context);
+            context.State.Statuses.ApplyStatus(
+                target,
+                new BattleStatusInstance(
+                    BattleStatusId.Chill,
+                    BattleStatusCategory.Slow,
+                    context.User,
+                    ColdHandMath.CalculateChillValue(context.User)));
+            return resolution;
+        }
+    }
+
+    public static class ColdHandMath
+    {
+        public const int IceBaseValue = 75;
+
+        public static int CalculateChillValue(BattleUnitState user)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            return SignedStatMath.FloorNonNegative(
+                SignedStatMath.ScaleFromBase(
+                    IceBaseValue,
+                    user.GetBattleStatValue(PachimonStatType.Ice)));
         }
     }
 }

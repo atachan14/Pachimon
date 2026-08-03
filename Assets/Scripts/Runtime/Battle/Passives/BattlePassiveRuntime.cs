@@ -7,7 +7,8 @@ namespace Pachimon.Battle
     {
         public BattlePassiveRuntime(
             BattleState state,
-            PassiveLogicRegistry logicRegistry)
+            PassiveLogicRegistry logicRegistry,
+            bool publishBattleStarted = true)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (logicRegistry == null) throw new ArgumentNullException(nameof(logicRegistry));
@@ -20,7 +21,10 @@ namespace Pachimon.Battle
                 }
             }
 
-            state.Events.Publish(new BattleStartedEvent(state));
+            if (publishBattleStarted)
+            {
+                state.Events.Publish(new BattleStartedEvent(state));
+            }
         }
     }
 }

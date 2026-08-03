@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Pachimon.Data;
 using Pachimon.Reward;
 using Pachimon.Skills;
+using Pachimon.Passives;
 
 namespace Pachimon.Battle
 {
@@ -10,7 +11,9 @@ namespace Pachimon.Battle
     {
         private readonly Dictionary<int, ISkillLogic> _logicBySkillId = new();
 
-        public SkillLogicRegistry(SkillCatalog skillCatalog)
+        public SkillLogicRegistry(
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog)
         {
             if (skillCatalog == null) throw new ArgumentNullException(nameof(skillCatalog));
 
@@ -19,9 +22,9 @@ namespace Pachimon.Battle
                 [AllocationType.Fire] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Fire),
                 [AllocationType.Aqua] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Aqua),
                 [AllocationType.Leaf] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Leaf),
-                [AllocationType.Electric] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Electric),
+                [AllocationType.Electric] = new ElectricShockSkillLogic(),
                 [AllocationType.Poison] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Poison),
-                [AllocationType.Ice] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Ice),
+                [AllocationType.Ice] = new ColdHandSkillLogic(),
                 [AllocationType.Wind] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Wind),
                 [AllocationType.Dragon] = new BasicAttributeDamageSkillLogic(PachimonAttribute.Dragon),
             };
@@ -32,6 +35,49 @@ namespace Pachimon.Battle
                 if (skill.SkillId == SkillIdRanges.StruggleId)
                 {
                     _logicBySkillId[skill.SkillId] = new StruggleSkillLogic();
+                }
+                else if (skill is AquaShockSkillAsset aquaShock)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new AquaShockSkillLogic(aquaShock);
+                }
+                else if (skill is BackfireSkillAsset backfire)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BackfireSkillLogic(backfire);
+                }
+                else if (skill is FireArrowSkillAsset fireArrow)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new FireArrowSkillLogic(fireArrow);
+                }
+                else if (skill is CombustionSkillAsset combustion)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new CombustionSkillLogic(combustion);
+                }
+                else if (skill is ElectricExplosionSkillAsset electricExplosion)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ElectricExplosionSkillLogic(
+                            electricExplosion);
+                }
+                else if (skill is ElectricQuickAttackSkillAsset quickAttack)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ElectricQuickAttackSkillLogic(
+                            quickAttack);
+                }
+                else if (skill is ElectromagneticCannonSkillAsset cannon)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ElectromagneticCannonSkillLogic(
+                            cannon);
+                }
+                else if (skill is ChargeSkillAsset charge)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ChargeSkillLogic(charge);
                 }
                 else if (skill.IsMapAssignable
                     && basicLogicByType.TryGetValue(skill.AllocationType, out var logic))

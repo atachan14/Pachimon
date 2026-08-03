@@ -30,6 +30,7 @@ namespace Pachimon.Run
         private string _startNodeId;
         private string _startPreviewCandidateId;
         private StartNodeController _startNodeController;
+        private StartNodeProgressState? _renderedStartNodeState;
         private BattleState _activeBattleState;
         private TrainerPreviewContent _activeEnemyTrainerPreview;
         private string _inspectedNodeId;
@@ -77,7 +78,6 @@ namespace Pachimon.Run
             _startNodeId = null;
             _startPreviewCandidateId = null;
             _startNodeController = null;
-            InitializeRevealedNodes();
             _canMoveToNextNode = false;
             CancelNodeSelection();
             ApplyHeaderState();
@@ -170,9 +170,12 @@ namespace Pachimon.Run
                     return false;
                 }
 
+                var runTarget = Context.PachimonPool.Get(
+                    battleTarget.InstanceId);
                 useContext = ItemUseContext.ForBattle(
                     battleTarget,
-                    ItemTargetAffiliation.Ally);
+                    ItemTargetAffiliation.Ally,
+                    runTarget);
             }
             else
             {
@@ -188,9 +191,11 @@ namespace Pachimon.Run
                     return false;
                 }
 
-                var effectiveMaxHp = Context.RunState.PlayerModifiers
-                    .ApplyTo(runTarget.Stats)
-                    .MaxHp;
+                var effectiveMaxHp = PachimonStatService.Calculate(
+                    runTarget.Stats,
+                    Context.RunState.PlayerModifiers,
+                    runTarget.PassiveIds,
+                    Context.PassiveStatModifierRegistry).MaxHp;
                 useContext = ItemUseContext.ForRun(
                     runTarget,
                     effectiveMaxHp,
@@ -212,6 +217,9 @@ namespace Pachimon.Run
             if (_activeBattleState != null)
             {
                 _battleScreen.ApplyExternalBattleStateChange();
+                RefreshBattlePanes(
+                    _activeBattleState,
+                    _activeEnemyTrainerPreview);
             }
             else
             {
@@ -246,7 +254,11 @@ namespace Pachimon.Run
 
                 useContext = ItemUseContext.ForBattle(
                     _activeBattleState.Enemy.GetUnitAt(enemyIndex),
-                    ItemTargetAffiliation.Enemy);
+                    ItemTargetAffiliation.Enemy,
+                    Context.PachimonPool.Get(
+                        _activeBattleState.Enemy
+                            .GetUnitAt(enemyIndex)
+                            .InstanceId));
             }
             else
             {
@@ -283,6 +295,9 @@ namespace Pachimon.Run
             if (_activeBattleState != null && _rightPaneShowsActiveBattle)
             {
                 _battleScreen.ApplyExternalBattleStateChange();
+                RefreshBattlePanes(
+                    _activeBattleState,
+                    _activeEnemyTrainerPreview);
             }
             else if (!string.IsNullOrWhiteSpace(_inspectedNodeId))
             {
@@ -306,12 +321,14 @@ namespace Pachimon.Run
                 return false;
             }
 
+            var battleTarget = _activeBattleState.Enemy.GetUnitAt(enemyIndex);
             var result = new ItemUseService(Context.ItemCatalog).TryUse(
                 Context.RunState.ItemInventory,
                 item.InstanceId,
                 ItemUseContext.ForBattle(
-                    _activeBattleState.Enemy.GetUnitAt(enemyIndex),
-                    ItemTargetAffiliation.Enemy));
+                    battleTarget,
+                    ItemTargetAffiliation.Enemy,
+                    Context.PachimonPool.Get(battleTarget.InstanceId)));
             if (!result.Succeeded)
             {
                 return false;
@@ -321,6 +338,9 @@ namespace Pachimon.Run
             var rightWindow = _rightPaneView?.NodeSelectionWindow?.BattleWindow;
             var rightTab = rightWindow?.SelectedTabIndex ?? 0;
             _battleScreen.ApplyExternalBattleStateChange();
+            RefreshBattlePanes(
+                _activeBattleState,
+                _activeEnemyTrainerPreview);
             _leftPaneView?.PartyWindow?.ShowTab(leftTab);
             rightWindow?.ShowTab(rightTab);
             _gameRootView?.RefreshItemPanel(true);
@@ -355,7 +375,6 @@ namespace Pachimon.Run
             }
 
             Context.RunState.CurrentNodeId = targetNodeId;
-            RevealNodeLocation(targetNodeId);
             _canMoveToNextNode = false;
             _pendingNodeId = null;
             ApplyHeaderState();
@@ -379,16 +398,14 @@ namespace Pachimon.Run
             _rightPaneShowsActiveBattle = false;
             var canMoveToNode = _canMoveToNextNode
                 && GetCurrentOutgoingNodeIds().Contains(nodeId);
-            var isNodeRevealed = IsNodeRevealed(node, canMoveToNode);
             _pendingNodeId = canMoveToNode ? nodeId : null;
             _mapOverlayView?.SetSelectedNode(nodeId);
-            ShowNodeSelectionDetails(node, canMoveToNode, isNodeRevealed);
+            ShowNodeSelectionDetails(node, canMoveToNode);
         }
 
         private void ShowNodeSelectionDetails(
             MapNode node,
-            bool canMoveToNode,
-            bool isNodeRevealed)
+            bool canMoveToNode)
         {
             switch (node.Content)
             {
@@ -396,22 +413,22 @@ namespace Pachimon.Run
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(battle.TrainerProfile, battle.NodeReward),
                         battle.EnemyPachimonInstanceIds,
-                        canMoveToNode,
-                        isNodeRevealed);
+                        canMoveToNode);
                     break;
                 case GymNodeContent gym:
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(gym.TrainerProfile, gym.NodeReward),
                         gym.EnemyPachimonInstanceIds,
-                        canMoveToNode,
-                        isNodeRevealed);
+                        canMoveToNode);
                     break;
                 case EliteNodeContent elite:
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(elite.TrainerProfile, null),
                         elite.EnemyPachimonInstanceIds,
-                        canMoveToNode,
-                        isNodeRevealed);
+                        canMoveToNode);
+                    break;
+                case CityNodeContent city:
+                    ShowCityNodeDetails(node, city, canMoveToNode);
                     break;
                 default:
                     if (canMoveToNode)
@@ -435,11 +452,10 @@ namespace Pachimon.Run
         private void ShowBattleNodeDetails(
             TrainerPreviewContent trainerPreview,
             IEnumerable<string> enemyIds,
-            bool canMoveToNode,
-            bool isNodeRevealed)
+            bool canMoveToNode)
         {
             _inspectedEnemyIds = enemyIds.ToArray();
-            var previews = BuildPachimonPreviews(_inspectedEnemyIds, isNodeRevealed);
+            var previews = BuildPachimonPreviews(_inspectedEnemyIds);
             if (canMoveToNode)
             {
                 _rightPaneView?.ShowBattleNodeSelection(
@@ -451,6 +467,61 @@ namespace Pachimon.Run
             }
 
             _rightPaneView?.ShowBattleNodePreview(trainerPreview, previews);
+        }
+
+        private void ShowCityNodeDetails(
+            MapNode node,
+            CityNodeContent city,
+            bool canMoveToNode)
+        {
+            if (IsCurrentLocation(node))
+            {
+                _rightPaneView?.ShowCityShop(
+                    city,
+                    Context.ItemCatalog,
+                    Context.RunState,
+                    ShowCityItemDetails,
+                    TryPurchaseCurrentCityStock);
+                return;
+            }
+
+            if (canMoveToNode)
+            {
+                _rightPaneView?.ShowCityNodeSelection(
+                    city,
+                    Context.ItemCatalog,
+                    Context.RunState,
+                    ShowCityItemDetails,
+                    ConfirmNodeSelection,
+                    CancelNodeSelection);
+                return;
+            }
+
+            _rightPaneView?.ShowCityNodePreview(
+                city,
+                Context.ItemCatalog,
+                Context.RunState,
+                ShowCityItemDetails);
+        }
+
+        private bool IsCurrentLocation(MapNode node)
+        {
+            var currentNode = GetCurrentNode();
+            if (node == null || currentNode == null)
+            {
+                return false;
+            }
+
+            if (node.NodeId == currentNode.NodeId)
+            {
+                return true;
+            }
+
+            var nodeGroup = Context.RunMap.GetNodeGroupForNode(node.NodeId);
+            var currentGroup = Context.RunMap.GetNodeGroupForNode(currentNode.NodeId);
+            return nodeGroup != null
+                && currentGroup != null
+                && nodeGroup.GroupId == currentGroup.GroupId;
         }
 
         private TrainerPreviewContent BuildTrainerPreview(
@@ -548,11 +619,10 @@ namespace Pachimon.Run
         }
 
         private IReadOnlyList<PachimonPreviewContent> BuildPachimonPreviews(
-            IEnumerable<string> enemyIds,
-            bool isRevealed)
+            IEnumerable<string> enemyIds)
         {
             return enemyIds
-                .Select(instanceId => BuildPachimonPreview(instanceId, isRevealed))
+                .Select(instanceId => BuildPachimonPreview(instanceId, true))
                 .ToArray();
         }
 
@@ -570,7 +640,9 @@ namespace Pachimon.Run
                 Context.PachimonPool.Get(instanceId),
                 modifiers,
                 Context.PachimonCatalog,
-                Context.SkillCatalog);
+                Context.SkillCatalog,
+                Context.PassiveCatalog,
+                Context.PassiveStatModifierRegistry);
         }
 
         private void ConfirmNodeSelection()
@@ -596,6 +668,17 @@ namespace Pachimon.Run
         {
             if (_activeBattleState == null)
             {
+                var currentNode = GetCurrentNode();
+                if (currentNode?.Content is CityNodeContent)
+                {
+                    _pendingNodeId = null;
+                    _inspectedNodeId = null;
+                    _inspectedEnemyIds = Array.Empty<string>();
+                    _mapOverlayView?.SetSelectedNode(null);
+                    ShowCurrentCityShop();
+                    return;
+                }
+
                 CancelNodeSelection();
                 return;
             }
@@ -780,6 +863,7 @@ namespace Pachimon.Run
                     StartDialogueData.CreateDefault(Context.RunState.PlayerName),
                     TrySetInitialParty,
                     CompleteCurrentNode);
+                _renderedStartNodeState = null;
                 _startNodeController.Changed += RenderStartNode;
                 _startScreen.ShowCandidates(
                     content.CandidatePachimonInstanceIds
@@ -799,37 +883,64 @@ namespace Pachimon.Run
                 return;
             }
 
+            var enteredState = _renderedStartNodeState
+                != _startNodeController.State;
+            _renderedStartNodeState = _startNodeController.State;
+
             switch (_startNodeController.State)
             {
                 case StartNodeProgressState.IntroDialogue:
-                    CloseStartCandidateDetails();
-                    _startScreen.HideCandidatePanel();
-                    logWindow.SetLogText(_startNodeController.Dialogue.Greeting);
-                    logWindow.ShowSingleOption("おう", () => _startNodeController.AdvanceIntro());
+                    if (enteredState)
+                    {
+                        CloseStartCandidateDetails();
+                        _startScreen.HideCandidatePanel();
+                        logWindow.SetLogText(_startNodeController.Dialogue.Greeting);
+                        logWindow.ShowSingleOption(
+                            "おう",
+                            () => _startNodeController.AdvanceIntro());
+                    }
                     break;
                 case StartNodeProgressState.Selecting:
-                    _startScreen.ShowCandidatePanel();
-                    _startScreen.ShowCandidateSelection();
+                    if (enteredState)
+                    {
+                        _startScreen.ShowCandidatePanel();
+                        _startScreen.ShowCandidateSelection();
+                        RenderStartSelection(logWindow);
+                    }
                     _startScreen.SetCandidateSelections(_startNodeController.SelectedIds);
-                    RenderStartSelection(logWindow);
                     RefreshStartCandidateDetails();
                     break;
                 case StartNodeProgressState.SelectionConfirmation:
-                    CloseStartCandidateDetails();
-                    _startScreen.ShowCandidatePanel();
-                    _startScreen.SetCandidateSelections(_startNodeController.SelectedIds);
-                    _startScreen.ShowCandidateConfirmation(_startNodeController.SelectedIds);
-                    RenderStartConfirmation(logWindow);
+                    if (enteredState)
+                    {
+                        CloseStartCandidateDetails();
+                        _startScreen.ShowCandidatePanel();
+                        _startScreen.SetCandidateSelections(_startNodeController.SelectedIds);
+                        _startScreen.ShowCandidateConfirmation(
+                            _startNodeController.SelectedIds);
+                        RenderStartConfirmation(logWindow);
+                    }
                     break;
                 case StartNodeProgressState.FinalDialogue:
-                    _startScreen.ShowCandidatePanel();
-                    _startScreen.SetCandidateSelections(_startNodeController.SelectedIds);
-                    _startScreen.ShowCandidateConfirmation(_startNodeController.SelectedIds);
-                    logWindow.SetLogText(_startNodeController.Dialogue.FinalMessage);
-                    logWindow.ShowSingleOption("おう", () => _startNodeController.Complete());
+                    if (enteredState)
+                    {
+                        _startScreen.ShowCandidatePanel();
+                        _startScreen.SetCandidateSelections(
+                            _startNodeController.SelectedIds);
+                        _startScreen.ShowCandidateConfirmation(
+                            _startNodeController.SelectedIds);
+                        logWindow.SetLogText(
+                            _startNodeController.Dialogue.FinalMessage);
+                        logWindow.ShowSingleOption(
+                            "おう",
+                            () => _startNodeController.Complete());
+                    }
                     break;
                 case StartNodeProgressState.Completed:
-                    logWindow.ClearOptions();
+                    if (enteredState)
+                    {
+                        logWindow.ClearOptions();
+                    }
                     break;
             }
         }
@@ -862,6 +973,13 @@ namespace Pachimon.Run
 
         private void ShowStartCandidateDetails(string instanceId)
         {
+            if (_startNodeController?.State == StartNodeProgressState.Selecting
+                && _startPreviewCandidateId == instanceId)
+            {
+                ToggleStartPreviewCandidate();
+                return;
+            }
+
             _startPreviewCandidateId = instanceId;
             _startScreen.SetFocusedCandidate(instanceId);
             RefreshStartCandidateDetails();
@@ -946,9 +1064,100 @@ namespace Pachimon.Run
                 return;
             }
 
-            _mainPaneView.LogWindowView?.SetLogText(
-                $"City Node\nショップ seed: {content.ShopSeed}\nここでは今後、shop inventory を表示する。");
-            _mainPaneView.LogWindowView?.ShowSingleOption("次へ進む", CompleteCurrentNode);
+            ShowCurrentCityShop();
+        }
+
+        private void ShowCurrentCityShop(string statusMessage = null)
+        {
+            var currentNode = GetCurrentNode();
+            if (currentNode?.Content is not CityNodeContent content)
+            {
+                return;
+            }
+
+            var message = "シティへようこそ。\nRightPaneの商品を選んで購入できます。";
+            if (!string.IsNullOrWhiteSpace(statusMessage))
+            {
+                message += $"\n\n{statusMessage}";
+            }
+
+            _mainPaneView.LogWindowView?.SetLogText(message);
+            _mainPaneView.LogWindowView?.ShowSingleOption("進む", CompleteCurrentNode);
+            _rightPaneView?.ShowCityShop(
+                content,
+                Context.ItemCatalog,
+                Context.RunState,
+                ShowCityItemDetails,
+                TryPurchaseCurrentCityStock);
+        }
+
+        private void ShowCityItemDetails(int itemId)
+        {
+            _gameRootView?.ShowItemDetails(itemId);
+        }
+
+        private void TryPurchaseCurrentCityStock(string stockId)
+        {
+            var currentNode = GetCurrentNode();
+            if (currentNode?.Content is not CityNodeContent content)
+            {
+                return;
+            }
+
+            var entry = content.StockEntries?
+                .FirstOrDefault(candidate => candidate.StockId == stockId);
+            if (entry == null)
+            {
+                ShowCurrentCityShop("商品が見つかりません。");
+                return;
+            }
+
+            if (entry.IsPurchased)
+            {
+                ShowCurrentCityShop("その商品は売り切れです。");
+                return;
+            }
+
+            if (Context.ItemCatalog.Get(entry.ItemId) == null)
+            {
+                ShowCurrentCityShop("商品データが見つかりません。");
+                return;
+            }
+
+            if (Context.RunState.ItemInventory.IsFull)
+            {
+                ShowCurrentCityShop("Item Slotがいっぱいです。");
+                return;
+            }
+
+            if (Context.RunState.Gold < entry.Price)
+            {
+                ShowCurrentCityShop("Goldが足りません。");
+                return;
+            }
+
+            if (!Context.RunState.ItemInventory.TryAdd(
+                    entry.ItemId,
+                    out var itemInstance,
+                    out _))
+            {
+                ShowCurrentCityShop("Itemを追加できませんでした。");
+                return;
+            }
+
+            if (!entry.TryMarkPurchased())
+            {
+                Context.RunState.ItemInventory.TryRemove(itemInstance.InstanceId, out _);
+                ShowCurrentCityShop("その商品は売り切れです。");
+                return;
+            }
+
+            Context.RunState.Gold -= entry.Price;
+            ApplyHeaderState();
+            _gameRootView?.RefreshItemPanel(true);
+            var item = Context.ItemCatalog.Get(entry.ItemId);
+            ShowCurrentCityShop(
+                $"{item?.DisplayName ?? "Item"}を{entry.Price} Goldで購入しました。");
         }
 
         private void ApplyBattleNode(MapNode node)
@@ -1009,7 +1218,9 @@ namespace Pachimon.Run
 
             var stateFactory = new BattleStateFactory(
                 Context.PachimonPool,
-                Context.PachimonCatalog);
+                Context.PachimonCatalog,
+                Context.PassiveCatalog,
+                Context.PassiveStatModifierRegistry);
             var battleState = stateFactory.Create(
                 CreateBattleSeed(node),
                 Context.RunState.PlayerPachimonIds,
@@ -1024,7 +1235,9 @@ namespace Pachimon.Run
             RefreshBattlePanes(battleState, enemyTrainerPreview);
             _battleScreen.BeginBattle(
                 battleState,
-                new BattleSkillRuntime(Context.SkillCatalog),
+                new BattleSkillRuntime(
+                    Context.SkillCatalog,
+                    Context.PassiveCatalog),
                 _mainPaneView.LogWindowView,
                 Context.PachimonCatalog,
                 BuildPlayerTrainerPreview().Graphic,
@@ -1054,7 +1267,8 @@ namespace Pachimon.Run
                     .Select(unit => PachimonPreviewFactory.FromBattleUnit(
                         unit,
                         Context.PachimonCatalog,
-                        Context.SkillCatalog))
+                        Context.SkillCatalog,
+                        Context.PassiveCatalog))
                     .ToArray());
             _rightPaneView?.ShowBattleStatus(
                 enemyTrainerPreview,
@@ -1062,7 +1276,8 @@ namespace Pachimon.Run
                     .Select(unit => PachimonPreviewFactory.FromBattleUnit(
                         unit,
                         Context.PachimonCatalog,
-                        Context.SkillCatalog))
+                        Context.SkillCatalog,
+                        Context.PassiveCatalog))
                     .ToArray());
             _leftPaneView?.PartyWindow?.ShowTab(leftSelectedTab);
             rightWindow?.ShowTab(rightSelectedTab);
@@ -1124,7 +1339,8 @@ namespace Pachimon.Run
             var session = new BattleRewardSession(
                 Context.RunState,
                 Context.PachimonPool,
-                nodeReward);
+                nodeReward,
+                Context.PassiveStatModifierRegistry);
             var sources = battleState.Enemy.Units
                 .Select(BuildRewardSource)
                 .ToArray();
@@ -1180,9 +1396,13 @@ namespace Pachimon.Run
                         skill?.DisplayName ?? $"Skill #{skillId}");
                 }),
                 unit.PassiveIds.Select(passiveId =>
-                    new RewardChoiceContent(
-                        passiveId,
-                        AttributePlaceholderName.FromCyclicId(passiveId))));
+                {
+                    var displayName = Context.PassiveCatalog.Get(passiveId)
+                        is { } statDefinition
+                            ? statDefinition.DisplayName
+                            : AttributePlaceholderName.FromCyclicId(passiveId);
+                    return new RewardChoiceContent(passiveId, displayName);
+                }));
         }
 
         private bool ClaimImmediateReward(
@@ -1302,6 +1522,7 @@ namespace Pachimon.Run
             var result = RestSpotRecoveryService.RecoverPlayerParty(
                 Context.RunState,
                 Context.PachimonPool,
+                Context.PassiveStatModifierRegistry,
                 content.HealPercent);
             RefreshPlayerPartyPane();
 
@@ -1355,7 +1576,6 @@ namespace Pachimon.Run
             ResolveCurrentLocation(currentNode);
             var outgoingNodeIds = GetCurrentOutgoingNodeIds();
             _canMoveToNextNode = outgoingNodeIds.Count > 0;
-            RevealNodeLocations(outgoingNodeIds);
             ApplyMapOverlayState();
 
             if (_canMoveToNextNode)
@@ -1398,52 +1618,5 @@ namespace Pachimon.Run
             }
         }
 
-        private void InitializeRevealedNodes()
-        {
-            RevealNodeLocation(Context.RunMap.StartNodeId);
-            foreach (var eliteNode in Context.RunMap.Nodes.Values
-                         .Where(node => node.NodeType == NodeType.Elite))
-            {
-                RevealNodeLocation(eliteNode.NodeId);
-            }
-        }
-
-        private bool IsNodeRevealed(MapNode node, bool canMoveToNode)
-        {
-            return node != null
-                && (node.NodeType == NodeType.Elite
-                    || canMoveToNode
-                    || Context.RunState.RevealedNodeIds.Contains(node.NodeId)
-                    || Context.RunState.ResolvedNodeIds.Contains(node.NodeId)
-                    || Context.RunState.CurrentNodeId == node.NodeId);
-        }
-
-        private void RevealNodeLocations(IEnumerable<string> nodeIds)
-        {
-            foreach (var nodeId in nodeIds)
-            {
-                RevealNodeLocation(nodeId);
-            }
-        }
-
-        private void RevealNodeLocation(string nodeId)
-        {
-            if (string.IsNullOrEmpty(nodeId))
-            {
-                return;
-            }
-
-            var group = Context.RunMap.GetNodeGroupForNode(nodeId);
-            if (group == null)
-            {
-                Context.RunState.RevealedNodeIds.Add(nodeId);
-                return;
-            }
-
-            foreach (var groupedNodeId in group.NodeIds)
-            {
-                Context.RunState.RevealedNodeIds.Add(groupedNodeId);
-            }
-        }
     }
 }

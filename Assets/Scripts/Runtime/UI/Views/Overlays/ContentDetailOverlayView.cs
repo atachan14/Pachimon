@@ -6,30 +6,37 @@ using UnityEngine.UI;
 
 namespace Pachimon.UI
 {
-    public sealed class AbilityDetailOverlayContent
+    public enum ContentDetailKind
     {
-        public AbilityDetailOverlayContent(
-            string kind,
+        Skill,
+        Passive,
+        Item,
+    }
+
+    public sealed class ContentDetailOverlayContent
+    {
+        public ContentDetailOverlayContent(
+            ContentDetailKind kind,
             string title,
             string metadata,
             string description,
             Color accentColor)
         {
-            Kind = kind ?? string.Empty;
+            Kind = kind;
             Title = title ?? string.Empty;
             Metadata = metadata ?? string.Empty;
             Description = description ?? string.Empty;
             AccentColor = accentColor;
         }
 
-        public string Kind { get; }
+        public ContentDetailKind Kind { get; }
         public string Title { get; }
         public string Metadata { get; }
         public string Description { get; }
         public Color AccentColor { get; }
     }
 
-    public sealed class AbilityDetailOverlayView : MonoBehaviour
+    public sealed class ContentDetailOverlayView : MonoBehaviour
     {
         private const float TransitionDuration = 0.25f;
         private const float PanelInset = 36f;
@@ -45,23 +52,24 @@ namespace Pachimon.UI
         private float _slideDistance = 1f;
 
         public bool IsOpen { get; private set; }
+        public ContentDetailKind? ShownKind { get; private set; }
 
-        public static AbilityDetailOverlayView CreateRuntime(RectTransform parent)
+        public static ContentDetailOverlayView CreateRuntime(RectTransform parent)
         {
             var rootObject = new GameObject(
-                "AbilityDetailOverlayView",
+                "ContentDetailOverlayView",
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
                 typeof(Image),
                 typeof(CanvasGroup),
-                typeof(AbilityDetailOverlayView));
+                typeof(ContentDetailOverlayView));
             rootObject.layer = parent.gameObject.layer;
             var rect = rootObject.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
             Stretch(rect);
             rect.offsetMin = new Vector2(PanelInset, PanelInset);
             rect.offsetMax = new Vector2(-PanelInset, -PanelInset);
-            var view = rootObject.GetComponent<AbilityDetailOverlayView>();
+            var view = rootObject.GetComponent<ContentDetailOverlayView>();
             view.Build();
             view.ApplyProgress(0f);
             return view;
@@ -76,7 +84,7 @@ namespace Pachimon.UI
             }
         }
 
-        public void Show(AbilityDetailOverlayContent content)
+        public void Show(ContentDetailOverlayContent content)
         {
             if (content == null)
             {
@@ -84,7 +92,7 @@ namespace Pachimon.UI
                 return;
             }
 
-            _kind.text = content.Kind;
+            _kind.text = GetKindLabel(content.Kind);
             _title.text = content.Title;
             _metadata.text = content.Metadata;
             var hasMetadata = !string.IsNullOrWhiteSpace(content.Metadata);
@@ -95,6 +103,7 @@ namespace Pachimon.UI
                 new Vector2(0.92f, hasMetadata ? 0.54f : 0.68f));
             _description.text = content.Description;
             _accent.color = content.AccentColor;
+            ShownKind = content.Kind;
             IsOpen = true;
             gameObject.SetActive(true);
             StartTransition(1f);
@@ -174,6 +183,17 @@ namespace Pachimon.UI
                 closeButton.GetComponent<RectTransform>(),
                 new Vector2(0.32f, 0.05f),
                 new Vector2(0.68f, 0.14f));
+        }
+
+        private static string GetKindLabel(ContentDetailKind kind)
+        {
+            return kind switch
+            {
+                ContentDetailKind.Skill => "SKILL",
+                ContentDetailKind.Passive => "PASSIVE",
+                ContentDetailKind.Item => "ITEM",
+                _ => string.Empty,
+            };
         }
 
         private void StartTransition(float target)

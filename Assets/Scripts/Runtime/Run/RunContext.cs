@@ -3,6 +3,7 @@ using Pachimon.Map;
 using Pachimon.Trainer;
 using Pachimon.Skills;
 using Pachimon.Items;
+using Pachimon.Passives;
 
 namespace Pachimon.Run
 {
@@ -14,6 +15,8 @@ namespace Pachimon.Run
             RunMap runMap,
             PachimonCatalog pachimonCatalog,
             SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog,
+            PassiveStatModifierRegistry passiveStatModifierRegistry,
             ItemCatalog itemCatalog,
             TrainerStyleCatalog trainerStyleCatalog,
             TrainerNameCatalog trainerNameCatalog,
@@ -24,6 +27,8 @@ namespace Pachimon.Run
             RunMap = runMap;
             PachimonCatalog = pachimonCatalog;
             SkillCatalog = skillCatalog;
+            PassiveCatalog = passiveCatalog;
+            PassiveStatModifierRegistry = passiveStatModifierRegistry;
             ItemCatalog = itemCatalog;
             TrainerStyleCatalog = trainerStyleCatalog;
             TrainerNameCatalog = trainerNameCatalog;
@@ -39,6 +44,10 @@ namespace Pachimon.Run
         public PachimonCatalog PachimonCatalog { get; }
 
         public SkillCatalog SkillCatalog { get; }
+
+        public PassiveCatalog PassiveCatalog { get; }
+
+        public PassiveStatModifierRegistry PassiveStatModifierRegistry { get; }
 
         public ItemCatalog ItemCatalog { get; }
 

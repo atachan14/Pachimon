@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using Pachimon.Reward;
+using Pachimon.Run;
+using Pachimon.Passives;
 
 namespace Pachimon.Battle
 {
@@ -24,13 +26,38 @@ namespace Pachimon.Battle
         private readonly Dictionary<int, Func<BattleUnitState, IPassiveLogic>>
             _factoriesByPassiveId = new();
 
-        public PassiveLogicRegistry()
+        public PassiveLogicRegistry(PassiveCatalog passiveCatalog = null)
         {
             for (var passiveId = FirstPlaceholderPassiveId;
                  passiveId <= LastPlaceholderPassiveId;
                  passiveId++)
             {
                 var capturedId = passiveId;
+                if (passiveCatalog?.Get(passiveId)
+                    is StoredChargePassiveAsset storedCharge)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new StoredChargePassiveLogic(owner, storedCharge);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is StaticElectricityPassiveAsset staticElectricity)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new StaticElectricityPassiveLogic(
+                            owner,
+                            staticElectricity);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId) != null)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new StatOnlyPassiveLogic(owner);
+                    continue;
+                }
+
                 var attribute = PlaceholderAttributes[
                     (passiveId - FirstPlaceholderPassiveId) % PlaceholderAttributes.Length];
                 _factoriesByPassiveId[passiveId] = owner =>
@@ -40,10 +67,12 @@ namespace Pachimon.Battle
 
         public static bool TryGetPlaceholderAttribute(
             int passiveId,
+            PassiveCatalog passiveCatalog,
             out PachimonAttribute attribute)
         {
             if (passiveId < FirstPlaceholderPassiveId
-                || passiveId > LastPlaceholderPassiveId)
+                || passiveId > LastPlaceholderPassiveId
+                || passiveCatalog?.Get(passiveId) != null)
             {
                 attribute = default;
                 return false;
@@ -73,6 +102,20 @@ namespace Pachimon.Battle
             if (passiveId <= 0) throw new ArgumentOutOfRangeException(nameof(passiveId));
             _factoriesByPassiveId[passiveId] = factory
                 ?? throw new ArgumentNullException(nameof(factory));
+        }
+
+        private sealed class StatOnlyPassiveLogic : IPassiveLogic
+        {
+            public StatOnlyPassiveLogic(BattleUnitState owner)
+            {
+                Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            }
+
+            public BattleUnitState Owner { get; }
+
+            public void Handle(IBattleEvent battleEvent)
+            {
+            }
         }
     }
 }

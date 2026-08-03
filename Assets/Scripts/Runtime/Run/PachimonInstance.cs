@@ -6,6 +6,8 @@ namespace Pachimon.Run
 {
     public sealed class PachimonInstance
     {
+        public const int MaxSkillSlots = 9;
+
         private readonly List<int> _skillIds = new();
         private readonly List<PachimonSkillSlot> _skillSlots = new();
         private readonly List<int> _passiveIds = new();
@@ -74,9 +76,11 @@ namespace Pachimon.Run
 
         public IReadOnlyList<int> PassiveIds => _passiveIds;
 
+        public bool CanAddSkill => _skillSlots.Count < MaxSkillSlots;
+
         public bool AddSkill(int skillId)
         {
-            if (skillId <= 0)
+            if (skillId <= 0 || !CanAddSkill)
             {
                 return false;
             }

@@ -1,4 +1,4 @@
-﻿%YAML 1.1
+%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!114 &11400000
 MonoBehaviour:
@@ -16,6 +16,6 @@ MonoBehaviour:
   _displayName: わるあがき
   _allocationType: 0
   _isMapAssignable: 0
-  _baseTurnCostTicks: 100
+  _baseRecoveryTicks: 100
   _baseCooldownTicks: 0
   _description: System Skill used when no regular Skill is available.

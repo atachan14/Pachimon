@@ -12,7 +12,8 @@ namespace Pachimon.Battle
             int battleSeed,
             BattleSideState player,
             BattleSideState enemy,
-            PassiveLogicRegistry passiveLogicRegistry = null)
+            PassiveLogicRegistry passiveLogicRegistry = null,
+            bool publishBattleStarted = true)
         {
             if (player?.Side != BattleSide.Player)
             {
@@ -27,11 +28,16 @@ namespace Pachimon.Battle
             BattleSeed = battleSeed;
             Player = player;
             Enemy = enemy;
+            PassiveLogicRegistry = passiveLogicRegistry
+                ?? new PassiveLogicRegistry();
             Events = new BattleEventDispatcher();
+            Presentation = new BattlePresentationRecorder(this);
             Timeline = new BattleTimeline(this);
+            Statuses = new BattleStatusRuntime(this);
             Passives = new BattlePassiveRuntime(
                 this,
-                passiveLogicRegistry ?? new PassiveLogicRegistry());
+                PassiveLogicRegistry,
+                publishBattleStarted);
         }
 
         public int BattleSeed { get; }
@@ -40,7 +46,10 @@ namespace Pachimon.Battle
         public BattleSideState Enemy { get; }
         public BattleTimeline Timeline { get; }
         public BattleEventDispatcher Events { get; }
+        public BattlePresentationRecorder Presentation { get; }
+        public BattleStatusRuntime Statuses { get; }
         public BattlePassiveRuntime Passives { get; }
+        internal PassiveLogicRegistry PassiveLogicRegistry { get; }
         public BattleOutcome Outcome { get; private set; }
         public IReadOnlyList<string> LogEntries => _logEntries;
 
@@ -78,6 +87,7 @@ namespace Pachimon.Battle
             }
 
             _logEntries.Add(message);
+            Presentation.RecordLog(message);
         }
     }
 }

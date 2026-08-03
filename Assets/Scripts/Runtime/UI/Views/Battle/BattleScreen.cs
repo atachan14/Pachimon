@@ -13,7 +13,6 @@ namespace Pachimon.UI
         [field: SerializeField] public BattleMainView BattleMainView { get; private set; }
         [field: SerializeField] public RewardOverlayView RewardOverlayView { get; private set; }
 
-        private readonly Queue<BattleLogMessage> _pendingMessages = new();
         private BattleState _currentState;
         private BattleFlowController _flowController;
         private LogWindowView _logWindowView;
@@ -55,6 +54,13 @@ namespace Pachimon.UI
             var outcome = _currentState.EvaluateOutcome();
             if (outcome == BattleOutcome.Undecided)
             {
+                if (_flowController?.Phase
+                    == BattleFlowPhase.AwaitingPlayerSkill)
+                {
+                    ShowPlayerSkillChoices(
+                        _flowController.RefreshPlayerSkillChoices());
+                }
+
                 return;
             }
 
@@ -85,7 +91,6 @@ namespace Pachimon.UI
             _stateChanged = stateChanged;
             _unitFocused = unitFocused;
             _battleCompleted = battleCompleted;
-            _pendingMessages.Clear();
             _observedDomainLogCount = 0;
             _completionSent = false;
             _previewedSkillSlotId = null;
@@ -132,8 +137,14 @@ namespace Pachimon.UI
                 case BattleFlowStepKind.PlayerInputRequired:
                     ShowPlayerSkillChoices(step);
                     break;
+                case BattleFlowStepKind.ActionStarted:
+                    HandleActionStarted(step);
+                    break;
                 case BattleFlowStepKind.ActionResolved:
                     HandleActionResolved(step);
+                    break;
+                case BattleFlowStepKind.ActionCancelled:
+                    HandleActionCancelled(step);
                     break;
                 case BattleFlowStepKind.BattleCompleted:
                     ShowBattleCompleted(step.Outcome);
@@ -156,7 +167,9 @@ namespace Pachimon.UI
                         choice.CooldownReadyTick - _currentState.CurrentTick);
                     var label = choice.IsUsable
                         ? choice.Skill.DisplayName
-                        : $"{choice.Skill.DisplayName}\nCD {remainingCooldown}";
+                        : !choice.IsCooldownReady
+                            ? $"{choice.Skill.DisplayName}\nCD {remainingCooldown}"
+                            : $"{choice.Skill.DisplayName}\nMN {choice.Skill.BaseManaCost}";
                     var skillSlotId = choice.SlotId;
                     return new LogWindowSkillOption(
                         skillSlotId,
@@ -192,7 +205,15 @@ namespace Pachimon.UI
 
             ClearSkillPreview();
             _logWindowView.ClearOptions();
-            HandleActionResolved(_flowController.SubmitPlayerSkill(skillSlotId));
+            var step = _flowController.SubmitPlayerSkill(skillSlotId);
+            if (step.Kind == BattleFlowStepKind.ActionStarted)
+            {
+                HandleActionStarted(step);
+            }
+            else
+            {
+                HandleActionResolved(step);
+            }
         }
 
         private void ClearSkillPreview()
@@ -205,25 +226,109 @@ namespace Pachimon.UI
         private void HandleActionResolved(BattleFlowStep step)
         {
             ClearSkillPreview();
-            Render(_currentState);
-            _stateChanged?.Invoke(_currentState);
-            QueueActionMessages(step.Resolution);
-            ShowNextPendingMessage();
+            var page = BuildActionDialoguePage(step.Resolution);
+            _logWindowView.PlayDialoguePage(
+                page,
+                CompleteActionPresentation);
         }
 
-        private void QueueActionMessages(SkillResolution resolution)
+        private void HandleActionStarted(BattleFlowStep step)
+        {
+            ClearSkillPreview();
+            Render(_currentState);
+            _stateChanged?.Invoke(_currentState);
+            var action = step.PendingAction;
+            _logWindowView.SetLogText(
+                $"{action.User.DisplayName}は{action.Skill.DisplayName}を構えた");
+            _logWindowView.ShowAdvancePrompt(AdvanceBattle);
+        }
+
+        private void HandleActionCancelled(BattleFlowStep step)
+        {
+            ClearSkillPreview();
+            Render(_currentState);
+            _stateChanged?.Invoke(_currentState);
+            var action = step.PendingAction;
+            _logWindowView.SetLogText(
+                $"{action.User.DisplayName}の{action.Skill.DisplayName}は不発に終わった");
+            _logWindowView.ShowAdvancePrompt(AdvanceBattle);
+        }
+
+        private DialoguePage BuildActionDialoguePage(SkillResolution resolution)
         {
             if (resolution == null)
             {
-                return;
+                return new DialoguePage(Array.Empty<DialogueBlock>());
             }
 
-            _pendingMessages.Enqueue(new BattleLogMessage(
+            var presentation = resolution.Presentation;
+            if (presentation.Steps.Count > 0)
+            {
+                _observedDomainLogCount = _currentState.LogEntries.Count;
+                var blocks = new List<DialogueBlock>();
+                foreach (var group in presentation.Steps
+                    .GroupBy(step => step.BlockIndex)
+                    .OrderBy(group => group.Key))
+                {
+                    var steps = group.ToArray();
+                    var transitions = AggregateTransitions(
+                        (group.Key == 0
+                            && presentation.InitialManaTransition != null
+                                ? new[] { presentation.InitialManaTransition }
+                                : Array.Empty<BattleResourceTransition>())
+                        .Concat(steps.SelectMany(step => step.Transitions)));
+                    var heading = group.Key == 0
+                        ? $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}！"
+                        : $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}が再発動！";
+                    var lines = new List<DialogueLine>
+                    {
+                        new(heading, () => BeginBattleDialogueBlock(
+                            resolution.User,
+                            transitions)),
+                    };
+                    foreach (var presentationStep in steps)
+                    {
+                        if (!string.IsNullOrWhiteSpace(presentationStep.Text))
+                        {
+                            var focusUnit = presentationStep.FocusUnit;
+                            lines.Add(new DialogueLine(
+                                presentationStep.Text,
+                                () => FocusBattleUnit(focusUnit)));
+                        }
+
+                        if (presentationStep.Kind
+                                == BattlePresentationStepKind.DamageApplied
+                            && presentationStep.Transitions.Any(transition =>
+                                ReferenceEquals(
+                                    transition.Unit,
+                                    presentationStep.FocusUnit)
+                                && transition.HpAfter == 0))
+                        {
+                            var defeatedUnit = presentationStep.FocusUnit;
+                            lines.Add(new DialogueLine(
+                                $"{defeatedUnit.DisplayName}は戦闘不能になった",
+                                () => FocusBattleUnit(defeatedUnit)));
+                        }
+                    }
+
+                    blocks.Add(new DialogueBlock(lines));
+                }
+
+                return new DialoguePage(blocks);
+            }
+
+            var fallbackLines = new List<DialogueLine>();
+            var initialTransitions = presentation.InitialManaTransition == null
+                ? Array.Empty<BattleResourceTransition>()
+                : new[] { presentation.InitialManaTransition };
+            fallbackLines.Add(new DialogueLine(
                 $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}！",
-                resolution.User));
+                () => BeginBattleDialogueBlock(
+                    resolution.User,
+                    initialTransitions)));
             while (_observedDomainLogCount < _currentState.LogEntries.Count)
             {
-                _pendingMessages.Enqueue(new BattleLogMessage(
+                fallbackLines.Add(new DialogueLine(
                     _currentState.LogEntries[_observedDomainLogCount],
                     null));
                 _observedDomainLogCount++;
@@ -232,30 +337,68 @@ namespace Pachimon.UI
             foreach (var effect in resolution.Effects)
             {
                 var damageKind = effect.IsTrueDamage ? "確定ダメージ" : "ダメージ";
-                _pendingMessages.Enqueue(new BattleLogMessage(
+                fallbackLines.Add(new DialogueLine(
                     $"{effect.Target.DisplayName}に{effect.Damage}の{damageKind}！",
-                    effect.Target));
+                    () => FocusBattleUnit(effect.Target)));
                 if (effect.Target.IsDefeated)
                 {
-                    _pendingMessages.Enqueue(new BattleLogMessage(
+                    fallbackLines.Add(new DialogueLine(
                         $"{effect.Target.DisplayName}は戦闘不能になった",
-                        effect.Target));
+                        () => FocusBattleUnit(effect.Target)));
                 }
+            }
+
+            return new DialoguePage(new[] { new DialogueBlock(fallbackLines) });
+        }
+
+        private void BeginBattleDialogueBlock(
+            BattleUnitState focusUnit,
+            IReadOnlyList<BattleResourceTransition> transitions)
+        {
+            FocusBattleUnit(focusUnit);
+            foreach (var transition in transitions)
+            {
+                BattleMainView?.PresentResourceSnapshot(transition);
             }
         }
 
-        private void ShowNextPendingMessage()
+        private void FocusBattleUnit(BattleUnitState unit)
         {
-            if (_pendingMessages.Count == 0)
+            if (unit != null)
             {
-                AdvanceBattle();
-                return;
+                _unitFocused?.Invoke(unit);
+            }
+        }
+
+        private static IReadOnlyList<BattleResourceTransition> AggregateTransitions(
+            IEnumerable<BattleResourceTransition> transitions)
+        {
+            var byUnit = new Dictionary<BattleUnitState, BattleResourceTransition>();
+            foreach (var transition in transitions.Where(value => value != null))
+            {
+                if (byUnit.TryGetValue(transition.Unit, out var existing))
+                {
+                    byUnit[transition.Unit] = new BattleResourceTransition(
+                        transition.Unit,
+                        existing.HpBefore,
+                        transition.HpAfter,
+                        existing.MnBefore,
+                        transition.MnAfter);
+                }
+                else
+                {
+                    byUnit.Add(transition.Unit, transition);
+                }
             }
 
-            var message = _pendingMessages.Dequeue();
-            _unitFocused?.Invoke(message.FocusUnit);
-            _logWindowView.SetLogText(message.Text);
-            _logWindowView.ShowAdvancePrompt(ShowNextPendingMessage);
+            return byUnit.Values.ToArray();
+        }
+
+        private void CompleteActionPresentation()
+        {
+            Render(_currentState);
+            _stateChanged?.Invoke(_currentState);
+            AdvanceBattle();
         }
 
         private void ShowBattleCompleted(BattleOutcome outcome)
@@ -272,18 +415,6 @@ namespace Pachimon.UI
                     _logWindowView.ClearOptions();
                     _battleCompleted?.Invoke(outcome);
                 });
-        }
-
-        private readonly struct BattleLogMessage
-        {
-            public BattleLogMessage(string text, BattleUnitState focusUnit)
-            {
-                Text = text;
-                FocusUnit = focusUnit;
-            }
-
-            public string Text { get; }
-            public BattleUnitState FocusUnit { get; }
         }
 
     }

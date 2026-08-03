@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pachimon.Battle
 {
@@ -28,6 +29,11 @@ namespace Pachimon.Battle
         public BattleUnitState GetSelf() => _user;
         public BattleUnitState GetFrontEnemy() => _enemies.GetFrontLiving();
         public BattleUnitState GetBackEnemy() => _enemies.GetBackLiving();
+        public BattleUnitState GetLowestHpEnemy() =>
+            _enemies.GetAllLiving()
+                .OrderBy(unit => unit.CurrentHp)
+                .ThenBy(unit => unit.SlotIndex)
+                .FirstOrDefault();
         public IReadOnlyList<BattleUnitState> GetAllEnemies() => _enemies.GetAllLiving();
         public BattleUnitState GetFrontAlly() => _allies.GetFrontLiving();
         public IReadOnlyList<BattleUnitState> GetAlliesBehind(BattleUnitState source) =>

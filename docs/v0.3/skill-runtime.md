@@ -11,7 +11,7 @@
 - 対象はボタン表示時ではなく、Skill効果を解決する時点で決める
 - `SkillLogicRegistry`がSkill IDとC# Logicを接続する
 - ID 1-151はAllocation Typeからv0.3基本Logicへ接続し、後から`RegisterOrReplace`でID単位の固有Logicへ差し替えられる
-- `BattleSkillRuntime`が使用可否確認、Logic解決、Cooldownと次Turnの予約を一続きで実行する
+- `BattleSkillRuntime`が使用可否確認、発生予約、Logic解決、Cooldownと次Turnの予約を担当する
 
 ## Target Query
 
@@ -40,21 +40,21 @@ RawDamage
 = Skill Logicが攻撃側Statから算出
 
 AfterDamageBonus
-= floor(RawDamage * (100 + AttackerDamageBonus) / 100)
+= RawDamage * OffenseMultiplier(AttackerDamageBonus)
 
 AfterAttribute
-= floor(AfterDamageBonus * 100 / (100 + DefenderAttribute))
+= AfterDamageBonus * DefenseMultiplier(DefenderAttribute)
 
 FinalDamage
-= max(1, floor(AfterAttribute * 100 / (100 + DefenderResistBonus)))
+= floor(AfterAttribute * DefenseMultiplier(DefenderResistBonus))
 ```
 
 - 攻撃側が参照するStatはSkill Logicが決める
 - v0.3基本属性Skillは使用者の対応属性値を攻撃値として参照する
 - 防御側はDamage属性に対応する属性値を参照する
 - DamageBonus / ResistBonusはPachimon固有Statとする
-- 途中計算は十分な幅の整数で行う
-- 最終Damageは整数へ切り捨てる
+- 途中計算では端数を維持する
+- 最終Damageを整数として確定するときに一度だけ切り捨てる
 - 通常の属性Damageは最低1とする
 
 例:
@@ -72,16 +72,16 @@ FinalDamage = 100
 
 ## v0.3基本Skill
 
-| Attribute | Skill | BaseDamage | TurnCost | Cooldown | Target |
-| --- | --- | ---: | ---: | ---: | --- |
-| Fire | ひのこ | 100 | 100 | 200 | 先頭の生存Enemy |
-| Aqua | みずでっぽう | 100 | 100 | 200 | 先頭の生存Enemy |
-| Leaf | はっぱスライサー | 100 | 100 | 200 | 先頭の生存Enemy |
-| Electric | ビリビリショック | 100 | 100 | 200 | 先頭の生存Enemy |
-| Poison | どくばり | 100 | 100 | 200 | 先頭の生存Enemy |
-| Ice | 冷たい手 | 100 | 100 | 200 | 先頭の生存Enemy |
-| Wind | かぜでっぽう | 100 | 100 | 200 | 先頭の生存Enemy |
-| Dragon | ドラゴンストレート | 100 | 100 | 200 | 先頭の生存Enemy |
+| Attribute | Skill | BaseDamage | Startup | Recovery | Cooldown | Target |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| Fire | ひのこ | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Aqua | みずでっぽう | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Leaf | はっぱスライサー | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Electric | ビリビリショック | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Poison | どくばり | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Ice | 冷たい手 | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Wind | かぜでっぽう | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
+| Dragon | ドラゴンストレート | 100 | 0 | 100 | 200 | 先頭の生存Enemy |
 
 8Skillは属性以外の処理が同一なため、v0.3では共通の基本属性Damage Logicを使ってよい。個性的な後続Skillは個別Asset / Logicで実装する。
 
@@ -97,7 +97,8 @@ FinalDamage = 100
 
 ```text
 Skill ID: 2000
-TurnCost: 100
+Startup: 0
+Recovery: 100
 Cooldown: 0
 Target: 先頭の生存Enemy
 Damage: 使用者の8属性のうち最も低い値の100%をTrue Damageとして使用する
@@ -116,12 +117,14 @@ Damage: 使用者の8属性のうち最も低い値の100%をTrue Damageとし�
 
 ```text
 使用可能判定
-  -> Skill Logicが対象を解決
+  -> 発生あり: 発生完了Tickを予約
+  -> CooldownReadyTickを設定
+  -> 発生完了時に使用者が戦闘不能: 不発
+  -> Skill Logicが発生時点の対象を解決
   -> BeforeSkill Event
   -> Damage / Effectを解決
   -> SkillResolved Event
-  -> CooldownReadyTickを設定
-  -> NextTurnTickを設定
+  -> 硬直後のNextTurnTickを設定
   -> 戦闘不能 / 勝敗判定
 ```
 

@@ -5,32 +5,29 @@ namespace Pachimon.Battle
 {
     public sealed class StruggleSkillLogic : ISkillLogic
     {
-        public SkillPreview Preview(SkillExecutionContext context)
-        {
-            if (context == null) throw new ArgumentNullException(nameof(context));
-            var target = GetTarget(context);
-            var trueDamage = GetLowestAttributeValue(context.User);
-            return new SkillPreview(
-                context.User,
-                context.Skill,
-                new[]
-                {
-                    new SkillPreviewEffect(
-                        target,
-                        -Math.Min(target.CurrentHp, trueDamage)),
-                    new SkillPreviewEffect(
-                        context.User,
-                        -Math.Min(context.User.CurrentHp, trueDamage)),
-                });
-        }
-
         public SkillResolution Resolve(SkillExecutionContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             var target = GetTarget(context);
             var trueDamage = GetLowestAttributeValue(context.User);
-            var targetDamage = target.ApplyDamage(trueDamage);
-            var selfDamage = context.User.ApplyDamage(trueDamage);
+            var targetDamage = BattleTrueDamageService.Apply(
+                context.State,
+                context.User,
+                target,
+                new TrueDamageContext(
+                    DamageOriginKind.Skill,
+                    context.Skill.SkillId,
+                    trueDamage,
+                    isAttack: true)).AppliedDamage;
+            var selfDamage = BattleTrueDamageService.Apply(
+                context.State,
+                context.User,
+                context.User,
+                new TrueDamageContext(
+                    DamageOriginKind.Self,
+                    context.Skill.SkillId,
+                    trueDamage,
+                    isAttack: false)).AppliedDamage;
             return new SkillResolution(
                 context.User,
                 context.Skill,
@@ -56,7 +53,7 @@ namespace Pachimon.Battle
             {
                 minimum = Math.Min(
                     minimum,
-                    user.StartingStats.GetValue((PachimonStatType)value));
+                    user.GetBattleStatValue((PachimonStatType)value));
             }
 
             return minimum;
