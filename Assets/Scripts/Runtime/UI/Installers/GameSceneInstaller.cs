@@ -37,6 +37,7 @@ namespace Pachimon.UI
         [SerializeField] private ItemCatalog _itemCatalog;
         [SerializeField] private TrainerStyleCatalog _trainerStyleCatalog;
         [SerializeField] private TrainerNameCatalog _trainerNameCatalog;
+        [SerializeField] private RunProfileSettings _runProfileSettings;
 
         [Header("Layout")]
         [SerializeField] private float _compactBreakpoint = 1100f;
@@ -45,19 +46,6 @@ namespace Pachimon.UI
         [Header("Debug")]
         [SerializeField] private bool _initializeRun = true;
         [SerializeField] private bool _initializeDemoBattle = true;
-        [SerializeField] private bool _grantDebugPotion = true;
-        [SerializeField, Min(0)] private int _grantDebugStoneCount;
-          [SerializeField] private int[] _grantDebugSkillMachineSkillIds =
-          {
-            9,
-            12,
-            20,
-            28,
-            33,
-            36,
-            41,
-            44,
-        };
 
         public RunContext CurrentRunContext { get; private set; }
 
@@ -92,7 +80,9 @@ namespace Pachimon.UI
                 && _passiveCatalog != null
                 && _itemCatalog != null
                 && _trainerStyleCatalog != null
-                && _trainerNameCatalog != null;
+                && _trainerNameCatalog != null
+                && _runProfileSettings != null
+                && _runProfileSettings.Resolve() != null;
         }
 
         private void InitializeSceneHierarchy()
@@ -214,54 +204,8 @@ namespace Pachimon.UI
                 _itemCatalog,
                 _trainerStyleCatalog,
                 _trainerNameCatalog,
-                NewGameRequest.ConsumePlayerName());
-
-            foreach (var skillId in _grantDebugSkillMachineSkillIds)
-            {
-                if (CurrentRunContext.RunState.ItemInventory.IsFull)
-                {
-                    break;
-                }
-
-                var skillMachine = _itemCatalog.GetSkillMachine(skillId);
-                if (skillMachine == null)
-                {
-                    Debug.LogWarning(
-                        $"Debug Skill Machine for Skill {skillId} "
-                        + "was not found in ItemCatalog.",
-                        this);
-                    continue;
-                }
-
-                CurrentRunContext.RunState.ItemInventory.TryAdd(
-                    skillMachine.ItemId,
-                    out _,
-                    out _);
-            }
-
-            if (_grantDebugPotion
-                && _itemCatalog.Get(ItemIds.Potion) != null
-                && !CurrentRunContext.RunState.ItemInventory.IsFull)
-            {
-                CurrentRunContext.RunState.ItemInventory.TryAdd(
-                    ItemIds.Potion,
-                    out _,
-                    out _);
-            }
-
-            if (_itemCatalog.Get(ItemIds.Stone) != null)
-            {
-                for (var index = 0;
-                     index < _grantDebugStoneCount
-                     && !CurrentRunContext.RunState.ItemInventory.IsFull;
-                     index++)
-                {
-                    CurrentRunContext.RunState.ItemInventory.TryAdd(
-                        ItemIds.Stone,
-                        out _,
-                        out _);
-                }
-            }
+                NewGameRequest.ConsumePlayerName(),
+                _runProfileSettings.Resolve());
 
             _gameRootView.BindItemPanel(
                 CurrentRunContext.RunState.ItemInventory,
@@ -359,6 +303,14 @@ namespace Pachimon.UI
             if (_itemCatalog == null) missing.Add(nameof(_itemCatalog));
             if (_trainerStyleCatalog == null) missing.Add(nameof(_trainerStyleCatalog));
             if (_trainerNameCatalog == null) missing.Add(nameof(_trainerNameCatalog));
+            if (_runProfileSettings == null)
+            {
+                missing.Add(nameof(_runProfileSettings));
+            }
+            else if (_runProfileSettings.Resolve() == null)
+            {
+                missing.Add("active RunStartupProfile");
+            }
 
             if (missing.Count == 0)
             {

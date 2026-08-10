@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17108632c3e442ca11d721b4b38a69b, type: 3}
+  m_Name: Item_10031_TM_HealingWind
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.SkillMachineItemAsset
+  _itemId: 10031
+  _displayName: 技マシーン[治癒の風]
+  _icon: {fileID: 0}
+  _description: 対象が「治癒の風」を習得する。
+  _category: 2
+  _basePrice: 5000
+  _skill: {fileID: 11400000, guid: 168bf0cc49ba8364bac66b1aa11f81ed, type: 2}

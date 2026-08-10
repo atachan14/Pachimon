@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bcf763f836546b888a5c31bc23d06bb, type: 3}
+  m_Name: RunProfileSettings
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Run.RunProfileSettings
+  _productionProfile: {fileID: 11400000, guid: ac2f86ec14d44ef5a15e0c69dca2eaf4, type: 2}
+  _developmentProfile: {fileID: 11400000, guid: 7adf496a623640af9485c2e9676eb37f, type: 2}
+  _editorSelection: 0

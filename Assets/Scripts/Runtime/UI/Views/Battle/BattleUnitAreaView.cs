@@ -105,5 +105,49 @@ namespace Pachimon.UI
                 currentHp,
                 currentMn);
         }
+
+        public void ShowPendingToxinDamage(
+            BattleResourceTransition transition)
+        {
+            if (!TryGetSlot(transition, out var slot))
+            {
+                return;
+            }
+
+            slot.ShowPendingToxinDamage(
+                transition.Unit,
+                transition.HpBefore,
+                transition.HpAfter,
+                transition.MnAfter);
+        }
+
+        public void CommitToxinDamage(BattleResourceTransition transition)
+        {
+            if (!TryGetSlot(transition, out var slot))
+            {
+                return;
+            }
+
+            slot.CommitToxinDamage(
+                transition.Unit,
+                transition.HpAfter,
+                transition.MnAfter);
+        }
+
+        private bool TryGetSlot(
+            BattleResourceTransition transition,
+            out BattleUnitSlotView slot)
+        {
+            slot = null;
+            if (transition?.Unit == null
+                || transition.Unit.SlotIndex < 0
+                || transition.Unit.SlotIndex >= _slots.Length)
+            {
+                return false;
+            }
+
+            slot = _slots[transition.Unit.SlotIndex];
+            return slot != null;
+        }
     }
 }

@@ -13,7 +13,11 @@ namespace Pachimon.Items
 
         public SkillAsset Skill => _skill;
 
-        public int SkillId => _skill != null ? _skill.SkillId : 0;
+        public int SkillId => ItemIds.TryGetSkillMachineSkillId(
+            ItemId,
+            out var skillId)
+            ? skillId
+            : 0;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

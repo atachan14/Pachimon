@@ -69,15 +69,44 @@ namespace Pachimon.Battle
             SkillAsset skill,
             BattleUnitState unit)
         {
+            return CreatePlan(skill, unit, state: null);
+        }
+
+        public static BattleSkillTimingPlan CreatePlan(
+            SkillAsset skill,
+            BattleUnitState unit,
+            BattleState state)
+        {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
 
             var multipliers = Calculate(
                 skill,
                 unit.GetBattleStatValue(PachimonStatType.Wind));
+            var baseRecoveryTicks = skill is FrozenBreakSkillAsset frozenBreak
+                && unit.GetStatus(BattleStatusId.FrozenBreakSelf) != null
+                    ? frozenBreak.LowHpRecoveryTicks
+                    : skill.BaseRecoveryTicks;
+            var startupMultiplier = multipliers.Startup;
+            var recoveryMultiplier = multipliers.Recovery;
+            var oneTwo = unit.GetStatus(BattleStatusId.OneTwo);
+            if (oneTwo?.Value > 0)
+            {
+                var oneTwoMultiplier = SignedStatMath.ReductionMultiplier(
+                    oneTwo.Value);
+                startupMultiplier *= oneTwoMultiplier;
+                recoveryMultiplier *= oneTwoMultiplier;
+            }
+            if (skill is SolarBeamSkillAsset solarBeam
+                && state?.Weather.Temperature > 0)
+            {
+                startupMultiplier *= SignedStatMath.ReductionMultiplier(
+                    state.Weather.Temperature
+                    * solarBeam.TemperatureStartupRatio / 100m);
+            }
             return new BattleSkillTimingPlan(
-                skill.BaseStartupTicks * multipliers.Startup,
-                skill.BaseRecoveryTicks * multipliers.Recovery,
+                skill.BaseStartupTicks * startupMultiplier,
+                baseRecoveryTicks * recoveryMultiplier,
                 skill.BaseCooldownTicks * multipliers.Cooldown);
         }
 

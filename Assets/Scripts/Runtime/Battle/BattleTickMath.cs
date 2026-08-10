@@ -53,12 +53,14 @@ namespace Pachimon.Battle
             int speed,
             decimal skillMultiplier)
         {
-            if (baseRecovery <= 0)
+            if (baseRecovery < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(baseRecovery));
             }
 
-            return ApplyTimingStat(baseRecovery, speed, skillMultiplier);
+            return baseRecovery == 0
+                ? 0
+                : ApplyTimingStat(baseRecovery, speed, skillMultiplier);
         }
 
         public static int GetEffectiveCooldown(int baseCooldown, int haste)

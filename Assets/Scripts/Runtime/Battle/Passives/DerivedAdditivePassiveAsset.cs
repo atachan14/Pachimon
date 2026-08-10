@@ -14,6 +14,7 @@ namespace Pachimon.Passives
         [SerializeField] private PachimonStatType _referenceStat;
         [SerializeField, Min(0)] private int _percent;
         [SerializeField] private int _minimumContribution;
+        [SerializeField] private bool _floorContribution;
 
         public PachimonStatType TargetStat => _targetStat;
 
@@ -22,6 +23,7 @@ namespace Pachimon.Passives
         public int Percent => _percent;
 
         public decimal MinimumContribution => _minimumContribution;
+        public bool FloorContribution => _floorContribution;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

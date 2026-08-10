@@ -63,6 +63,8 @@ DialoguePage
 DialogueBlock
   Skillの初回発動または再発動1回分
   Block末尾でクリック待ち
+  次のBlockではPageを消去せず、既存行へ新しい行を追記する
+  表示上限を超えた場合だけ古い行から上へ送る
 
 DialogueLine
   Block内の個別メッセージ

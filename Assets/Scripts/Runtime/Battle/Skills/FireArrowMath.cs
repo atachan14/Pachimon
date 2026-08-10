@@ -8,13 +8,14 @@ namespace Pachimon.Battle
     {
         public static decimal CalculateBaseDamage(
             FireArrowSkillAsset skill,
-            decimal fire)
+            decimal fire,
+            decimal? fireScalingPercent = null)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
                 skill.BasePower,
                 fire,
-                skill.FireScalingPercent);
+                fireScalingPercent ?? skill.FireScalingPercent);
         }
     }
 }

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7f490000000000000000000000000001, type: 3}
+  m_Name: Passive_014_IceDamageReduction
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.IncomingAttributeDamagePassiveAsset
+  _passiveId: 14
+  _displayName: "\u6C37002"
+  _description: "\u53D7\u3051\u308B\u6C37Damage\u304C15%\u6E1B\u5C11\u3059\u308B\u3002"
+  _attribute: 5
+  _damagePercent: 85

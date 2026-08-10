@@ -9,13 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 42e0d95bfe3c6e84185b3514276e27d6, type: 3}
   m_Name: Skill_056
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.DragonUpperSkillAsset
   _skillId: 56
-  _displayName: ドラゴンストレート
+  _displayName: "\u30C9\u30E9\u30B4\u30F3\u30A2\u30C3\u30D1\u30FC"
   _allocationType: 8
   _isMapAssignable: 1
-  _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseRecoveryTicks: 120
+  _baseCooldownTicks: 400
+  _baseManaCost: 120
+  _description: "\u5148\u982D\u306E\u6575\u306BDragon Damage\u3068\u30CE\u30C3\u30AF\u30A2\u30A6\u30C8\u3092\u4E0E\u3048\u308B\u3002"
+  _baseDragonDamage: 100
+  _dragonDamageRatio: 100
+  _knockoutDurationTicks: 200
+  _knockoutStatus: {fileID: 11400000, guid: fb9b1ea8ba9553f46afe447ac437c6d4, type: 2}

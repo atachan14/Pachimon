@@ -17,3 +17,4 @@ MonoBehaviour:
   _description: "\u653B\u6483\u3092\u53D7\u3051\u308B\u305F\u3073\u3001\u653B\u6483\u8005\u3078Electric\u3068Ice\u3067\u30B9\u30B1\u30FC\u30EB\u3059\u308B\u9EBB\u75FA\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _electricBaseValue: 20
   _iceBaseValue: 10
+  _paralysisStatus: {fileID: 11400000, guid: e83333335ac350ac91f5513dee8023e3, type: 2}

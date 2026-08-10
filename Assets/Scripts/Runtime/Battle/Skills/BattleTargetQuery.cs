@@ -4,6 +4,14 @@ using System.Linq;
 
 namespace Pachimon.Battle
 {
+    public sealed class SkillTargetUnavailableException : InvalidOperationException
+    {
+        public SkillTargetUnavailableException()
+            : base("No target is currently available for this Skill.")
+        {
+        }
+    }
+
     public sealed class BattleTargetQuery
     {
         private readonly BattleState _state;
@@ -27,18 +35,37 @@ namespace Pachimon.Battle
 
         public BattleState State => _state;
         public BattleUnitState GetSelf() => _user;
-        public BattleUnitState GetFrontEnemy() => _enemies.GetFrontLiving();
-        public BattleUnitState GetBackEnemy() => _enemies.GetBackLiving();
+        public BattleUnitState GetFrontEnemy() =>
+            GetEnemyTargets().FirstOrDefault()
+            ?? throw new SkillTargetUnavailableException();
+        public BattleUnitState GetBackEnemy() =>
+            GetEnemyTargets().LastOrDefault()
+            ?? throw new SkillTargetUnavailableException();
         public BattleUnitState GetLowestHpEnemy() =>
-            _enemies.GetAllLiving()
+            GetEnemyTargets()
                 .OrderBy(unit => unit.CurrentHp)
                 .ThenBy(unit => unit.SlotIndex)
-                .FirstOrDefault();
-        public IReadOnlyList<BattleUnitState> GetAllEnemies() => _enemies.GetAllLiving();
+                .FirstOrDefault()
+            ?? throw new SkillTargetUnavailableException();
+        public IReadOnlyList<BattleUnitState> GetAllEnemies() => GetEnemyTargets();
         public BattleUnitState GetFrontAlly() => _allies.GetFrontLiving();
+        public BattleUnitState GetLowestHpAlly() =>
+            _allies.GetAllLiving()
+                .OrderBy(unit => unit.CurrentHp)
+                .ThenBy(unit => unit.SlotIndex)
+                .FirstOrDefault()
+            ?? throw new SkillTargetUnavailableException();
         public IReadOnlyList<BattleUnitState> GetAlliesBehind(BattleUnitState source) =>
             _allies.GetLivingBehind(source);
         public IReadOnlyList<BattleUnitState> GetAlliesAhead(BattleUnitState source) =>
             _allies.GetLivingAheadOf(source);
+
+        private IReadOnlyList<BattleUnitState> GetEnemyTargets()
+        {
+            var targets = _enemies.GetAllTargetable();
+            return targets.Count > 0
+                ? targets
+                : throw new SkillTargetUnavailableException();
+        }
     }
 }

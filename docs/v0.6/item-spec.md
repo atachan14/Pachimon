@@ -15,13 +15,13 @@
 - 画面下部へ3Column x 3RowのGridを表示する
 - MainPaneのLogWindowに相当する高さと位置を基準にする
 - Mapと同様に、上側からスライドして表示する
-- 各SlotにはItem Iconを表示する
-- Item Iconを対象PachimonへDrag & Dropして使用する
+- 各SlotにはItem名をテキストで表示する
+- Item名のカードを対象PachimonへDrag & Dropして使用する
 
 ## 詳細表示
 
-- ExpandedではItem IconのClickで共通の詳細Overlayを表示する
-- CompactではItem IconのLong Pressで共通の詳細Overlayを表示する
+- ExpandedではItem名のカードのClickで共通の詳細Overlayを表示する
+- CompactではItem名のカードのLong Pressで共通の詳細Overlayを表示する
 - CompactでDragを始めてもLeftPaneを自動展開しない
 - Compactでは使用前にLeftPaneの対象Pachimon Tabを選択しておく
 - Compact向けの別操作は、必要になった段階で詳細画面からの使用などを検討する

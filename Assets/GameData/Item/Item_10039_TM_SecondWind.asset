@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17108632c3e442ca11d721b4b38a69b, type: 3}
+  m_Name: Item_10039_TM_SecondWind
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.SkillMachineItemAsset
+  _itemId: 10039
+  _displayName: 技マシーン[セカンドウィンド]
+  _icon: {fileID: 0}
+  _description: 対象が「セカンドウィンド」を習得する。
+  _category: 2
+  _basePrice: 5000
+  _skill: {fileID: 11400000, guid: 0caa5d0528e87f944a5ff48d74f58223, type: 2}

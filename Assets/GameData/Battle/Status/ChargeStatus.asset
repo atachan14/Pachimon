@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a8cec3728a44883b1e5a7b390408066, type: 3}
+  m_Name: ChargeStatus
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.ChargeStatusAsset
+  _statusId: 106
+  _displayName: "\u5145\u96FB"
+  _description: "Electric\u3092\u4FDD\u5B58\u3057\u3001\u5145\u96FB\u4E2D\u304B\u3089\u5145\u96FB\u5B8C\u4E86\u3078\u79FB\u884C\u3059\u308B\u3002"
+  _icon: {fileID: 0}
+  _chargingDisplayName: "\u5145\u96FB\u4E2D"
+  _chargingDescription: "ResistBonus\u3092\u52A0\u7B97\u3057\u3001Electric\u3092\u4E57\u7B97\u3059\u308B\u3002"
+  _chargedDisplayName: "\u5145\u96FB\u5B8C\u4E86"
+  _chargedDescription: "Speed\u3092\u52A0\u7B97\u3057\u3001Electric\u3092\u4E57\u7B97\u3059\u308B\u3002"
+  _chargingResistBonusRatio: 40
+  _chargingElectricRatio: 50
+  _chargedDurationRatio: 200
+  _chargedElectricRatio: 150
+  _chargedSpeedRatio: 100

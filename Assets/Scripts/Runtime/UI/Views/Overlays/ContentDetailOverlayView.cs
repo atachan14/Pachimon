@@ -11,6 +11,7 @@ namespace Pachimon.UI
         Skill,
         Passive,
         Item,
+        FieldEffect,
     }
 
     public sealed class ContentDetailOverlayContent
@@ -192,6 +193,7 @@ namespace Pachimon.UI
                 ContentDetailKind.Skill => "SKILL",
                 ContentDetailKind.Passive => "PASSIVE",
                 ContentDetailKind.Item => "ITEM",
+                ContentDetailKind.FieldEffect => "FIELD",
                 _ => string.Empty,
             };
         }

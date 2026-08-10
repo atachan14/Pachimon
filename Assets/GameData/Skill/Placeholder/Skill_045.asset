@@ -9,13 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: bd51a80cc12f4a2fa2abf2a6eeffd7bb, type: 3}
   m_Name: Skill_045
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PoisonShieldSkillAsset
   _skillId: 45
-  _displayName: どくばり
+  _displayName: ポイズンシールド
   _allocationType: 5
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _description: 自身へPoison依存のShieldを付与し、自身の毒素をPoison依存の割合で取り除く。
+  _baseManaCost: 100
+  _baseShieldValue: 300
+  _shieldPoisonScalingPercent: 100
+  _baseToxinReductionPercent: 50
+  _reductionPoisonScalingPercent: 100

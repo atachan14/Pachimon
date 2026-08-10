@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Pachimon.Run;
 
 namespace Pachimon.Battle
 {
@@ -12,8 +14,28 @@ namespace Pachimon.Battle
         Chill = 103,
         Freeze = 104,
         Knockout = 105,
-        Charging = 106,
-        Charged = 107,
+        Charge = 106,
+        Toxin = 108,
+        ToxinGrowth = 109,
+        FireGrowth = 110,
+        AddChain = 111,
+        Burn = 112,
+        ComboMasterBonus = 113,
+        IceGrowth = 114,
+        FrozenBreakSelf = 115,
+        LaunchCeremony = 116,
+        LeafGrowth = 117,
+        Flying = 118,
+        WindErosion = 119,
+        HealingWind = 120,
+        StillAir = 121,
+        OneTwo = 122,
+        DragonBoxer = 123,
+        Footwork = 124,
+        SweetScience = 125,
+        DragonDance = 126,
+        DragonCranker = 127,
+        DragonDefense = 128,
     }
 
     [Flags]
@@ -21,10 +43,41 @@ namespace Pachimon.Battle
     {
         None = 0,
         Leak = 1 << 0,
-        WeatherGranted = 1 << 1,
         Charge = 1 << 2,
         Stun = 1 << 3,
         Slow = 1 << 4,
+        Toxin = 1 << 5,
+        Burn = 1 << 6,
+        Untargetable = 1 << 7,
+    }
+
+    public sealed class ToxinApplicationRecord
+    {
+        public ToxinApplicationRecord(
+            string sourceInstanceId,
+            string sourceDisplayName,
+            int appliedValue)
+        {
+            SourceInstanceId = sourceInstanceId ?? string.Empty;
+            SourceDisplayName = sourceDisplayName ?? string.Empty;
+            AppliedValue = appliedValue;
+        }
+
+        public string SourceInstanceId { get; }
+        public string SourceDisplayName { get; }
+        public int AppliedValue { get; }
+    }
+
+    public readonly struct ToxinTickResult
+    {
+        public ToxinTickResult(int damage, int decay)
+        {
+            Damage = damage;
+            Decay = decay;
+        }
+
+        public int Damage { get; }
+        public int Decay { get; }
     }
 
     public sealed class BattleStatusInstance
@@ -36,9 +89,13 @@ namespace Pachimon.Battle
             int value,
             int stackCount = 1,
             int? durationTicks = null,
-            object tuning = null)
+            object runtimeData = null,
+            BattleStatusAsset definition = null)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null && statusId != BattleStatusId.Toxin)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
             if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
             if (stackCount <= 0)
             {
@@ -55,7 +112,8 @@ namespace Pachimon.Battle
             Value = value;
             StackCount = stackCount;
             RemainingTicks = durationTicks;
-            Tuning = tuning;
+            RuntimeData = runtimeData;
+            Definition = definition;
         }
 
         public BattleStatusId StatusId { get; }
@@ -64,27 +122,71 @@ namespace Pachimon.Battle
         public int Value { get; private set; }
         public int StackCount { get; }
         public int? RemainingTicks { get; private set; }
-        public object Tuning { get; }
+        public object RuntimeData { get; }
+        public BattleStatusAsset Definition { get; }
+        public decimal DamageWork { get; private set; }
+        public decimal DecayWork { get; private set; }
+        public IReadOnlyList<ToxinApplicationRecord> ToxinApplications =>
+            _toxinApplications;
         public bool IsTimed => RemainingTicks.HasValue;
+        public bool IsVisible => true;
         public bool IsExpired =>
             RemainingTicks == 0
-            || ((Categories & BattleStatusCategory.Slow) != 0 && Value <= 0);
+            || (StatusId == BattleStatusId.Freeze && Value <= 0)
+            || (StatusId == BattleStatusId.WindErosion && Value <= 0)
+            || (((Categories
+                    & (BattleStatusCategory.Slow | BattleStatusCategory.Toxin)) != 0)
+                && Value <= 0);
 
-        public string DisplayName => StatusId switch
+        public void AddRemainingTicks(int ticks)
         {
-            BattleStatusId.Leak => "漏電",
+            if (ticks < 0) throw new ArgumentOutOfRangeException(nameof(ticks));
+            if (ticks == 0 || !RemainingTicks.HasValue)
+                return;
+            RemainingTicks = checked(RemainingTicks.Value + ticks);
+        }
+
+        private readonly List<ToxinApplicationRecord> _toxinApplications = new();
+
+        public string DisplayName => Definition != null
+            ? Definition.GetDisplayName(this)
+            : GetLegacyDisplayName();
+
+        public string Description => Definition?.GetDescription(this)
+            ?? string.Empty;
+
+        private string GetLegacyDisplayName() => StatusId switch
+        {
+            BattleStatusId.Leak => $"漏電 {Value}",
             BattleStatusId.StoredCharge => StackCount > 1
                 ? $"蓄電 ×{StackCount}"
                 : "蓄電",
-            BattleStatusId.Stun => FormatTimedName("Stun"),
-            BattleStatusId.Slow => FormatTimedName($"Slow {Value}"),
+            BattleStatusId.Stun =>
+                FormatTimedName(Definition?.DisplayName ?? "Stun"),
+            BattleStatusId.Slow =>
+                FormatTimedName($"{Definition?.DisplayName ?? "Slow"} {Value}"),
             BattleStatusId.Paralysis =>
-                FormatTimedName($"Paralysis {Value}"),
-            BattleStatusId.Chill => FormatTimedName($"Chill {Value}"),
+                FormatTimedName(
+                    $"{Definition?.DisplayName ?? "Paralysis"} {Value}"),
+            BattleStatusId.Chill =>
+                FormatTimedName($"{Definition?.DisplayName ?? "Chill"} {Value}"),
             BattleStatusId.Freeze => FormatTimedName("Freeze"),
             BattleStatusId.Knockout => FormatTimedName("Knockout"),
-            BattleStatusId.Charging => FormatTimedName($"充電中 {Value}"),
-            BattleStatusId.Charged => FormatTimedName($"充電完了 {Value}"),
+            BattleStatusId.Toxin =>
+                $"{Definition?.DisplayName ?? "毒素"} {Value}",
+            BattleStatusId.ToxinGrowth =>
+                $"毒素適応 +{Value * StackCount}%",
+            BattleStatusId.FireGrowth =>
+                $"燃える男 Fire +{Value * StackCount}",
+            BattleStatusId.AddChain =>
+                $"アドチェイン {AddChainRuntime.FormatUnits(Value)}",
+            BattleStatusId.Burn => $"{Definition?.DisplayName ?? "火傷"} {Value}",
+            BattleStatusId.ComboMasterBonus =>
+                $"コンボマスター DB +{Value * StackCount}",
+            BattleStatusId.IceGrowth =>
+                $"氷の刃 Ice +{Value * StackCount}",
+            BattleStatusId.LeafGrowth =>
+                $"粉植物 Leaf +{Value * StackCount}",
             _ => StatusId.ToString(),
         };
 
@@ -106,6 +208,17 @@ namespace Pachimon.Battle
             RemainingTicks = Math.Max(0, RemainingTicks.Value - ticks);
         }
 
+        internal void AddDuration(int ticks)
+        {
+            if (ticks <= 0) throw new ArgumentOutOfRangeException(nameof(ticks));
+            if (!RemainingTicks.HasValue)
+            {
+                return;
+            }
+
+            RemainingTicks = checked(RemainingTicks.Value + ticks);
+        }
+
         internal void AddValue(int amount)
         {
             if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
@@ -116,6 +229,91 @@ namespace Pachimon.Battle
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
             Value = Math.Max(0, Value - amount);
+        }
+
+        internal void AddToxinApplication(
+            BattleUnitState source,
+            int appliedValue)
+        {
+            if (StatusId != BattleStatusId.Toxin)
+            {
+                throw new InvalidOperationException(
+                    "Only Toxin can store Toxin application history.");
+            }
+
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (appliedValue <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(appliedValue));
+            }
+
+            AddToxinApplication(new ToxinApplicationRecord(
+                source.InstanceId,
+                source.DisplayName,
+                appliedValue));
+        }
+
+        internal void AddToxinApplication(ToxinApplicationRecord application)
+        {
+            if (StatusId != BattleStatusId.Toxin)
+            {
+                throw new InvalidOperationException(
+                    "Only Toxin can store Toxin application history.");
+            }
+
+            if (application == null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            if (application.AppliedValue <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(application));
+            }
+
+            Value = checked(Value + application.AppliedValue);
+            _toxinApplications.Add(application);
+        }
+
+        internal ToxinTickResult AccumulateToxinTick(
+            decimal unroundedDamage,
+            decimal unroundedDecay)
+        {
+            if (StatusId != BattleStatusId.Toxin)
+            {
+                throw new InvalidOperationException(
+                    "Only Toxin can accumulate Toxin tick work.");
+            }
+
+            if (unroundedDamage < 0m)
+            {
+                throw new ArgumentOutOfRangeException(nameof(unroundedDamage));
+            }
+
+            if (unroundedDecay < 0m)
+            {
+                throw new ArgumentOutOfRangeException(nameof(unroundedDecay));
+            }
+
+            DamageWork += unroundedDamage;
+            DecayWork += unroundedDecay;
+            var damage = SignedStatMath.FloorNonNegative(DamageWork);
+            var decay = Math.Min(
+                Value,
+                SignedStatMath.FloorNonNegative(DecayWork));
+            DamageWork -= damage;
+            DecayWork -= decay;
+            Value -= decay;
+            return new ToxinTickResult(damage, decay);
+        }
+
+        internal void CopyToxinRuntimeFrom(BattleStatusInstance original)
+        {
+            if (original == null) throw new ArgumentNullException(nameof(original));
+            DamageWork = original.DamageWork;
+            DecayWork = original.DecayWork;
+            _toxinApplications.Clear();
+            _toxinApplications.AddRange(original._toxinApplications);
         }
     }
 }

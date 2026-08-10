@@ -12,6 +12,12 @@ namespace Pachimon.Battle
         ResourceChanged = 2,
     }
 
+    public enum BattlePresentationBlockStyle
+    {
+        RepeatedSkill,
+        Continuous,
+    }
+
     public sealed class BattleResourceTransition
     {
         public BattleResourceTransition(
@@ -69,18 +75,22 @@ namespace Pachimon.Battle
     {
         public static readonly BattlePresentationTimeline Empty = new(
             null,
-            Array.Empty<BattlePresentationStep>());
+            Array.Empty<BattlePresentationStep>(),
+            BattlePresentationBlockStyle.RepeatedSkill);
 
         public BattlePresentationTimeline(
             BattleResourceTransition initialManaTransition,
-            IEnumerable<BattlePresentationStep> steps)
+            IEnumerable<BattlePresentationStep> steps,
+            BattlePresentationBlockStyle blockStyle)
         {
             InitialManaTransition = initialManaTransition;
             Steps = steps?.ToArray() ?? Array.Empty<BattlePresentationStep>();
+            BlockStyle = blockStyle;
         }
 
         public BattleResourceTransition InitialManaTransition { get; }
         public IReadOnlyList<BattlePresentationStep> Steps { get; }
+        public BattlePresentationBlockStyle BlockStyle { get; }
     }
 
     public sealed class BattlePresentationRecorder
@@ -91,6 +101,7 @@ namespace Pachimon.Battle
         private readonly Dictionary<BattleUnitState, PendingResourceChange> _pendingResources = new();
         private BattleResourceTransition _initialManaTransition;
         private int _currentBlockIndex;
+        private BattlePresentationBlockStyle _blockStyle;
 
         public BattlePresentationRecorder(BattleState state)
         {
@@ -114,6 +125,7 @@ namespace Pachimon.Battle
             _pendingResources.Clear();
             _initialManaTransition = null;
             _currentBlockIndex = 0;
+            _blockStyle = BattlePresentationBlockStyle.RepeatedSkill;
             foreach (var unit in _state.Player.Units.Concat(_state.Enemy.Units))
             {
                 _snapshots[unit] = new ResourceSnapshot(
@@ -132,6 +144,14 @@ namespace Pachimon.Battle
             }
 
             _currentBlockIndex++;
+        }
+
+        public void UseContinuousBlocks()
+        {
+            if (IsRecording)
+            {
+                _blockStyle = BattlePresentationBlockStyle.Continuous;
+            }
         }
 
         public void RecordInitialManaSpent(
@@ -181,7 +201,8 @@ namespace Pachimon.Battle
             int hpBefore,
             int hpAfter,
             int appliedDamage,
-            bool isTrueDamage)
+            bool isTrueDamage,
+            int shieldAbsorbedDamage = 0)
         {
             if (!IsRecording || target == null)
             {
@@ -216,9 +237,16 @@ namespace Pachimon.Battle
             _pendingResources.Clear();
 
             var damageKind = isTrueDamage ? "確定ダメージ" : "ダメージ";
+            var text = shieldAbsorbedDamage > 0
+                ? appliedDamage > 0
+                    ? $"{target.DisplayName}に{appliedDamage}の{damageKind}！"
+                      + $"（Shieldが{shieldAbsorbedDamage}吸収）"
+                    : $"{target.DisplayName}のShieldが"
+                      + $"{shieldAbsorbedDamage}ダメージを吸収した！"
+                : $"{target.DisplayName}に{appliedDamage}の{damageKind}！";
             _steps.Add(new BattlePresentationStep(
                 BattlePresentationStepKind.DamageApplied,
-                $"{target.DisplayName}に{appliedDamage}の{damageKind}！",
+                text,
                 target,
                 transitions,
                 _currentBlockIndex,
@@ -251,7 +279,8 @@ namespace Pachimon.Battle
             FlushPendingResources();
             var result = new BattlePresentationTimeline(
                 _initialManaTransition,
-                _steps);
+                _steps,
+                _blockStyle);
             Reset();
             return result;
         }
@@ -299,6 +328,7 @@ namespace Pachimon.Battle
             _pendingResources.Clear();
             _initialManaTransition = null;
             _currentBlockIndex = 0;
+            _blockStyle = BattlePresentationBlockStyle.RepeatedSkill;
         }
 
         private readonly struct ResourceSnapshot
@@ -325,6 +355,53 @@ namespace Pachimon.Battle
 
             public ResourceSnapshot Before { get; }
             public ResourceSnapshot After { get; }
+        }
+    }
+
+    public sealed class ToxinPresentationRecorder
+    {
+        private readonly Dictionary<BattleUnitState, BattleResourceTransition>
+            _pending = new();
+
+        public void RecordDamage(
+            BattleUnitState target,
+            int hpBefore,
+            int hpAfter)
+        {
+            if (target == null || hpBefore == hpAfter)
+            {
+                return;
+            }
+
+            if (_pending.TryGetValue(target, out var existing))
+            {
+                _pending[target] = new BattleResourceTransition(
+                    target,
+                    existing.HpBefore,
+                    hpAfter,
+                    existing.MnBefore,
+                    target.CurrentMn);
+                return;
+            }
+
+            _pending.Add(target, new BattleResourceTransition(
+                target,
+                hpBefore,
+                hpAfter,
+                target.CurrentMn,
+                target.CurrentMn));
+        }
+
+        public IReadOnlyList<BattleResourceTransition> Drain()
+        {
+            if (_pending.Count == 0)
+            {
+                return Array.Empty<BattleResourceTransition>();
+            }
+
+            var transitions = _pending.Values.ToArray();
+            _pending.Clear();
+            return transitions;
         }
     }
 }

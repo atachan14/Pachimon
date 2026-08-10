@@ -17,13 +17,13 @@
 - Skillの基本項目は`硬直 / CD / MN`と記載する
 - 発生が0より大きいSkillだけ`発生`を記載する
 - Statを増幅倍率として使う場合は、負数対応した`AmplificationMultiplier(Stat)`で記載する
-- StatからDamageや状態異常Valueを生成する場合は、原則`BaseValue × AmplificationMultiplier(Stat)`で記載する
+- StatからDamageや状態Valueを生成する場合は、原則`BaseValue × AmplificationMultiplier(Stat)`で記載する
 - 割合を表す値には`%`または`割合`を明記する
 - SkillやPassive固有の未確定事項は各項目の`要確認`へ記載する
 
 ## Statから生成する効果量
 
-Damageや状態異常Valueなど、Statを強さへ変換する効果は原則として次の共通式を使う。
+Damageや状態Valueなど、Statを強さへ変換する効果は原則として次の共通式を使う。
 
 ```text
 EffectValue

@@ -175,7 +175,8 @@ namespace Pachimon.Run
                 useContext = ItemUseContext.ForBattle(
                     battleTarget,
                     ItemTargetAffiliation.Ally,
-                    runTarget);
+                    runTarget,
+                    _activeBattleState);
             }
             else
             {
@@ -258,7 +259,8 @@ namespace Pachimon.Run
                     Context.PachimonPool.Get(
                         _activeBattleState.Enemy
                             .GetUnitAt(enemyIndex)
-                            .InstanceId));
+                            .InstanceId),
+                    _activeBattleState);
             }
             else
             {
@@ -328,7 +330,8 @@ namespace Pachimon.Run
                 ItemUseContext.ForBattle(
                     battleTarget,
                     ItemTargetAffiliation.Enemy,
-                    Context.PachimonPool.Get(battleTarget.InstanceId)));
+                    Context.PachimonPool.Get(battleTarget.InstanceId),
+                    _activeBattleState));
             if (!result.Succeeded)
             {
                 return false;
@@ -1245,6 +1248,8 @@ namespace Pachimon.Run
                 $"{enemyTrainerPreview.DisplayName}が勝負をしかけてきた",
                 state => RefreshBattlePanes(state, enemyTrainerPreview),
                 FocusBattlePaneUnit,
+                _gameRootView.ShowFieldEffectDetails,
+                _gameRootView.ShowWeatherDetails,
                 outcome => CompleteBattle(outcome, battleState, nodeReward));
         }
 

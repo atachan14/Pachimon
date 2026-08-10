@@ -62,6 +62,7 @@ namespace Pachimon.Battle
                     }
 
                     queuedUnit.Timing.MarkReady();
+                    queuedUnit.NotifyBattleContextChanged();
                     _currentActor = queuedUnit;
                     actor = queuedUnit;
                     return true;
@@ -91,6 +92,10 @@ namespace Pachimon.Battle
                 }
 
                 AdvanceBy(nextRemaining);
+                if (_state.EvaluateOutcome() != BattleOutcome.Undecided)
+                {
+                    return false;
+                }
                 foreach (var unit in GetAllUnitsInStableOrder()
                              .Where(IsTurnClockEligible)
                              .Where(unit => unit.Timing.IsComplete)
@@ -116,6 +121,7 @@ namespace Pachimon.Battle
 
             StartCooldown(actor, usedSkillSlotId, timing.CooldownWork);
             actor.Timing.BeginStartup(timing.StartupWork);
+            actor.NotifyBattleContextChanged();
             _currentActor = null;
             return actor.GetActionRemainingTicks();
         }
@@ -195,6 +201,7 @@ namespace Pachimon.Battle
             decimal recoveryWork)
         {
             actor.Timing.BeginRecovery(recoveryWork);
+            actor.NotifyBattleContextChanged();
         }
 
         private void ValidateCurrentActor(BattleUnitState actor, int usedSkillSlotId)
@@ -240,7 +247,17 @@ namespace Pachimon.Battle
 
                 // This tick uses the current status values, then decays them.
                 _state.Statuses.AdvanceTime(1);
+                if (_state.EvaluateOutcome() == BattleOutcome.Undecided)
+                {
+                    // Field-applied Statuses begin updating on the next tick.
+                    _state.Fields.AdvanceTime(1);
+                    _state.Weather.AdvanceTime(1);
+                }
                 _state.CurrentTick = AddTicks(_state.CurrentTick, 1);
+                if (_state.EvaluateOutcome() != BattleOutcome.Undecided)
+                {
+                    break;
+                }
             }
         }
 

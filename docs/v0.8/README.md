@@ -21,6 +21,8 @@ Pachimon、Skill、Passive、Itemを追加し、Placeholder中心の状態から
 - [technical/battle-preview-simulation.md](./technical/battle-preview-simulation.md)
 - [technical/battle-presentation-timeline.md](./technical/battle-presentation-timeline.md)
 - [technical/passive-data.md](./technical/passive-data.md)
+- [technical/run-startup-profiles.md](./technical/run-startup-profiles.md)
 - [content/README.md](./content/README.md)
 - [content/shared-rules.md](./content/shared-rules.md)
+- [content/implementation-questions.md](./content/implementation-questions.md)
 - [content/statuses/README.md](./content/statuses/README.md)

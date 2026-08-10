@@ -18,7 +18,7 @@ namespace Pachimon.Items
             if (context == null) throw new ArgumentNullException(nameof(context));
             if (context.Affiliation != ItemTargetAffiliation.Ally
                 || context.RunTarget == null
-                || skillMachine.Skill == null)
+                || skillMachine.SkillId <= 0)
             {
                 return ItemUseFailureReason.InvalidTarget;
             }

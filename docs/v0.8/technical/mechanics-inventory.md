@@ -31,7 +31,7 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 ### 確認できた要求
 
 - 単体、全体、多段、連鎖、再発動
-- 先頭、最後尾、最低HP、状態異常量による対象選択
+- 先頭、最後尾、最低HP、状態量による対象選択
 - 軽減前Damageと軽減後Damageの参照
 - 属性を条件とする追加Damage
 - 自傷Damage
@@ -64,7 +64,7 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 - 被Damage、与Damage、回避などのイベント反応
 - 付与元ごとに独立した効果時間
 - Slow、Stun、Leakなどとして扱う子分類
-- 同時に複数の分類へ所属する状態異常
+- 同時に複数の分類へ所属する状態
 
 ### 実装方針
 
@@ -78,7 +78,6 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 | Status | Categories |
 | --- | --- |
 | 通常漏電 | `Leak` |
-| 雨漏電 | `Leak`, `WeatherGranted` |
 | 麻痺 | `Slow`, `ElectricStatus` |
 | 冷気 | `Slow`, `IceStatus` |
 | 凍結 | `Stun`, `RemovedByFire` |
@@ -116,7 +115,7 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 
 ### 実装方針
 
-- 天気と陣営生成物を、共通の`Field Effect`基盤へ載せる候補とする
+- 天気は全体用`BattleWeatherRuntime`、陣営生成物は`BattleFieldRuntime`へ分離して保持する
 - 効果範囲、所有者、所属陣営、Value、残りtickを分離して保持する
 - 同名再付与時の合算・置換・独立保持はEffectごとのPolicyとする
 
@@ -154,8 +153,8 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 - 1. 共通Stat Calculatorと計算内訳: 完了
 - 2. 派生Stat Passive: 完了
 - 3. Damage Contextとイベント情報: 属性ダメージの適用前・適用後イベント、貫通、超過ダメージの再軽減まで完了
-- 4. Status InstanceとCategory: 通常漏電の保持・置換・消費、蓄電のスタック操作、Battle中UI表示まで実装
+- 4. Status InstanceとCategory: 通常漏電の保持・Value加算・消費、蓄電のスタック操作、Battle中UI表示まで実装
 - 6. Timelineの発生・停止・再発動: 発生、Timed Status、Stun停止・再開、動的Speed/Haste、SlowのValue減衰と進行中Phaseへの反映まで実装済み
-- 9. 複雑な連鎖・再帰的追加Damage: 漏電からParty全体への追加Electricダメージと漏電間の連鎖、安全上限まで実装
+- 9. 複雑な追加Damage: 漏電からParty全体への追加Electricダメージを実装。Status Damageは別の漏電を発動しない
 
 後続Mechanicsをすべて先に完成させる必要はない。各段階で代表Skill・Passiveを1つ実装し、共通基盤と固有Logicの境界を確認してから次へ進む。

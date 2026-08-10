@@ -41,7 +41,8 @@ namespace Pachimon.UI
             Color remainingColor,
             Color valueColor,
             string valueText,
-            bool showRemaining)
+            bool showRemaining,
+            bool useValueText = false)
         {
             var next = new Presentation(
                 phase,
@@ -52,7 +53,8 @@ namespace Pachimon.UI
                 remainingColor,
                 valueColor,
                 valueText,
-                showRemaining);
+                showRemaining,
+                useValueText);
             if (!_isInitialized)
             {
                 _isInitialized = true;
@@ -178,7 +180,7 @@ namespace Pachimon.UI
                 1f);
 
             _value.color = presentation.ValueColor;
-            _value.text = presentation.IsTimed
+            _value.text = presentation.IsTimed && !presentation.UseValueText
                 ? presentation.RemainingTicks.ToString()
                 : presentation.ValueText;
         }
@@ -214,7 +216,8 @@ namespace Pachimon.UI
                 Color remainingColor,
                 Color valueColor,
                 string valueText,
-                bool showRemaining)
+                bool showRemaining,
+                bool useValueText)
             {
                 Phase = phase;
                 Ratio = ratio;
@@ -225,6 +228,7 @@ namespace Pachimon.UI
                 ValueColor = valueColor;
                 ValueText = valueText;
                 ShowRemaining = showRemaining;
+                UseValueText = useValueText;
             }
 
             public BattleActionPhase Phase { get; }
@@ -236,6 +240,7 @@ namespace Pachimon.UI
             public Color ValueColor { get; }
             public string ValueText { get; }
             public bool ShowRemaining { get; }
+            public bool UseValueText { get; }
             public bool IsTimed =>
                 Phase == BattleActionPhase.InitialDelay
                 || Phase == BattleActionPhase.Startup
@@ -254,14 +259,17 @@ namespace Pachimon.UI
                     RemainingColor,
                     ValueColor,
                     ValueText,
-                    ShowRemaining);
+                    ShowRemaining,
+                    UseValueText);
             }
 
             public bool HasSameState(Presentation other)
             {
                 return Phase == other.Phase
                     && RemainingTicks == other.RemainingTicks
-                    && Mathf.Approximately(Ratio, other.Ratio);
+                    && Mathf.Approximately(Ratio, other.Ratio)
+                    && UseValueText == other.UseValueText
+                    && ValueText == other.ValueText;
             }
 
             public static Presentation Lerp(
@@ -289,8 +297,13 @@ namespace Pachimon.UI
                         from.ValueColor,
                         to.ValueColor,
                         progress),
-                    from.ValueText,
-                    from.ShowRemaining);
+                    progress < 0.5f ? from.ValueText : to.ValueText,
+                    progress < 0.5f
+                        ? from.ShowRemaining
+                        : to.ShowRemaining,
+                    progress < 0.5f
+                        ? from.UseValueText
+                        : to.UseValueText);
             }
         }
     }

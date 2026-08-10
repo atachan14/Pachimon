@@ -12,9 +12,12 @@ namespace Pachimon.Battle
         private readonly int[] _passiveIds;
         private readonly Dictionary<int, BattleSkillCooldownState> _cooldowns = new();
         private readonly List<BattleStatusInstance> _statuses = new();
+        private readonly List<BattleShieldInstance> _shields = new();
         private readonly PachimonStats _battleBaseStats;
         private EffectivePachimonStats _battleStats;
+        private Func<IEnumerable<IStatModifier>> _battleModifierProvider;
         private bool _battleStatsDirty = true;
+        private long _nextShieldApplicationOrder;
 
         public BattleUnitState(
             string instanceId,
@@ -93,6 +96,8 @@ namespace Pachimon.Battle
         public IReadOnlyList<int> SkillIds => _skillIds;
         public IReadOnlyList<int> PassiveIds => _passiveIds;
         public IReadOnlyList<BattleStatusInstance> Statuses => _statuses;
+        public IReadOnlyList<BattleShieldInstance> Shields => _shields;
+        public int TotalShield => _shields.Sum(shield => shield.Value);
         public BattleUnitTimingState Timing { get; }
         public int TiePriority { get; internal set; }
         public bool IsAlive => CurrentHp > 0;
@@ -257,21 +262,85 @@ namespace Pachimon.Battle
             _statuses.Clear();
             foreach (var status in original.Statuses)
             {
-                if (!unitMap.TryGetValue(status.Source, out var sourceClone))
+                BattleUnitState sourceClone = null;
+                if (status.Source != null
+                    && !unitMap.TryGetValue(status.Source, out sourceClone))
                 {
                     throw new InvalidOperationException(
                         "A Status source does not belong to the Battle.");
                 }
 
-                _statuses.Add(new BattleStatusInstance(
+                var runtimeData = status.RuntimeData is FrozenBreakRuntimeState frozenBreak
+                    ? frozenBreak.CreateSimulationClone()
+                    : status.RuntimeData;
+                var cloneStatus = new BattleStatusInstance(
                     status.StatusId,
                     status.Categories,
                     sourceClone,
                     status.Value,
                     status.StackCount,
                     status.RemainingTicks,
-                    status.Tuning));
+                    runtimeData,
+                    status.Definition);
+                cloneStatus.CopyToxinRuntimeFrom(status);
+                _statuses.Add(cloneStatus);
             }
+
+            _shields.Clear();
+            _shields.AddRange(original.Shields.Select(
+                shield => shield.CreateSimulationClone()));
+            _nextShieldApplicationOrder = original._nextShieldApplicationOrder;
+        }
+
+        public BattleShieldInstance AddShield(
+            int value,
+            int? durationTicks = null)
+        {
+            var shield = new BattleShieldInstance(
+                _nextShieldApplicationOrder++,
+                value,
+                durationTicks);
+            _shields.Add(shield);
+            return shield;
+        }
+
+        public BattleShieldAbsorptionResult AbsorbDamage(int damage)
+        {
+            if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            var remaining = damage;
+            var absorbed = 0;
+            foreach (var shield in _shields
+                         .OrderBy(current => current.RemainingTicks ?? int.MaxValue)
+                         .ThenBy(current => current.ApplicationOrder)
+                         .ToArray())
+            {
+                var currentAbsorbed = shield.Absorb(remaining);
+                absorbed = checked(absorbed + currentAbsorbed);
+                remaining -= currentAbsorbed;
+                if (remaining == 0)
+                {
+                    break;
+                }
+            }
+
+            _shields.RemoveAll(shield => shield.IsExpired);
+            return new BattleShieldAbsorptionResult(damage, absorbed);
+        }
+
+        public int RemoveAllShields()
+        {
+            var removedValue = TotalShield;
+            _shields.Clear();
+            return removedValue;
+        }
+
+        internal void AdvanceShields(int ticks)
+        {
+            foreach (var shield in _shields)
+            {
+                shield.Advance(ticks);
+            }
+            _shields.RemoveAll(shield => shield.IsExpired);
         }
 
         public int ApplyDamage(int amount)
@@ -283,6 +352,10 @@ namespace Pachimon.Battle
             {
                 _statuses.Clear();
                 InvalidateBattleStats();
+            }
+            if (CurrentHp == 0)
+            {
+                _shields.Clear();
             }
             return appliedDamage;
         }
@@ -345,6 +418,14 @@ namespace Pachimon.Battle
                 current => current.StatusId == statusId);
         }
 
+        public IReadOnlyList<BattleStatusInstance> GetStatuses(
+            BattleStatusId statusId)
+        {
+            return _statuses
+                .Where(current => current.StatusId == statusId)
+                .ToArray();
+        }
+
         public bool HasStatusCategory(BattleStatusCategory category)
         {
             if (category == BattleStatusCategory.None)
@@ -355,6 +436,10 @@ namespace Pachimon.Battle
             return _statuses.Any(status =>
                 (status.Categories & category) != 0);
         }
+
+        public bool IsTargetable =>
+            IsAlive
+            && !HasStatusCategory(BattleStatusCategory.Untargetable);
 
         public int GetStatusCategoryValue(BattleStatusCategory category)
         {
@@ -379,11 +464,25 @@ namespace Pachimon.Battle
             {
                 _battleStats = EffectivePachimonStats.Calculate(
                     _battleBaseStats,
-                    BattleStatusStatModifierFactory.Create(_statuses));
+                    BattleStatusStatModifierFactory.Create(_statuses)
+                        .Concat(_battleModifierProvider?.Invoke()
+                            ?? Enumerable.Empty<IStatModifier>()));
                 _battleStatsDirty = false;
             }
 
             return _battleStats;
+        }
+
+        internal void SetBattleModifierProvider(
+            Func<IEnumerable<IStatModifier>> provider)
+        {
+            _battleModifierProvider = provider;
+            InvalidateBattleStats();
+        }
+
+        internal void NotifyBattleContextChanged()
+        {
+            InvalidateBattleStats();
         }
 
         public void AddStatusStacks(
@@ -426,6 +525,17 @@ namespace Pachimon.Battle
             return true;
         }
 
+        internal bool TryRemoveStatusInstance(BattleStatusInstance status)
+        {
+            if (status == null) throw new ArgumentNullException(nameof(status));
+            var removed = _statuses.Remove(status);
+            if (removed)
+            {
+                InvalidateBattleStats();
+            }
+            return removed;
+        }
+
         internal IReadOnlyList<BattleStatusInstance> AdvanceStatuses(int ticks)
         {
             if (ticks < 0) throw new ArgumentOutOfRangeException(nameof(ticks));
@@ -438,7 +548,19 @@ namespace Pachimon.Battle
                 changedAny |= status.IsTimed;
                 if ((status.Categories & BattleStatusCategory.Slow) != 0)
                 {
-                    status.DecayValue(ticks);
+                    var decayPerTick = status.Definition is SlowStatusAsset slow
+                        ? slow.DecayPerTick
+                        : 1;
+                    status.DecayValue(checked(ticks * decayPerTick));
+                    changedAny = true;
+                }
+                if (status.StatusId == BattleStatusId.WindErosion)
+                {
+                    var decayPerTick = status.Definition
+                        is WindErosionStatusAsset erosion
+                            ? erosion.DecayPerTick
+                            : 1;
+                    status.DecayValue(checked(ticks * decayPerTick));
                     changedAny = true;
                 }
                 if (!status.IsExpired)

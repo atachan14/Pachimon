@@ -21,19 +21,28 @@ namespace Pachimon.Battle
 
             var snapshot = BattleSimulationSnapshot.Create(state);
             var simulationUser = snapshot.GetSimulationUnit(user);
+            var manaPlan = spendMana
+                ? BattleSkillManaCostCalculator.CreatePlan(
+                    simulationUser,
+                    skill)
+                : new BattleSkillManaSpendPlan(0, 0m);
+            var manaSpent = manaPlan.Actual;
             if (spendMana
-                && !simulationUser.TrySpendMn(skill.BaseManaCost))
+                && (manaSpent <= 0 && skill.ConsumesAllCurrentMana
+                    || !simulationUser.TrySpendMn(manaSpent)))
             {
                 throw new InvalidOperationException(
                     $"Unit '{user.InstanceId}' could not spend "
-                    + $"{skill.BaseManaCost} MN in Preview.");
+                    + $"{manaSpent} MN in Preview.");
             }
 
-            BattleSkillResolver.Resolve(
+            var resolution = BattleSkillResolver.Resolve(
                 snapshot.State,
                 simulationUser,
                 skill,
-                logic);
+                logic,
+                actualManaSpent: manaSpent,
+                effectiveManaSpent: manaPlan.Effective);
 
             var effects = new List<SkillPreviewEffect>();
             foreach (var original in state.Player.Units.Concat(state.Enemy.Units))
@@ -58,7 +67,9 @@ namespace Pachimon.Battle
                 effects,
                 SkillTimingCalculator.CreatePlan(
                     skill,
-                    simulationUser));
+                    simulationUser,
+                    snapshot.State),
+                resolution.WasTargetUnavailable);
         }
     }
 }

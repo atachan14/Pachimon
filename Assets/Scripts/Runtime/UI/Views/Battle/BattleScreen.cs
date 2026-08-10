@@ -78,6 +78,8 @@ namespace Pachimon.UI
             string challengeMessage,
             Action<BattleState> stateChanged,
             Action<BattleUnitState> unitFocused,
+            Action<BattleFieldEffectInstance> fieldEffectDetailsRequested,
+            Action<BattleWeatherInstance> weatherDetailsRequested,
             Action<BattleOutcome> battleCompleted)
         {
             _currentState = state ?? throw new ArgumentNullException(nameof(state));
@@ -95,6 +97,9 @@ namespace Pachimon.UI
             _completionSent = false;
             _previewedSkillSlotId = null;
             BattleMainView?.ClearSkillPreview();
+            BattleMainView?.ConfigureFieldEffectClicks(
+                fieldEffectDetailsRequested,
+                weatherDetailsRequested);
 
             Render(state);
             _stateChanged?.Invoke(state);
@@ -132,6 +137,32 @@ namespace Pachimon.UI
             }
 
             var step = _flowController.Advance();
+            var toxinTransitions = _currentState.ToxinPresentation.Drain();
+            if (toxinTransitions.Count > 0)
+            {
+                if (BattleMainView == null)
+                {
+                    _stateChanged?.Invoke(_currentState);
+                    HandleFlowStep(step);
+                    return;
+                }
+
+                BattleMainView.PlayToxinDamage(
+                    toxinTransitions,
+                    () =>
+                    {
+                        _stateChanged?.Invoke(_currentState);
+                        HandleFlowStep(step);
+                    });
+                return;
+            }
+
+            HandleFlowStep(step);
+        }
+
+        private void HandleFlowStep(BattleFlowStep step)
+        {
+            BattleMainView?.RenderFields(_currentState);
             switch (step.Kind)
             {
                 case BattleFlowStepKind.PlayerInputRequired:
@@ -277,23 +308,37 @@ namespace Pachimon.UI
                                 ? new[] { presentation.InitialManaTransition }
                                 : Array.Empty<BattleResourceTransition>())
                         .Concat(steps.SelectMany(step => step.Transitions)));
-                    var heading = group.Key == 0
-                        ? $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}！"
-                        : $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}が再発動！";
-                    var lines = new List<DialogueLine>
+                    var showHeading = group.Key == 0
+                        || presentation.BlockStyle
+                            == BattlePresentationBlockStyle.RepeatedSkill;
+                    var lines = new List<DialogueLine>();
+                    if (showHeading)
                     {
-                        new(heading, () => BeginBattleDialogueBlock(
+                        var heading = group.Key == 0
+                            ? $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}！"
+                            : $"{resolution.User.DisplayName}の{resolution.Skill.DisplayName}が再発動！";
+                        lines.Add(new DialogueLine(
+                            heading,
+                            () => BeginBattleDialogueBlock(
                             resolution.User,
-                            transitions)),
-                    };
+                            transitions)));
+                    }
+
+                    var transitionsApplied = showHeading;
                     foreach (var presentationStep in steps)
                     {
                         if (!string.IsNullOrWhiteSpace(presentationStep.Text))
                         {
                             var focusUnit = presentationStep.FocusUnit;
+                            var applyBlockTransitions = !transitionsApplied;
                             lines.Add(new DialogueLine(
                                 presentationStep.Text,
-                                () => FocusBattleUnit(focusUnit)));
+                                applyBlockTransitions
+                                    ? () => BeginBattleDialogueBlock(
+                                        focusUnit ?? resolution.User,
+                                        transitions)
+                                    : () => FocusBattleUnit(focusUnit)));
+                            transitionsApplied = true;
                         }
 
                         if (presentationStep.Kind

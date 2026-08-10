@@ -9,13 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: aa241ed9dca84fcb8f3d5ad7b095298c, type: 3}
   m_Name: Skill_023
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.WindErosionSkillAsset
   _skillId: 23
-  _displayName: かぜでっぽう
+  _displayName: 風化の風
   _allocationType: 7
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 100
+  _description: 敵全体へWind参照の風化を与える。
+  _baseErosionValue: 20
+  _windValueRatio: 100
+  _statusDefinition: {fileID: 11400000, guid: 107e040d36bf4f69858cc0db850c0cd8, type: 2}

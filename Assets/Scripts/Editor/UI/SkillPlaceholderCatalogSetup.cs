@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Data;
+using Pachimon.Battle;
 using Pachimon.Skills;
 using Pachimon.UI;
 using UnityEditor;
@@ -16,6 +17,42 @@ namespace Pachimon.Editor.UI
         private const string PlaceholderFolder = DataFolder + "/Placeholder";
         private const string SystemFolder = DataFolder + "/System";
         private const string CatalogPath = DataFolder + "/SkillCatalog.asset";
+        private const string ToxinStatusPath =
+            "Assets/GameData/Battle/Status/ToxinStatus.asset";
+        private const string SmogFieldEffectPath =
+            "Assets/GameData/Battle/FieldEffect/SmogFieldEffect.asset";
+        private const string WaterVeilFieldEffectPath =
+            "Assets/GameData/Battle/FieldEffect/WaterVeilFieldEffect.asset";
+        private const string StunStatusPath =
+            "Assets/GameData/Battle/Status/StunStatus.asset";
+        private const string ParalysisStatusPath =
+            "Assets/GameData/Battle/Status/ParalysisStatus.asset";
+        private const string ChillStatusPath =
+            "Assets/GameData/Battle/Status/ChillStatus.asset";
+        private const string ChargeStatusPath =
+            "Assets/GameData/Battle/Status/ChargeStatus.asset";
+        private const string LaunchCeremonyStatusPath =
+            "Assets/GameData/Battle/Status/LaunchCeremonyStatus.asset";
+        private const string FreezeStatusPath =
+            "Assets/GameData/Battle/Status/FreezeStatus.asset";
+        private const string FrozenBreakStatusPath =
+            "Assets/GameData/Battle/Status/FrozenBreakStatus.asset";
+        private const string SunnyWeatherPath =
+            "Assets/GameData/Battle/Weather/SunnyWeather.asset";
+        private const string RainWeatherPath =
+            "Assets/GameData/Battle/Weather/RainWeather.asset";
+        private const string WindWeatherPath =
+            "Assets/GameData/Battle/Weather/WindWeather.asset";
+        private const string FlyingStatusPath =
+            "Assets/GameData/Battle/Status/FlyingStatus.asset";
+        private const string WindErosionStatusPath =
+            "Assets/GameData/Battle/Status/WindErosionStatus.asset";
+        private const string HealingWindStatusPath =
+            "Assets/GameData/Battle/Status/HealingWindStatus.asset";
+        private const string StillAirStatusPath =
+            "Assets/GameData/Battle/Status/StillAirStatus.asset";
+        private const string OneTwoStatusPath =
+            "Assets/GameData/Battle/Status/OneTwoStatus.asset";
 
         private static readonly AllocationType[] AllocationTypes =
         {
@@ -47,6 +84,65 @@ namespace Pachimon.Editor.UI
             EnsureAssetFolder(SystemFolder);
 
             var catalog = GetOrCreateCatalog();
+            var toxinStatus = AssetDatabase.LoadAssetAtPath<ToxinStatusAsset>(
+                ToxinStatusPath);
+            var smogFieldEffect = AssetDatabase
+                .LoadAssetAtPath<SmogFieldEffectAsset>(SmogFieldEffectPath);
+            var waterVeilFieldEffect = AssetDatabase
+                .LoadAssetAtPath<WaterVeilFieldEffectAsset>(
+                    WaterVeilFieldEffectPath);
+            var stunStatus = AssetDatabase.LoadAssetAtPath<StunStatusAsset>(
+                StunStatusPath);
+            var paralysisStatus = AssetDatabase.LoadAssetAtPath<SlowStatusAsset>(
+                ParalysisStatusPath);
+            var chillStatus = AssetDatabase.LoadAssetAtPath<SlowStatusAsset>(
+                ChillStatusPath);
+            var chargeStatus = AssetDatabase.LoadAssetAtPath<ChargeStatusAsset>(
+                ChargeStatusPath);
+            var launchCeremonyStatus = AssetDatabase
+                .LoadAssetAtPath<LaunchCeremonyStatusAsset>(
+                    LaunchCeremonyStatusPath);
+            var freezeStatus = AssetDatabase.LoadAssetAtPath<FreezeStatusAsset>(
+                FreezeStatusPath);
+            var frozenBreakStatus = AssetDatabase
+                .LoadAssetAtPath<FrozenBreakStatusAsset>(FrozenBreakStatusPath);
+            var sunnyWeather = AssetDatabase.LoadAssetAtPath<SunnyWeatherAsset>(
+                SunnyWeatherPath);
+            var rainWeather = AssetDatabase.LoadAssetAtPath<RainWeatherAsset>(
+                RainWeatherPath);
+            var windWeather = AssetDatabase.LoadAssetAtPath<WindWeatherAsset>(
+                WindWeatherPath);
+            var flyingStatus = AssetDatabase.LoadAssetAtPath<FlyingStatusAsset>(
+                FlyingStatusPath);
+            var windErosionStatus = AssetDatabase
+                .LoadAssetAtPath<WindErosionStatusAsset>(WindErosionStatusPath);
+            var healingWindStatus = AssetDatabase
+                .LoadAssetAtPath<HealingWindStatusAsset>(HealingWindStatusPath);
+            var stillAirStatus = AssetDatabase.LoadAssetAtPath<StillAirStatusAsset>(
+                StillAirStatusPath);
+            var oneTwoStatus = AssetDatabase.LoadAssetAtPath<OneTwoStatusAsset>(
+                OneTwoStatusPath);
+            if (toxinStatus == null
+                || smogFieldEffect == null
+                || stunStatus == null
+                || paralysisStatus == null
+                || chillStatus == null
+                || chargeStatus == null
+                || freezeStatus == null
+                || frozenBreakStatus == null
+                || sunnyWeather == null
+                || rainWeather == null
+                || windWeather == null
+                || flyingStatus == null
+                || windErosionStatus == null
+                || healingWindStatus == null
+                || stillAirStatus == null
+                || oneTwoStatus == null)
+            {
+                Debug.LogError(
+                    "Battle Status and Field Effect Definitions are required.");
+                return;
+            }
             var skillsById = catalog.Skills
                 .Where(skill => skill != null)
                 .GroupBy(skill => skill.SkillId)
@@ -122,6 +218,264 @@ namespace Pachimon.Editor.UI
                         basePower: 100,
                         fireScalingPercent: 100);
                     EditorUtility.SetDirty(combustion);
+                }
+                else if (skill is ChainBurnSkillAsset chainBurn)
+                {
+                    Undo.RecordObject(chainBurn, "Update Chain Burn Skill");
+                    chainBurn.ConfigureForEditor(
+                        skillId: 17,
+                        displayName: "チェインバーン",
+                        baseRecoveryTicks: 130,
+                        baseCooldownTicks: 250,
+                        baseManaCost: 100,
+                        description:
+                            "先頭から後方へ往復するFire連鎖攻撃。"
+                            + "使うたびにアドチェインが0.5増加する。",
+                        basePower: 80,
+                        fireScalingPercent: 100,
+                        baseChainCount: 1,
+                        addChainGainUnits: 50);
+                    EditorUtility.SetDirty(chainBurn);
+                }
+                else if (skill is FireBarrierSkillAsset fireBarrier)
+                {
+                    var fieldEffect = AssetDatabase.LoadAssetAtPath<
+                        FireBarrierFieldEffectAsset>(
+                        "Assets/GameData/Battle/FieldEffect/FireBarrierFieldEffect.asset");
+                    Undo.RecordObject(fireBarrier, "Update Fire Barrier Skill");
+                    fireBarrier.ConfigureForEditor(
+                        skillId: 25,
+                        displayName: "炎の障壁",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "自陣に、味方への攻撃を肩代わりする炎の障壁を生成する。",
+                        baseValue: 400,
+                        fireValueRatio: 100,
+                        fieldEffect);
+                    EditorUtility.SetDirty(fireBarrier);
+                }
+                else if (skill is SunnyDaySkillAsset sunnyDay)
+                {
+                    Undo.RecordObject(sunnyDay, "Update Sunny Day Skill");
+                    sunnyDay.ConfigureForEditor(
+                        skillId: 49,
+                        displayName: "温暖化",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "Fireに応じてBattle中の気温を恒久的に上昇させる。",
+                        baseValue: 400,
+                        fireValueRatio: 100,
+                        temperatureDefinition: sunnyWeather);
+                    EditorUtility.SetDirty(sunnyDay);
+                }
+                else if (skill is RainDanceSkillAsset rainDance)
+                {
+                    Undo.RecordObject(rainDance, "Update Rain Dance Skill");
+                    rainDance.ConfigureForEditor(
+                        skillId: 18,
+                        displayName: "あまごい",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "Aquaに応じたValueの雨を発生させる。",
+                        baseValue: 400,
+                        aquaValueRatio: 100,
+                        rainDefinition: rainWeather);
+                    EditorUtility.SetDirty(rainDance);
+                }
+                else if (skill is WaterPulseSkillAsset waterPulse)
+                {
+                    Undo.RecordObject(waterPulse, "Update Water Pulse Skill");
+                    waterPulse.ConfigureForEditor(
+                        skillId: 10,
+                        displayName: "水の波動",
+                        baseRecoveryTicks: 150,
+                        baseCooldownTicks: 300,
+                        description:
+                            "CurrentMNをすべて消費し、消費量とAquaに応じた"
+                            + "Aqua Damageを先頭の敵へ与える。",
+                        aquaDamageRatio: 100);
+                    EditorUtility.SetDirty(waterPulse);
+                }
+                else if (skill is LaunchCeremonySkillAsset launchCeremony)
+                {
+                    Undo.RecordObject(
+                        launchCeremony,
+                        "Update Launch Ceremony Skill");
+                    launchCeremony.ConfigureForEditor(
+                        skillId: 26,
+                        displayName: "\u9032\u6C34\u5F0F",
+                        baseRecoveryTicks: 20,
+                        baseCooldownTicks: 120,
+                        description:
+                            "\u6B21\u306ESkill\u3092\u5F37\u5316\u3057\u3001MN\u6D88\u8CBB\u3092\u8EFD\u6E1B\u3059\u308B\u3002",
+                        statusDefinition: launchCeremonyStatus);
+                    EditorUtility.SetDirty(launchCeremony);
+                }
+                else if (skill is WaterVeilSkillAsset waterVeil)
+                {
+                    Undo.RecordObject(waterVeil, "Update Water Veil Skill");
+                    waterVeil.ConfigureForEditor(
+                        skillId: 34,
+                        displayName: "\u6C34\u306E\u30D9\u30FC\u30EB",
+                        baseRecoveryTicks: 120,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 350,
+                        description:
+                            "\u5473\u65B9\u5074\u306B\u56DE\u5FA9\u3068Aqua/Fire\u8EFD\u6E1B\u3092\u884C\u3046\u30D9\u30FC\u30EB\u3092\u751F\u6210\u3059\u308B\u3002",
+                        baseFieldValue: 300,
+                        aquaValueRatio: 100,
+                        fieldEffect: waterVeilFieldEffect);
+                    EditorUtility.SetDirty(waterVeil);
+                }
+                else if (skill is HeavySnowSkillAsset heavySnow)
+                {
+                    Undo.RecordObject(heavySnow, "Update Heavy Snow Skill");
+                    heavySnow.ConfigureForEditor(
+                        skillId: 30,
+                        displayName: "寒冷化",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "Iceに応じてBattle中の気温を恒久的に低下させる。",
+                        baseValue: 400,
+                        iceValueRatio: 100,
+                        temperatureDefinition: sunnyWeather);
+                    EditorUtility.SetDirty(heavySnow);
+                }
+                else if (skill is IceShieldSkillAsset iceShield)
+                {
+                    Undo.RecordObject(iceShield, "Update Ice Shield Skill");
+                    iceShield.ConfigureForEditor(
+                        skillId: 14,
+                        displayName: "\u6C37\u306E\u76FE",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "\u5148\u982D\u306E\u751F\u5B58\u5473\u65B9\u3078Ice\u4F9D\u5B58\u306EShield\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                        baseShieldValue: 300,
+                        iceShieldRatio: 100);
+                    EditorUtility.SetDirty(iceShield);
+                }
+                else if (skill is IceShardSkillAsset iceShard)
+                {
+                    Undo.RecordObject(iceShard, "Update Ice Shard Skill");
+                    iceShard.ConfigureForEditor(
+                        skillId: 22,
+                        displayName: "\u30A2\u30A4\u30B9\u30B7\u30E3\u30FC\u30C9",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 150,
+                        description:
+                            "\u6575\u5168\u4F53\u3078Ice Damage\u3068\u51B7\u6C17\u3092\u4E0E\u3048\u308B\u3002",
+                        frontBaseDamage: 100,
+                        frontDamageIceRatio: 100,
+                        frontBaseChill: 75,
+                        frontChillIceRatio: 100,
+                        otherBaseDamage: 50,
+                        otherDamageIceRatio: 100,
+                        otherBaseChill: 50,
+                        otherChillIceRatio: 100,
+                        chillStatus: chillStatus);
+                    EditorUtility.SetDirty(iceShard);
+                }
+                else if (skill is FrozenBreakSkillAsset frozenBreak)
+                {
+                    Undo.RecordObject(frozenBreak, "Update Frozen Break Skill");
+                    frozenBreak.ConfigureForEditor(
+                        skillId: 46,
+                        displayName: "フローズンブレイク",
+                        highHpRecoveryTicks: 200,
+                        lowHpRecoveryTicks: 1,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "HPが半分以上なら敵を攻撃・凍結し、"
+                            + "半分未満なら対象外になって毎tick回復する。",
+                        baseIceDamage: 100,
+                        iceDamageRatio: 100,
+                        baseDuration: 70,
+                        durationIceRatio: 40,
+                        baseHealPerTick: 1,
+                        healIceRatio: 50,
+                        freezeStatus: freezeStatus,
+                        selfStatus: frozenBreakStatus);
+                    EditorUtility.SetDirty(frozenBreak);
+                }
+                else if (skill is WindStormSkillAsset windStorm)
+                {
+                    Undo.RecordObject(windStorm, "Update Wind Storm Skill");
+                    windStorm.ConfigureForEditor(
+                        skillId: 47,
+                        displayName: "暴風",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "Windに応じたValueの暴風を発生させる。",
+                        baseValue: 400,
+                        windValueRatio: 100,
+                        windDefinition: windWeather);
+                    EditorUtility.SetDirty(windStorm);
+                }
+                else if (skill is FlyingAttackSkillAsset flyingAttack)
+                {
+                    Undo.RecordObject(flyingAttack, "Update Flying Attack Skill");
+                    flyingAttack.ConfigureForEditor(
+                        15, "フライングアタック", 100, 100, 300, 100,
+                        "発生中は飛行し、発動時に敵の先頭へWind Damageを与える。",
+                        120, 100, flyingStatus);
+                    EditorUtility.SetDirty(flyingAttack);
+                }
+                else if (skill is WindErosionSkillAsset windErosion)
+                {
+                    Undo.RecordObject(windErosion, "Update Wind Erosion Skill");
+                    windErosion.ConfigureForEditor(
+                        23, "風化の風", 100, 300, 100,
+                        "敵全体へWind参照の風化を与える。",
+                        20, 100, windErosionStatus);
+                    EditorUtility.SetDirty(windErosion);
+                }
+                else if (skill is HealingWindSkillAsset healingWind)
+                {
+                    Undo.RecordObject(healingWind, "Update Healing Wind Skill");
+                    healingWind.ConfigureForEditor(
+                        31, "治癒の風", 100, 300, 100,
+                        "最もCurrent HPが低い味方を回復し、WindとSpeedを増加させる。",
+                        100, 50, 50, 100, 200, healingWindStatus);
+                    EditorUtility.SetDirty(healingWind);
+                }
+                else if (skill is SecondWindSkillAsset secondWind)
+                {
+                    Undo.RecordObject(secondWind, "Update Second Wind Skill");
+                    secondWind.ConfigureForEditor(
+                        39, "セカンドウィンド", 100, 400, 100,
+                        "Wind参照のShieldを得て、200tickの間Windが0になる。",
+                        200, 200, stillAirStatus);
+                    EditorUtility.SetDirty(secondWind);
+                }
+                else if (skill is DragonJabSkillAsset dragonJab)
+                {
+                    Undo.RecordObject(dragonJab, "Update Dragon Jab Skill");
+                    dragonJab.ConfigureForEditor(
+                        16,
+                        "ドラゴンジャブ",
+                        100,
+                        250,
+                        100,
+                        "敵の先頭に竜ダメージを与え、ワン・ツーを獲得する。",
+                        100,
+                        100,
+                        30,
+                        oneTwoStatus);
+                    EditorUtility.SetDirty(dragonJab);
                 }
                 else if (skill is AquaShockSkillAsset aquaShock)
                 {
@@ -202,19 +556,106 @@ namespace Pachimon.Editor.UI
                     charge.ConfigureForEditor(
                         skillId: 36,
                         displayName: "充電",
-                        baseRecoveryTicks: 200,
+                        baseStartupTicks: 300,
+                        baseRecoveryTicks: 0,
                         baseCooldownTicks: 500,
                         baseManaCost: 400,
                         description:
-                            "自身のElectricを保存して充電中になる。"
-                            + "終了後、同じValueの充電完了になる。",
-                        chargingDurationPercent: 400,
-                        chargingResistBonusPercent: 40,
-                        chargingElectricPercent: 50,
-                        chargedDurationPercent: 200,
-                        chargedElectricPercent: 150,
-                        chargedSpeedPercent: 100);
+                            "発生開始時のElectricを保存して充電中になり、"
+                            + "発動時に同じValueの充電完了になる。",
+                        chargeStatus: chargeStatus);
                     EditorUtility.SetDirty(charge);
+                }
+                else if (skill is SmogSkillAsset smog)
+                {
+                    Undo.RecordObject(smog, "Update Smog Skill");
+                    smog.ConfigureForEditor(
+                        skillId: 21,
+                        displayName: "スモッグ",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "敵陣に毒素を付与し続けるスモッグを生成する。",
+                        baseFieldValue: 300,
+                        poisonScalingPercent: 100,
+                        fieldEffect: smogFieldEffect);
+                    EditorUtility.SetDirty(smog);
+                }
+                else if (skill is NeurotoxinSkillAsset neurotoxin)
+                {
+                    Undo.RecordObject(neurotoxin, "Update Neurotoxin Skill");
+                    neurotoxin.ConfigureForEditor(
+                        skillId: 13,
+                        displayName: "神経毒",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "最後尾の敵へPoisonとElectricに応じたStunと、"
+                            + "Poisonに応じた毒素を付与する。",
+                        basePoisonStunTicks: 50,
+                        poisonStunScalingPercent: 100,
+                        baseElectricStunTicks: 50,
+                        electricStunScalingPercent: 100,
+                        baseToxinValue: 100,
+                        toxinScalingPercent: 100,
+                        toxinStatus: toxinStatus,
+                        stunStatus: stunStatus);
+                    EditorUtility.SetDirty(neurotoxin);
+                }
+                else if (skill is ToxinTransferSkillAsset toxinTransfer)
+                {
+                    Undo.RecordObject(toxinTransfer, "Update Toxin Transfer Skill");
+                    toxinTransfer.ConfigureForEditor(
+                        skillId: 29,
+                        displayName: "毒渡し",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "最も毒素が多い敵から50%を取り除き、"
+                            + "別の最少対象へ除去量の200%を付与する。",
+                        removalPercent: 50,
+                        applicationPercent: 200);
+                    EditorUtility.SetDirty(toxinTransfer);
+                }
+                else if (skill is ToxinExplosionSkillAsset toxinExplosion)
+                {
+                    Undo.RecordObject(toxinExplosion, "Update Toxin Explosion Skill");
+                    toxinExplosion.ConfigureForEditor(
+                        skillId: 37,
+                        displayName: "毒爆破",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 400,
+                        baseManaCost: 200,
+                        description:
+                            "最も多い敵の毒素を全消費し、PoisonとFireを"
+                            + "加えたPoisonダメージを敵全体へ与える。",
+                        toxinConversionPercent: 100,
+                        basePoisonPower: 50,
+                        poisonScalingPercent: 100,
+                        baseFirePower: 50,
+                        fireScalingPercent: 100);
+                    EditorUtility.SetDirty(toxinExplosion);
+                }
+                else if (skill is PoisonShieldSkillAsset poisonShield)
+                {
+                    Undo.RecordObject(poisonShield, "Update Poison Shield Skill");
+                    poisonShield.ConfigureForEditor(
+                        skillId: 45,
+                        displayName: "ポイズンシールド",
+                        baseRecoveryTicks: 100,
+                        baseCooldownTicks: 300,
+                        baseManaCost: 100,
+                        description:
+                            "自身へPoison依存のShieldを付与し、"
+                            + "自身の毒素をPoison依存の割合で取り除く。",
+                        baseShieldValue: 300,
+                        shieldPoisonScalingPercent: 100,
+                        baseToxinReductionPercent: 50,
+                        reductionPoisonScalingPercent: 100);
+                    EditorUtility.SetDirty(poisonShield);
                 }
                 else
                 {
@@ -228,6 +669,23 @@ namespace Pachimon.Editor.UI
                         BasicCooldown,
                         "v0.3 basic attribute damage Skill placeholder.");
                     EditorUtility.SetDirty(skill);
+                }
+
+                if (skill is PlaceholderSkillAsset placeholder)
+                {
+                    placeholder.ConfigureStatusForEditor(
+                        allocationType == AllocationType.Poison ? 100 : 0,
+                        100,
+                        allocationType == AllocationType.Poison
+                            ? toxinStatus
+                            : null,
+                        allocationType == AllocationType.Electric
+                            ? paralysisStatus
+                            : null,
+                        allocationType == AllocationType.Ice
+                            ? chillStatus
+                            : null);
+                    EditorUtility.SetDirty(placeholder);
                 }
 
                 skillsById[skillId] = skill;

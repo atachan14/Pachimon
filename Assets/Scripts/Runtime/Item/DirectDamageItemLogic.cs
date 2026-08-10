@@ -33,7 +33,7 @@ namespace Pachimon.Items
                     nameof(item));
             }
 
-            return context.ApplyDamage(damageItem.DamageAmount);
+            return context.ApplyDamage(damageItem.DamageAmount, item.ItemId);
         }
     }
 }

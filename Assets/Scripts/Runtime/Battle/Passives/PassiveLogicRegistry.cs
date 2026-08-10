@@ -51,6 +51,290 @@ namespace Pachimon.Battle
                     continue;
                 }
 
+                if (passiveCatalog?.Get(passiveId)
+                    is FieldValueAmplificationPassiveAsset fieldAmplification)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new FieldValueAmplificationPassiveLogic(
+                            owner,
+                            fieldAmplification);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ToxinGrowthPassiveAsset toxinGrowth)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ToxinGrowthPassiveLogic(owner, toxinGrowth);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is PoisonKnightPassiveAsset poisonKnight)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new PoisonKnightPassiveLogic(owner, poisonKnight);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is FireGrowthOnDamagePassiveAsset fireGrowth)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new FireGrowthOnDamagePassiveLogic(owner, fireGrowth);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is DarkFlamePassiveAsset darkFlame)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new DarkFlamePassiveLogic(owner, darkFlame);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is FireArcherPassiveAsset fireArcher)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new FireArcherPassiveLogic(owner, fireArcher);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is BurnPursuitPassiveAsset burnPursuit)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new BurnPursuitPassiveLogic(owner, burnPursuit);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is SunnyManPassiveAsset sunnyMan)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new SunnyManPassiveLogic(owner, sunnyMan);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is RainManPassiveAsset rainMan)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new RainManPassiveLogic(owner, rainMan);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is LifeWaterPassiveAsset lifeWater)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new LifeWaterPassiveLogic(owner, lifeWater);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WaterBlessingPassiveAsset waterBlessing)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WaterBlessingPassiveLogic(owner, waterBlessing);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is HealthyPlantPassiveAsset healthyPlant)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new HealthyPlantPassiveLogic(owner, healthyPlant);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is EntanglingVinePassiveAsset entanglingVine)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new EntanglingVinePassiveLogic(owner, entanglingVine);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WarmPlantPassiveAsset warmPlant)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WarmPlantPassiveLogic(owner, warmPlant);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is SturdyPlantPassiveAsset sturdyPlant)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new SturdyPlantPassiveLogic(owner, sturdyPlant);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is PowderPlantPassiveAsset powderPlant)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new PowderPlantPassiveLogic(owner, powderPlant);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is RunningStartPassiveAsset runningStart)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new RunningStartPassiveLogic(owner, runningStart);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WindBlessingPassiveAsset windBlessing)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WindBlessingPassiveLogic(owner, windBlessing);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WeatherChildPassiveAsset weatherChild)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WeatherChildPassiveLogic(owner, weatherChild);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is TeamAttributeDamagePassiveAsset teamAttributeDamage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new TeamAttributeDamagePassiveLogic(
+                            owner,
+                            teamAttributeDamage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ResistAdvantageDamagePassiveAsset resistAdvantage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ResistAdvantageDamagePassiveLogic(
+                            owner,
+                            resistAdvantage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is IncomingAttributeDamagePassiveAsset incomingDamage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new IncomingAttributeDamagePassiveLogic(
+                            owner,
+                            incomingDamage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is TargetSlowDamagePassiveAsset targetSlowDamage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new TargetSlowDamagePassiveLogic(
+                            owner,
+                            targetSlowDamage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is TargetStatusDamagePassiveAsset targetStatusDamage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new TargetStatusDamagePassiveLogic(
+                            owner,
+                            targetStatusDamage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is FrozenGroundPassiveAsset frozenGround)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new FrozenGroundPassiveLogic(owner, frozenGround);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is IceGrowthOnDamagePassiveAsset iceGrowth)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new IceGrowthOnDamagePassiveLogic(owner, iceGrowth);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is IceWitchPassiveAsset iceWitch)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new IceWitchPassiveLogic(owner, iceWitch);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ComboMasterPassiveAsset comboMaster)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ComboMasterPassiveLogic(owner, comboMaster);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is DragonBoxerPassiveAsset dragonBoxer)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new DragonBoxerPassiveLogic(owner, dragonBoxer);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is SweetSciencePassiveAsset sweetScience)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new SweetSciencePassiveLogic(owner, sweetScience);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is DragonSkeletonPassiveAsset dragonSkeleton)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new DragonSkeletonPassiveLogic(owner, dragonSkeleton);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is DragonRagePassiveAsset dragonRage)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new DragonRagePassiveLogic(owner, dragonRage);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ManyHitsPassiveAsset manyHits)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ManyHitsPassiveLogic(owner, manyHits);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is DragonGuardPassiveAsset dragonGuard)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new DragonGuardPassiveLogic(owner, dragonGuard);
+                    continue;
+                }
+
                 if (passiveCatalog?.Get(passiveId) != null)
                 {
                     _factoriesByPassiveId[passiveId] = owner =>

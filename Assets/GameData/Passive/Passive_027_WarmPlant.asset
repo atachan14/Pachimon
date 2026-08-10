@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0270000000000000000000000000003, type: 3}
+  m_Name: Passive_027_WarmPlant
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.WarmPlantPassiveAsset
+  _passiveId: 27
+  _displayName: 温暖植物
+  _description: 正の気温に応じてSpeedが増加する。
+  _temperatureSpeedRatio: 30

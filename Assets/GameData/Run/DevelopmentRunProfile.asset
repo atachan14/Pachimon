@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9360eb3f11841de81ec436059557ad1, type: 3}
+  m_Name: DevelopmentRunProfile
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Run.RunStartupProfile
+  _startingGold: 100
+  _startingItems:
+  - {fileID: 11400000, guid: cfa1d90e99f64774ca8d337c976ba588, type: 2}
+  - {fileID: 11400000, guid: 24c4855c8f5e2354fa8be8ad6cff75eb, type: 2}
+  - {fileID: 11400000, guid: e0270000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: e0350000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: e0430000000000000000000000000001, type: 2}
+  - {fileID: 11400000, guid: de2f6c0543ac45c98321e862660c998d, type: 2}
+  - {fileID: 11400000, guid: b796d5b7a4574ad49eca1d6b5219891e, type: 2}
+  - {fileID: 11400000, guid: 064f402eef8442db8984f894efb9df86, type: 2}
+  - {fileID: 11400000, guid: b33d252e267d4c3eb60c0c57e339d495, type: 2}

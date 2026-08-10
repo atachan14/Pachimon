@@ -75,6 +75,8 @@ namespace Pachimon.Battle
                 unitMap[original].CopyStatusesForSimulation(original, unitMap);
             }
             simulationState.Statuses.RefreshAllActionClockPauses();
+            simulationState.Fields.CopyForSimulation(source.Fields, unitMap);
+            simulationState.Weather.CopyForSimulation(source.Weather, unitMap);
 
             return new BattleSimulationSnapshot(
                 simulationState,

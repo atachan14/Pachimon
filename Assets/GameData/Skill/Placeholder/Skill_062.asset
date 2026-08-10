@@ -19,3 +19,4 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 200
   _description: v0.3 basic attribute damage Skill placeholder.
+  _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

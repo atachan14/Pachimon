@@ -29,9 +29,9 @@
 2. 属性ごとにPachimon、Skill、Passiveを追加する
 3. 8属性それぞれ約5体を目安に増やす
 4. 追加途中でも定期的にMap生成とBattleを通し確認する
-5. 新規Skillには検証用の技マシーンを用意し、`GameSceneInstaller`の初期配布Skill IDリストから必要分だけ配布する
+5. 新規Skillには検証用の技マシーンを用意し、`DevelopmentRunProfile.asset`から必要分だけ配布する
 
-初期Itemは9Slot上限を共有するため、すべての実装済みSkillを同時配布しない。新しい仕組みを持つ代表Skillを優先し、確認済みSkillは初期配布リストから外す。
+初期Itemは9Slot上限を共有するため、すべての実装済みSkillを同時配布しない。新しい仕組みを持つ代表Skillを優先し、確認済みSkillは開発Profileから外す。通常Buildは`ProductionRunProfile.asset`を強制使用する。
 
 ## Phase 4: Item
 

@@ -80,7 +80,7 @@ RecoveryWork = BaseRecovery × SkillRecoveryMultiplier
 
 ## tickの端数処理
 
-- 発生、硬直、CD、状態異常の効果時間は、途中計算で端数を維持する
+- 発生、硬直、CD、状態の効果時間は、途中計算で端数を維持する
 - 完了tickを確定するときに切り上げる
 - 正の計算結果は最低1tickとする
 - Base値が明示的に0の場合は最低値を適用せず、0tickのままとする
@@ -96,7 +96,7 @@ RecoveryWork = BaseRecovery × SkillRecoveryMultiplier
 
 ## Event順序
 
-Passiveや状態異常が同じダメージイベントへ反応する場合の共通優先順位は未決定。
+Passiveや状態が同じダメージイベントへ反応する場合の共通優先順位は未決定。
 
 実装前に最低限、次を区別する。
 
@@ -107,3 +107,24 @@ HP反映後
 戦闘不能判定後
 追加ダメージ生成後
 ```
+
+## 対象確定
+
+- `先頭`など位置を参照する通常Skillは、効果解決時に対象を検索する
+- 対象指定不可のPachimonは、単体・全体・ランダムの対象候補から原則除外する
+- 効果解決時に対象が存在しない場合、`対象指定不可による不発`として記録する
+- 不発時は`対象がいなかった！`と表示し、MN・硬直・CDは通常どおり処理する
+- Skill選択時の個体を追跡する特殊Skillだけ、Skill Contextへ対象を保存する
+- 保存した対象が効果解決時に対象指定不可なら、別対象へ切り替えず不発とする
+
+## tick内の共通更新順
+
+1. 現在のStatus・Field Effectを反映したStatで行動時計とCooldownを進める
+2. Statusの定期効果を処理する
+3. StatusのValue・残り時間を減少させ、終了・遷移を処理する
+4. Field Effectの定期効果を処理する
+5. Field EffectのValue・残り時間を減少させ、終了・遷移を処理する
+6. WeatherのValueを減少させ、終了を処理する
+7. 完了した発生・Turnを解決する
+
+Field Effectがこのtickに付与したStatusは、次のtickから時間・Value減少の対象になる。

@@ -21,7 +21,7 @@
 - 発生源と対象が同じ自傷攻撃も`AttackReceivedEvent`の対象とする
 - `AttackReceivedEvent`は属性ダメージと確定ダメージの両方を対象とする
 - 実ダメージが0でも攻撃として適用された場合は発行する
-- 自傷、状態異常、Itemなどは、個別仕様で攻撃と明記されない限り`IsAttack = false`とする
+- 自傷、状態、Itemなどは、個別仕様で攻撃と明記されない限り`IsAttack = false`とする
 
 `AttackReceivedEvent`は次の情報を保持する。
 
@@ -35,7 +35,9 @@
 
 - わるあがきの敵側への確定ダメージ: `IsAttack = true`
 - わるあがきの自傷確定ダメージ: `IsAttack = false`
-- 漏電による追加ダメージ: `IsAttack = false`
+- 漏電による追加ダメージ: `Origin = Status / Leak`、`Source = null`、`IsAttack = false`
+  - 攻撃者のAttribute、DamageBonus、送出Passiveは適用しない
+  - 対象のElectricとResistBonusによる軽減は適用する
 
 ### 攻撃倍率
 
@@ -51,6 +53,16 @@
 
 - 正数は受けるDamageを軽減する
 - 負数は受けるDamageを線形に増加させる
+
+### 状態Damage
+
+- 状態Damageも原則として属性またはTrueのDamage Typeを持つ
+- 状態そのものをDamage Originとし、発生源Unitを持たないDamageを許可する
+- 属性を持つ状態Damageには、対象側の同属性Statと`ResistBonus`による軽減を適用する
+- 状態Valueを付与時の攻撃側Statから生成した場合、発動時に同じ攻撃側Statを再適用しない
+- 発動時の`DamageBonus`や与Damage Passiveは、状態固有仕様で明記された場合だけ適用する
+- 状態Damageは、固有仕様で攻撃と明記されない限り`IsAttack = false`とする
+- Trueの状態Damageは属性Statと`ResistBonus`による軽減を受けない
 
 ### 直接Statを参照する効果
 
@@ -104,3 +116,14 @@ Damage = BasePower × AmplificationMultiplier(Stat)
 - 次の対象の属性値とResistBonusによる軽減を改めて適用する
 - 軽減後も超過ダメージが残る場合、さらに次の対象へ連続して引き継ぐ
 - 超過ダメージが0以下になるか、次の対象が存在しなくなった時点で終了する
+
+## Shield
+
+- Shieldは原則として属性Damage、TrueDamage、継続Damageをすべて吸収する
+- TrueDamageは属性・Resist軽減を受けないが、Shieldは無視しない
+- Damage軽減計算後、HPへ適用する直前にShieldへDamageを適用する
+- 複数Shieldがある場合、残り時間が短いものから消費する
+- 残り時間が同じ場合、無期限同士を含めて先に付与されたものから消費する
+- Shieldを超過したDamageはHPへ引き継ぐ
+- 再付与時は既存Shieldへ合算せず、独立したShield Instanceとして追加する
+- 戦闘不能時とBattle終了時に、そのPachimonが保持するShieldをすべて破棄する

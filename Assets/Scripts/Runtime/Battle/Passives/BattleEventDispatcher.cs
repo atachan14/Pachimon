@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Run;
 
 namespace Pachimon.Battle
 {
@@ -8,6 +9,41 @@ namespace Pachimon.Battle
     {
         BattleUnitState Owner { get; }
         void Handle(IBattleEvent battleEvent);
+    }
+
+    public interface IBattleStatModifierProvider
+    {
+        IEnumerable<IStatModifier> CreateStatModifiers(BattleState state);
+    }
+
+    public interface IHealingModifierProvider
+    {
+        decimal ModifyHealing(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            decimal value);
+    }
+
+    public interface IOutgoingStatusValueModifierProvider
+    {
+        decimal ModifyOutgoingStatusValue(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            BattleStatusId statusId,
+            BattleStatusCategory categories,
+            decimal value);
+    }
+
+    public interface IOutgoingPenetrationModifierProvider
+    {
+        decimal ModifyPenetrationPercent(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            DamageContext context,
+            decimal penetrationPercent);
     }
 
     public sealed class BattleEventDispatcher

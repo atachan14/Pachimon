@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17108632c3e442ca11d721b4b38a69b, type: 3}
+  m_Name: Item_10016_TM_DragonJab
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.SkillMachineItemAsset
+  _itemId: 10016
+  _displayName: 技マシーン[ドラゴンジャブ]
+  _icon: {fileID: 0}
+  _description: 対象が「ドラゴンジャブ」を習得する。
+  _category: 2
+  _basePrice: 5000
+  _skill: {fileID: 11400000, guid: 186a3d709909a6f4cbd3b0b8060937a6, type: 2}

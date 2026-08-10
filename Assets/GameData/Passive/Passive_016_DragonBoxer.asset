@@ -1,0 +1,14 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bed599072b5449c1aa472dbe0d2e083d, type: 3}
+  m_Name: Passive_016_DragonBoxer
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DragonBoxerPassiveAsset
+  _passiveId: 16
+  _displayName: ドラゴンボクサー
+  _description: 竜ダメージを与えるたびにスタックを獲得し、竜ダメージが増加する。他属性ダメージを与えるとスタックが半減する。
+  _stackGain: 10
+  _damagePercentPerStack: 1
+  _stackStatus: {fileID: 11400000, guid: 25fc08cbb47e41e6bf510db85c496483, type: 2}

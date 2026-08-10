@@ -34,6 +34,7 @@ namespace Pachimon.UI
                 instance.SpeciesId,
                 definition,
                 Math.Min(instance.CurrentHp, stats.MaxHp),
+                0,
                 Math.Min(instance.CurrentMn, stats.MaxMn),
                 stats,
                 instance.SkillIds,
@@ -58,19 +59,23 @@ namespace Pachimon.UI
                 unit.SpeciesId,
                 pachimonCatalog?.Get(unit.SpeciesId),
                 unit.CurrentHp,
+                unit.TotalShield,
                 unit.CurrentMn,
                 unit.GetBattleStats(),
                 unit.SkillIds,
                 unit.PassiveIds,
                 skillCatalog,
                 passiveCatalog,
-                unit.Statuses.Select(status => status.DisplayName));
+                unit.Statuses
+                    .Where(status => status.IsVisible)
+                    .Select(status => status.DisplayName));
         }
 
         private static PachimonPreviewContent Create(
             int speciesId,
             PachimonSpeciesDefinition definition,
             int currentHp,
+            int currentShield,
             int currentMn,
             EffectivePachimonStats stats,
             IEnumerable<int> skillIds,
@@ -90,6 +95,7 @@ namespace Pachimon.UI
                 definition?.DisplayName ?? $"Pachimon #{speciesId}",
                 currentHp,
                 stats.MaxHp,
+                currentShield,
                 currentMn,
                 stats.MaxMn,
                 BuildStatPreviews(stats),

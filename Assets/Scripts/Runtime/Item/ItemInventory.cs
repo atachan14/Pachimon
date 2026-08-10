@@ -43,6 +43,24 @@ namespace Pachimon.Items
             return true;
         }
 
+        public bool TryAddAt(
+            int slotIndex,
+            int itemId,
+            out ItemInstance item)
+        {
+            ValidateSlotIndex(slotIndex);
+            item = null;
+            if (itemId <= 0 || _slots[slotIndex] != null)
+            {
+                return false;
+            }
+
+            item = new ItemInstance($"item_{_nextInstanceNumber:D6}", itemId);
+            _nextInstanceNumber++;
+            _slots[slotIndex] = item;
+            return true;
+        }
+
         public bool TryRemove(string instanceId, out ItemInstance removedItem)
         {
             removedItem = null;

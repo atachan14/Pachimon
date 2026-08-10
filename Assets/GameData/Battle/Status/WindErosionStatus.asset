@@ -1,0 +1,13 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 04e003968b00469e8629d5e876bc42ed, type: 3}
+  m_Name: WindErosionStatus
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.WindErosionStatusAsset
+  _statusId: 119
+  _displayName: 風化
+  _description: ResistBonusがValueだけ減少し、Valueは毎tick1減少する。
+  _icon: {fileID: 0}
+  _decayPerTick: 1

@@ -19,3 +19,4 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 200
   _description: v0.3 basic attribute damage Skill placeholder.
+  _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}

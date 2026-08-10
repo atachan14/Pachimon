@@ -9,13 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 61172d6b433744f5ae98a641a8a5a46b, type: 3}
   m_Name: Skill_016
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.DragonJabSkillAsset
   _skillId: 16
-  _displayName: ドラゴンストレート
+  _displayName: ドラゴンジャブ
   _allocationType: 8
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 250
+  _baseManaCost: 100
+  _description: 敵の先頭に竜ダメージを与え、ワン・ツーを獲得する。
+  _baseDragonDamage: 100
+  _dragonDamageRatio: 100
+  _oneTwoValue: 30
+  _oneTwoStatus: {fileID: 11400000, guid: 1cc763a82fa2429fa539eea80e5b9ecf, type: 2}

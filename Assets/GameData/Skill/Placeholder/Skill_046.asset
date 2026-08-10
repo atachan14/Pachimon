@@ -9,13 +9,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: a146f0b15d914388ab3567ec76151931, type: 3}
   m_Name: Skill_046
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.FrozenBreakSkillAsset
   _skillId: 46
-  _displayName: 冷たい手
+  _displayName: フローズンブレイク
   _allocationType: 6
   _isMapAssignable: 1
-  _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseRecoveryTicks: 200
+  _baseCooldownTicks: 300
+  _baseManaCost: 100
+  _description: HPが半分以上なら敵を攻撃・凍結し、半分未満なら対象外になって毎tick回復する。
+  _lowHpRecoveryTicks: 1
+  _baseIceDamage: 100
+  _iceDamageRatio: 100
+  _baseDuration: 70
+  _durationIceRatio: 40
+  _baseHealPerTick: 1
+  _healIceRatio: 50
+  _freezeStatus: {fileID: 11400000, guid: a8490000000000000000000000000001, type: 2}
+  _selfStatus: {fileID: 11400000, guid: d446f0b15d914388ab3567ec76151934, type: 2}

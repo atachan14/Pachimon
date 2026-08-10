@@ -66,6 +66,11 @@ namespace Pachimon.Battle
             return _units.Where(unit => unit.IsAlive).ToArray();
         }
 
+        public IReadOnlyList<BattleUnitState> GetAllTargetable()
+        {
+            return _units.Where(unit => unit.IsTargetable).ToArray();
+        }
+
         public IReadOnlyList<BattleUnitState> GetLivingAheadOf(BattleUnitState source)
         {
             ValidateMember(source);

@@ -31,9 +31,59 @@ namespace Pachimon.Run
             return passiveIds
                 .Distinct()
                 .Select(_catalog.Get)
-                .OfType<DerivedAdditivePassiveAsset>()
-                .Select(CreateModifier)
+                .Where(definition => definition is DerivedAdditivePassiveAsset
+                    or DragonSkeletonPassiveAsset
+                    or DragonGuardPassiveAsset)
+                .SelectMany(CreateModifiers)
                 .ToArray();
+        }
+
+        private static IEnumerable<IStatModifier> CreateModifiers(
+            PassiveAsset definition)
+        {
+            if (definition is DerivedAdditivePassiveAsset derived)
+            {
+                yield return CreateModifier(derived);
+                yield break;
+            }
+
+            if (definition is not DragonSkeletonPassiveAsset skeleton)
+            {
+                if (definition is DragonGuardPassiveAsset guard)
+                {
+                    var guardSource = new StatModifierSource(
+                        StatModifierSourceType.Passive,
+                        $"passive:{guard.PassiveId}",
+                        guard.DisplayName);
+                    yield return new DerivedStatModifier(
+                        PachimonStatType.ResistBonus,
+                        StatModifierOperation.DerivedAdditive,
+                        stats => decimal.Floor(
+                            stats.GetValue(PachimonStatType.Dragon)
+                            * guard.ResistFromDragonRatio / 100m),
+                        guardSource);
+                }
+                yield break;
+            }
+
+            var source = new StatModifierSource(
+                StatModifierSourceType.Passive,
+                $"passive:{skeleton.PassiveId}",
+                skeleton.DisplayName);
+            yield return new DerivedStatModifier(
+                PachimonStatType.Dragon,
+                StatModifierOperation.DerivedAdditive,
+                stats => decimal.Floor(
+                    stats.GetValue(PachimonStatType.Speed)
+                    * skeleton.DragonFromSpeedRatio / 100m),
+                source);
+            yield return new DerivedStatModifier(
+                PachimonStatType.Speed,
+                StatModifierOperation.DerivedAdditive,
+                stats => decimal.Floor(
+                    stats.GetValue(PachimonStatType.Dragon)
+                    * skeleton.SpeedFromDragonRatio / 100m),
+                source);
         }
 
         private static IStatModifier CreateModifier(
@@ -42,11 +92,19 @@ namespace Pachimon.Run
             return new DerivedStatModifier(
                 definition.TargetStat,
                 StatModifierOperation.DerivedAdditive,
-                stats => Math.Max(
-                    definition.MinimumContribution,
-                    stats.GetValue(definition.ReferenceStat)
-                    * definition.Percent
-                    / 100m),
+                stats =>
+                {
+                    var contribution = Math.Max(
+                        definition.MinimumContribution,
+                        stats.GetValue(definition.ReferenceStat)
+                        * definition.Percent
+                        / 100m);
+                    return definition.FloorContribution
+                        ? SignedStatMath.FloorStat(
+                            contribution,
+                            clampToNonNegative: false)
+                        : contribution;
+                },
                 new StatModifierSource(
                     StatModifierSourceType.Passive,
                     $"passive:{definition.PassiveId}",

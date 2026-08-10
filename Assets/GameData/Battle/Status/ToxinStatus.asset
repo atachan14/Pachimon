@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f4719c49a2b4c699268a8199ff734eb, type: 3}
+  m_Name: ToxinStatus
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.ToxinStatusAsset
+  _statusId: 108
+  _displayName: "\u6BD2\u7D20"
+  _description: "\u6BCEtick\u3001\u73FE\u5728Value\u306E1%\u306EPoison\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001Value\u30921%\u6E1B\u5C11\u3055\u305B\u308B\u3002"
+  _icon: {fileID: 0}
+  _damagePerTickRatio: 1
+  _decayPerTickRatio: 1

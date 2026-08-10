@@ -13,13 +13,21 @@ namespace Pachimon.Battle
             SkillAsset skill,
             int skillSlotId,
             int startupTicks,
-            BattleSkillTimingPlan timing)
+            BattleSkillTimingPlan timing,
+            SkillStatusConsumptionSnapshot statusConsumption,
+            int actualManaSpent,
+            decimal effectiveManaSpent,
+            object runtimeData)
         {
             User = user ?? throw new ArgumentNullException(nameof(user));
             Skill = skill ?? throw new ArgumentNullException(nameof(skill));
             SkillSlotId = skillSlotId;
             StartupTicks = startupTicks;
             Timing = timing;
+            StatusConsumption = statusConsumption;
+            ActualManaSpent = actualManaSpent;
+            EffectiveManaSpent = effectiveManaSpent;
+            RuntimeData = runtimeData;
         }
 
         public BattleUnitState User { get; }
@@ -27,6 +35,10 @@ namespace Pachimon.Battle
         public int SkillSlotId { get; }
         public int StartupTicks { get; }
         public BattleSkillTimingPlan Timing { get; }
+        public SkillStatusConsumptionSnapshot StatusConsumption { get; }
+        public int ActualManaSpent { get; }
+        public decimal EffectiveManaSpent { get; }
+        public object RuntimeData { get; }
     }
 
     public sealed class BattleSkillRuntime
@@ -69,7 +81,12 @@ namespace Pachimon.Battle
                         user.GetCooldownRemainingTicks(slot.SlotId);
                     var readyTick = state.CurrentTick + remainingCooldown;
                     var isCooldownReady = remainingCooldown == 0;
-                    var hasEnoughMn = user.CanSpendMn(skill.BaseManaCost);
+                    var mana = BattleSkillManaCostCalculator.CreatePlan(
+                        user,
+                        skill);
+                    var hasEnoughMn = skill.ConsumesAllCurrentMana
+                        ? mana.Actual > 0
+                        : user.CanSpendMn(mana.Actual);
                     var isUsable = _logicRegistry.TryGet(slot.SkillId, out _)
                         && isCooldownReady
                         && hasEnoughMn;
@@ -94,7 +111,7 @@ namespace Pachimon.Battle
             var skill = _skillCatalog.Get(SkillIdRanges.StruggleId)
                 ?? throw new InvalidOperationException(
                     $"Skill {SkillIdRanges.StruggleId} (Struggle) was not found.");
-            if (!_logicRegistry.TryGet(skill.SkillId, out _))
+            if (!_logicRegistry.TryGet(skill.SkillId, out var logic))
             {
                 throw new InvalidOperationException(
                     $"Skill {SkillIdRanges.StruggleId} (Struggle) has no registered Logic.");
@@ -145,16 +162,29 @@ namespace Pachimon.Battle
             state.Presentation.Begin(user, skill);
             try
             {
-                SpendMana(state, user, skill);
-                var resolution = ResolveSkill(state, user, skill)
-                    .WithPresentation(state.Presentation.Complete());
+                var statusConsumption = state.Statuses
+                    .CaptureSkillStatusConsumption(user);
+                var manaSpent = SpendMana(state, user, skill);
                 var timing = SkillTimingCalculator.CreatePlan(
                     skill,
-                    user);
+                    user,
+                    state);
+                var resolution = ResolveSkill(
+                    state,
+                    user,
+                    skill,
+                    actualManaSpent: manaSpent.Actual,
+                    effectiveManaSpent: manaSpent.Effective);
+                state.Statuses.CompleteSkillStatusConsumption(
+                    user,
+                    statusConsumption);
+                resolution = resolution.WithPresentation(
+                    state.Presentation.Complete());
                 state.Timeline.CompleteImmediateAction(
                     user,
                     skillSlotId,
                     timing);
+                state.Statuses.RefreshAllActionClockPauses();
                 return resolution;
             }
             catch
@@ -185,16 +215,23 @@ namespace Pachimon.Battle
                     $"Skill {skill.SkillId} does not require Startup.");
             }
 
-            if (!_logicRegistry.TryGet(skill.SkillId, out _))
+            if (!_logicRegistry.TryGet(skill.SkillId, out var logic))
             {
                 throw new InvalidOperationException(
                     $"Skill {skill.SkillId} has no registered Logic.");
             }
 
-            SpendMana(state, user, skill);
+            var statusConsumption = state.Statuses
+                .CaptureSkillStatusConsumption(user);
+            var manaSpent = SpendMana(state, user, skill);
             var timing = SkillTimingCalculator.CreatePlan(
                 skill,
-                user);
+                user,
+                state);
+            var runtimeData = logic is IStartupSkillLogic startupLogic
+                ? startupLogic.BeginStartup(
+                    new SkillExecutionContext(state, user, skill))
+                : null;
             var startupTicks = state.Timeline.BeginStartup(
                 user,
                 skillSlotId,
@@ -204,7 +241,11 @@ namespace Pachimon.Battle
                 skill,
                 skillSlotId,
                 startupTicks,
-                timing);
+                timing,
+                statusConsumption,
+                manaSpent.Actual,
+                manaSpent.Effective,
+                runtimeData);
         }
 
         public SkillResolution ExecutePending(
@@ -229,11 +270,22 @@ namespace Pachimon.Battle
             state.Presentation.Begin(action.User, action.Skill);
             try
             {
-                var resolution = ResolveSkill(state, action.User, action.Skill)
-                    .WithPresentation(state.Presentation.Complete());
+                var resolution = ResolveSkill(
+                    state,
+                    action.User,
+                    action.Skill,
+                    action.RuntimeData,
+                    action.ActualManaSpent,
+                    action.EffectiveManaSpent);
+                state.Statuses.CompleteSkillStatusConsumption(
+                    action.User,
+                    action.StatusConsumption);
+                resolution = resolution.WithPresentation(
+                    state.Presentation.Complete());
                 state.Timeline.CompleteDelayedAction(
                     action.User,
                     action.Timing);
+                state.Statuses.RefreshAllActionClockPauses();
                 return resolution;
             }
             catch
@@ -308,7 +360,10 @@ namespace Pachimon.Battle
                     $"Skill Slot {skillSlotId} is still on Cooldown.");
             }
 
-            if (!user.CanSpendMn(skill.BaseManaCost))
+            var mana = BattleSkillManaCostCalculator.CreatePlan(user, skill);
+            if (skill.ConsumesAllCurrentMana
+                ? mana.Actual <= 0
+                : !user.CanSpendMn(mana.Actual))
             {
                 throw new InvalidOperationException(
                     $"Unit '{user.InstanceId}' does not have enough MN "
@@ -328,7 +383,10 @@ namespace Pachimon.Battle
         private SkillResolution ResolveSkill(
             BattleState state,
             BattleUnitState user,
-            SkillAsset skill)
+            SkillAsset skill,
+            object runtimeData = null,
+            int actualManaSpent = 0,
+            decimal effectiveManaSpent = 0m)
         {
             if (!_logicRegistry.TryGet(skill.SkillId, out var logic))
             {
@@ -340,26 +398,37 @@ namespace Pachimon.Battle
                 state,
                 user,
                 skill,
-                logic);
+                logic,
+                runtimeData,
+                actualManaSpent,
+                effectiveManaSpent);
         }
 
-        private static void SpendMana(
+        private static BattleSkillManaSpendPlan SpendMana(
             BattleState state,
             BattleUnitState user,
             SkillAsset skill)
         {
             var before = user.CurrentMn;
-            if (!user.TrySpendMn(skill.BaseManaCost))
+            var plan = BattleSkillManaCostCalculator.CreatePlan(user, skill);
+            var amount = plan.Actual;
+            if (amount <= 0 && skill.ConsumesAllCurrentMana)
+            {
+                throw new InvalidOperationException(
+                    $"Unit '{user.InstanceId}' requires positive MN for Skill {skill.SkillId}.");
+            }
+            if (!user.TrySpendMn(amount))
             {
                 throw new InvalidOperationException(
                     $"Unit '{user.InstanceId}' could not spend "
-                    + $"{skill.BaseManaCost} MN for Skill {skill.SkillId}.");
+                    + $"{amount} MN for Skill {skill.SkillId}.");
             }
 
             state.Presentation.RecordInitialManaSpent(
                 user,
                 before,
                 user.CurrentMn);
+            return plan;
         }
 
         private static void ValidateUser(BattleState state, BattleUnitState user)

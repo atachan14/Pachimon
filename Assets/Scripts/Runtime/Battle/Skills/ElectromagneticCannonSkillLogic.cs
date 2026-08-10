@@ -30,19 +30,18 @@ namespace Pachimon.Battle
                         context.User,
                         target,
                         transferredDamage);
-                var hpBeforeDamage = target.CurrentHp;
                 var result = BattleAttributeDamageService.Apply(
                     context.State,
                     context.User,
                     target,
                     calculation.Context);
                 effects.Add(new SkillEffectResult(
-                    target,
+                    result.ActualTarget,
                     result.AppliedDamage,
                     isTrueDamage: false));
                 transferredDamage = CalculateOverflow(
-                    result.FinalDamage,
-                    hpBeforeDamage);
+                    result.DamageAfterShield,
+                    result.AppliedDamage + result.ActualTarget.CurrentHp);
                 if (transferredDamage <= 0)
                 {
                     break;

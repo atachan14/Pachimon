@@ -218,6 +218,28 @@ namespace Pachimon.UI
             _contentDetailOverlayView.Show(CreateItemDetail(item));
         }
 
+        public void ShowFieldEffectDetails(BattleFieldEffectInstance effect)
+        {
+            if (effect == null || _contentDetailOverlayView == null)
+            {
+                return;
+            }
+
+            BringOverlayToFront(_contentDetailViewport);
+            _contentDetailOverlayView.Show(CreateFieldEffectDetail(effect));
+        }
+
+        public void ShowWeatherDetails(BattleWeatherInstance weather)
+        {
+            if (weather == null || _contentDetailOverlayView == null)
+            {
+                return;
+            }
+
+            BringOverlayToFront(_contentDetailViewport);
+            _contentDetailOverlayView.Show(CreateWeatherDetail(weather));
+        }
+
         public void ToggleItemPanel()
         {
             if (ItemPanelView == null || _itemPanelViewport == null)
@@ -813,6 +835,111 @@ namespace Pachimon.UI
                     statDefinition,
                     owner?.StatCalculation);
             }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is FieldValueAmplificationPassiveAsset fieldDefinition)
+            {
+                var currentMultiplier = owner != null
+                    && owner.TryGetStat(
+                        PachimonDisplayStat.Poison,
+                        out var poison)
+                        ? SignedStatMath.AmplificationMultiplier(
+                            poison
+                            * fieldDefinition.PoisonScalingPercent
+                            / 100m)
+                        : (decimal?)null;
+                var currentText = currentMultiplier.HasValue
+                    ? $"現在の増幅率は{currentMultiplier.Value:0.##}倍。"
+                    : string.Empty;
+                description = "自身が生成物を生成するとき、"
+                    + "生成予定ValueをPoisonに応じて増幅する。"
+                    + currentText;
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is ToxinGrowthPassiveAsset toxinGrowthDefinition)
+            {
+                description = "自身が毒素を付与するたび、Battle中のPoisonが"
+                    + $"{toxinGrowthDefinition.PoisonPercentPerApplication}%増加する。"
+                    + "複数回発動した増加率は加算してから適用する。";
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is PoisonKnightPassiveAsset poisonKnightDefinition)
+            {
+                decimal? currentSharePercent = null;
+                if (owner != null
+                    && owner.TryGetStat(PachimonDisplayStat.Poison, out var poison))
+                {
+                    currentSharePercent = SignedStatMath.ScaleFromBase(
+                        poisonKnightDefinition.BaseSharePercent,
+                        poison,
+                        poisonKnightDefinition.PoisonScalingPercent);
+                }
+
+                var currentText = currentSharePercent.HasValue
+                    ? $"現在の共有率は{currentSharePercent.Value:0.##}%。"
+                    : string.Empty;
+                description = "自身が受けたShieldと実際のHP回復量の一部を、"
+                    + "生存中の他の味方全員にも与える。"
+                    + currentText;
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is FireGrowthOnDamagePassiveAsset fireGrowthDefinition)
+            {
+                description = "Damageを受けるたび、Battle中のFireが"
+                    + $"{fireGrowthDefinition.FireIncreasePerDamage}増加する。"
+                    + "HPとShieldのどちらへ適用されたDamageでも発動する。";
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is DarkFlamePassiveAsset darkFlameDefinition)
+            {
+                decimal? currentConversionPercent = null;
+                if (owner != null
+                    && owner.TryGetStat(PachimonDisplayStat.Poison, out var poison))
+                {
+                    currentConversionPercent =
+                        darkFlameDefinition.BaseConversionPercent
+                        * SignedStatMath.AmplificationMultiplier(
+                            poison
+                            * darkFlameDefinition.PoisonScalingPercent
+                            / 100m);
+                }
+
+                var currentText = currentConversionPercent.HasValue
+                    ? $"現在の変換率は{currentConversionPercent.Value:0.##}%。"
+                    : string.Empty;
+                description = "Fire Damageを与えたとき、その軽減前Valueを基に"
+                    + "同じ対象へ追加Poison Damageを与える。"
+                    + currentText;
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is FireArcherPassiveAsset fireArcherDefinition)
+            {
+                decimal? currentMissingHpPercent = null;
+                if (owner != null
+                    && owner.TryGetStat(PachimonDisplayStat.Fire, out var fire))
+                {
+                    currentMissingHpPercent =
+                        fireArcherDefinition.MissingHpPercent
+                        * SignedStatMath.AmplificationMultiplier(
+                            fire
+                            * fireArcherDefinition.FireScalingPercent
+                            / 100m);
+                }
+
+                var currentText = currentMissingHpPercent.HasValue
+                    ? "現在は対象の減少HPの"
+                      + $"{currentMissingHpPercent.Value:0.##}%をBaseDamageにする。"
+                    : string.Empty;
+                description = "Skill Damageを与えたとき、対象の減少HPとFireに"
+                    + "応じた追加Fire Damageを同じ対象へ与える。"
+                    + currentText;
+            }
+            else if (_passiveCatalog?.Get(ability.Id)
+                is ComboMasterPassiveAsset comboMasterDefinition)
+            {
+                description = "Battle中に完了した最大追加連鎖回数1回につき、"
+                    + "DamageBonusが"
+                    + $"{comboMasterDefinition.DamageBonusPerChain}増加する。";
+            }
             else if (PassiveLogicRegistry.TryGetPlaceholderAttribute(
                     ability.Id,
                     _passiveCatalog,
@@ -879,6 +1006,53 @@ namespace Pachimon.UI
                 $"カテゴリ  {category}    基準価格  {item.BasePrice} Gold",
                 item.Description,
                 GameUiPalette.ItemChip);
+        }
+
+        private static ContentDetailOverlayContent CreateFieldEffectDetail(
+            BattleFieldEffectInstance effect)
+        {
+            var side = effect.TargetSide == BattleSide.Player
+                ? "自陣生成物"
+                : "敵陣生成物";
+            var description = !string.IsNullOrWhiteSpace(effect.Description)
+                ? effect.Description
+                : effect.EffectId switch
+            {
+                BattleFieldEffectId.Smog =>
+                    "毎tick、現在Valueの1%を対象陣営の生存パチモン全員へ"
+                    + "毒素として付与する。\n"
+                    + "毎tick、現在Valueの1%ずつ減衰する。",
+                _ => "説明未設定",
+            };
+            var runtimeValues = effect.EffectId
+                    == BattleFieldEffectId.FireBarrier
+                ? $"Value  {effect.Value}    HP  {effect.CurrentHp}/{effect.MaxHp}"
+                    + $"    残り  {effect.RemainingTicks}tick"
+                : $"Value  {effect.Value}";
+            return new ContentDetailOverlayContent(
+                ContentDetailKind.FieldEffect,
+                effect.DisplayName,
+                $"{side}    {runtimeValues}    生成者  {effect.Source.DisplayName}",
+                description,
+                BattleFieldInfoView.GetAccentColor(effect.EffectId));
+        }
+
+        private static ContentDetailOverlayContent CreateWeatherDetail(
+            BattleWeatherInstance weather)
+        {
+            var runtimeValues = weather.WeatherId == BattleWeatherId.Temperature
+                ? $"気温  {weather.Value:+#;-#;0}"
+                : $"Value  {weather.Value}";
+            return new ContentDetailOverlayContent(
+                ContentDetailKind.FieldEffect,
+                weather.DisplayName,
+                $"全体環境    {runtimeValues}    最終変更者  {weather.Source.DisplayName}",
+                string.IsNullOrWhiteSpace(weather.Description)
+                    ? "説明未設定"
+                    : weather.Description,
+                BattleFieldInfoView.GetWeatherAccentColor(
+                    weather.WeatherId,
+                    weather.IsSnow ? -weather.Value : weather.Value));
         }
 
         private static string GetAllocationTypeLabel(AllocationType type)

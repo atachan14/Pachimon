@@ -34,7 +34,7 @@ Battle全体の`CurrentTick`を1tick進めるたび、全Unitを次の順序で�
 5. `CurrentTick`を進める
 
 `IsPaused`のUnitは行動時計とCooldownの両方を進めない。
-状態異常自身の残り時間は別の時計として扱い、Stun中も進める。
+状態自身の残り時間は別の時計として扱い、Stun中も進める。
 
 ## Timed Status
 

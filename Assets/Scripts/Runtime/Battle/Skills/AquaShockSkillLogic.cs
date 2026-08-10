@@ -18,39 +18,68 @@ namespace Pachimon.Battle
         {
             ValidateSkill(context);
             var target = GetTarget(context);
-            var electricDamage = ResolveComponent(
+            var electricResult = ResolveComponent(
                 context,
                 target,
                 PachimonAttribute.Electric);
-            var aquaDamage = ResolveComponent(
+            var aquaResult = ResolveComponent(
                 context,
                 target,
                 PachimonAttribute.Aqua);
 
-            if (target.IsAlive)
+            var statusTarget = aquaResult.ActualTarget;
+            if (statusTarget.IsAlive)
             {
-                var aqua = context.User.GetBattleStatValue(
-                    PachimonStatType.Aqua);
-                target.ApplyOrReplaceStatus(new BattleStatusInstance(
-                    BattleStatusId.Leak,
-                    BattleStatusCategory.Leak,
-                    context.User,
-                    AquaShockMath.CalculateLeakValue(_skill, aqua)));
+                var aqua = context.User.GetBattleStatValue(PachimonStatType.Aqua);
+                context.State.Statuses.ApplyAttackStatus(
+                    statusTarget,
+                    new BattleStatusInstance(
+                        BattleStatusId.Leak,
+                        BattleStatusCategory.Leak,
+                        context.User,
+                        AquaShockMath.CalculateLeakValue(
+                            _skill,
+                            aqua,
+                            context.GetAttributeRatio(PachimonAttribute.Aqua))));
             }
 
+            var effects = ReferenceEquals(
+                    electricResult.ActualTarget,
+                    aquaResult.ActualTarget)
+                ? new[]
+                {
+                    new SkillEffectResult(
+                        aquaResult.ActualTarget,
+                        checked(electricResult.AppliedDamage + aquaResult.AppliedDamage),
+                        isTrueDamage: false),
+                }
+                : new[]
+                {
+                    new SkillEffectResult(
+                        electricResult.ActualTarget,
+                        electricResult.AppliedDamage,
+                        isTrueDamage: false),
+                    new SkillEffectResult(
+                        aquaResult.ActualTarget,
+                        aquaResult.AppliedDamage,
+                        isTrueDamage: false),
+                };
             return new SkillResolution(
                 context.User,
                 context.Skill,
-                new[]
-                {
-                    new SkillEffectResult(
-                        target,
-                        checked(electricDamage + aquaDamage),
-                        isTrueDamage: false),
-                });
+                effects);
         }
 
         public DamageContext CreateDamageContext(
+            BattleUnitState user,
+            BattleUnitState target,
+            PachimonAttribute attribute)
+        {
+            return CreateDamageContext(state: null, user, target, attribute);
+        }
+
+        private DamageContext CreateDamageContext(
+            BattleState state,
             BattleUnitState user,
             BattleUnitState target,
             PachimonAttribute attribute)
@@ -69,7 +98,10 @@ namespace Pachimon.Battle
                 PachimonAttribute.Aqua =>
                     AquaShockMath.CalculateAquaBaseDamage(
                         _skill,
-                        attributeValue),
+                        attributeValue,
+                        state?.ResolveAttributeRatio(
+                            PachimonAttribute.Aqua,
+                            100m) ?? 100m),
                 _ => throw new ArgumentOutOfRangeException(nameof(attribute)),
             };
             return new DamageContext(
@@ -83,7 +115,7 @@ namespace Pachimon.Battle
                 applyAttackerAttributeMultiplier: false);
         }
 
-        private int ResolveComponent(
+        private BattleDamageApplicationResult ResolveComponent(
             SkillExecutionContext context,
             BattleUnitState target,
             PachimonAttribute attribute)
@@ -92,8 +124,7 @@ namespace Pachimon.Battle
                 context.State,
                 context.User,
                 target,
-                CreateDamageContext(context.User, target, attribute))
-                .AppliedDamage;
+                CreateDamageContext(context.State, context.User, target, attribute));
         }
 
         private static BattleUnitState GetTarget(SkillExecutionContext context)

@@ -9,13 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: ab9bf6765fad48388fcd2d3f0327e160, type: 3}
   m_Name: Skill_015
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.FlyingAttackSkillAsset
   _skillId: 15
-  _displayName: かぜでっぽう
+  _displayName: フライングアタック
   _allocationType: 7
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 100
+  _description: 発生中は飛行し、発動時に敵の先頭へWind Damageを与える。
+  _baseStartupTicks: 100
+  _baseWindDamage: 120
+  _windDamageRatio: 100
+  _flyingStatus: {fileID: 11400000, guid: 752713c4d5804e78943bc718f5282427, type: 2}

@@ -18212,13 +18212,11 @@ MonoBehaviour:
   _itemCatalog: {fileID: 11400000, guid: a0d59aa3f19f08a45be9402733c0789a, type: 2}
   _trainerStyleCatalog: {fileID: 11400000, guid: 034671d0de9184e47b804d68857d7b1c, type: 2}
   _trainerNameCatalog: {fileID: 11400000, guid: 6f0cd6872ede46346874c1573c14fe46, type: 2}
+  _runProfileSettings: {fileID: 11400000, guid: 47d2d0b8dbee4327989e0277934c4cf2, type: 2}
   _compactBreakpoint: 960
   _initialScreen: {fileID: 0}
   _initializeRun: 1
   _initializeDemoBattle: 1
-  _grantDebugPotion: 1
-  _grantDebugStoneCount: 0
-  _grantDebugSkillMachineSkillIds: 090000000c000000140000001c0000002100000024000000290000002c000000
 --- !u!4 &910000003
 Transform:
   m_ObjectHideFlags: 0
@@ -30021,6 +30019,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.UI.LogWindowView
   <TextLogText>k__BackingField: {fileID: 1152800397}
   <SelectGridRoot>k__BackingField: {fileID: 1049898643}
+  _charactersPerSecond: 30
+  _dialogueVisibleLineCount: 3
 --- !u!114 &1441713350
 MonoBehaviour:
   m_ObjectHideFlags: 0

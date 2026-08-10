@@ -9,13 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: a0110000000000000000000000000001, type: 3}
   m_Name: Skill_011
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.SunbathSkillAsset
   _skillId: 11
-  _displayName: はっぱスライサー
+  _displayName: 日光浴
   _allocationType: 3
   _isMapAssignable: 1
+  _baseStartupTicks: 0
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 250
+  _baseManaCost: 100
+  _description: 自身のHPをLeafに応じて回復する。正の気温で増加し、雨で減少する。
+  _baseHealing: 150
+  _leafHealingRatio: 100
+  _temperatureHealingRatio: 100
+  _rainHealingReductionRatio: 100

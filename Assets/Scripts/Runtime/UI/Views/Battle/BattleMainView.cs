@@ -16,11 +16,16 @@ namespace Pachimon.UI
         [field: SerializeField] public BattleUnitAreaView AllyArea { get; private set; }
 
         private const float SlideDuration = 0.38f;
+        private const float ToxinPreviewDuration = 0.4f;
+        private const float ToxinCommitDuration = 0.5f;
         private RectTransform _trainerLayer;
         private Image _playerTrainerImage;
         private Image _enemyTrainerImage;
         private CanvasGroup _enemyAreaCanvasGroup;
         private CanvasGroup _allyAreaCanvasGroup;
+        private BattleFieldInfoView _fieldInfoView;
+        private Action<BattleFieldEffectInstance> _fieldDetailsRequested;
+        private Action<BattleWeatherInstance> _weatherDetailsRequested;
         private Vector3 _enemyAreaHomePosition;
         private Vector3 _allyAreaHomePosition;
 
@@ -54,6 +59,30 @@ namespace Pachimon.UI
 
             EnemyArea?.RenderUnits(state.Enemy.Units, "Enemy", pachimonCatalog, false);
             AllyArea?.RenderUnits(state.Player.Units, "Ally", pachimonCatalog, true);
+            RenderFields(state);
+        }
+
+        public void ConfigureFieldEffectClicks(
+            Action<BattleFieldEffectInstance> detailsRequested,
+            Action<BattleWeatherInstance> weatherDetailsRequested)
+        {
+            _fieldDetailsRequested = detailsRequested;
+            _weatherDetailsRequested = weatherDetailsRequested;
+            EnsureFieldInfoView();
+            _fieldInfoView.Initialize(
+                _fieldDetailsRequested,
+                _weatherDetailsRequested);
+        }
+
+        public void RenderFields(BattleState state)
+        {
+            if (state == null)
+            {
+                return;
+            }
+
+            EnsureFieldInfoView();
+            _fieldInfoView.Render(state.Fields.Effects, state.Weather.Weather);
         }
 
         public void ShowSkillPreview(BattleState state, SkillPreview preview)
@@ -89,6 +118,45 @@ namespace Pachimon.UI
                 transition.Unit,
                 transition.HpAfter,
                 transition.MnAfter);
+        }
+
+        public void PlayToxinDamage(
+            IReadOnlyList<BattleResourceTransition> transitions,
+            Action onCompleted)
+        {
+            if (transitions == null || transitions.Count == 0)
+            {
+                onCompleted?.Invoke();
+                return;
+            }
+
+            StartCoroutine(AnimateToxinDamage(transitions, onCompleted));
+        }
+
+        private IEnumerator AnimateToxinDamage(
+            IReadOnlyList<BattleResourceTransition> transitions,
+            Action onCompleted)
+        {
+            foreach (var transition in transitions)
+            {
+                GetArea(transition)?.ShowPendingToxinDamage(transition);
+            }
+
+            yield return new WaitForSecondsRealtime(ToxinPreviewDuration);
+            foreach (var transition in transitions)
+            {
+                GetArea(transition)?.CommitToxinDamage(transition);
+            }
+
+            yield return new WaitForSecondsRealtime(ToxinCommitDuration);
+            onCompleted?.Invoke();
+        }
+
+        private BattleUnitAreaView GetArea(BattleResourceTransition transition)
+        {
+            return transition?.Unit?.Side == BattleSide.Player
+                ? AllyArea
+                : EnemyArea;
         }
 
         public void ConfigureItemDrops(
@@ -348,6 +416,36 @@ namespace Pachimon.UI
             {
                 GraphicWindow.gameObject.AddComponent<RectMask2D>();
             }
+        }
+
+        private void EnsureFieldInfoView()
+        {
+            if (_fieldInfoView != null)
+            {
+                return;
+            }
+
+            var fieldRoot = transform.Find("Space") as RectTransform
+                ?? transform.Find("FieldInfoArea") as RectTransform;
+            if (fieldRoot == null)
+            {
+                var fieldObject = new GameObject(
+                    "FieldInfoArea",
+                    typeof(RectTransform),
+                    typeof(LayoutElement));
+                fieldObject.layer = gameObject.layer;
+                fieldObject.transform.SetParent(transform, false);
+                fieldRoot = fieldObject.GetComponent<RectTransform>();
+                fieldObject.GetComponent<LayoutElement>().flexibleHeight = 1f;
+                fieldRoot.SetSiblingIndex(Mathf.Min(1, transform.childCount - 1));
+            }
+
+            fieldRoot.name = "FieldInfoArea";
+            _fieldInfoView = fieldRoot.GetComponent<BattleFieldInfoView>()
+                ?? fieldRoot.gameObject.AddComponent<BattleFieldInfoView>();
+            _fieldInfoView.Initialize(
+                _fieldDetailsRequested,
+                _weatherDetailsRequested);
         }
 
         private static Image CreateTrainerImage(RectTransform parent, string objectName)

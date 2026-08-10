@@ -20,8 +20,57 @@ namespace Pachimon.Editor.UI
             DataFolder + "/Item_10033_TM_FireArrow.asset";
         private const string CombustionMachinePath =
             DataFolder + "/Item_10041_TM_Combustion.asset";
+        private const string ChainBurnMachinePath =
+            DataFolder + "/Item_10017_TM_ChainBurn.asset";
+        private const string FireBarrierMachinePath =
+            DataFolder + "/Item_10025_TM_FireBarrier.asset";
+        private const string SunnyDayMachinePath =
+            DataFolder + "/Item_10049_TM_SunnyDay.asset";
+        private const string RainDanceMachinePath =
+            DataFolder + "/Item_10018_TM_RainDance.asset";
+        private const string WaterPulseMachinePath =
+            DataFolder + "/Item_10010_TM_WaterPulse.asset";
+        private const string LaunchCeremonyMachinePath =
+            DataFolder + "/Item_10026_TM_LaunchCeremony.asset";
+        private const string WaterVeilMachinePath =
+            DataFolder + "/Item_10034_TM_WaterVeil.asset";
+        private const string SunbathMachinePath = DataFolder + "/Item_10011_TM_Sunbath.asset";
+        private const string ChainVinesMachinePath = DataFolder + "/Item_10019_TM_ChainVines.asset";
+        private const string SolarBeamMachinePath = DataFolder + "/Item_10027_TM_SolarBeam.asset";
+        private const string EntanglingVinesMachinePath = DataFolder + "/Item_10035_TM_EntanglingVines.asset";
+        private const string ParalysisPowderMachinePath = DataFolder + "/Item_10043_TM_ParalysisPowder.asset";
+        private const string HeavySnowMachinePath =
+            DataFolder + "/Item_10030_TM_HeavySnow.asset";
+        private const string WindStormMachinePath =
+            DataFolder + "/Item_10047_TM_WindStorm.asset";
+        private const string FlyingAttackMachinePath =
+            DataFolder + "/Item_10015_TM_FlyingAttack.asset";
+        private const string WindErosionMachinePath =
+            DataFolder + "/Item_10023_TM_WindErosion.asset";
+        private const string HealingWindMachinePath =
+            DataFolder + "/Item_10031_TM_HealingWind.asset";
+        private const string SecondWindMachinePath =
+            DataFolder + "/Item_10039_TM_SecondWind.asset";
+        private const string DragonJabMachinePath =
+            DataFolder + "/Item_10016_TM_DragonJab.asset";
+        private const string IceShieldMachinePath =
+            DataFolder + "/Item_10014_TM_IceShield.asset";
+        private const string IceShardMachinePath =
+            DataFolder + "/Item_10022_TM_IceShard.asset";
         private const string ElectricExplosionMachinePath =
             DataFolder + "/Item_10020_TM_ElectricExplosion.asset";
+        private const string SmogMachinePath =
+            DataFolder + "/Item_10021_TM_Smog.asset";
+        private const string NeurotoxinMachinePath =
+            DataFolder + "/Item_10013_TM_Neurotoxin.asset";
+        private const string ToxinTransferMachinePath =
+            DataFolder + "/Item_10029_TM_ToxinTransfer.asset";
+        private const string ToxinExplosionMachinePath =
+            DataFolder + "/Item_10037_TM_ToxinExplosion.asset";
+        private const string PoisonShieldMachinePath =
+            DataFolder + "/Item_10045_TM_PoisonShield.asset";
+        private const string FrozenBreakMachinePath =
+            DataFolder + "/Item_10046_TM_FrozenBreak.asset";
         private const string AquaShockMachinePath =
             DataFolder + "/Item_10012_TM_AquaShock.asset";
         private const string ElectricQuickAttackMachinePath =
@@ -36,8 +85,57 @@ namespace Pachimon.Editor.UI
             "Assets/GameData/Skill/Placeholder/Skill_033.asset";
         private const string CombustionSkillPath =
             "Assets/GameData/Skill/Placeholder/Skill_041.asset";
+        private const string ChainBurnSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_017.asset";
+        private const string FireBarrierSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_025.asset";
+        private const string SunnyDaySkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_049.asset";
+        private const string RainDanceSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_018.asset";
+        private const string WaterPulseSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_010.asset";
+        private const string LaunchCeremonySkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_026.asset";
+        private const string WaterVeilSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_034.asset";
+        private const string SunbathSkillPath = "Assets/GameData/Skill/Placeholder/Skill_011.asset";
+        private const string ChainVinesSkillPath = "Assets/GameData/Skill/Placeholder/Skill_019.asset";
+        private const string SolarBeamSkillPath = "Assets/GameData/Skill/Placeholder/Skill_027.asset";
+        private const string EntanglingVinesSkillPath = "Assets/GameData/Skill/Placeholder/Skill_035.asset";
+        private const string ParalysisPowderSkillPath = "Assets/GameData/Skill/Placeholder/Skill_043.asset";
+        private const string HeavySnowSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_030.asset";
+        private const string WindStormSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_047.asset";
+        private const string FlyingAttackSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_015.asset";
+        private const string WindErosionSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_023.asset";
+        private const string HealingWindSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_031.asset";
+        private const string SecondWindSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_039.asset";
+        private const string DragonJabSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_016.asset";
+        private const string IceShieldSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_014.asset";
+        private const string IceShardSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_022.asset";
         private const string ElectricExplosionSkillPath =
             "Assets/GameData/Skill/Placeholder/Skill_020.asset";
+        private const string SmogSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_021.asset";
+        private const string NeurotoxinSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_013.asset";
+        private const string ToxinTransferSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_029.asset";
+        private const string ToxinExplosionSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_037.asset";
+        private const string PoisonShieldSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_045.asset";
+        private const string FrozenBreakSkillPath =
+            "Assets/GameData/Skill/Placeholder/Skill_046.asset";
         private const string AquaShockSkillPath =
             "Assets/GameData/Skill/Placeholder/Skill_012.asset";
         private const string ElectricQuickAttackSkillPath =
@@ -123,6 +221,91 @@ namespace Pachimon.Editor.UI
                 CombustionSkillPath,
                 "技マシーン[燃焼]",
                 stoneIcon);
+            var chainBurnMachine = ConfigureSkillMachine(
+                ChainBurnMachinePath,
+                ChainBurnSkillPath,
+                "技マシーン[チェインバーン]",
+                stoneIcon);
+            var fireBarrierMachine = ConfigureSkillMachine(
+                FireBarrierMachinePath,
+                FireBarrierSkillPath,
+                "技マシーン[炎の障壁]",
+                stoneIcon);
+            var sunnyDayMachine = ConfigureSkillMachine(
+                SunnyDayMachinePath,
+                SunnyDaySkillPath,
+                "技マシーン[温暖化]",
+                stoneIcon);
+            var rainDanceMachine = ConfigureSkillMachine(
+                RainDanceMachinePath,
+                RainDanceSkillPath,
+                "技マシーン[あまごい]",
+                stoneIcon);
+            var waterPulseMachine = ConfigureSkillMachine(
+                WaterPulseMachinePath,
+                WaterPulseSkillPath,
+                "\u6280\u30DE\u30B7\u30FC\u30F3[\u6C34\u306E\u6CE2\u52D5]",
+                stoneIcon);
+            var launchCeremonyMachine = ConfigureSkillMachine(
+                LaunchCeremonyMachinePath,
+                LaunchCeremonySkillPath,
+                "\u6280\u30DE\u30B7\u30FC\u30F3[\u9032\u6C34\u5F0F]",
+                stoneIcon);
+            var waterVeilMachine = ConfigureSkillMachine(
+                WaterVeilMachinePath,
+                WaterVeilSkillPath,
+                "\u6280\u30DE\u30B7\u30FC\u30F3[\u6C34\u306E\u30D9\u30FC\u30EB]",
+                stoneIcon);
+            var sunbathMachine = ConfigureSkillMachine(SunbathMachinePath, SunbathSkillPath, "技マシーン[日光浴]", stoneIcon);
+            var chainVinesMachine = ConfigureSkillMachine(ChainVinesMachinePath, ChainVinesSkillPath, "技マシーン[連鎖する蔦]", stoneIcon);
+            var solarBeamMachine = ConfigureSkillMachine(SolarBeamMachinePath, SolarBeamSkillPath, "技マシーン[ソーラービーム]", stoneIcon);
+            var entanglingVinesMachine = ConfigureSkillMachine(EntanglingVinesMachinePath, EntanglingVinesSkillPath, "技マシーン[絡み合う蔓]", stoneIcon);
+            var paralysisPowderMachine = ConfigureSkillMachine(ParalysisPowderMachinePath, ParalysisPowderSkillPath, "技マシーン[しびれ粉]", stoneIcon);
+            var heavySnowMachine = ConfigureSkillMachine(
+                HeavySnowMachinePath,
+                HeavySnowSkillPath,
+                "技マシーン[寒冷化]",
+                stoneIcon);
+            var windStormMachine = ConfigureSkillMachine(
+                WindStormMachinePath,
+                WindStormSkillPath,
+                "技マシーン[暴風]",
+                stoneIcon);
+            var flyingAttackMachine = ConfigureSkillMachine(
+                FlyingAttackMachinePath,
+                FlyingAttackSkillPath,
+                "技マシーン[フライングアタック]",
+                stoneIcon);
+            var windErosionMachine = ConfigureSkillMachine(
+                WindErosionMachinePath,
+                WindErosionSkillPath,
+                "技マシーン[風化の風]",
+                stoneIcon);
+            var healingWindMachine = ConfigureSkillMachine(
+                HealingWindMachinePath,
+                HealingWindSkillPath,
+                "技マシーン[治癒の風]",
+                stoneIcon);
+            var secondWindMachine = ConfigureSkillMachine(
+                SecondWindMachinePath,
+                SecondWindSkillPath,
+                "技マシーン[セカンドウィンド]",
+                stoneIcon);
+            var dragonJabMachine = ConfigureSkillMachine(
+                DragonJabMachinePath,
+                DragonJabSkillPath,
+                "技マシーン[ドラゴンジャブ]",
+                stoneIcon);
+            var iceShieldMachine = ConfigureSkillMachine(
+                IceShieldMachinePath,
+                IceShieldSkillPath,
+                "技マシーン[氷の盾]",
+                stoneIcon);
+            var iceShardMachine = ConfigureSkillMachine(
+                IceShardMachinePath,
+                IceShardSkillPath,
+                "技マシーン[アイスシャード]",
+                stoneIcon);
             var aquaShockMachine = ConfigureSkillMachine(
                 AquaShockMachinePath,
                 AquaShockSkillPath,
@@ -132,6 +315,36 @@ namespace Pachimon.Editor.UI
                 ElectricExplosionMachinePath,
                 ElectricExplosionSkillPath,
                 "技マシーン[電気爆発]",
+                stoneIcon);
+            var smogMachine = ConfigureSkillMachine(
+                SmogMachinePath,
+                SmogSkillPath,
+                "技マシーン[スモッグ]",
+                stoneIcon);
+            var neurotoxinMachine = ConfigureSkillMachine(
+                NeurotoxinMachinePath,
+                NeurotoxinSkillPath,
+                "技マシーン[神経毒]",
+                stoneIcon);
+            var toxinTransferMachine = ConfigureSkillMachine(
+                ToxinTransferMachinePath,
+                ToxinTransferSkillPath,
+                "技マシーン[毒渡し]",
+                stoneIcon);
+            var toxinExplosionMachine = ConfigureSkillMachine(
+                ToxinExplosionMachinePath,
+                ToxinExplosionSkillPath,
+                "技マシーン[毒爆破]",
+                stoneIcon);
+            var poisonShieldMachine = ConfigureSkillMachine(
+                PoisonShieldMachinePath,
+                PoisonShieldSkillPath,
+                "技マシーン[ポイズンシールド]",
+                stoneIcon);
+            var frozenBreakMachine = ConfigureSkillMachine(
+                FrozenBreakMachinePath,
+                FrozenBreakSkillPath,
+                "技マシーン[フローズンブレイク]",
                 stoneIcon);
             var electricQuickAttackMachine = ConfigureSkillMachine(
                 ElectricQuickAttackMachinePath,
@@ -157,11 +370,38 @@ namespace Pachimon.Editor.UI
                 backfireMachine,
                 fireArrowMachine,
                 combustionMachine,
+                chainBurnMachine,
+                fireBarrierMachine,
+                sunnyDayMachine,
+                rainDanceMachine,
+                waterPulseMachine,
+                launchCeremonyMachine,
+                waterVeilMachine,
+                heavySnowMachine,
+                windStormMachine,
+                iceShieldMachine,
+                iceShardMachine,
                 aquaShockMachine,
                 electricExplosionMachine,
+                neurotoxinMachine,
+                smogMachine,
+                toxinTransferMachine,
+                toxinExplosionMachine,
+                poisonShieldMachine,
+                frozenBreakMachine,
                 electricQuickAttackMachine,
                 chargeMachine,
                 electromagneticCannonMachine,
+                sunbathMachine,
+                chainVinesMachine,
+                solarBeamMachine,
+                entanglingVinesMachine,
+                paralysisPowderMachine,
+                flyingAttackMachine,
+                windErosionMachine,
+                healingWindMachine,
+                secondWindMachine,
+                dragonJabMachine,
             });
             EditorUtility.SetDirty(catalog);
             AssignCatalogToSceneInstaller(catalog);

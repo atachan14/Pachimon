@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34fc8e387076460085d5c14cefb55123, type: 3}
+  m_Name: Passive_009_DarkFlame
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DarkFlamePassiveAsset
+  _passiveId: 9
+  _displayName: 闇の炎
+  _description: Fire Damageの軽減前Valueを基に、Poisonで増幅した追加Poison Damageを与える。
+  _baseConversionPercent: 20
+  _poisonScalingPercent: 100

@@ -29,9 +29,9 @@ namespace Pachimon.Battle
                     context.State,
                     context.User,
                     target,
-                    CalculateEnemyDamage(context.User, target).Context);
+                    CalculateEnemyDamage(context.State, context.User, target).Context);
                 effects.Add(new SkillEffectResult(
-                    target,
+                    enemyResult.ActualTarget,
                     enemyResult.AppliedDamage,
                     isTrueDamage: false));
 
@@ -39,9 +39,9 @@ namespace Pachimon.Battle
                     context.State,
                     context.User,
                     context.User,
-                    CalculateSelfDamage(context.User).Context);
+                    CalculateSelfDamage(context.State, context.User).Context);
                 effects.Add(new SkillEffectResult(
-                    context.User,
+                    selfResult.ActualTarget,
                     selfResult.AppliedDamage,
                     isTrueDamage: false));
 
@@ -65,12 +65,23 @@ namespace Pachimon.Battle
             BattleUnitState user,
             BattleUnitState target)
         {
+            return CalculateEnemyDamage(state: null, user, target);
+        }
+
+        private DamageCalculationResult CalculateEnemyDamage(
+            BattleState state,
+            BattleUnitState user,
+            BattleUnitState target)
+        {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
             var baseDamage = CombustionMath.CalculateBaseDamage(
                 _skill,
-                user.GetBattleStatValue(PachimonStatType.Fire));
+                user.GetBattleStatValue(PachimonStatType.Fire),
+                state?.ResolveAttributeRatio(
+                    PachimonAttribute.Fire,
+                    _skill.FireScalingPercent));
             return AttributeDamageCalculator.Calculate(new DamageContext(
                 DamageOriginKind.Skill,
                 _skill.SkillId,
@@ -85,11 +96,21 @@ namespace Pachimon.Battle
         public DamageCalculationResult CalculateSelfDamage(
             BattleUnitState user)
         {
+            return CalculateSelfDamage(state: null, user);
+        }
+
+        private DamageCalculationResult CalculateSelfDamage(
+            BattleState state,
+            BattleUnitState user)
+        {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
             var baseDamage = CombustionMath.CalculateBaseDamage(
                 _skill,
-                user.GetBattleStatValue(PachimonStatType.Fire));
+                user.GetBattleStatValue(PachimonStatType.Fire),
+                state?.ResolveAttributeRatio(
+                    PachimonAttribute.Fire,
+                    _skill.FireScalingPercent));
             return AttributeDamageCalculator.Calculate(new DamageContext(
                 DamageOriginKind.Skill,
                 _skill.SkillId,

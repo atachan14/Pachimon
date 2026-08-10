@@ -9,13 +9,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: d0b654d18e314637b829194df6190f14, type: 3}
   m_Name: Skill_025
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.FireBarrierSkillAsset
   _skillId: 25
-  _displayName: ひのこ
+  _displayName: "\u708E\u306E\u969C\u58C1"
   _allocationType: 1
   _isMapAssignable: 1
-  _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseRecoveryTicks: 200
+  _baseCooldownTicks: 300
+  _baseManaCost: 100
+  _description: "\u81EA\u9663\u306B\u3001\u5473\u65B9\u3078\u306E\u653B\u6483\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u708E\u306E\u969C\u58C1\u3092\u751F\u6210\u3059\u308B\u3002"
+  _baseValue: 200
+  _fireValueRatio: 100
+  _fieldEffect: {fileID: 11400000, guid: 6107e7bad9b745e9b9876721e113bf8c, type: 2}

@@ -12,7 +12,7 @@ Electric属性のPachimon、固定Skill、Passiveをまとめる。
 
 ### [Pachimon名] 2
 
-- Status: `Idea`
+- Status: `Verified`
 - Species ID: `12`
 - モチーフ:
 - 狙い: AquaとElectricを組み合わせ、漏電から全体ダメージへつなげる
@@ -30,9 +30,9 @@ Electric属性のPachimon、固定Skill、Passiveをまとめる。
   - `10 × AmplificationMultiplier(Aqua)`のAquaダメージを与える
   - `Value = 10 × AmplificationMultiplier(Aqua)`の`漏電`を付与する
 
-##### 状態異常: 漏電
+##### 状態: 漏電
 
-- 保持者がElectricダメージを受けるとき、漏電を消費する
+- 保持者がPachimonによるElectric攻撃を受けるとき、漏電を消費する
 - 漏電を消費した場合、保持者側のParty全体へ次のElectricダメージを発生させる
 
 ```text
@@ -49,19 +49,24 @@ Enemy 1の漏電を消費
 Enemy 1、Enemy 2、Enemy 3へElectricダメージを発生させる
 ```
 
-自傷ダメージなども、Electricダメージであれば漏電の発動対象とする。
+Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば漏電の発動対象とする。
+漏電・毒素など`Origin = Status`のダメージや、Pachimonを発生源としないダメージでは発動しない。
 追加ダメージは各対象のElectricで再度軽減される（原則、属性ダメージは全て属性値によって軽減される）
 
 - 必要な新規仕組み:
-  - 消費型状態異常
+  - 消費型状態
   - ダメージ属性を条件とした発動
   - Party全体への追加ダメージ
 - 補足仕様:
-  - 漏電による追加ダメージでも別の漏電を起動する
-  - 追加ダメージの発生源は、漏電を起動した攻撃者として扱う
+  - 漏電による追加ダメージでは別の漏電を起動しない
+  - 追加ダメージの発生源は`Status / Leak`とし、Pachimonは発生源として保持しない
+  - 攻撃扱いにはせず、攻撃者のAttribute、DamageBonus、送出Passiveは適用しない
+  - 対象のElectricとResistBonusによる軽減は適用する
   - 全体攻撃で複数の漏電保持者が同時にダメージを受けた場合、保持者ごとに漏電を発動する
-  - 同じ対象へ通常漏電を再付与した場合、暫定仕様としてValueと付与元を新しい漏電で置換する
+  - 同じ対象へ同一Status IDの漏電を再付与した場合、既存Valueへ加算する
   - 漏電Valueは付与時に切り捨てて保持する
+  - 発動時は対象が持つ全`Leak`のValueを合計して消費し、Party全体への追加ダメージを1回発生させる
+  - 発動ログは`XXは漏電している！`の後、Party各対象へのダメージを連続表示する
 
 #### Passive
 
@@ -74,7 +79,7 @@ Enemy 1、Enemy 2、Enemy 3へElectricダメージを発生させる
 
 ### [Pachimon名] 3
 
-- Status: `Idea`
+- Status: `Verified`
 - Species ID: `20`
 - モチーフ:
 - 狙い: Fireを利用してElectricダメージと貫通率を高める
@@ -127,7 +132,7 @@ Enemy 1、Enemy 2、Enemy 3へElectricダメージを発生させる
 
 ### [Pachimon名] 4
 
-- Status: `Idea`
+- Status: `Verified`
 - Species ID: `28`
 - モチーフ:
 - 狙い: Windを利用して短い間隔で複合属性攻撃を行う
@@ -179,7 +184,7 @@ EffectiveCooldown
 
 ### [Pachimon名] 5
 
-- Status: `Idea`
+- Status: `Verified`
 - Species ID:
 - モチーフ:
 - 狙い: 一時的に防御へ回り、その後ElectricとSpeedを強化する
@@ -188,35 +193,36 @@ EffectiveCooldown
 
 - 名前: 充電
 - Implementation: `Implemented`
-- 硬直: `200`
+- 発生: `300`
+- 硬直: `0`
 - CD: `500`
 - MN: `400`
 - 対象: 自身
-- 効果: `Value = 使用時のElectric`として`充電中`を付与する
-- 状態異常の共通仕様と実装上の安全規則: [Charge Statuses](./statuses/charge.md)
+- 効果: 発生開始時に`Value = 使用時のElectric`として`充電中`を付与し、発動時に同じValueの`充電完了`へ切り替える
+- 状態の共通仕様と実装上の安全規則: [Charge Statuses](./statuses/charge.md)
 
-##### 状態異常: 充電中
+##### 状態: 充電中
 
-- 効果時間: `Value × 400% tick`
+- 効果時間は持たず、Skillの発生中だけ存在する
 - ResistBonusを`Value × 40%`増加させる
 - Electricを`50%`減少させる
-- 効果時間終了時に充電中を消費し、同じValueの`充電完了`を付与する
+- Skill発動時に充電中を消費し、同じValueの`充電完了`を付与する
 
-##### 状態異常: 充電完了
+##### 状態: 充電完了
 
 - 効果時間: `Value × 200% tick`
 - Electricを`50%`増加させる
 - Speedを`Value × 100%`増加させる
 
 - 必要な新規仕組み:
-  - 付与時のStatを保存する状態異常
-  - 状態異常終了時の別状態への遷移
+  - 付与時のStatを保存する状態
+  - 状態終了時の別状態への遷移
   - 時限Stat補正
 - 補足仕様:
-  - Valueには使用時のElectricをスナップショットとして保存する
+  - Valueには発生開始時のElectricをスナップショットとして保存する
   - 充電中と充電完了は、それぞれ別スタックとして重複できる
-  - Electricの`±50%`は、別の状態異常による補正と乗算する
-  - 戦闘不能になると、充電中・充電完了を含むすべての状態異常を取り除く
+  - Electricの`±50%`は、別の状態による補正と乗算する
+  - 戦闘不能になると、充電中・充電完了を含むすべての状態を取り除く
 
 #### Passive
 
@@ -232,7 +238,7 @@ EffectiveCooldown
 
 - 必要な新規仕組み:
   - 属性・確定ダメージ共通の`AttackReceivedEvent`（実装済み）
-  - tickごとにValueが減衰する加算型状態異常
+  - tickごとにValueが減衰する加算型状態
 - 補足仕様:
   - 自傷ダメージと継続ダメージでは発動しない
   - 攻撃者が存在するダメージでのみ発動する
@@ -258,7 +264,7 @@ EffectiveCooldown
 
 ### [Pachimon名] 6
 
-- Status: `Idea`
+- Status: `Verified`
 - Species ID: `44`
 - モチーフ:
 - 狙い: 長い発生時間と高コストの代わりに、大ダメージと超過ダメージを与える
@@ -300,7 +306,7 @@ EffectiveCooldown
 - Implementation: `Implemented`
 - 効果: Battle中にElectricダメージが発生するたび、自身へ蓄電を1スタック付与する
 
-##### 状態異常: 蓄電
+##### 状態: 蓄電
 
 - 自身がElectricダメージを与えるとき、蓄電をすべて消費する
 - 与えるElectricダメージを`消費スタック数 × 10%`増加させる

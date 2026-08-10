@@ -22,20 +22,28 @@ namespace Pachimon.Battle
                 context.State,
                 context.User,
                 target,
-                Calculate(context.User, target).Context);
+                Calculate(context.State, context.User, target).Context);
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 new[]
                 {
                     new SkillEffectResult(
-                        target,
+                        result.ActualTarget,
                         result.AppliedDamage,
                         isTrueDamage: false),
                 });
         }
 
         public DamageCalculationResult Calculate(
+            BattleUnitState user,
+            BattleUnitState target)
+        {
+            return Calculate(state: null, user, target);
+        }
+
+        private DamageCalculationResult Calculate(
+            BattleState state,
             BattleUnitState user,
             BattleUnitState target)
         {
@@ -47,11 +55,20 @@ namespace Pachimon.Battle
             var baseDamage = ElectricExplosionMath.CalculateBaseDamage(
                 _skill,
                 electric,
-                fire);
+                fire,
+                state?.ResolveAttributeRatio(
+                    PachimonAttribute.Electric,
+                    _skill.ElectricScalingPercent),
+                state?.ResolveAttributeRatio(
+                    PachimonAttribute.Fire,
+                    _skill.FireScalingPercent));
             var penetrationPercent =
                 ElectricExplosionMath.CalculatePenetrationPercent(
                     _skill,
-                    fire);
+                    fire,
+                    state?.ResolveAttributeRatio(
+                        PachimonAttribute.Fire,
+                        100m) ?? 100m);
             return AttributeDamageCalculator.Calculate(new DamageContext(
                 DamageOriginKind.Skill,
                 _skill.SkillId,

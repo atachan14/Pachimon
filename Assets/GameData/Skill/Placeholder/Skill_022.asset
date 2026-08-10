@@ -9,13 +9,23 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: d2490000000000000000000000000001, type: 3}
   m_Name: Skill_022
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.IceShardSkillAsset
   _skillId: 22
-  _displayName: 冷たい手
+  _displayName: "\u30A2\u30A4\u30B9\u30B7\u30E3\u30FC\u30C9"
   _allocationType: 6
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 150
+  _description: "\u6575\u5168\u4F53\u3078Ice Damage\u3068\u51B7\u6C17\u3092\u4E0E\u3048\u308B\u3002"
+  _frontBaseDamage: 100
+  _frontDamageIceRatio: 100
+  _frontBaseChill: 75
+  _frontChillIceRatio: 100
+  _otherBaseDamage: 50
+  _otherDamageIceRatio: 100
+  _otherBaseChill: 50
+  _otherChillIceRatio: 100
+  _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

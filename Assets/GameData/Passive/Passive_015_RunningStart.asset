@@ -1,0 +1,12 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c76982edb5845aa8551fe173b5e8dc7, type: 3}
+  m_Name: Passive_015_RunningStart
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.RunningStartPassiveAsset
+  _passiveId: 15
+  _displayName: 助走
+  _description: Skillの基本発生値の20%だけDamageBonusを得る。
+  _startupDamageBonusRatio: 20

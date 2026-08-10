@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d138d9cb283474482511fc0ff8ea755, type: 3}
+  m_Name: Passive_021_ScienceCraft
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.FieldValueAmplificationPassiveAsset
+  _passiveId: 21
+  _displayName: 科学工作
+  _description: 自身が生成物を生成するとき、ValueをPoisonに応じて増幅する。
+  _poisonScalingPercent: 30

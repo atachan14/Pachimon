@@ -78,6 +78,12 @@ namespace Pachimon.Battle
                     && nextStatusTick <= nextTurnTick)
                 {
                     _state.Timeline.AdvanceToTick(nextStatusTick);
+                    outcome = _state.EvaluateOutcome();
+                    if (outcome != BattleOutcome.Undecided)
+                    {
+                        Phase = BattleFlowPhase.Completed;
+                        return BattleFlowStep.Complete(outcome);
+                    }
                     continue;
                 }
 
@@ -88,6 +94,12 @@ namespace Pachimon.Battle
 
                 _pendingActions.Remove(nextPending);
                 _state.Timeline.AdvanceToTick(nextPendingTick);
+                outcome = _state.EvaluateOutcome();
+                if (outcome != BattleOutcome.Undecided)
+                {
+                    Phase = BattleFlowPhase.Completed;
+                    return BattleFlowStep.Complete(outcome);
+                }
                 if (!nextPending.Action.User.IsAlive)
                 {
                     return BattleFlowStep.CancelAction(

@@ -11,6 +11,7 @@ namespace Pachimon.Battle
         Status = 2,
         Item = 3,
         Self = 4,
+        Field = 5,
     }
 
     public sealed class DamageContext
@@ -57,6 +58,39 @@ namespace Pachimon.Battle
         public decimal PenetrationPercent { get; }
         public bool ApplyDamageBonusMultiplier { get; }
         public bool ApplyOutgoingModifiers { get; }
+
+        public DamageContext WithPenetrationPercent(decimal penetrationPercent)
+        {
+            return new DamageContext(
+                OriginKind,
+                OriginId,
+                BaseDamage,
+                AttackerStats,
+                DefenderStats,
+                Attribute,
+                IsAttack,
+                ApplyAttackerAttributeMultiplier,
+                penetrationPercent,
+                ApplyDamageBonusMultiplier,
+                ApplyOutgoingModifiers);
+        }
+
+        public DamageContext WithDefenderStats(
+            EffectivePachimonStats defenderStats)
+        {
+            return new DamageContext(
+                OriginKind,
+                OriginId,
+                BaseDamage,
+                AttackerStats,
+                defenderStats,
+                Attribute,
+                IsAttack,
+                ApplyAttackerAttributeMultiplier,
+                PenetrationPercent,
+                ApplyDamageBonusMultiplier,
+                ApplyOutgoingModifiers);
+        }
     }
 
     public sealed class TrueDamageContext

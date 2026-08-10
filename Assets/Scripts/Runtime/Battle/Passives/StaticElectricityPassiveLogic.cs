@@ -1,5 +1,6 @@
 using System;
 using Pachimon.Passives;
+using Pachimon.Reward;
 using Pachimon.Run;
 
 namespace Pachimon.Battle
@@ -29,23 +30,28 @@ namespace Pachimon.Battle
 
             attackEvent.State.Statuses.ApplyStatus(
                 attackEvent.Source,
-                new BattleStatusInstance(
-                    BattleStatusId.Paralysis,
-                    BattleStatusCategory.Slow,
+                BattleStatusFactory.CreateSlow(
                     Owner,
-                    CalculateParalysisValue()));
+                    CalculateParalysisValue(attackEvent.State),
+                    _definition.ParalysisStatus));
         }
 
-        private int CalculateParalysisValue()
+        private int CalculateParalysisValue(BattleState state)
         {
             var electric = SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
                     _definition.ElectricBaseValue,
-                    Owner.GetBattleStatValue(PachimonStatType.Electric)));
+                    Owner.GetBattleStatValue(PachimonStatType.Electric),
+                    state.ResolveAttributeRatio(
+                        PachimonAttribute.Electric,
+                        100m)));
             var ice = SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
                     _definition.IceBaseValue,
-                    Owner.GetBattleStatValue(PachimonStatType.Ice)));
+                    Owner.GetBattleStatValue(PachimonStatType.Ice),
+                    state.ResolveAttributeRatio(
+                        PachimonAttribute.Ice,
+                        100m)));
             return checked(electric + ice);
         }
 

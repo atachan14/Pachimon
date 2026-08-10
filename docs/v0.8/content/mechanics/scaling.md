@@ -1,6 +1,6 @@
 # Scaling Mechanics
 
-StatをDamage、状態異常Value、軽減、時間短縮などの係数へ変換する共通式をまとめる。
+StatをDamage、状態Value、軽減、時間短縮などの係数へ変換する共通式をまとめる。
 
 ## AmplificationMultiplier
 
@@ -54,25 +54,29 @@ ReductionMultiplier(Stat)
 
 ## ScaleFromBase
 
-StatからDamageや状態異常Valueなどの効果量を生成する標準式。
+StatからDamageや状態Valueなどの効果量を生成する標準式。
 
 ```text
-ScaleFromBase(BaseValue, Stat, ScalingRatio)
+ScaleFromBase(BaseValue, Stat, Ratio)
 = BaseValue
-  × AmplificationMultiplier(Stat × ScalingRatio / 100)
+  × AmplificationMultiplier(Stat × Ratio / 100)
 ```
 
 - `BaseValue`は`Stat = 0`で得られる効果量
-- `ScalingRatio`はStatの影響度とし、基本値は`100`
-- `ScalingRatio = 50`でStatの影響を半分、`200`で倍にする
-- SOでは`BasePower / BaseValue`と`XxxScalingPercent`のように別々の調整項目として保持する
+- `Ratio`はStatの影響度とし、基本値は`100`
+- `Ratio = 50`でStatの影響を半分、`200`で倍にする
+- SOでは基準値と`XxxRatio`を別々の調整項目として保持する
+- Damageの基準値はDamage属性を含む`BaseFireDamage`などの名前を使う
+- DamageのRatioは`FireDamageRatio`など、`入力元 + 出力先 + Ratio`の順にする
+- 汎用Valueは`BaseValue / FireValueRatio`のように表す
+- Valueから別の値を導出する場合は`ValueHpRatio`など、同じく入力元から出力先の順にする
 
 ### 例
 
 ```text
 BaseValue = 80
 Fire = 100
-ScalingRatio = 50
+Ratio = 50
 
 EffectValue
 = 80 × AmplificationMultiplier(50)
@@ -94,6 +98,25 @@ EffectValue
 Value = Electric × SnapshotScalingRatio / 100
 ```
 
+## Battle中のAttribute Ratio補正
+
+- Weather・Status・PassiveなどがAttributeの影響度を変える場合、Stat本体ではなくRatioへMultiplierを適用する
+- `BattleState.ResolveAttributeRatio(Attribute, BaseRatio)`を共通入口とする
+- Damageと固有効果は同じ補正済みRatioを使用する
+- 防御計算は攻撃・効果用Ratioを参照しない
+
+```text
+EffectiveAttributeRatio
+= BaseAttributeRatio
+  × WeatherRatioMultiplier
+  × StatusRatioMultiplier
+  × PassiveRatioMultiplier
+  × OtherRatioMultiplier
+```
+
+- 現段階ではWeather Ratioのみ実装済み
+- SOのBaseRatioは変更せず、Battle解決時に補正値を計算する
+
 ## 端数処理
 
-係数の計算中は端数を維持する。整数化と最低保証は、Damage、状態異常、Timingなど各Mechanicsの最終処理で行う。
+係数の計算中は端数を維持する。整数化と最低保証は、Damage、状態、Timingなど各Mechanicsの最終処理で行う。

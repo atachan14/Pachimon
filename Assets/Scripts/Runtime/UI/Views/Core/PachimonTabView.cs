@@ -59,6 +59,7 @@ namespace Pachimon.UI
             string displayName,
             int currentHp,
             int maxHp,
+            int currentShield,
             int currentMn,
             int maxMn,
             IEnumerable<PachimonStatPreview> stats,
@@ -72,6 +73,7 @@ namespace Pachimon.UI
             DisplayName = displayName;
             CurrentHp = currentHp;
             MaxHp = maxHp;
+            CurrentShield = currentShield;
             CurrentMn = currentMn;
             MaxMn = maxMn;
             _stats = stats?.ToDictionary(item => item.Stat, item => item.Value) ?? new();
@@ -94,6 +96,7 @@ namespace Pachimon.UI
         public string DisplayName { get; }
         public int CurrentHp { get; }
         public int MaxHp { get; }
+        public int CurrentShield { get; }
         public int CurrentMn { get; }
         public int MaxMn { get; }
         public IReadOnlyList<string> StatusEffects { get; }
@@ -122,6 +125,8 @@ namespace Pachimon.UI
             new(0.32f, 0.32f, 0.32f, 1f);
         private static readonly Color MnColor =
             new(0.20f, 0.52f, 0.86f, 1f);
+        private static readonly Color ShieldColor =
+            new(0.58f, 0.61f, 0.64f, 1f);
 
         [SerializeField] private Image _frontGraphic;
         [SerializeField] private TMP_Text _nameText;
@@ -135,6 +140,7 @@ namespace Pachimon.UI
         [SerializeField] private TextChipView _passiveTemplate;
         private RectTransform _runtimeHpBar;
         private Image _runtimeHpFill;
+        private Image _runtimeHpShield;
         private RectTransform _runtimeMnBar;
         private Image _runtimeMnFill;
         private PachimonPreviewContent _boundPreview = PachimonPreviewContent.Hidden;
@@ -200,10 +206,10 @@ namespace Pachimon.UI
                         : "HP  ? / ?\nMN  ? / ?";
                 _hpText.color = Color.white;
                 _hpText.fontStyle |= FontStyles.Bold;
-                var hpRatio = revealed && preview.MaxHp > 0
-                    ? Mathf.Clamp01((float)preview.CurrentHp / preview.MaxHp)
-                    : 0f;
-                SetRuntimeHpFill(hpRatio);
+                SetRuntimeHpFill(
+                    revealed ? preview.CurrentHp : 0,
+                    revealed ? preview.MaxHp : 0,
+                    revealed ? preview.CurrentShield : 0);
             }
 
             if (_mnText != null)
@@ -322,6 +328,19 @@ namespace Pachimon.UI
             _runtimeHpFill = fillObject.GetComponent<Image>();
             _runtimeHpFill.raycastTarget = false;
 
+            var shieldObject = new GameObject(
+                "Shield",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image));
+            shieldObject.layer = gameObject.layer;
+            var shieldRect = shieldObject.GetComponent<RectTransform>();
+            shieldRect.SetParent(_runtimeHpBar, false);
+            _runtimeHpShield = shieldObject.GetComponent<Image>();
+            _runtimeHpShield.color = ShieldColor;
+            _runtimeHpShield.raycastTarget = false;
+            _runtimeHpShield.enabled = false;
+
             SyncRuntimeHpBarTransform();
         }
 
@@ -404,22 +423,51 @@ namespace Pachimon.UI
             _runtimeMnBar.sizeDelta = source.sizeDelta;
         }
 
-        private void SetRuntimeHpFill(float ratio)
+        private void SetRuntimeHpFill(
+            int currentHp,
+            int maxHp,
+            int currentShield)
         {
             if (_runtimeHpFill == null)
             {
                 return;
             }
 
-            ratio = Mathf.Clamp01(ratio);
-            _runtimeHpFill.rectTransform.anchorMax = new Vector2(ratio, 1f);
-            _runtimeHpFill.color = ratio <= 0f
+            var safeMaxHp = Mathf.Max(0, maxHp);
+            var safeHp = Mathf.Clamp(currentHp, 0, safeMaxHp);
+            var safeShield = Mathf.Max(0, currentShield);
+            var gaugeMaximum = safeMaxHp + safeShield;
+            var hpRatio = gaugeMaximum > 0
+                ? Mathf.Clamp01((float)safeHp / gaugeMaximum)
+                : 0f;
+            var healthRatio = safeMaxHp > 0
+                ? Mathf.Clamp01((float)safeHp / safeMaxHp)
+                : 0f;
+            _runtimeHpFill.rectTransform.anchorMin = Vector2.zero;
+            _runtimeHpFill.rectTransform.anchorMax = new Vector2(hpRatio, 1f);
+            _runtimeHpFill.color = healthRatio <= 0f
                 ? EmptyHpColor
-                : ratio <= 0.25f
+                : healthRatio <= 0.25f
                     ? CriticalHpColor
-                    : ratio <= 0.5f
+                    : healthRatio <= 0.5f
                         ? WarningHpColor
                         : HealthyHpColor;
+
+            if (_runtimeHpShield == null)
+            {
+                return;
+            }
+
+            var shieldEnd = gaugeMaximum > 0
+                ? Mathf.Clamp01((float)(safeHp + safeShield) / gaugeMaximum)
+                : hpRatio;
+            _runtimeHpShield.enabled = safeShield > 0;
+            _runtimeHpShield.rectTransform.anchorMin =
+                new Vector2(hpRatio, 0f);
+            _runtimeHpShield.rectTransform.anchorMax =
+                new Vector2(shieldEnd, 1f);
+            _runtimeHpShield.rectTransform.offsetMin = Vector2.zero;
+            _runtimeHpShield.rectTransform.offsetMax = Vector2.zero;
         }
 
         private void SetRuntimeMnFill(float ratio)

@@ -24,14 +24,14 @@ namespace Pachimon.Battle
                 context.State,
                 context.User,
                 target,
-                Calculate(context.User, target).Context);
+                Calculate(context.State, context.User, target).Context);
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 new[]
                 {
                     new SkillEffectResult(
-                        target,
+                        result.ActualTarget,
                         result.AppliedDamage,
                         isTrueDamage: false),
                 });
@@ -41,12 +41,23 @@ namespace Pachimon.Battle
             BattleUnitState user,
             BattleUnitState target)
         {
+            return Calculate(state: null, user, target);
+        }
+
+        private DamageCalculationResult Calculate(
+            BattleState state,
+            BattleUnitState user,
+            BattleUnitState target)
+        {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
             var baseDamage = BackfireMath.CalculateBaseDamage(
                 _skill,
-                user.GetBattleStatValue(PachimonStatType.Fire));
+                user.GetBattleStatValue(PachimonStatType.Fire),
+                state?.ResolveAttributeRatio(
+                    PachimonAttribute.Fire,
+                    _skill.FireScalingPercent));
             var penetrationPercent = BackfireMath.CalculatePenetrationPercent(
                 _skill,
                 user.GetBattleStatValue(PachimonStatType.Poison));

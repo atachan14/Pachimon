@@ -9,13 +9,20 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 995b309fbc0d4ba586814bce7aae7fb4, type: 3}
   m_Name: Skill_031
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.HealingWindSkillAsset
   _skillId: 31
-  _displayName: かぜでっぽう
+  _displayName: 治癒の風
   _allocationType: 7
   _isMapAssignable: 1
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 100
+  _description: 最もCurrent HPが低い味方を回復し、WindとSpeedを増加させる。
+  _baseHealing: 100
+  _baseWindBonus: 50
+  _baseSpeedBonus: 50
+  _windRatio: 100
+  _durationTicks: 200
+  _statusDefinition: {fileID: 11400000, guid: 43ab3c4ea696496083142f9215e94de1, type: 2}

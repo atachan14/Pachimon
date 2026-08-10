@@ -18,23 +18,27 @@ namespace Pachimon.Battle
 
         public static decimal CalculateAquaBaseDamage(
             AquaShockSkillAsset skill,
-            decimal aqua)
+            decimal aqua,
+            decimal aquaScalingPercent = 100m)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
                 skill.AquaBasePower,
-                aqua);
+                aqua,
+                aquaScalingPercent);
         }
 
         public static int CalculateLeakValue(
             AquaShockSkillAsset skill,
-            decimal aqua)
+            decimal aqua,
+            decimal aquaScalingPercent = 100m)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
                     skill.LeakBaseValue,
-                    aqua));
+                    aqua,
+                    aquaScalingPercent));
         }
     }
 }

@@ -21,10 +21,14 @@ namespace Pachimon.UI
             new(0.32f, 0.32f, 0.32f, 1f);
         private static readonly Color HpTrackColor =
             new(0.12f, 0.15f, 0.16f, 1f);
+        private static readonly Color ShieldColor =
+            new(0.58f, 0.61f, 0.64f, 1f);
         private static readonly Color MnColor =
             new(0.20f, 0.52f, 0.86f, 1f);
         private static readonly Color PreviewColor =
             new(0.62f, 0.62f, 0.62f, 0.88f);
+        private static readonly Color ToxinPreviewColor =
+            new(0.56f, 0.24f, 0.72f, 0.94f);
         private static readonly Color InitialElapsedColor =
             new(0.94f, 0.49f, 0.12f, 1f);
         private static readonly Color InitialRemainingColor =
@@ -39,12 +43,17 @@ namespace Pachimon.UI
             new(0.96f, 0.78f, 0.18f, 1f);
         private static readonly Color TurnColor =
             new(0.84f, 0.18f, 0.18f, 1f);
+        private static readonly Color ActionLockElapsedColor =
+            new(0.28f, 0.72f, 0.92f, 1f);
+        private static readonly Color ActionLockRemainingColor =
+            new(0.10f, 0.28f, 0.52f, 1f);
         [SerializeField] private RectTransform _infoRoot;
         [SerializeField] private RectTransform _graphicRoot;
 
         private RectTransform _gaugeRoot;
         private TMP_Text _nameText;
         private Image _hpFill;
+        private Image _hpShield;
         private Image _hpPreview;
         private TMP_Text _hpValueText;
         private ResourceGaugeView _hpGaugeView;
@@ -109,7 +118,7 @@ namespace Pachimon.UI
             SetPreviewSegment(
                 _hpPreview,
                 unit.CurrentHp,
-                unit.MaxHp,
+                unit.MaxHp + unit.TotalShield,
                 hpDelta);
             SetPreviewSegment(
                 _mnPreview,
@@ -157,7 +166,8 @@ namespace Pachimon.UI
                 unit.InstanceId,
                 safeHp,
                 unit.MaxHp,
-                GetHpColor(hpRatio, isDefeated));
+                GetHpColor(hpRatio, isDefeated),
+                unit.TotalShield);
 
             var safeMn = Mathf.Clamp(currentMn, 0, unit.MaxMn);
             var mnRatio = unit.MaxMn > 0
@@ -168,6 +178,39 @@ namespace Pachimon.UI
                 safeMn,
                 unit.MaxMn,
                 mnRatio <= 0f ? EmptyHpColor : MnColor);
+        }
+
+        public void ShowPendingToxinDamage(
+            BattleUnitState unit,
+            int hpBefore,
+            int hpAfter,
+            int currentMn)
+        {
+            if (unit == null)
+            {
+                return;
+            }
+
+            PresentResourceSnapshot(unit, hpBefore, currentMn);
+            SetPreviewSegment(
+                _hpPreview,
+                hpBefore,
+                unit.MaxHp + unit.TotalShield,
+                hpAfter - hpBefore,
+                ToxinPreviewColor);
+        }
+
+        public void CommitToxinDamage(
+            BattleUnitState unit,
+            int hpAfter,
+            int currentMn)
+        {
+            if (_hpPreview != null)
+            {
+                _hpPreview.enabled = false;
+            }
+
+            PresentResourceSnapshot(unit, hpAfter, currentMn);
         }
 
         private void EnsureResourceBars()
@@ -232,6 +275,12 @@ namespace Pachimon.UI
                 HealthyHpColor);
             Stretch(_hpFill.rectTransform);
 
+            _hpShield = GetOrCreateImage(
+                track.rectTransform,
+                "Shield",
+                ShieldColor);
+            _hpShield.enabled = false;
+
             _hpPreview = GetOrCreateImage(
                 track.rectTransform,
                 "Preview",
@@ -249,7 +298,11 @@ namespace Pachimon.UI
             Stretch(_hpValueText.rectTransform);
             _hpGaugeView = track.GetComponent<ResourceGaugeView>()
                 ?? track.gameObject.AddComponent<ResourceGaugeView>();
-            _hpGaugeView.Configure("HP", _hpFill, _hpValueText);
+            _hpGaugeView.Configure(
+                "HP",
+                _hpFill,
+                _hpValueText,
+                _hpShield);
 
             var mnTrack = GetOrCreateImage(_gaugeRoot, "MnGauge", HpTrackColor);
             SetAnchors(
@@ -460,6 +513,28 @@ namespace Pachimon.UI
                 return;
             }
 
+            var actionLock = unit.GetStatus(BattleStatusId.FrozenBreakSelf);
+            if (actionLock?.RemainingTicks is int lockRemaining
+                && actionLock.RuntimeData is FrozenBreakRuntimeState lockRuntime)
+            {
+                var lockTotal = lockRuntime.TotalDurationTicks;
+                var lockRatio = lockTotal > 0
+                    ? Mathf.Clamp01(1f - (float)lockRemaining / lockTotal)
+                    : 1f;
+                PresentActionGauge(
+                    timing.Phase,
+                    lockRatio,
+                    lockTotal,
+                    lockRemaining,
+                    ActionLockElapsedColor,
+                    ActionLockRemainingColor,
+                    ActionLockElapsedColor,
+                    $"対象外 {lockRemaining}",
+                    showRemaining: true,
+                    useValueText: true);
+                return;
+            }
+
             var elapsedColor = InitialElapsedColor;
             var remainingColor = InitialRemainingColor;
             var valueColor = InitialElapsedColor;
@@ -509,7 +584,8 @@ namespace Pachimon.UI
             Color remainingColor,
             Color valueColor,
             string valueText,
-            bool showRemaining)
+            bool showRemaining,
+            bool useValueText = false)
         {
             _actionGaugeView?.Present(
                 phase,
@@ -520,7 +596,8 @@ namespace Pachimon.UI
                 remainingColor,
                 valueColor,
                 valueText,
-                showRemaining);
+                showRemaining,
+                useValueText);
         }
 
         private void RenderGraphic(
@@ -549,7 +626,8 @@ namespace Pachimon.UI
             Image preview,
             int currentValue,
             int maxValue,
-            int delta)
+            int delta,
+            Color? segmentColor = null)
         {
             if (preview == null || maxValue <= 0 || delta == 0)
             {
@@ -573,7 +651,7 @@ namespace Pachimon.UI
             }
 
             preview.enabled = true;
-            preview.color = PreviewColor;
+            preview.color = segmentColor ?? PreviewColor;
             preview.rectTransform.anchorMin =
                 new Vector2(Mathf.Min(currentRatio, predictedRatio), 0f);
             preview.rectTransform.anchorMax =

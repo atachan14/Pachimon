@@ -190,22 +190,6 @@ namespace Pachimon.UI
             var background = slotObject.GetComponent<Image>();
             background.color = new Color32(255, 255, 255, 235);
 
-            var iconObject = new GameObject(
-                "Icon",
-                typeof(RectTransform),
-                typeof(CanvasRenderer),
-                typeof(Image));
-            iconObject.layer = gameObject.layer;
-            iconObject.transform.SetParent(slotObject.transform, false);
-            var iconRect = iconObject.GetComponent<RectTransform>();
-            iconRect.anchorMin = new Vector2(0.08f, 0.24f);
-            iconRect.anchorMax = new Vector2(0.92f, 0.94f);
-            iconRect.offsetMin = Vector2.zero;
-            iconRect.offsetMax = Vector2.zero;
-            var icon = iconObject.GetComponent<Image>();
-            icon.preserveAspect = true;
-            icon.raycastTarget = false;
-
             var labelObject = new GameObject(
                 "Label",
                 typeof(RectTransform),
@@ -214,23 +198,27 @@ namespace Pachimon.UI
             labelObject.layer = gameObject.layer;
             labelObject.transform.SetParent(slotObject.transform, false);
             var labelRect = labelObject.GetComponent<RectTransform>();
-            labelRect.anchorMin = new Vector2(0.04f, 0.02f);
-            labelRect.anchorMax = new Vector2(0.96f, 0.27f);
-            labelRect.offsetMin = Vector2.zero;
-            labelRect.offsetMax = Vector2.zero;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.offsetMin = new Vector2(8f, 6f);
+            labelRect.offsetMax = new Vector2(-8f, -6f);
             var label = labelObject.GetComponent<TextMeshProUGUI>();
             if (TMP_Settings.defaultFontAsset != null)
             {
                 label.font = TMP_Settings.defaultFontAsset;
             }
 
-            label.fontSize = 18f;
+            label.fontSize = 20f;
+            label.fontStyle = FontStyles.Bold;
             label.alignment = TextAlignmentOptions.Center;
-            label.textWrappingMode = TextWrappingModes.NoWrap;
-            label.overflowMode = TextOverflowModes.Ellipsis;
+            label.textWrappingMode = TextWrappingModes.Normal;
+            label.overflowMode = TextOverflowModes.Truncate;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 10f;
+            label.fontSizeMax = 20f;
             label.raycastTarget = false;
             var slotView = slotObject.GetComponent<ItemSlotView>();
-            slotView.Initialize(this, icon, label);
+            slotView.Initialize(this, null, label);
             return slotView;
         }
 

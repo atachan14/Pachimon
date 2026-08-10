@@ -10,7 +10,7 @@ namespace Pachimon.Battle
             if (context == null) throw new ArgumentNullException(nameof(context));
             var target = GetTarget(context);
             var trueDamage = GetLowestAttributeValue(context.User);
-            var targetDamage = BattleTrueDamageService.Apply(
+            var targetResult = BattleTrueDamageService.Apply(
                 context.State,
                 context.User,
                 target,
@@ -18,8 +18,8 @@ namespace Pachimon.Battle
                     DamageOriginKind.Skill,
                     context.Skill.SkillId,
                     trueDamage,
-                    isAttack: true)).AppliedDamage;
-            var selfDamage = BattleTrueDamageService.Apply(
+                    isAttack: true));
+            var selfResult = BattleTrueDamageService.Apply(
                 context.State,
                 context.User,
                 context.User,
@@ -27,14 +27,14 @@ namespace Pachimon.Battle
                     DamageOriginKind.Self,
                     context.Skill.SkillId,
                     trueDamage,
-                    isAttack: false)).AppliedDamage;
+                    isAttack: false));
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 new[]
                 {
-                    new SkillEffectResult(target, targetDamage, true),
-                    new SkillEffectResult(context.User, selfDamage, true),
+                    new SkillEffectResult(targetResult.ActualTarget, targetResult.AppliedDamage, true),
+                    new SkillEffectResult(selfResult.ActualTarget, selfResult.AppliedDamage, true),
                 });
         }
 

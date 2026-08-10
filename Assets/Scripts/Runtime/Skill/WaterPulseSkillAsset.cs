@@ -1,0 +1,48 @@
+using System.Collections.Generic;
+using Pachimon.Data;
+using UnityEngine;
+
+namespace Pachimon.Skills
+{
+    [CreateAssetMenu(
+        fileName = "WaterPulseSkill",
+        menuName = "Pachimon/Skills/Water Pulse Skill")]
+    public sealed class WaterPulseSkillAsset : SkillAsset
+    {
+        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+
+        public int AquaDamageRatio => _aquaDamageRatio;
+        public override bool ConsumesAllCurrentMana => true;
+
+        public override void CollectValidationErrors(ICollection<string> errors)
+        {
+            base.CollectValidationErrors(errors);
+            if (AllocationType != AllocationType.Aqua)
+            {
+                errors?.Add($"Skill {SkillId}: Water Pulse must be Aqua.");
+            }
+        }
+
+#if UNITY_EDITOR
+        public void ConfigureForEditor(
+            int skillId,
+            string displayName,
+            int baseRecoveryTicks,
+            int baseCooldownTicks,
+            string description,
+            int aquaDamageRatio)
+        {
+            base.ConfigureForEditor(
+                skillId,
+                displayName,
+                AllocationType.Aqua,
+                isMapAssignable: true,
+                baseRecoveryTicks,
+                baseCooldownTicks,
+                description,
+                baseManaCost: 0);
+            _aquaDamageRatio = aquaDamageRatio;
+        }
+#endif
+    }
+}

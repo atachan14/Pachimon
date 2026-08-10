@@ -12,14 +12,18 @@ namespace Pachimon.UI
         private const string PreviewRecoveryColorHex = "#2D75C7";
 
         private Image _fill;
+        private Image _shield;
         private TMP_Text _value;
         private string _label;
         private string _ownerId;
         private int _displayedValue;
         private int _displayedMaximum;
+        private int _displayedShield;
         private int _startValue;
         private int _targetValue;
         private int _targetMaximum;
+        private int _startShield;
+        private int _targetShield;
         private int _previewDelta;
         private float _startRatio;
         private float _targetRatio;
@@ -32,23 +36,28 @@ namespace Pachimon.UI
         public void Configure(
             string label,
             Image fill,
-            TMP_Text value)
+            TMP_Text value,
+            Image shield = null)
         {
             _label = label;
             _fill = fill;
             _value = value;
+            _shield = shield;
         }
 
         public void Present(
             string ownerId,
             int currentValue,
             int maximumValue,
-            Color fillColor)
+            Color fillColor,
+            int shieldValue = 0)
         {
             var safeMaximum = Mathf.Max(0, maximumValue);
             var safeValue = Mathf.Clamp(currentValue, 0, safeMaximum);
-            var ratio = safeMaximum > 0
-                ? (float)safeValue / safeMaximum
+            var safeShield = Mathf.Max(0, shieldValue);
+            var gaugeMaximum = safeMaximum + safeShield;
+            var ratio = gaugeMaximum > 0
+                ? (float)safeValue / gaugeMaximum
                 : 0f;
             if (!_isInitialized || _ownerId != ownerId)
             {
@@ -56,8 +65,11 @@ namespace Pachimon.UI
                 _ownerId = ownerId;
                 _displayedValue = safeValue;
                 _displayedMaximum = safeMaximum;
+                _displayedShield = safeShield;
                 _targetValue = safeValue;
                 _targetMaximum = safeMaximum;
+                _startShield = safeShield;
+                _targetShield = safeShield;
                 _startValue = safeValue;
                 _startRatio = ratio;
                 _targetRatio = ratio;
@@ -70,6 +82,7 @@ namespace Pachimon.UI
 
             if (_targetValue == safeValue
                 && _targetMaximum == safeMaximum
+                && _targetShield == safeShield
                 && _targetColor == fillColor)
             {
                 return;
@@ -77,11 +90,13 @@ namespace Pachimon.UI
 
             _startRatio = GetDisplayedRatio();
             _startValue = _displayedValue;
+            _startShield = _displayedShield;
             _targetRatio = ratio;
             _startColor = _fill != null ? _fill.color : fillColor;
             _targetColor = fillColor;
             _targetValue = safeValue;
             _targetMaximum = safeMaximum;
+            _targetShield = safeShield;
             _animationElapsed = 0f;
             _animationDuration = Mathf.Lerp(
                 MinimumDuration,
@@ -103,9 +118,14 @@ namespace Pachimon.UI
             _previewDelta = 0;
             _displayedValue = 0;
             _displayedMaximum = 0;
+            _displayedShield = 0;
             if (_fill != null)
             {
                 _fill.rectTransform.anchorMax = new Vector2(0f, 1f);
+            }
+            if (_shield != null)
+            {
+                _shield.enabled = false;
             }
 
             if (_value != null)
@@ -131,6 +151,10 @@ namespace Pachimon.UI
                 _startValue,
                 _targetValue,
                 eased));
+            _displayedShield = Mathf.RoundToInt(Mathf.Lerp(
+                _startShield,
+                _targetShield,
+                eased));
             _displayedMaximum = _targetMaximum;
             Render(ratio, color);
 
@@ -142,6 +166,7 @@ namespace Pachimon.UI
             _animationDuration = 0f;
             _displayedValue = _targetValue;
             _displayedMaximum = _targetMaximum;
+            _displayedShield = _targetShield;
             Render(_targetRatio, _targetColor);
         }
 
@@ -153,6 +178,25 @@ namespace Pachimon.UI
                 _fill.rectTransform.anchorMax = new Vector2(
                     Mathf.Clamp01(ratio),
                     1f);
+            }
+
+            if (_shield != null)
+            {
+                var gaugeMaximum = _displayedMaximum + _displayedShield;
+                var shieldEnd = gaugeMaximum > 0
+                    ? Mathf.Clamp01(
+                        (float)(_displayedValue + _displayedShield)
+                        / gaugeMaximum)
+                    : ratio;
+                _shield.enabled = _displayedShield > 0;
+                _shield.rectTransform.anchorMin = new Vector2(
+                    Mathf.Clamp01(ratio),
+                    0f);
+                _shield.rectTransform.anchorMax = new Vector2(
+                    Mathf.Max(Mathf.Clamp01(ratio), shieldEnd),
+                    1f);
+                _shield.rectTransform.offsetMin = Vector2.zero;
+                _shield.rectTransform.offsetMax = Vector2.zero;
             }
 
             RenderValue();
@@ -173,9 +217,10 @@ namespace Pachimon.UI
 
         private float GetDisplayedRatio()
         {
-            return _displayedMaximum > 0
+            var gaugeMaximum = _displayedMaximum + _displayedShield;
+            return gaugeMaximum > 0
                 ? Mathf.Clamp01(
-                    (float)_displayedValue / _displayedMaximum)
+                    (float)_displayedValue / gaugeMaximum)
                 : 0f;
         }
 

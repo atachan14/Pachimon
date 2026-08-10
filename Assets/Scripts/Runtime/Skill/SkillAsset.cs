@@ -24,6 +24,7 @@ namespace Pachimon.Skills
         public int BaseRecoveryTicks => _baseRecoveryTicks;
         public int BaseCooldownTicks => _baseCooldownTicks;
         public virtual int BaseManaCost => _baseManaCost;
+        public virtual bool ConsumesAllCurrentMana => false;
         public virtual string Description => _description;
 
         public virtual void CollectValidationErrors(ICollection<string> errors)
@@ -46,9 +47,9 @@ namespace Pachimon.Skills
                 errors.Add($"Skill {_skillId}: Startup cannot be negative.");
             }
 
-            if (_baseRecoveryTicks <= 0)
+            if (_baseRecoveryTicks < 0)
             {
-                errors.Add($"Skill {_skillId}: Recovery must be positive.");
+                errors.Add($"Skill {_skillId}: Recovery cannot be negative.");
             }
 
             if (_baseCooldownTicks < 0)

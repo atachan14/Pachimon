@@ -162,7 +162,7 @@ namespace Pachimon.Editor.UI
             var statusSection = CreateSection(
                 content.transform,
                 "StatusSection",
-                "状態異常",
+                "状態",
                 GameUiPalette.StatusSection);
             var statusGrid = CreateGrid(statusSection.transform, "StatusGrid", 0, 92f, 34f);
             var statusTemplate = CreateChip(

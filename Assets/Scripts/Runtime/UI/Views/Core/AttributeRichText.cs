@@ -132,6 +132,24 @@ namespace Pachimon.UI
                     + $"により貫通率は{penetration:0.##}%。";
             }
 
+            if (skill is DragonJabSkillAsset dragonJab
+                && owner?.IsRevealed == true
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Dragon,
+                    out var dragon))
+            {
+                var damage = SignedStatMath.FloorNonNegative(
+                    SignedStatMath.ScaleFromBase(
+                        dragonJab.BaseDragonDamage,
+                        dragon,
+                        dragonJab.DragonDamageRatio));
+                var icon = AttributeRichText.GetIcon(AllocationType.Dragon);
+                return $"\u6575\u306E\u5148\u982D\u306B{icon}"
+                    + $"{AttributeRichText.Colorize(AllocationType.Dragon, damage)}"
+                    + "\u306E\u7ADC\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001"
+                    + $"\u30EF\u30F3\u30FB\u30C4\u30FCValue\u3092{dragonJab.OneTwoValue}\u7372\u5F97\u3059\u308B\u3002";
+            }
+
             if (skill is FireArrowSkillAsset fireArrow
                 && owner?.IsRevealed == true
                 && owner.TryGetStat(
@@ -183,6 +201,31 @@ namespace Pachimon.UI
                     + "のFireダメージを与える。"
                     + $"両者が生存している間、MNを{combustion.BaseManaCost}"
                     + "消費して再発動する。";
+            }
+
+            if (skill is ChainBurnSkillAsset chainBurn
+                && owner?.IsRevealed == true
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Fire,
+                    out var chainBurnFire))
+            {
+                var baseDamage = SignedStatMath.FloorNonNegative(
+                    SignedStatMath.ScaleFromBase(
+                        chainBurn.BasePower,
+                        chainBurnFire,
+                        chainBurn.FireScalingPercent));
+                var fireIcon = AttributeRichText.GetIcon(AllocationType.Fire);
+                var hitCount = chainBurn.BaseChainCount + 1;
+                return $"先頭から後方へ往復し、{hitCount}回連鎖する。"
+                    + $"初撃は{fireIcon}"
+                    + AttributeRichText.Colorize(
+                        AllocationType.Fire,
+                        baseDamage)
+                    + "、以降は連鎖順に減衰する。"
+                    + "使用するたびにアドチェインが"
+                    + AddChainRuntime.FormatUnits(
+                        chainBurn.AddChainGainUnits)
+                    + "増加する。整数部分が追加連鎖回数になる。";
             }
 
             if (skill is AquaShockSkillAsset aquaShock
@@ -240,6 +283,80 @@ namespace Pachimon.UI
                     + $"{AttributeRichText.Colorize(AllocationType.Electric, displayedDamage)}"
                     + "のElectricダメージを与える。"
                     + $"{fireIcon}{fire}により貫通率は{penetration:0.##}%。";
+            }
+
+            if (skill is NeurotoxinSkillAsset neurotoxin
+                && owner?.IsRevealed == true
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Poison,
+                    out var neurotoxinPoison)
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Electric,
+                    out var neurotoxinElectric))
+            {
+                var stunTicks = NeurotoxinMath.CalculateStunTicks(
+                    neurotoxin,
+                    neurotoxinPoison,
+                    neurotoxinElectric);
+                var toxinValue = NeurotoxinMath.CalculateToxinValue(
+                    neurotoxin,
+                    neurotoxinPoison);
+                var poisonIcon =
+                    AttributeRichText.GetIcon(AllocationType.Poison);
+                var electricIcon =
+                    AttributeRichText.GetIcon(AllocationType.Electric);
+                return "敵の最後尾に"
+                    + $"{stunTicks}tickのStun"
+                    + $"（{poisonIcon}{neurotoxinPoison} / "
+                    + $"{electricIcon}{neurotoxinElectric}参照）と、"
+                    + $"Value {toxinValue}の毒素を付与する。";
+            }
+
+            if (skill is ToxinTransferSkillAsset toxinTransfer)
+            {
+                return "最も毒素が多い敵から"
+                    + $"{toxinTransfer.RemovalPercent}%を取り除き、"
+                    + "その対象を除く毒素が最も少ない敵へ"
+                    + $"除去量の{toxinTransfer.ApplicationPercent}%を付与する。"
+                    + "敵が1体の場合は同じ対象へ付与する。";
+            }
+
+            if (skill is ToxinExplosionSkillAsset toxinExplosion
+                && owner?.IsRevealed == true
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Poison,
+                    out var explosionPoison)
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Fire,
+                    out var explosionFire))
+            {
+                var fixedDamage = SignedStatMath.FloorNonNegative(
+                    ToxinExplosionMath.CalculateBaseDamage(
+                        toxinExplosion,
+                        consumedToxin: 0,
+                        explosionPoison,
+                        explosionFire));
+                return "最も毒素が多い敵の毒素をすべて消費する。"
+                    + $"消費Valueの{toxinExplosion.ToxinConversionPercent}%"
+                    + $"と、現在Statによる{fixedDamage}を合計した"
+                    + "Poisonダメージを敵全体へ与える（軽減前）。";
+            }
+
+            if (skill is PoisonShieldSkillAsset poisonShield
+                && owner?.IsRevealed == true
+                && owner.TryGetStat(
+                    PachimonDisplayStat.Poison,
+                    out var shieldPoison))
+            {
+                var shieldValue = PoisonShieldMath.CalculateShieldValue(
+                    poisonShield,
+                    shieldPoison);
+                var reductionPercent =
+                    PoisonShieldMath.CalculateToxinReductionPercent(
+                        poisonShield,
+                        shieldPoison);
+                return $"自身に{shieldValue}のShieldを付与する。"
+                    + $"自身の毒素を{reductionPercent:0.##}%取り除く。";
             }
 
             if (skill is ElectricQuickAttackSkillAsset quickAttack
@@ -324,6 +441,58 @@ namespace Pachimon.UI
                     + "（軽減前）のElectricダメージを与える。"
                     + "戦闘不能にした場合、超過分を次の先頭へ引き継ぐ。"
                     + $"現在の硬直は{recovery}、CDは{cooldown}。";
+            }
+
+            if (owner?.IsRevealed == true
+                && owner.TryGetStat(PachimonDisplayStat.Wind, out var wind))
+            {
+                var icon = AttributeRichText.GetIcon(AllocationType.Wind);
+                if (skill is FlyingAttackSkillAsset flyingAttack)
+                {
+                    var damage = SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            flyingAttack.BaseWindDamage,
+                            wind,
+                            flyingAttack.WindDamageRatio));
+                    var speed = SignedStatMath.FloorNonNegative(
+                        wind * (flyingAttack.FlyingStatus?.WindSpeedRatio ?? 0)
+                        / 100m);
+                    return $"発生中は飛行して対象指定不可となり、Speed +{speed}。"
+                        + $"発動時、敵の先頭へ{icon}{damage}のWind Damageを与える。";
+                }
+
+                if (skill is WindErosionSkillAsset erosion)
+                {
+                    var value = SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            erosion.BaseErosionValue,
+                            wind,
+                            erosion.WindValueRatio));
+                    return $"敵全体へValue {value}の風化を与える。"
+                        + "風化はRBをValueだけ減少させ、毎tick1減少する。";
+                }
+
+                if (skill is HealingWindSkillAsset healingWind)
+                {
+                    int Scale(int baseValue) => SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            baseValue,
+                            wind,
+                            healingWind.WindRatio));
+                    return "最もCurrent HPが低い味方のHPを"
+                        + $"{Scale(healingWind.BaseHealing)}回復し、"
+                        + $"{healingWind.DurationTicks}tickの間Windを"
+                        + $"{Scale(healingWind.BaseWindBonus)}、Speedを"
+                        + $"{Scale(healingWind.BaseSpeedBonus)}増加させる。";
+                }
+
+                if (skill is SecondWindSkillAsset secondWind)
+                {
+                    var shield = SignedStatMath.FloorNonNegative(
+                        wind * secondWind.WindShieldRatio / 100m);
+                    return $"自身へ{shield}のShieldを付与し、"
+                        + $"{secondWind.DurationTicks}tickの間、最終Windを0にする。";
+                }
             }
 
             if (owner?.IsRevealed == true

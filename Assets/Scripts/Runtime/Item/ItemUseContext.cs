@@ -23,13 +23,15 @@ namespace Pachimon.Items
             ItemTargetAffiliation affiliation,
             PachimonInstance runTarget,
             BattleUnitState battleTarget,
-            int effectiveMaxHp)
+            int effectiveMaxHp,
+            BattleState battleState)
         {
             Kind = kind;
             Affiliation = affiliation;
             RunTarget = runTarget;
             BattleTarget = battleTarget;
             EffectiveMaxHp = effectiveMaxHp;
+            BattleState = battleState;
         }
 
         public ItemUseContextKind Kind { get; }
@@ -37,6 +39,7 @@ namespace Pachimon.Items
         public PachimonInstance RunTarget { get; }
         public BattleUnitState BattleTarget { get; }
         public int EffectiveMaxHp { get; }
+        public BattleState BattleState { get; }
         public string TargetInstanceId =>
             Kind == ItemUseContextKind.Run
                 ? RunTarget.InstanceId
@@ -62,13 +65,15 @@ namespace Pachimon.Items
                 affiliation,
                 target,
                 null,
-                effectiveMaxHp);
+                effectiveMaxHp,
+                null);
         }
 
         public static ItemUseContext ForBattle(
             BattleUnitState target,
             ItemTargetAffiliation affiliation,
-            PachimonInstance runTarget = null)
+            PachimonInstance runTarget = null,
+            BattleState battleState = null)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (runTarget != null
@@ -87,7 +92,8 @@ namespace Pachimon.Items
                 affiliation,
                 runTarget,
                 target,
-                target.MaxHp);
+                target.MaxHp,
+                battleState);
         }
 
         public int RestoreHp(int amount)
@@ -100,13 +106,23 @@ namespace Pachimon.Items
             }
             else
             {
-                BattleTarget.RestoreHp(amount);
+                if (BattleState != null)
+                {
+                    BattleState.SupportEffects.RestoreHp(
+                        BattleTarget,
+                        BattleTarget,
+                        amount);
+                }
+                else
+                {
+                    BattleTarget.RestoreHp(amount);
+                }
             }
 
             return CurrentHp - previousHp;
         }
 
-        public int ApplyDamage(int amount)
+        public int ApplyDamage(int amount, int originId = 1)
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
             var previousHp = CurrentHp;
@@ -116,6 +132,19 @@ namespace Pachimon.Items
             }
             else
             {
+                if (BattleState != null)
+                {
+                    return BattleTrueDamageService.Apply(
+                        BattleState,
+                        BattleTarget,
+                        BattleTarget,
+                        new TrueDamageContext(
+                            DamageOriginKind.Item,
+                            originId,
+                            amount,
+                            isAttack: false)).AppliedDamage;
+                }
+
                 BattleTarget.ApplyDamage(amount);
             }
 

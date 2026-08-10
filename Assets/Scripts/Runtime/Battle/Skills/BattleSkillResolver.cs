@@ -10,7 +10,10 @@ namespace Pachimon.Battle
             BattleState state,
             BattleUnitState user,
             SkillAsset skill,
-            ISkillLogic logic)
+            ISkillLogic logic,
+            object runtimeData = null,
+            int actualManaSpent = 0,
+            decimal effectiveManaSpent = 0m)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -23,15 +26,32 @@ namespace Pachimon.Battle
             try
             {
                 resolution = logic.Resolve(
-                    new SkillExecutionContext(state, user, skill));
+                    new SkillExecutionContext(
+                        state,
+                        user,
+                        skill,
+                        runtimeData,
+                        actualManaSpent,
+                        effectiveManaSpent));
                 var statusEffects = state.Statuses.EndSkillResolution();
                 if (statusEffects.Count > 0)
                 {
                     resolution = new SkillResolution(
                         resolution.User,
                         resolution.Skill,
-                        resolution.Effects.Concat(statusEffects));
+                        resolution.Effects.Concat(statusEffects),
+                        wasTargetUnavailable: resolution.WasTargetUnavailable);
                 }
+            }
+            catch (SkillTargetUnavailableException)
+            {
+                state.Statuses.CancelSkillResolution();
+                state.AddLog("対象がいなかった！");
+                resolution = new SkillResolution(
+                    user,
+                    skill,
+                    Array.Empty<SkillEffectResult>(),
+                    wasTargetUnavailable: true);
             }
             catch
             {
@@ -39,6 +59,9 @@ namespace Pachimon.Battle
                 throw;
             }
 
+            resolution = resolution.WithManaSpent(
+                actualManaSpent,
+                effectiveManaSpent);
             state.Events.Publish(new SkillResolvedEvent(state, resolution));
             foreach (var defeatedUnit in resolution.Effects
                          .Where(effect =>

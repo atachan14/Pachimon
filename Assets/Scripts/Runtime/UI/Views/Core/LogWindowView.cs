@@ -578,6 +578,7 @@ namespace Pachimon.UI
             }
 
             var capacity = Mathf.Max(1, _dialogueVisibleLineCount);
+            var visibleHistory = new List<DialogueLine>(capacity);
             foreach (var block in page.Blocks)
             {
                 if (block?.Lines == null || block.Lines.Count == 0)
@@ -585,25 +586,46 @@ namespace Pachimon.UI
                     continue;
                 }
 
-                var firstCount = Mathf.Min(capacity, block.Lines.Count);
-                _dialogueSegments.Enqueue(new DialoguePlaybackSegment(
-                    block.Lines.Take(firstCount).ToArray(),
-                    Enumerable.Range(0, firstCount).ToArray(),
-                    revealFromLineIndex: 0));
-
-                for (var lineIndex = capacity;
-                    lineIndex < block.Lines.Count;
-                    lineIndex++)
+                if (block.Lines.Count <= capacity)
                 {
-                    var firstLine = lineIndex - capacity + 1;
-                    var visibleLines = block.Lines
-                        .Skip(firstLine)
-                        .Take(capacity)
+                    var visibleLines = visibleHistory
+                        .Concat(block.Lines)
+                        .TakeLast(capacity)
                         .ToArray();
+                    var firstNewLine = visibleLines.Length - block.Lines.Count;
                     _dialogueSegments.Enqueue(new DialoguePlaybackSegment(
                         visibleLines,
-                        new[] { visibleLines.Length - 1 },
-                        visibleLines.Length - 1));
+                        Enumerable.Range(firstNewLine, block.Lines.Count)
+                            .ToArray(),
+                        firstNewLine));
+                    visibleHistory.Clear();
+                    visibleHistory.AddRange(visibleLines);
+                    continue;
+                }
+
+                // A block longer than the window fills it once, then advances
+                // one line at a time while preserving the current page.
+                for (var lineIndex = 0;
+                    lineIndex < block.Lines.Count;
+                    lineIndex += lineIndex == 0 ? capacity : 1)
+                {
+                    var addedLineCount = lineIndex == 0 ? capacity : 1;
+                    var addedLines = block.Lines
+                        .Skip(lineIndex)
+                        .Take(addedLineCount)
+                        .ToArray();
+                    var visibleLines = visibleHistory
+                        .Concat(addedLines)
+                        .TakeLast(capacity)
+                        .ToArray();
+                    var firstNewLine = visibleLines.Length - addedLines.Length;
+                    _dialogueSegments.Enqueue(new DialoguePlaybackSegment(
+                        visibleLines,
+                        Enumerable.Range(firstNewLine, addedLines.Length)
+                            .ToArray(),
+                        firstNewLine));
+                    visibleHistory.Clear();
+                    visibleHistory.AddRange(visibleLines);
                 }
             }
         }
