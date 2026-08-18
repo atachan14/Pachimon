@@ -36,10 +36,96 @@ namespace Pachimon.Battle
                 {
                     _logicBySkillId[skill.SkillId] = new StruggleSkillLogic();
                 }
+                else if (skill is TriAttackSkillAsset triAttack)
+                {
+                    _logicBySkillId[skill.SkillId] = new TriAttackSkillLogic(triAttack);
+                }
+                else if (skill is BodySlamSkillAsset bodySlam)
+                {
+                    _logicBySkillId[skill.SkillId] = new BodySlamSkillLogic(bodySlam);
+                }
+                else if (skill is FakeOutSkillAsset fakeOut)
+                {
+                    _logicBySkillId[skill.SkillId] = new FakeOutSkillLogic(fakeOut);
+                }
+                else if (skill is DestructionBeamSkillAsset destructionBeam)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new DestructionBeamSkillLogic(destructionBeam);
+                }
+                else if (skill is SexyPoseSkillAsset sexyPose)
+                {
+                    _logicBySkillId[skill.SkillId] = new SexyPoseSkillLogic(sexyPose);
+                }
+                else if (skill is IntangibilitySkillAsset intangibility)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new IntangibilitySkillLogic(intangibility);
+                }
+                else if (skill is SpiritBombSkillAsset spiritBomb)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new SpiritBombSkillLogic(spiritBomb);
+                }
+                else if (skill is CloneTechniqueSkillAsset cloneTechnique)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new CloneTechniqueSkillLogic(cloneTechnique);
+                }
+                else if (skill is BurningStrikeSkillAsset burningStrike)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BurningStrikeSkillLogic(burningStrike);
+                }
+                else if (skill is WaterPulseReplacementSkillAsset regularWaterPulse)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new WaterPulseReplacementSkillLogic(regularWaterPulse);
+                }
+                else if (skill is PlantRageSkillAsset plantRage)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new PlantRageSkillLogic(plantRage);
+                }
+                else if (skill is ChainThunderSkillAsset chainThunder)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ChainThunderSkillLogic(chainThunder);
+                }
+                else if (skill is DeathmatchSkillAsset deathmatch)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new DeathmatchSkillLogic(deathmatch);
+                }
+                else if (skill is FreezingSkillAsset freezing)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new FreezingSkillLogic(freezing);
+                }
+                else if (skill is WindGodSkillAsset windGod)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new WindGodSkillLogic(windGod);
+                }
+                else if (skill is DragonInstallSkillAsset dragonInstall)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new DragonInstallSkillLogic(dragonInstall);
+                }
                 else if (skill is AquaShockSkillAsset aquaShock)
                 {
                     _logicBySkillId[skill.SkillId] =
                         new AquaShockSkillLogic(aquaShock);
+                }
+                else if (skill is LightningCloudSkillAsset lightningCloud)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new LightningCloudSkillLogic(lightningCloud);
+                }
+                else if (skill is ElectricShieldSkillAsset electricShield)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ElectricShieldSkillLogic(electricShield);
                 }
                 else if (skill is WaterPulseSkillAsset waterPulse)
                 {
@@ -55,6 +141,36 @@ namespace Pachimon.Battle
                 {
                     _logicBySkillId[skill.SkillId] =
                         new WaterVeilSkillLogic(waterVeil);
+                }
+                else if (skill is WaterCutterSkillAsset waterCutter)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new WaterCutterSkillLogic(waterCutter);
+                }
+                else if (skill is MuddyWaterSkillAsset muddyWater)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new MuddyWaterSkillLogic(muddyWater);
+                }
+                else if (skill is WaterSpoutSkillAsset waterSpout)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new WaterSpoutSkillLogic(waterSpout);
+                }
+                else if (skill is EvaporationSkillAsset evaporation)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new EvaporationSkillLogic(evaporation);
+                }
+                else if (skill is BeatVineSkillAsset beatVine)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BeatVineSkillLogic(beatVine);
+                }
+                else if (skill is FireVineSkillAsset fireVine)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new FireVineSkillLogic(fireVine);
                 }
                 else if (skill is SunbathSkillAsset sunbath)
                 {
@@ -131,6 +247,16 @@ namespace Pachimon.Battle
                     _logicBySkillId[skill.SkillId] =
                         new IceBladeSkillLogic(iceBlade);
                 }
+                else if (skill is IcePebbleSkillAsset icePebble)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new IcePebbleSkillLogic(icePebble);
+                }
+                else if (skill is FrostArrowSkillAsset frostArrow)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new FrostArrowSkillLogic(frostArrow);
+                }
                 else if (skill is FrozenBreakSkillAsset frozenBreak)
                 {
                     _logicBySkillId[skill.SkillId] =
@@ -160,6 +286,16 @@ namespace Pachimon.Battle
                 {
                     _logicBySkillId[skill.SkillId] =
                         new SecondWindSkillLogic(secondWind);
+                }
+                else if (skill is CuttingDanceSkillAsset cuttingDance)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new CuttingDanceSkillLogic(cuttingDance);
+                }
+                else if (skill is KachofugetsuSkillAsset kachofugetsu)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new KachofugetsuSkillLogic(kachofugetsu);
                 }
                 else if (skill is DragonJabSkillAsset dragonJab)
                 {
@@ -243,6 +379,16 @@ namespace Pachimon.Battle
                 {
                     _logicBySkillId[skill.SkillId] =
                         new PoisonShieldSkillLogic(poisonShield);
+                }
+                else if (skill is PoisonMistSkillAsset poisonMist)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new PoisonMistSkillLogic(poisonMist);
+                }
+                else if (skill is FirstTouchSkillAsset firstTouch)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new FirstTouchSkillLogic(firstTouch);
                 }
                 else if (skill.IsMapAssignable
                     && basicLogicByType.TryGetValue(skill.AllocationType, out var logic))

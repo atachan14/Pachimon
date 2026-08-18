@@ -50,7 +50,7 @@ namespace Pachimon.Editor.UI
                 $"{StatusFolder}/FootworkStatus.asset");
             footwork.ConfigureForEditor(
                 "フットワーク",
-                "次に受ける攻撃を回避する。");
+                "次に受ける攻撃と付随する状態を回避する。");
 
             var sweetScience = GetOrCreate<SweetScienceStatusAsset>(
                 $"{StatusFolder}/SweetScienceStatus.asset");
@@ -91,7 +91,9 @@ namespace Pachimon.Editor.UI
                 80,
                 300,
                 80,
-                "次に受ける攻撃を回避する。",
+                "{value:duration}tickの間、次に受ける攻撃と付随する状態を回避する。",
+                80,
+                100,
                 footwork);
 
             var danceSkill = ReplaceWith<DragonDanceSkillAsset>(
@@ -314,6 +316,8 @@ namespace Pachimon.Editor.UI
             return catalog?.Get(itemId) is SkillMachineItemAsset machine
                 && machine.ItemId == itemId
                 && machine.Skill?.SkillId == skillId
+                && AssetDatabase.GetAssetPath(machine)
+                    == GetSkillMachinePath(machine.Skill)
                 && !string.IsNullOrWhiteSpace(machine.DisplayName);
         }
 
@@ -347,8 +351,21 @@ namespace Pachimon.Editor.UI
 
         private static SkillMachineItemAsset ConfigureSkillMachine(SkillAsset skill)
         {
-            var path = $"{ItemFolder}/Item_{ItemIds.GetSkillMachineItemId(skill.SkillId)}"
-                       + $"_TM_{skill.name}.asset";
+            var path = GetSkillMachinePath(skill);
+            var legacyPath = $"{ItemFolder}/Item_{ItemIds.GetSkillMachineItemId(skill.SkillId)}"
+                             + $"_TM_{skill.name}.asset";
+            if (path != legacyPath
+                && AssetDatabase.LoadMainAssetAtPath(path) == null
+                && AssetDatabase.LoadMainAssetAtPath(legacyPath) != null)
+            {
+                var moveError = AssetDatabase.MoveAsset(legacyPath, path);
+                if (!string.IsNullOrEmpty(moveError))
+                {
+                    throw new System.InvalidOperationException(
+                        $"Failed to rename Skill Machine Asset: {moveError}");
+                }
+            }
+
             var item = GetOrCreate<SkillMachineItemAsset>(path);
             item.ConfigureForEditor(
                 ItemIds.GetSkillMachineItemId(skill.SkillId),
@@ -359,6 +376,26 @@ namespace Pachimon.Editor.UI
                 5000);
             item.ConfigureSkillForEditor(skill);
             return item;
+        }
+
+        private static string GetSkillMachinePath(SkillAsset skill)
+        {
+            if (skill == null)
+                throw new System.ArgumentNullException(nameof(skill));
+
+            const string suffix = "SkillAsset";
+            var englishName = skill.GetType().Name;
+            if (englishName.EndsWith(
+                    suffix,
+                    System.StringComparison.Ordinal))
+            {
+                englishName = englishName.Substring(
+                    0,
+                    englishName.Length - suffix.Length);
+            }
+
+            return $"{ItemFolder}/Item_{ItemIds.GetSkillMachineItemId(skill.SkillId)}"
+                   + $"_TM_{englishName}.asset";
         }
 
         private static void ReplaceCatalogEntries(

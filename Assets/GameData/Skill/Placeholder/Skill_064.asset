@@ -16,11 +16,12 @@ MonoBehaviour:
   _displayName: "\u30C9\u30E9\u30B4\u30F3\u30C7\u30A3\u30D5\u30A7\u30F3\u30B9"
   _allocationType: 8
   _isMapAssignable: 1
-  _baseRecoveryTicks: 100
+  _baseStartupTicks: 100
+  _baseRecoveryTicks: 150
   _baseCooldownTicks: 400
-  _baseManaCost: 120
-  _description: "Shield\u3092\u5F97\u3066\u3001\u671F\u9593\u4E2D\u306F\u5473\u65B9\u304C\u53D7\u3051\u308B\u653B\u6483Damage\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u3002"
-  _baseShieldValue: 300
+  _baseManaCost: 60
+  _description: "\u81EA\u8EAB\u3078\u5024{color:Dragon}{value:shield}{/color}\u3001{value:duration}tick\u306EShield\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u52B9\u679C\u4E2D\u306F\u5473\u65B9\u304C\u53D7\u3051\u308B\u653B\u6483\u3068\u72B6\u614B\u4ED8\u4E0E\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u3002"
+  _baseShieldValue: 125
   _dragonShieldRatio: 100
-  _durationTicks: 500
+  _durationTicks: 300
   _defenseStatus: {fileID: 11400000, guid: 5b1015e07d4d93c4aaf31acad4153663, type: 2}

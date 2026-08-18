@@ -12,7 +12,9 @@ namespace Pachimon.Battle
             BattleUnitState user,
             SkillAsset skill,
             ISkillLogic logic,
-            bool spendMana)
+            bool spendMana,
+            int skillSlotId = 0,
+            int resolutionCount = 1)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -21,8 +23,10 @@ namespace Pachimon.Battle
 
             var snapshot = BattleSimulationSnapshot.Create(state);
             var simulationUser = snapshot.GetSimulationUnit(user);
+            simulationUser.TryConsumeStatus(BattleStatusId.Clone, out _);
             var manaPlan = spendMana
                 ? BattleSkillManaCostCalculator.CreatePlan(
+                    snapshot.State,
                     simulationUser,
                     skill)
                 : new BattleSkillManaSpendPlan(0, 0m);
@@ -36,13 +40,19 @@ namespace Pachimon.Battle
                     + $"{manaSpent} MN in Preview.");
             }
 
-            var resolution = BattleSkillResolver.Resolve(
-                snapshot.State,
-                simulationUser,
-                skill,
-                logic,
-                actualManaSpent: manaSpent,
-                effectiveManaSpent: manaPlan.Effective);
+            var wasTargetUnavailable = true;
+            for (var index = 0; index < resolutionCount; index++)
+            {
+                var resolution = BattleSkillResolver.Resolve(
+                    snapshot.State,
+                    simulationUser,
+                    skill,
+                    logic,
+                    actualManaSpent: index == 0 ? manaSpent : 0,
+                    effectiveManaSpent: manaPlan.Effective,
+                    skillSlotId: skillSlotId);
+                wasTargetUnavailable &= resolution.WasTargetUnavailable;
+            }
 
             var effects = new List<SkillPreviewEffect>();
             foreach (var original in state.Player.Units.Concat(state.Enemy.Units))
@@ -69,7 +79,7 @@ namespace Pachimon.Battle
                     skill,
                     simulationUser,
                     snapshot.State),
-                resolution.WasTargetUnavailable);
+                wasTargetUnavailable);
         }
     }
 }

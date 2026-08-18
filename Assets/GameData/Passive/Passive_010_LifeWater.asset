@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.LifeWaterPassiveAsset
   _passiveId: 10
   _displayName: 生命の水
-  _description: MNを消費したSkillの効果解決後、効果計算用MN消費量とAquaに応じて自身を回復する。
+  _description: "MNを消費したSkillの効果解決後、消費MNの{value:baseRecoveryRatio}%を基準に、{icon:Aqua}水に応じて自身を回復する。"
   _baseRecoveryRatio: 20
   _aquaRecoveryRatio: 5

@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u30D0\u30C3\u30AF\u30D5\u30A1\u30A4\u30A2"
   _allocationType: 1
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _baseManaCost: 100
-  _description: "\u6700\u5F8C\u5C3E\u306E\u6575\u3078Fire\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002Poison\u306B\u5FDC\u3058\u305F\u8CAB\u901A\u3092\u6301\u3064\u3002"
+  _baseCooldownTicks: 300
+  _baseManaCost: 25
+  _description: "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{icon:Fire}{color:Fire}{value:damage}{/color}\u306E{term:FireDamage|\u708E\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002{icon:Poison}\u6BD2\u306B\u3088\u308B\u8CAB\u901A\u7387\u306F{value:penetration}%\u3002"
   _basePower: 100
   _fireScalingPercent: 100
   _basePenetrationPercent: 10

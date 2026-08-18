@@ -54,6 +54,7 @@ namespace Pachimon.Battle
 
         public int BattleSeed { get; }
         public long CurrentTick { get; internal set; }
+        public int ElectricDamageCount { get; private set; }
         public BattleSideState Player { get; }
         public BattleSideState Enemy { get; }
         public BattleTimeline Timeline { get; }
@@ -68,6 +69,17 @@ namespace Pachimon.Battle
         internal PassiveLogicRegistry PassiveLogicRegistry { get; }
         public BattleOutcome Outcome { get; private set; }
         public IReadOnlyList<string> LogEntries => _logEntries;
+
+        internal void RecordElectricDamage()
+        {
+            ElectricDamageCount = checked(ElectricDamageCount + 1);
+        }
+
+        internal void SetElectricDamageCountForSimulation(int count)
+        {
+            if (count < 0) throw new ArgumentOutOfRangeException(nameof(count));
+            ElectricDamageCount = count;
+        }
 
         public decimal ResolveAttributeRatio(
             PachimonAttribute attribute,

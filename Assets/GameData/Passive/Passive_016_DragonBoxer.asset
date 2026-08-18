@@ -8,7 +8,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DragonBoxerPassiveAsset
   _passiveId: 16
   _displayName: ドラゴンボクサー
-  _description: 竜ダメージを与えるたびにスタックを獲得し、竜ダメージが増加する。他属性ダメージを与えるとスタックが半減する。
+  _description: "{icon:Dragon}{term:DragonDamage|竜ダメージ}を与えるたび{value:stackGain}Stack獲得し、1Stackごとに竜ダメージが{value:damagePerStack}%増加する。他属性ダメージでStackが半減する。"
   _stackGain: 10
   _damagePercentPerStack: 1
   _stackStatus: {fileID: 11400000, guid: 25fc08cbb47e41e6bf510db85c496483, type: 2}

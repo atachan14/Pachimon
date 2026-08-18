@@ -1,4 +1,6 @@
 using System;
+using Pachimon.Reward;
+using Pachimon.Run;
 using Pachimon.Skills;
 
 namespace Pachimon.Battle
@@ -17,6 +19,13 @@ namespace Pachimon.Battle
             if (_skill.FootworkStatus == null)
                 throw new InvalidOperationException("Dragon Footwork requires a Footwork Status.");
 
+            var durationTicks = Math.Max(
+                1,
+                SignedStatMath.FloorNonNegative(
+                    context.ScaleFromAttribute(
+                        _skill.BaseDurationTicks,
+                        PachimonAttribute.Dragon,
+                        _skill.DurationDragonRatio)));
             context.State.Statuses.ApplyStatus(
                 context.User,
                 new BattleStatusInstance(
@@ -24,6 +33,7 @@ namespace Pachimon.Battle
                     BattleStatusCategory.None,
                     context.User,
                     value: 0,
+                    durationTicks: durationTicks,
                     definition: _skill.FootworkStatus));
             context.State.Presentation.RecordLog(
                 $"{context.User.DisplayName}はフットワークを始めた！");

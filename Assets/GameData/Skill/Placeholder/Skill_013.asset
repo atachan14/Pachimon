@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: Skill_013
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.NeurotoxinSkillAsset
   _skillId: 13
-  _displayName: 神経毒
+  _displayName: "\u795E\u7D4C\u6BD2"
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: 最後尾の敵へPoisonとElectricに応じたStunと、Poisonに応じた毒素を付与する。
+  _baseCooldownTicks: 400
+  _baseManaCost: 40
+  _description: "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{value:stunTicks}tick\u306E{term:Stun|Stun}\u3068\u3001\u5024{value:toxinValue}\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _basePoisonStunTicks: 50
   _poisonStunScalingPercent: 100
   _baseElectricStunTicks: 50

@@ -33,7 +33,7 @@ namespace Pachimon.UI
         private RectTransform _panelRect;
         private RectTransform _viewportRect;
         private CanvasGroup _canvasGroup;
-        private Coroutine _transitionCoroutine;
+        private VerticalSlideTransition _slideTransition;
         private bool _isInitialized;
         private bool _isOpen;
         private RunMap _runMap;
@@ -65,13 +65,7 @@ namespace Pachimon.UI
 
         private void OnDisable()
         {
-            if (_transitionCoroutine == null)
-            {
-                return;
-            }
-
-            StopCoroutine(_transitionCoroutine);
-            _transitionCoroutine = null;
+            _slideTransition?.Cancel();
         }
 
         private void OnRectTransformDimensionsChange()
@@ -84,10 +78,11 @@ namespace Pachimon.UI
             RefreshMapLayout();
             BuildMapIfNeeded();
             ApplyMapLayout();
+            _slideTransition?.SetSlideDistance(_viewportRect.rect.height);
 
-            if (!_isOpen && _transitionCoroutine == null)
+            if (!_isOpen && _slideTransition?.IsRunning != true)
             {
-                _panelRect.anchoredPosition = GetClosedPosition();
+                _slideTransition?.Snap(0f);
             }
         }
 
@@ -117,9 +112,7 @@ namespace Pachimon.UI
             RefreshNodeState();
             FocusCurrentNode();
             _isOpen = true;
-            _canvasGroup.alpha = 1f;
-            SetInteractionEnabled(false);
-            StartTransition(Vector2.zero, true);
+            _slideTransition.Play(1f, _transitionDuration);
         }
 
         public void ReplayOpenTransition()
@@ -129,7 +122,7 @@ namespace Pachimon.UI
                 return;
             }
 
-            _panelRect.anchoredPosition = GetClosedPosition();
+            _slideTransition.Snap(0f);
             Open();
         }
 
@@ -144,8 +137,7 @@ namespace Pachimon.UI
             }
 
             Canvas.ForceUpdateCanvases();
-            SetInteractionEnabled(false);
-            StartTransition(GetClosedPosition(), false);
+            _slideTransition.Play(0f, _transitionDuration);
         }
 
         public void Render(
@@ -283,18 +275,20 @@ namespace Pachimon.UI
                 0f);
 
             _canvasGroup.alpha = 1f;
-            SetInteractionEnabled(false);
+            _slideTransition = new VerticalSlideTransition(
+                this,
+                _panelRect,
+                _canvasGroup,
+                () => _isOpen,
+                applyAlpha: false);
+            _slideTransition.SetSlideDistance(_viewportRect.rect.height);
             _scrollIndicator = ScrollEdgeIndicator.GetOrCreate(_mapScrollRect);
             _isInitialized = true;
 
             Canvas.ForceUpdateCanvases();
-            _panelRect.anchoredPosition = GetClosedPosition();
+            _slideTransition.SetSlideDistance(_viewportRect.rect.height);
+            _slideTransition.Snap(0f);
             return true;
-        }
-
-        private Vector2 GetClosedPosition()
-        {
-            return new Vector2(0f, _viewportRect.rect.height);
         }
 
         private void RefreshMapLayout()
@@ -643,55 +637,6 @@ namespace Pachimon.UI
             var offsetFromBottom = Mathf.Clamp(nodePosition.y - desiredViewportY, 0f, scrollableHeight);
             _mapScrollRect.StopMovement();
             _mapScrollRect.verticalNormalizedPosition = offsetFromBottom / scrollableHeight;
-        }
-
-        private void StartTransition(Vector2 targetPosition, bool enableInteractionWhenComplete)
-        {
-            if (_transitionCoroutine != null)
-            {
-                StopCoroutine(_transitionCoroutine);
-            }
-
-            if (_transitionDuration <= 0f)
-            {
-                _panelRect.anchoredPosition = targetPosition;
-                SetInteractionEnabled(enableInteractionWhenComplete);
-                _transitionCoroutine = null;
-                return;
-            }
-
-            _transitionCoroutine = StartCoroutine(
-                AnimatePosition(targetPosition, enableInteractionWhenComplete));
-        }
-
-        private System.Collections.IEnumerator AnimatePosition(
-            Vector2 targetPosition,
-            bool enableInteractionWhenComplete)
-        {
-            var startPosition = _panelRect.anchoredPosition;
-            var elapsed = 0f;
-
-            while (elapsed < _transitionDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                var progress = Mathf.Clamp01(elapsed / _transitionDuration);
-                var easedProgress = progress * progress * (3f - (2f * progress));
-                _panelRect.anchoredPosition = Vector2.LerpUnclamped(
-                    startPosition,
-                    targetPosition,
-                    easedProgress);
-                yield return null;
-            }
-
-            _panelRect.anchoredPosition = targetPosition;
-            SetInteractionEnabled(enableInteractionWhenComplete);
-            _transitionCoroutine = null;
-        }
-
-        private void SetInteractionEnabled(bool isEnabled)
-        {
-            _canvasGroup.interactable = isEnabled;
-            _canvasGroup.blocksRaycasts = isEnabled;
         }
 
         private sealed class EdgeBinding

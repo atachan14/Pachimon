@@ -28,15 +28,21 @@ namespace Pachimon.Battle
                 var target = navigator.GetNext();
                 if (target == null || !context.User.IsAlive) break;
                 if (hit > 0) context.BeginNextPresentationBlock();
+                var skillHit = context.BeginAttackHit(target);
 
                 var ratio = ChainTargetNavigator.GetDamageRatio(hit, chainCount);
                 var damage = context.ScaleFromAttribute(_skill.BaseLeafDamage, PachimonAttribute.Leaf, _skill.LeafDamageRatio) * ratio;
                 var result = BattleAttributeDamageService.Apply(context.State, context.User, target,
                     new DamageContext(DamageOriginKind.Skill, _skill.SkillId, damage,
                         context.User.GetBattleStats(), target.GetBattleStats(), PachimonAttribute.Leaf,
-                        isAttack: true, applyAttackerAttributeMultiplier: false));
+                        isAttack: true, applyAttackerAttributeMultiplier: false),
+                    skillHit);
                 var actualTarget = result.ActualTarget;
-                effects.Add(new SkillEffectResult(actualTarget, result.AppliedDamage, false));
+                effects.Add(new SkillEffectResult(
+                    actualTarget,
+                    result.AppliedDamage,
+                    false,
+                    hit: skillHit));
 
                 var rawSlow = context.ScaleFromAttribute(_skill.BaseSlow, PachimonAttribute.Leaf, _skill.SlowLeafRatio) * ratio;
                 var modifiedSlow = context.State.Passives.ModifyOutgoingStatusValue(
@@ -45,8 +51,11 @@ namespace Pachimon.Battle
                 var slow = SignedStatMath.FloorNonNegative(modifiedSlow);
                 if (slow > 0)
                 {
-                    context.State.Statuses.ApplyAttackStatus(actualTarget,
-                        BattleStatusFactory.CreateSlow(context.User, slow, _skill.SlowStatus));
+                    skillHit.ApplyStatus(
+                        BattleStatusFactory.CreateSlow(
+                            context.User,
+                            slow,
+                            _skill.SlowStatus));
                 }
             }
 

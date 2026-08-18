@@ -54,7 +54,9 @@ namespace Pachimon.UI
             PartyWindow?.Bind(trainerPreview, pachimonPreviews);
         }
 
-        public void ConfigureItemDrop(Func<ItemInstance, int, bool> tryUse)
+        public void ConfigureItemDrop(
+            Func<ItemInstance, int, bool> canUse,
+            Func<ItemInstance, int, bool> tryUse)
         {
             var dropTarget = GetComponent<ItemDropTargetView>();
             if (dropTarget == null)
@@ -62,11 +64,21 @@ namespace Pachimon.UI
                 dropTarget = gameObject.AddComponent<ItemDropTargetView>();
             }
 
-            dropTarget.Configure(item =>
-            {
-                var partyIndex = (PartyWindow?.SelectedTabIndex ?? 0) - 1;
-                return partyIndex >= 0 && tryUse != null && tryUse(item, partyIndex);
-            });
+            dropTarget.Configure(
+                item =>
+                {
+                    var partyIndex = (PartyWindow?.SelectedTabIndex ?? 0) - 1;
+                    return partyIndex >= 0
+                        && canUse != null
+                        && canUse(item, partyIndex);
+                },
+                item =>
+                {
+                    var partyIndex = (PartyWindow?.SelectedTabIndex ?? 0) - 1;
+                    return partyIndex >= 0
+                        && tryUse != null
+                        && tryUse(item, partyIndex);
+                });
         }
     }
 }

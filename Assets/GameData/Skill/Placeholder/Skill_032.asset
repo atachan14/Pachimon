@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u9F8D\u306E\u821E"
   _allocationType: 8
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 400
-  _baseManaCost: 120
-  _description: "Battle\u4E2D\u3001Dragon\u3068Speed\u3092\u6052\u4E45\u7684\u306B\u5897\u52A0\u3059\u308B\u3002"
+  _baseCooldownTicks: 300
+  _baseManaCost: 60
+  _description: "Battle\u4E2D\u3001\u81EA\u8EAB\u306E{icon:Dragon}\u7ADC\u3092{value:dragonBonus}\u3001Speed\u3092{value:speedBonus}\u6052\u4E45\u7684\u306B\u5897\u52A0\u3055\u305B\u308B\u3002\u518D\u4F7F\u7528\u6642\u306F\u52A0\u7B97\u3059\u308B\u3002"
   _dragonBonus: 50
-  _speedBonus: 20
+  _speedBonus: 50
   _statusDefinition: {fileID: 11400000, guid: a1ab5c1c78424e24f8c3a83ec66d1bca, type: 2}

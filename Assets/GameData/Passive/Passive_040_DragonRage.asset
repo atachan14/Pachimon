@@ -14,6 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DragonRagePassiveAsset
   _passiveId: 40
   _displayName: "\u9F8D\u306E\u6012\u308A"
-  _description: "Dragon\u306B\u5FDC\u3058\u3066\u3001\u81EA\u8EAB\u304C\u4E0E\u3048\u308BAttribute
-    Damage\u306E\u8CAB\u901A\u7387\u304C\u5897\u52A0\u3059\u308B\u3002"
+  _description: "自身が与える属性ダメージの貫通率に{icon:Dragon}竜の{value:penetrationRatio}%を加算する。現在の加算値は{value:currentPenetration}%。"
   _penetrationRatio: 20

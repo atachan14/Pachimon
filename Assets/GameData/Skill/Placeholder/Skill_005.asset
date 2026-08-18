@@ -16,10 +16,13 @@ MonoBehaviour:
   _displayName: "\u3069\u304F\u3070\u308A"
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _baseManaCost: 0
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 20
+  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Poison}{color:Poison}{value:damage}{/color}\u306E{term:PoisonDamage|\u6BD2\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _statusBaseValue: 100
   _statusScalingPercent: 100
   _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}
+  _paralysisStatus: {fileID: 0}
+  _chillStatus: {fileID: 0}

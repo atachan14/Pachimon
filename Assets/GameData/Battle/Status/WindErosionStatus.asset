@@ -8,6 +8,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.WindErosionStatusAsset
   _statusId: 119
   _displayName: 風化
-  _description: ResistBonusがValueだけ減少し、Valueは毎tick1減少する。
+  _description: "ResistBonusを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。"
   _icon: {fileID: 0}
   _decayPerTick: 1

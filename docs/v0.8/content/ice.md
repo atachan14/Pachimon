@@ -2,12 +2,12 @@
 
 ## Pachimon
 
-### [Pachimon名]2
+### カガミン
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `14`
+- モチーフ: 氷の鏡盾を胸と背に持つアザラシ
+- 狙い: 氷の盾と氷Damage軽減を、丸い守備型シルエットで表現する
 
 #### Fixed Skill
 
@@ -15,9 +15,9 @@
 - Implementation: `Implemented`
 - 効果:先頭の味方にシールドを付与
 - 対象は先頭の生存味方とする
-- 仮式: `BaseShield 300 × AmplificationMultiplier(Ice × 100%)`
+- 仮式: `BaseShield 100 × AmplificationMultiplier(Ice × 100%)`
 - Shieldは時間経過で消滅せず、Damageで消費されるまで残る
-- 硬直`100`、CD`300`、MN`100`
+- 硬直`100`、CD`300`、MN`40`
 - BaseShieldとIce Ratioは`IceShieldSkillAsset`から調整可能にする
 
 #### Passive
@@ -31,12 +31,12 @@
 - True Damageと他属性Damageには適用しない
 - 倍率は`IncomingAttributeDamagePassiveAsset`から調整可能にする
 
-### [Pachimon名]3
+### ツララン
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `22`
+- モチーフ: 長い氷晶の耳を持つウサギ
+- 狙い: アイスシャードとSlow参照を、鋭く素早い氷晶獣として表現する
 
 #### Fixed Skill
 
@@ -67,12 +67,12 @@
 - Slow Ratio`30%`は`TargetSlowDamagePassiveAsset`から調整可能にする
 
 
-### [Pachimon名]4
+### サムゾウ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `30`
+- モチーフ: 雪と凍土を背負うマンモス
+- 狙い: 寒冷化と氷の大地を、重量感のある地形型シルエットで表現する
 
 #### Fixed Skill
 
@@ -143,12 +143,12 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - 凍結中に凍結を追加した場合はValueを加算する
 - 炎Damageによる減少では、Shield適用後にHPへ実際に適用されたDamageを参照する
 
-### [Pachimon名]5
+### ツラカマ
 
 - Status: `Idea`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `38`
+- モチーフ: 両腕が氷の刃になったカマキリ
+- 狙い: 氷の刃と氷Damageによる成長を、細身の追撃役として表現する
 
 #### Fixed Skill
 
@@ -187,12 +187,12 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - 所持者が生存している間だけ発動する
 - 1回あたりの増加値は`IceGrowthOnDamagePassiveAsset`から調整可能にする
 
-### [Pachimon名]6
+### フロマジョ
 
 - Status: `Idea`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `46`
+- モチーフ: 氷のフードを被った浮遊する魔女型精霊
+- 狙い: フローズンブレイクと氷の魔女を、神秘的な術師シルエットで表現する
 
 #### Fixed Skill
 
@@ -241,22 +241,82 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - このDamageで別の敵が戦闘不能になった場合も、改めて氷の魔女を発動する
 - BaseIceDamageとIceDamageRatioは`IceWitchPassiveAsset`から調整可能にする
 
-### [Pachimon名]
+### ヒョウガメ
 
-- Status: `Idea`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Status: `Implemented`
+- Species ID: `54`
+- モチーフ: 氷河の甲羅を持つ大型のカメ
+- 狙い: 氷の礫と氷の鎧を、明確な重装甲シルエットで表現する
 
 #### Fixed Skill
 
-- 名前:
-- 効果:
+- 名前: 氷の礫
+- Implementation: `Implemented`
+- 対象: 先頭の生存敵
+- 1つのHitとしてIceダメージと冷気を適用する
+
+```text
+Iceダメージ = floor(70 × AmplificationMultiplier(Ice × IceRatio 100%))
+冷気Value = floor(35 × AmplificationMultiplier(Ice × IceRatio 100%))
+Shield Value = floor(70 × AmplificationMultiplier(Ice × IceRatio 100%))
+Shield効果時間 = 100tick
+```
+
+- Base値・Ice Ratio・Shield効果時間は`IcePebbleSkillAsset`から調整可能
 
 #### Passive
 
-- 名前:
+- 名前:氷の鎧
+- Implementation: `Implemented`
+- Passive ID: `54`
 - 効果:
+自身に付与されるシールドのvalueと効果時間が氷*20%増加。
+
+```text
+Shield補正倍率 = AmplificationMultiplier(Ice × IceScalingPercent 20%)
+```
+
+- 永続ShieldにはValue補正のみを適用する
+- 補正値は`IceArmorPassiveAsset`から調整可能
+
+### ユキフクロ
+
+- Status: `Implemented`
+- Species ID: `62`
+- モチーフ: 矢尻型の翼と氷晶の尾を持つ雪フクロウ
+- 狙い: フロストアローと冷気拡散を、遠距離攻撃型の翼形状で表現する
+
+#### Fixed Skill
+
+- 名前: フロストアロー
+- Implementation: `Implemented`
+- 効果:
+最も体力が低い敵に100 * 氷参照ダメージと30 * 氷参照の冷気を与える。
+このskillで敵を戦闘不能にした場合、消費したMNが還元され、このスキルのCDも回復する。
+
+- 「最も体力が低い」は現在HPの実数で判定する
+- 同値の場合は前方の敵を優先する
+- 1つのHitとしてIceダメージと冷気を適用する
+
+```text
+Iceダメージ = floor(100 × AmplificationMultiplier(Ice × IceRatio 100%))
+冷気Value = floor(30 × AmplificationMultiplier(Ice × IceRatio 100%))
+```
+
+- Base値とIce Ratioは`FrostArrowSkillAsset`から調整可能
+
+#### Passive
+
+- 名前: 冷気拡散（仮）
+- Implementation: `Implemented`
+- Passive ID: `62`
+- 効果:
+自身のSkillで敵を戦闘不能にした場合、対象に付与されていた冷気の150%を残りの敵に付与する（分散せずに付与）。
+
+- 撃破ダメージが入る直前の冷気Valueを参照する
+- 残りの生存敵それぞれへ同じValueを付与する
+- 端数は最後に切り捨てる
+- 付与率は`ChillSpreadPassiveAsset`から調整可能
 
 
 ## 既存共通Skill

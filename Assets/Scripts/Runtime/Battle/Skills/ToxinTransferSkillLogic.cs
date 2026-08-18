@@ -81,8 +81,7 @@ namespace Pachimon.Battle
 
             if (applied > 0)
             {
-                context.State.Statuses.ApplyAttackStatus(
-                    targets.Destination,
+                context.BeginStatusHit(targets.Destination).ApplyStatus(
                     BattleStatusFactory.CreateToxin(
                         context.User,
                         applied,

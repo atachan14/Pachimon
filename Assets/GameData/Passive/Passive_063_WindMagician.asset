@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a662446f1449b14b8396eeb8c32071a, type: 3}
+  m_Name: Passive_063_WindMagician
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.WindMagicianPassiveAsset
+  _passiveId: 63
+  _displayName: "\u98A8\u306E\u9B54\u8853\u5E2B"
+  _description: "自身のSkillで風以外の属性ダメージを与えるたび、Battle中の{icon:Wind}風が{value:windGain}増加する。"
+  _windGainPerHit: 10
+  _growthStatus: {fileID: 11400000, guid: 503605032ca895a41a093c6dc280ea70, type: 2}

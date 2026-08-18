@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.FieldValueAmplificationPassiveAsset
   _passiveId: 21
   _displayName: 科学工作
-  _description: 自身が生成物を生成するとき、ValueをPoisonに応じて増幅する。
+  _description: "自身が生成物を生成するとき、生成予定Valueを{icon:Poison}毒に応じて増幅する。毒の参照率は{value:poisonScalingPercent}%で、現在の倍率は{value:currentMultiplier}倍。"
   _poisonScalingPercent: 30

@@ -173,6 +173,12 @@ namespace Pachimon.UI
             {
                 Debug.LogWarning($"{nameof(GameSceneInstaller)} on '{name}' is missing HeaderView.SettingsButton.", this);
             }
+            else
+            {
+                _headerView.SettingsButton.onClick.RemoveAllListeners();
+                _headerView.SettingsButton.onClick.AddListener(
+                    _gameRootView.ToggleSettingsOverlay);
+            }
         }
 
         private void InitializeDemoBattle()
@@ -211,11 +217,15 @@ namespace Pachimon.UI
                 CurrentRunContext.RunState.ItemInventory,
                 _itemCatalog);
             _leftPaneView.ConfigureItemDrop(
+                CurrentRunContext.MapRunController.CanUseItemOnPlayer,
                 CurrentRunContext.MapRunController.TryUseItemOnPlayer);
             _rightPaneView.ConfigureItemDrop(
+                CurrentRunContext.MapRunController.CanUseItemOnEnemy,
                 CurrentRunContext.MapRunController.TryUseItemOnEnemy);
             _battleScreen.BattleMainView?.ConfigureItemDrops(
+                CurrentRunContext.MapRunController.CanUseItemOnPlayer,
                 CurrentRunContext.MapRunController.TryUseItemOnPlayer,
+                CurrentRunContext.MapRunController.CanUseItemOnBattleEnemy,
                 CurrentRunContext.MapRunController.TryUseItemOnBattleEnemy);
             _battleScreen.BattleMainView?.ConfigureUnitClicks(
                 CurrentRunContext.MapRunController.FocusPlayerBattleUnit,

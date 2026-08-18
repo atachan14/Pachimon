@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e17108632c3e442ca11d721b4b38a69b, type: 3}
+  m_Name: Item_11001_TM_BodySlam
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.SkillMachineItemAsset
+  _itemId: 11001
+  _displayName: "\u6280\u30DE\u30B7\u30FC\u30F3[\u306E\u3057\u304B\u304B\u308A]"
+  _icon: {fileID: 0}
+  _description: "\u5BFE\u8C61\u306E\u5473\u65B9\u30D1\u30C1\u30E2\u30F3\u304C\u300C\u306E\u3057\u304B\u304B\u308A\u300D\u3092\u7FD2\u5F97\u3059\u308B\u3002"
+  _category: 2
+  _basePrice: 5000
+  _skill: {fileID: 11400000, guid: 5caf0f39e27bffc42b33298e4fc3b294, type: 2}

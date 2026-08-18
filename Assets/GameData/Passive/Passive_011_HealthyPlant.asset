@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.HealthyPlantPassiveAsset
   _passiveId: 11
   _displayName: 健康植物
-  _description: 自身が受ける回復効果をLeafに応じて増加させる。
+  _description: "自身が受ける回復効果が、{icon:Leaf}草に応じて増加する。基準増加率は{value:baseHealingRatio}%。"
   _baseHealingRatio: 15
   _leafHealingRatio: 10

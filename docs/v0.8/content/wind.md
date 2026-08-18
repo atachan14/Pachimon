@@ -2,12 +2,12 @@
 
 ## Pachimon
 
-### [Pachimon名]2
+### トビチタ
 
 - Status: `Implemented`
 - Species ID: `15`
-- モチーフ:
-- 狙い:
+- モチーフ: 翼状の前脚を持つ飛行チーター
+- 狙い: フライングアタックと助走を、跳躍中の高速シルエットで表現する
 
 #### Fixed Skill
 
@@ -40,12 +40,12 @@
 - SOに記載された基本発生値を参照する
 - 発生0のSkillでは発動しない
 
-### [Pachimon名]3
+### フウカロン
 
 - Status: `Implemented`
 - Species ID: `23`
-- モチーフ:
-- 狙い:
+- モチーフ: 風に削られた砂岩と風の帯からなる獣
+- 狙い: 風化とResistBonus差を、侵食された装甲として表現する
 
 #### Fixed Skill
 
@@ -75,12 +75,12 @@ Valueはtickごとに減少し、0になると破棄される。
 - True DamageとStatus Damageには適用しない
 - 差分Ratio`30%`は`ResistAdvantageDamagePassiveAsset`から調整可能にする
 
-### [Pachimon名]4
+### ナギシカ
 
 - Status: `Implemented`
 - Species ID: `31`
-- モチーフ:
-- 狙い:
+- モチーフ: そよ風の角とたてがみを持つ鹿
+- 狙い: 治癒の風と味方Wind強化を、穏やかな支援役として表現する
 
 #### Fixed Skill
 
@@ -90,8 +90,8 @@ Valueはtickごとに減少し、0になると破棄される。
 - 硬直: `100`
 - CD: `300`
 - MN: `100`
-- 効果:[最も体力が低い味方]のHPを 100 * 風参照 回復し、風（50 * 風参照）とSpeed（50 * 風参照）を増加させる。
-- 最も体力が低い味方はCurrent HPが低い順、同値なら前方優先
+- 効果:[HP割合が最も低い味方]のHPを 100 * 風参照 回復し、風（50 * 風参照）とSpeed（50 * 風参照）を増加させる。
+- HP割合が低い順で選び、同率なら前方を優先する
 - Wind / Speed増加の効果時間は200tick
 
 #### Passive
@@ -106,12 +106,12 @@ Valueはtickごとに減少し、0になると破棄される。
 - 倍率`115%`は`TeamAttributeDamagePassiveAsset`から調整可能にする
 
 
-### [Pachimon名]5
+### ナギマル
 
 - Status: `Implemented`
 - Species ID: `39`
-- モチーフ:
-- 狙い:
+- モチーフ: 風の膜をまとった丸い浮遊獣
+- 狙い: セカンドウィンドのShieldと無風を、静かな防護膜として表現する
 
 #### Fixed Skill
 
@@ -119,7 +119,7 @@ Valueはtickごとに減少し、0になると破棄される。
 - Skill ID: `39`
 - Implementation: `Implemented`
 - 硬直：100
-- MN:100
+- MN:30
 - CD:400
 - 効果:
 風 * 200% , 効果時間=200tickのシールドを獲得し、自身に200tickの[無風]を付与する。
@@ -136,12 +136,12 @@ Valueはtickごとに減少し、0になると破棄される。
 - 効果:自身がシールドを獲得するとき、他の味方にもvalue=20% , 効果時間=100%のシールドを付与する。
 - 風の加護によって共有されたShieldでは、別の風の加護を再発動しない
 
-### [Pachimon名]6
+### アラシープ
 
 - Status: `Idea`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `47`
+- モチーフ: 渦巻く嵐雲の毛を持つ羊
+- 狙い: 暴風と天気の子を、複数の風が回る天候型シルエットで表現する
 
 #### Fixed Skill
 
@@ -173,5 +173,67 @@ Speedが風参照で増加（風*20%の）。
 - 雨と雪は同じRain Weatherの表示切替なので、どちらも1種類として数える
 - 暴風・雷など、同時に存在する別のWeatherをそれぞれ1種類として数える
 - 1種類あたりのDamageBonusは`WeatherChildPassiveAsset`から調整可能にする（仮値`20`）
+
+### カマツバメ
+
+- Status: `Implemented`
+- Species ID: `55`
+- モチーフ: 三日月状の長い翼を持つツバメ
+- 狙い: きりきり舞いと風乗りを、連続攻撃向きの高速飛行シルエットで表現する
+
+#### Fixed Skill: きりきり舞い
+
+- Implementation: `Implemented`
+- 追加連鎖数: `2`
+- 各HitでWindダメージと風化を付与する
+- ダメージと風化の両方へ同じ連鎖減衰率を適用する
+
+```text
+Windダメージ = floor(100 × AmplificationMultiplier(Wind × 100%) × ChainRatio)
+風化Value = floor(20 × AmplificationMultiplier(Wind × 100%) × ChainRatio)
+```
+
+- 使用後にアドチェインを`0.5`獲得する
+- Base値・Ratio・連鎖数・アドチェイン獲得量は`CuttingDanceSkillAsset`から調整可能
+
+#### Passive:風乗り
+
+- Implementation: `Implemented`
+- Passive ID: `55`
+- 自身がWindダメージを1以上与えるたびにSpeedを増加する
+- 仮値: 1 Hitにつき`20`
+- Battle中恒久で、複数回発動時は加算する
+- 増加量は`WindRiderPassiveAsset`から調整可能
+
+### カザクジャ
+
+- Status: `Implemented`
+- Species ID: `63`
+- モチーフ: 炎・水・風の三種の尾羽を持つ孔雀
+- 狙い: 花鳥風月と風の魔術師を、複数属性が共存する扇状の尾羽で表現する
+
+#### Fixed Skill: 花鳥風月
+
+- Implementation: `Implemented`
+- 先頭の生存敵を対象とする
+- Fire・Aqua・Windの3成分を同じ1 Hitとして順番に適用する
+- 回避・肩代わりの判定は3成分で共有する
+
+```text
+Fireダメージ = floor(50 × AmplificationMultiplier(Fire × 100%))
+Aquaダメージ = floor(50 × AmplificationMultiplier(Aqua × 100%))
+Windダメージ = floor(50 × AmplificationMultiplier(Wind × 100%))
+```
+
+- 各成分のBase値とRatioは`KachofugetsuSkillAsset`から調整可能
+
+#### Passive: 風の魔術師
+
+- Implementation: `Implemented`
+- Passive ID: `63`
+- 自身がWind以外の属性ダメージを1以上与えるたびにWindを`10`増加する
+- 複合Skillでは、条件を満たした属性成分ごとに発動する
+- Battle中恒久で、複数回発動時は加算する
+- 増加量は`WindMagicianPassiveAsset`から調整可能
 
 ## Ideas

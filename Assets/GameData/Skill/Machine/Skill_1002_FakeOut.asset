@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d6bf17198194b9d4583e734aca3b0514, type: 3}
+  m_Name: Skill_1002_FakeOut
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.FakeOutSkillAsset
+  _skillId: 1002
+  _displayName: "\u306D\u3053\u3060\u307E\u3057"
+  _allocationType: 0
+  _isMapAssignable: 0
+  _baseStartupTicks: 0
+  _baseRecoveryTicks: 0
+  _baseCooldownTicks: 0
+  _baseManaCost: 0
+  _description: "Battle\u4E2D\u306BSlot\u3054\u3068\u306B1\u5EA6\u3060\u3051\u4F7F\u7528\u3067\u304D\u308B\u3002\u5148\u982D\u306E\u6575\u3078True
+    Damage\u3068Stun\u3092\u4E0E\u3048\u308B\u3002"
+  _trueDamage: 100
+  _stunTicks: 100
+  _stunStatus: {fileID: 11400000, guid: c611111138a14e8a89d33f1bcc6e01c1, type: 2}

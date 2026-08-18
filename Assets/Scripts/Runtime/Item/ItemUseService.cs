@@ -49,7 +49,7 @@ namespace Pachimon.Items
                     context.TargetInstanceId);
             }
 
-            var failureReason = logic.CanUse(item, context);
+            var failureReason = logic.CanUse(item, itemInstance, context);
             if (failureReason != ItemUseFailureReason.None)
             {
                 return ItemUseResult.Failure(
@@ -58,7 +58,7 @@ namespace Pachimon.Items
                     context.TargetInstanceId);
             }
 
-            var effectAmount = logic.Apply(item, context);
+            var effectAmount = logic.Apply(item, itemInstance, context);
             if (effectAmount <= 0)
             {
                 return ItemUseResult.Failure(
@@ -77,6 +77,31 @@ namespace Pachimon.Items
                 itemInstanceId,
                 context.TargetInstanceId,
                 effectAmount);
+        }
+
+        public ItemUseFailureReason CanUse(
+            ItemInventory inventory,
+            string itemInstanceId,
+            ItemUseContext context)
+        {
+            if (inventory == null) throw new ArgumentNullException(nameof(inventory));
+            if (context == null) throw new ArgumentNullException(nameof(context));
+
+            var itemInstance = inventory.Get(itemInstanceId);
+            if (itemInstance == null)
+            {
+                return ItemUseFailureReason.ItemNotOwned;
+            }
+
+            var item = _itemCatalog.Get(itemInstance.ItemId);
+            if (item == null)
+            {
+                return ItemUseFailureReason.ItemDefinitionMissing;
+            }
+
+            return _logicRegistry.TryGet(item.ItemId, out var logic)
+                ? logic.CanUse(item, itemInstance, context)
+                : ItemUseFailureReason.ItemLogicMissing;
         }
     }
 }

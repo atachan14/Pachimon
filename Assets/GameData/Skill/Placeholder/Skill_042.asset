@@ -9,13 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: ca7c3057cfbb8704ea734388f36fd4f7, type: 3}
   m_Name: Skill_042
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.WaterCutterSkillAsset
   _skillId: 42
-  _displayName: みずでっぽう
+  _displayName: "\u30A6\u30A9\u30FC\u30BF\u30FC\u30AB\u30C3\u30BF\u30FC"
   _allocationType: 2
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 25
+  _description: "\u6575\u306E\u5148\u982D\u3078{icon:Aqua}{color:Aqua}{value:damage}{/color}\u306E\u6C34\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002\u3053\u306E\u653B\u6483\u306F{value:penetration}%\u8CAB\u901A\u3059\u308B\u3002"
+  _baseAquaDamage: 100
+  _aquaDamageRatio: 100
+  _basePenetrationPercent: 20
+  _windPenetrationRatio: 100

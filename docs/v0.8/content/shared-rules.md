@@ -67,6 +67,28 @@ EffectValue
 - 151種すべてが有効な場合は1種をRunから外し、残り150種を各2個体生成する
 - 150種以下の場合は有効SpeciesをすべてRunへ参加させる
 
+## 初期Stat生成
+
+初期Statは、属性Statと共通Statを別々のBudgetから生成する。
+
+### 属性Stat
+
+- 対象は`Fire / Aqua / Leaf / Electric / Poison / Ice / Wind / Dragon`
+- 属性Budget `800`を8属性へランダムに全量振り分ける
+- 各属性の平均は`100`となる
+
+### 共通Stat
+
+- 対象は`MaxHP / MaxMN / Speed / Haste / DamageBonus / ResistBonus`
+- 共通Budget `600`を6Statへランダムに全量振り分ける
+- `MaxHP / MaxMN`は振分前に最低値`500`を持つ
+- `MaxHP / MaxMN`は共通Budgetの振分値`1`につき`5`増加する
+- その他の共通Statは振分値`1`につき`1`増加する
+- 各共通Statの振分値の平均は`100`となる
+- したがって`MaxHP / MaxMN`の平均は約`1000`、その他4Statの平均は約`100`となる
+
+各グループのBudget合計は個体間で一致させる。個別Statは大きく揺らぎ、`MaxHP / MaxMN`以外は`0`を許容する。
+
 ## Skill振り分け
 
 - Mapへ追加振り分けするSkillは、Run参加Speciesの固定Skillから選ぶ

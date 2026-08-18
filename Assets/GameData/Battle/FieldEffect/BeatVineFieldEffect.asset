@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c596b7c182c03c9428e4347643119dfc, type: 3}
+  m_Name: BeatVineFieldEffect
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.BeatVineFieldEffectAsset
+  _effectId: 6
+  _displayName: "\u30D3\u30FC\u30C8\u30F4\u30A1\u30A4\u30F3"
+  _description: "100tick\u3054\u3068\u306B\u6575\u5148\u982D\u3078\u8349\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u690D\u7269\u3002"
+  _icon: {fileID: 0}
+  _categories: -1
+  _baseValue: 50
+  _leafValueRatio: 100
+  _attackIntervalTicks: 100

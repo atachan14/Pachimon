@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.WarmPlantPassiveAsset
   _passiveId: 27
   _displayName: 温暖植物
-  _description: 正の気温に応じてSpeedが増加する。
+  _description: "正の{term:Temperature|気温}の{value:temperatureSpeedRatio}%をSpeedへ加算する。"
   _temperatureSpeedRatio: 30

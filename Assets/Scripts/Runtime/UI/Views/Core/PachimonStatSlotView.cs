@@ -1,4 +1,5 @@
 using TMPro;
+using Pachimon.Reward;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -34,6 +35,7 @@ namespace Pachimon.UI
             _labelVisualApplied = true;
             if (!AttributeRichText.IsAttribute(_stat))
             {
+                ApplyNonAttributeColor();
                 return;
             }
 
@@ -55,6 +57,31 @@ namespace Pachimon.UI
             if (background != null)
             {
                 background.color = GameUiPalette.Transparent;
+            }
+        }
+
+        private void ApplyNonAttributeColor()
+        {
+            var iconRoot = transform.Find("Icon");
+            var background = iconRoot?.GetComponent<Image>();
+            var label = iconRoot?.Find("Label")?.GetComponent<TMP_Text>();
+            var color = _stat switch
+            {
+                PachimonDisplayStat.Speed or PachimonDisplayStat.Haste =>
+                    RewardElementPalette.TimingColor,
+                PachimonDisplayStat.DamageBonus
+                    or PachimonDisplayStat.ResistBonus =>
+                    RewardElementPalette.CombatBonusColor,
+                _ => GameUiPalette.StatCard,
+            };
+            if (background != null)
+            {
+                background.color = color;
+            }
+            if (label != null)
+            {
+                label.color = AttributeCardPalette.GetReadableTextColor(
+                    new[] { color });
             }
         }
     }

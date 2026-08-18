@@ -8,6 +8,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.FlyingStatusAsset
   _statusId: 118
   _displayName: 飛行
-  _description: 対象指定不可になり、Windの20%のSpeedを得る。
+  _description: "対象指定不可になり、風の{value:windSpeedRatio}%をSpeedへ加算する。"
   _icon: {fileID: 0}
   _windSpeedRatio: 20

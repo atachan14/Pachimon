@@ -61,11 +61,102 @@ namespace Pachimon.Battle
             BattleUnitState target,
             BattleStatusInstance status)
         {
+            ValidateTarget(target);
+            if (status == null) throw new ArgumentNullException(nameof(status));
+            if (status.Source != null && status.Source.Side != target.Side)
+            {
+                var hit = new SkillHit(
+                    _state,
+                    status.Source,
+                    target,
+                    DamageOriginKind.Status,
+                    (int)status.StatusId);
+                ApplyAttackStatus(hit, status);
+                return;
+            }
+
             ApplyStatusCore(
                 target,
                 status,
                 reduceIncomingValue: true,
                 logAttackApplication: true);
+        }
+
+        public void HandleAttackReceived(AttackReceivedEvent attackEvent)
+        {
+            if (attackEvent == null)
+                throw new ArgumentNullException(nameof(attackEvent));
+            if (attackEvent.OriginKind == DamageOriginKind.Self)
+                return;
+
+            foreach (var status in attackEvent.Target
+                         .GetStatuses(BattleStatusId.ElectricShield)
+                         .ToArray())
+            {
+                if (status.RuntimeData is not ElectricShieldRuntimeData runtime
+                    || status.Definition is not ElectricShieldStatusAsset definition
+                    || !attackEvent.ActiveShieldApplicationOrders.Contains(
+                        runtime.ShieldApplicationOrder))
+                {
+                    continue;
+                }
+
+                ApplyStatus(
+                    attackEvent.Source,
+                    BattleStatusFactory.CreateSlow(
+                        attackEvent.Target,
+                        status.Value,
+                        definition.ParalysisStatus));
+                _state.AddLog(
+                    $"{attackEvent.Source.DisplayName}に麻痺を{status.Value}付与した！");
+
+                if (!attackEvent.Target.Shields.Any(shield =>
+                        shield.ApplicationOrder == runtime.ShieldApplicationOrder))
+                {
+                    attackEvent.Target.TryRemoveStatusInstance(status);
+                }
+            }
+        }
+
+        internal bool ApplyAttackStatus(
+            SkillHit hit,
+            BattleStatusInstance status)
+        {
+            if (hit == null) throw new ArgumentNullException(nameof(hit));
+            if (status == null) throw new ArgumentNullException(nameof(status));
+            if (!ReferenceEquals(hit.State, _state))
+            {
+                throw new ArgumentException(
+                    "SkillHit belongs to another Battle.",
+                    nameof(hit));
+            }
+            if (hit.WasEvaded)
+                return false;
+            if (!hit.DamageWasResolved)
+            {
+                var barrier = _state.Fields.InterceptStatusAttack(
+                    hit.Source,
+                    hit.Target,
+                    hit.OriginKind);
+                if (barrier != null)
+                {
+                    hit.BlockStatus(barrier);
+                }
+            }
+            if (!hit.CanApplyStatus)
+            {
+                return hit.InterceptedFieldEffect != null
+                    && _state.Fields.TryApplyStatus(
+                        hit.InterceptedFieldEffect,
+                        status);
+            }
+
+            ApplyStatusCore(
+                hit.Target,
+                status,
+                reduceIncomingValue: true,
+                logAttackApplication: true);
+            return true;
         }
 
         internal void ApplyTransformedStatus(
@@ -281,20 +372,31 @@ namespace Pachimon.Battle
         {
             if (damageEvent == null)
                 throw new ArgumentNullException(nameof(damageEvent));
-            if (damageEvent.Calculation.Context.Attribute
-                != PachimonAttribute.Dragon)
+
+            if (damageEvent.WeaknessValue > 0)
             {
-                return;
+                damageEvent.MultiplyDamage(
+                    1m + damageEvent.WeaknessValue / 100m);
             }
 
-            if (!damageEvent.Target.TryConsumeStatus(
+            if (damageEvent.Calculation.Context.Attribute
+                    == PachimonAttribute.Dragon
+                && damageEvent.Target.TryConsumeStatus(
                     BattleStatusId.DragonCranker,
                     out var cranker))
             {
-                return;
+                damageEvent.MultiplyDamage(1m + cranker.Value / 100m);
             }
+        }
 
-            damageEvent.MultiplyDamage(1m + cranker.Value / 100m);
+        public int ClampIncomingDamage(BattleUnitState target, int damage)
+        {
+            ValidateTarget(target);
+            if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            return damage > 0
+                && target.GetStatus(BattleStatusId.Intangible) != null
+                    ? 1
+                    : damage;
         }
 
         public void HandleDamageApplied(DamageAppliedEvent damageEvent)

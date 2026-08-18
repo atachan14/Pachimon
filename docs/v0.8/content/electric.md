@@ -10,11 +10,11 @@ Electric属性のPachimon、固定Skill、Passiveをまとめる。
 
 ## Pachimon
 
-### [Pachimon名] 2
+### デンキウオ
 
 - Status: `Verified`
 - Species ID: `12`
-- モチーフ:
+- モチーフ: 背中の水槽で電気を育てるエイ型の水棲獣
 - 狙い: AquaとElectricを組み合わせ、漏電から全体ダメージへつなげる
 
 #### Fixed Skill
@@ -77,11 +77,11 @@ Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば�
 - 必要な新規仕組み:
   - 下限を持つ派生加算補正
 
-### [Pachimon名] 3
+### ボルカブル
 
 - Status: `Verified`
 - Species ID: `20`
-- モチーフ:
+- モチーフ: 火炉と溶岩の熱を電気へ変える黒い炉獣
 - 狙い: Fireを利用してElectricダメージと貫通率を高める
 
 #### Fixed Skill
@@ -130,11 +130,11 @@ Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば�
 - 必要な新規仕組み:
   - 下限を持つ派生加算補正
 
-### [Pachimon名] 4
+### ライハヤテ
 
 - Status: `Verified`
 - Species ID: `28`
-- モチーフ:
+- モチーフ: 雲を蹴り、風を電気へ変えて疾走する白い風獣
 - 狙い: Windを利用して短い間隔で複合属性攻撃を行う
 
 #### Fixed Skill
@@ -182,11 +182,11 @@ EffectiveCooldown
 - 必要な新規仕組み:
   - 下限を持つ派生加算補正
 
-### [Pachimon名] 5
+### タメデン
 
 - Status: `Verified`
-- Species ID:
-- モチーフ:
+- Species ID: `36`
+- モチーフ: 絶縁装甲と蓄電端子を持つ丸い防御獣
 - 狙い: 一時的に防御へ回り、その後ElectricとSpeedを強化する
 
 #### Fixed Skill
@@ -262,11 +262,11 @@ EffectiveCooldown
 
 - 再付与と時間進行は[Slow共通仕様](./statuses/slow.md#共通仕様)に従う
 
-### [Pachimon名] 6
+### レールガン
 
 - Status: `Verified`
 - Species ID: `44`
-- モチーフ:
+- モチーフ: 電磁砲の角と二本の導電レールを背負う重装獣
 - 狙い: 長い発生時間と高コストの代わりに、大ダメージと超過ダメージを与える
 
 #### Fixed Skill
@@ -321,5 +321,54 @@ EffectiveCooldown
   - 漏電などによる追加ダメージでもスタックを獲得する
   - ダメージが0でも蓄電を獲得・消費する
   - 多段Electricダメージでは、各ヒットで蓄電を適用する
+
+### クモライ
+
+- Status: `Implemented`
+- Species ID: `52`
+- モチーフ: 雷雲をまとい、稲妻の雫を吊るす浮遊獣
+
+#### Fixed Skill: 雷雲
+
+- `Value = 300 + Electric × Electric Ratio`の`[天気：雷]`を生成する。
+- 再使用時は既存の雷へValueを加算する。
+- 仮値: 硬直100 / CD300 / MN100。
+
+[天気：雷]
+
+- tickごとにValueが1減少し、0で終了する。
+- Electric Ratioを`Value × 0.1%`増加させる。
+  - Value500なら1.5倍、Value400なら1.4倍。
+- 全PachimonのSpeedを、それぞれの`Electric × 10%`増加させる。
+- 150tickごとに、敵味方の生存Pachimon全員へ`floor(現在Value / 3)`のElectricダメージを与える。
+- 雷ダメージはField由来・非攻撃扱いとする。
+- 攻撃側のElectric・DamageBonusは重ねて適用せず、対象のElectric・ResistBonusでは軽減する。
+
+#### Passive: 雷男
+
+- 所有者が生存し、雷が存在している間、Speedが40増加する。
+
+### シビレガメ
+
+- Status: `Implemented`
+- Species ID: `60`
+- モチーフ: 六角形の電気シールドを甲羅にした防壁獣
+
+#### Fixed Skill: エレキシールド
+
+- 自身へ次の効果を付与する。
+  - 効果時間200tickの`150 × AmplificationMultiplier(Electric × 100%)`のShield。
+  - `50 × AmplificationMultiplier(Electric × 100%)`の麻痺。
+- このShieldが持続中に攻撃を受けるたび、攻撃者へ`25 × AmplificationMultiplier(Electric × 100%)`の麻痺を付与する。
+- 仮値: 硬直100 / CD300 / MN50。
+- 再使用時はShieldと反撃効果をそれぞれ独立して追加する。
+- 複数のエレキシールドが有効なら、それぞれが1回ずつ反撃する。
+- Shieldを破壊した攻撃でも、そのエレキシールドは反撃する。
+- 0ダメージとTrueDamageでも、攻撃扱いなら反撃する。
+- 自傷・Status・Fieldダメージでは反撃しない。
+
+#### Passive: しびれ発電
+
+- 所有者が生存している間、Electricを`現在の麻痺Value × 50%`派生加算する。
 
 ## Ideas

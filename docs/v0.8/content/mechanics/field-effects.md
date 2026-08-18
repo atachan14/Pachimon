@@ -27,11 +27,21 @@
 - 引き継いだ余剰Damageへ元の対象の属性値とResistBonusによる軽減を適用する
 - 元の対象が持つShieldなど、Damage適用段階の防御は余剰Damageにも適用する
 
+### 軽量Field Entity
+
+- Damageや状態を受け取る必要がある生成物でも、Turn・Skill・MNなどを必要としなければ完全な`BattleUnitState`にはしない
+- Runtime InstanceへHP、防御Snapshot、許可された状態だけを保持する
+- 生成物ごとに受け取れる状態を限定し、Slow・Stunなど行動用の状態は行動主体でない生成物へ適用しない
+- 生成物へのDamageは`FieldEffectDamageAppliedEvent`として通知し、Passiveや別のField Effectが反応できる
+- Field Effect由来Damageから同じ反応を再帰させないなど、Originによるループ防止を行う
+
 ## 表示領域
 
 - MainPane中央をField表示領域とする
 - `EnemyArea`と`AllyArea`の間を上下3段へ分割する
 - 上段を敵陣Field（右寄せ）、中段を全体Field（中央寄せ）、下段を自陣Field（左寄せ）とする
+- 3つのLaneはそれぞれ独立して横スクロールし、1つのLaneのカード数が他のLaneの配置へ影響しない
+- カードが表示幅へ収まる間は、敵陣・全体・自陣それぞれの寄せ方向を維持する
 - 環境パラメーターとWeatherは全体Fieldの中央寄せで表示する
 - 異なるWeatherは同時に存在・表示できる
 - 生成物、環境パラメーター、Weatherはカードで表示する

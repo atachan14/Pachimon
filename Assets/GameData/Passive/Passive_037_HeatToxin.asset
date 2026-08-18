@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DerivedAdditivePassiveAsset
   _passiveId: 37
   _displayName: 熱毒
-  _description: Fireの100%をPoisonへ加算する。加算値の下限は0。
+  _description: "{icon:Fire}炎の{value:percent}%を{icon:Poison}毒へ加算する。現在の加算値は{value:contribution}。"
   _targetStat: 6
   _referenceStat: 2
   _percent: 100

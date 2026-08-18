@@ -9,8 +9,8 @@ namespace Pachimon.Reward
     public sealed class ModValueSettings : ScriptableObject
     {
         [SerializeField, Min(0)] private int _attributeAmount = 60;
-        [SerializeField, Min(0)] private int _maxHpAmount = 500;
-        [SerializeField, Min(0)] private int _maxMnAmount = 500;
+        [SerializeField, Min(0)] private int _maxHpAmount = 100;
+        [SerializeField, Min(0)] private int _maxMnAmount = 100;
         [SerializeField, Min(0)] private int _speedAmount = 20;
         [SerializeField, Min(0)] private int _damageBonusAmount = 20;
         [SerializeField, Min(0)] private int _resistBonusAmount = 20;

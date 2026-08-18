@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Items;
 using Pachimon.Map;
+using Pachimon.Data;
+using Pachimon.Reward;
 using Pachimon.Run;
 using TMPro;
 using UnityEngine;
@@ -12,10 +14,62 @@ namespace Pachimon.UI
 {
     public sealed class CityShopWindowView : MonoBehaviour
     {
+        private static readonly PachimonStatType[] EngravingDisplayOrder =
+        {
+            PachimonStatType.MaxHp,
+            PachimonStatType.MaxMn,
+            PachimonStatType.Fire,
+            PachimonStatType.Poison,
+            PachimonStatType.Aqua,
+            PachimonStatType.Ice,
+            PachimonStatType.Leaf,
+            PachimonStatType.Wind,
+            PachimonStatType.Electric,
+            PachimonStatType.Dragon,
+            PachimonStatType.Speed,
+            PachimonStatType.Haste,
+            PachimonStatType.DamageBonus,
+            PachimonStatType.ResistBonus,
+        };
+
         private readonly Dictionary<ItemCategory, bool> _expandedCategories = new();
+        private readonly Dictionary<string, bool> _expandedSubcategories = new();
+        private readonly Dictionary<string, StockRowBinding> _stockRows = new();
         private TMP_Text _titleText;
         private RectTransform _contentRoot;
+        private CityNodeContent _boundCity;
+        private ItemCatalog _boundCatalog;
+        private bool _boundPurchaseEnabled;
         private bool _initialized;
+
+        private sealed class StockRowBinding
+        {
+            public StockRowBinding(
+                GameObject root,
+                Image background,
+                Button detailButton,
+                TMP_Text nameText,
+                TMP_Text priceText,
+                Button purchaseButton,
+                TMP_Text purchaseLabel)
+            {
+                Root = root;
+                Background = background;
+                DetailButton = detailButton;
+                NameText = nameText;
+                PriceText = priceText;
+                PurchaseButton = purchaseButton;
+                PurchaseLabel = purchaseLabel;
+            }
+
+            public GameObject Root { get; }
+            public Image Background { get; }
+            public Button DetailButton { get; }
+            public TMP_Text NameText { get; }
+            public TMP_Text PriceText { get; }
+            public Button PurchaseButton { get; }
+            public TMP_Text PurchaseLabel { get; }
+        }
 
         public static CityShopWindowView CreateRuntime(Transform parent)
         {
@@ -47,7 +101,7 @@ namespace Pachimon.UI
             ItemCatalog catalog,
             RunState runState,
             bool purchaseEnabled,
-            Action<int> onDetails,
+            Action<CityStockEntry> onDetails,
             Action<string> onPurchase)
         {
             EnsureInitialized();
@@ -58,7 +112,7 @@ namespace Pachimon.UI
                     : "CITY LINEUP";
             }
 
-            RebuildStock(
+            BindStock(
                 city,
                 catalog,
                 runState,
@@ -145,18 +199,89 @@ namespace Pachimon.UI
             _initialized = true;
         }
 
-        private void RebuildStock(
+        private void BindStock(
             CityNodeContent city,
             ItemCatalog catalog,
             RunState runState,
             bool purchaseEnabled,
-            Action<int> onDetails,
+            Action<CityStockEntry> onDetails,
             Action<string> onPurchase)
+        {
+            var values = GetStockValues(city, catalog);
+            if (!CanReuseStockStructure(
+                    city,
+                    catalog,
+                    purchaseEnabled,
+                    values))
+            {
+                RebuildStockStructure(
+                    city,
+                    catalog,
+                    purchaseEnabled,
+                    values);
+            }
+
+            foreach (var value in values)
+            {
+                if (_stockRows.TryGetValue(value.Entry.StockId, out var binding))
+                {
+                    BindStockRow(
+                        binding,
+                        value.Entry,
+                        value.Item,
+                        runState,
+                        purchaseEnabled,
+                        onDetails,
+                        onPurchase);
+                }
+            }
+        }
+
+        private static StockViewValue[] GetStockValues(
+            CityNodeContent city,
+            ItemCatalog catalog)
+        {
+            if (city?.StockEntries == null || catalog == null)
+            {
+                return Array.Empty<StockViewValue>();
+            }
+
+            return city.StockEntries
+                .Select(entry => new StockViewValue(entry, catalog.Get(entry.ItemId)))
+                .Where(value => value.Item != null)
+                .ToArray();
+        }
+
+        private bool CanReuseStockStructure(
+            CityNodeContent city,
+            ItemCatalog catalog,
+            bool purchaseEnabled,
+            IReadOnlyList<StockViewValue> values)
+        {
+            return ReferenceEquals(city, _boundCity)
+                && ReferenceEquals(catalog, _boundCatalog)
+                && purchaseEnabled == _boundPurchaseEnabled
+                && values.Count == _stockRows.Count
+                && values.All(value =>
+                    _stockRows.ContainsKey(value.Entry.StockId));
+        }
+
+        private void RebuildStockStructure(
+            CityNodeContent city,
+            ItemCatalog catalog,
+            bool purchaseEnabled,
+            IReadOnlyList<StockViewValue> values)
         {
             foreach (Transform child in _contentRoot)
             {
+                child.gameObject.SetActive(false);
                 Destroy(child.gameObject);
             }
+
+            _stockRows.Clear();
+            _boundCity = city;
+            _boundCatalog = catalog;
+            _boundPurchaseEnabled = purchaseEnabled;
 
             if (city?.StockEntries == null || catalog == null)
             {
@@ -170,35 +295,33 @@ namespace Pachimon.UI
                 return;
             }
 
-            var groups = city.StockEntries
-                .Select(entry => new StockViewValue(entry, catalog.Get(entry.ItemId)))
-                .Where(value => value.Item != null)
-                .GroupBy(value => value.Item.Category)
-                .OrderBy(group => (int)group.Key);
-
-            foreach (var group in groups)
+            var categories = values
+                .Select(value => value.Item.Category)
+                .Concat(catalog.Items.OfType<EngravingItemAsset>().Any()
+                    ? new[] { ItemCategory.Engraving }
+                    : Array.Empty<ItemCategory>())
+                .Distinct()
+                .OrderBy(category => (int)category);
+            foreach (var category in categories)
             {
-                var values = group
+                var groupedValues = values
+                    .Where(value => value.Item.Category == category)
                     .OrderBy(value => value.Item.DisplayName)
                     .ThenBy(value => value.Entry.Price)
                     .ToArray();
                 CreateCategorySection(
-                    group.Key,
-                    values,
-                    runState,
-                    purchaseEnabled,
-                    onDetails,
-                    onPurchase);
+                    category,
+                    groupedValues,
+                    catalog,
+                    purchaseEnabled);
             }
         }
 
         private void CreateCategorySection(
             ItemCategory category,
             IReadOnlyList<StockViewValue> values,
-            RunState runState,
-            bool purchaseEnabled,
-            Action<int> onDetails,
-            Action<string> onPurchase)
+            ItemCatalog catalog,
+            bool purchaseEnabled)
         {
             var sectionObject = new GameObject(
                 $"{category}Section",
@@ -239,22 +362,66 @@ namespace Pachimon.UI
             rowsObject.GetComponent<ContentSizeFitter>().verticalFit =
                 ContentSizeFitter.FitMode.PreferredSize;
 
-            foreach (var value in values)
+            if (category == ItemCategory.Engraving)
             {
-                CreateStockRow(
-                    rowsObject.transform,
-                    value.Entry,
-                    value.Item,
-                    runState,
-                    purchaseEnabled,
-                    onDetails,
-                    onPurchase);
+                var engravingByStat = catalog.Items
+                    .OfType<EngravingItemAsset>()
+                    .GroupBy(item => item.TargetStat)
+                    .ToDictionary(group => group.Key, group => group.First());
+                foreach (var statType in EngravingDisplayOrder)
+                {
+                    if (!engravingByStat.TryGetValue(statType, out var engraving))
+                    {
+                        continue;
+                    }
+
+                    var itemValues = values
+                        .Where(value => value.Item.ItemId == engraving.ItemId)
+                        .OrderBy(value => value.Entry.Price)
+                        .ToArray();
+                    CreateItemSubcategory(
+                        category,
+                        rowsObject.transform,
+                        engraving,
+                        itemValues,
+                        purchaseEnabled);
+                }
+            }
+            else if (category == ItemCategory.Equipment)
+            {
+                foreach (var value in values.OrderBy(value => value.Entry.Price))
+                {
+                    AddStockRow(rowsObject.transform, value, purchaseEnabled);
+                }
+            }
+            else
+            {
+                foreach (var itemGroup in values
+                             .GroupBy(value => value.Item.ItemId)
+                             .OrderBy(group => group.First().Item.DisplayName))
+                {
+                    var itemValues = itemGroup
+                        .OrderBy(value => value.Entry.Price)
+                        .ToArray();
+                    if (itemValues.Length > 1)
+                    {
+                        CreateItemSubcategory(
+                            category,
+                            rowsObject.transform,
+                            itemValues[0].Item,
+                            itemValues,
+                            purchaseEnabled);
+                        continue;
+                    }
+
+                    AddStockRow(rowsObject.transform, itemValues[0], purchaseEnabled);
+                }
             }
 
             if (!_expandedCategories.TryGetValue(category, out var expanded))
             {
-                expanded = true;
-                _expandedCategories[category] = true;
+                expanded = false;
+                _expandedCategories[category] = false;
             }
 
             void ApplyExpanded()
@@ -275,14 +442,98 @@ namespace Pachimon.UI
             ApplyExpanded();
         }
 
-        private void CreateStockRow(
+        private void CreateItemSubcategory(
+            ItemCategory category,
+            Transform parent,
+            ItemAsset item,
+            IReadOnlyList<StockViewValue> values,
+            bool purchaseEnabled)
+        {
+            var stateKey = $"{(int)category}:{item.ItemId}";
+            var sectionObject = new GameObject(
+                $"Item_{item.ItemId}_Section",
+                typeof(RectTransform),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            sectionObject.layer = gameObject.layer;
+            sectionObject.transform.SetParent(parent, false);
+            var sectionLayout = sectionObject.GetComponent<VerticalLayoutGroup>();
+            sectionLayout.spacing = 3f;
+            sectionLayout.padding = new RectOffset(10, 0, 0, 0);
+            sectionLayout.childControlWidth = true;
+            sectionLayout.childControlHeight = true;
+            sectionLayout.childForceExpandWidth = true;
+            sectionLayout.childForceExpandHeight = false;
+            sectionObject.GetComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+
+            var header = CreateButton(
+                "SubcategoryHeader",
+                sectionObject.transform,
+                GameUiPalette.StatCard,
+                out var headerText);
+            SetLayoutHeight(header.gameObject, 42f);
+
+            var rowsObject = new GameObject(
+                "Rows",
+                typeof(RectTransform),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            rowsObject.layer = gameObject.layer;
+            rowsObject.transform.SetParent(sectionObject.transform, false);
+            var rowsLayout = rowsObject.GetComponent<VerticalLayoutGroup>();
+            rowsLayout.spacing = 3f;
+            rowsLayout.childControlWidth = true;
+            rowsLayout.childControlHeight = true;
+            rowsLayout.childForceExpandWidth = true;
+            rowsLayout.childForceExpandHeight = false;
+            rowsObject.GetComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+
+            foreach (var value in values)
+            {
+                AddStockRow(rowsObject.transform, value, purchaseEnabled);
+            }
+
+            if (!_expandedSubcategories.TryGetValue(stateKey, out var expanded))
+            {
+                expanded = false;
+                _expandedSubcategories[stateKey] = false;
+            }
+
+            void ApplyExpanded()
+            {
+                rowsObject.SetActive(expanded);
+                headerText.text = $"{(expanded ? "▼" : "▶")}  "
+                    + $"{item.DisplayName}  ({values.Count})";
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
+            }
+
+            header.onClick.AddListener(() =>
+            {
+                expanded = !expanded;
+                _expandedSubcategories[stateKey] = expanded;
+                ApplyExpanded();
+            });
+            ApplyExpanded();
+        }
+
+        private void AddStockRow(
+            Transform parent,
+            StockViewValue value,
+            bool purchaseEnabled)
+        {
+            var binding = CreateStockRow(
+                parent,
+                value.Entry,
+                purchaseEnabled);
+            _stockRows.Add(value.Entry.StockId, binding);
+        }
+
+        private StockRowBinding CreateStockRow(
             Transform parent,
             CityStockEntry entry,
-            ItemAsset item,
-            RunState runState,
-            bool purchaseEnabled,
-            Action<int> onDetails,
-            Action<string> onPurchase)
+            bool purchaseEnabled)
         {
             var rowObject = new GameObject(
                 $"Stock_{entry.StockId}",
@@ -292,9 +543,7 @@ namespace Pachimon.UI
                 typeof(HorizontalLayoutGroup));
             rowObject.layer = gameObject.layer;
             rowObject.transform.SetParent(parent, false);
-            rowObject.GetComponent<Image>().color = entry.IsPurchased
-                ? GameUiPalette.MissingGraphic
-                : GameUiPalette.StatCard;
+            var background = rowObject.GetComponent<Image>();
             SetLayoutHeight(rowObject, 50f);
 
             var layout = rowObject.GetComponent<HorizontalLayoutGroup>();
@@ -325,7 +574,7 @@ namespace Pachimon.UI
             var nameText = CreateText(
                 "ItemName",
                 detailButton.transform,
-                item.DisplayName,
+                string.Empty,
                 18f,
                 FontStyles.Normal,
                 TextAlignmentOptions.MidlineLeft);
@@ -335,49 +584,229 @@ namespace Pachimon.UI
             var priceText = CreateText(
                 "Price",
                 detailButton.transform,
-                $"{entry.Price} G",
+                string.Empty,
                 18f,
                 FontStyles.Bold,
                 TextAlignmentOptions.MidlineRight);
             var priceLayout = priceText.gameObject.AddComponent<LayoutElement>();
             priceLayout.preferredWidth = 92f;
-            if (onDetails != null)
-            {
-                detailButton.onClick.AddListener(() => onDetails(item.ItemId));
-            }
-
-            var status = GetStatus(entry, runState, purchaseEnabled);
-            var canPurchase = purchaseEnabled
-                && !entry.IsPurchased
-                && runState != null
-                && !runState.ItemInventory.IsFull
-                && runState.Gold >= entry.Price;
+            Button purchaseButton = null;
+            TMP_Text purchaseLabel = null;
             if (purchaseEnabled)
             {
-                var purchaseButton = CreateButton(
+                purchaseButton = CreateButton(
                     "PurchaseButton",
                     rowObject.transform,
-                    canPurchase
-                        ? GameUiPalette.ButtonAccent
-                        : GameUiPalette.MissingGraphic,
-                    out var purchaseLabel);
-                purchaseLabel.text = status;
+                    GameUiPalette.MissingGraphic,
+                    out purchaseLabel);
                 purchaseLabel.fontSize = 15f;
-                purchaseLabel.color = canPurchase
-                    ? GameUiPalette.OnAccentText
-                    : GameUiPalette.SecondaryText;
                 var purchaseLayout = purchaseButton.gameObject.AddComponent<LayoutElement>();
                 purchaseLayout.preferredWidth = 116f;
                 purchaseLayout.flexibleWidth = 0f;
-                if (canPurchase && onPurchase != null)
+            }
+
+            return new StockRowBinding(
+                rowObject,
+                background,
+                detailButton,
+                nameText,
+                priceText,
+                purchaseButton,
+                purchaseLabel);
+        }
+
+        private static void BindStockRow(
+            StockRowBinding binding,
+            CityStockEntry entry,
+            ItemAsset item,
+            RunState runState,
+            bool purchaseEnabled,
+            Action<CityStockEntry> onDetails,
+            Action<string> onPurchase)
+        {
+            binding.Root.name = $"Stock_{entry.StockId}";
+            binding.Background.color = entry.IsPurchased
+                ? GameUiPalette.MissingGraphic
+                : GameUiPalette.StatCard;
+            binding.NameText.richText = true;
+            binding.NameText.text = FormatStockDisplayName(
+                item,
+                entry.GeneratedData);
+            binding.PriceText.text = $"{entry.Price} G";
+            binding.DetailButton.onClick.RemoveAllListeners();
+            if (onDetails != null)
+            {
+                binding.DetailButton.onClick.AddListener(
+                    () => onDetails(entry));
+            }
+
+            if (!purchaseEnabled || binding.PurchaseButton == null)
+            {
+                return;
+            }
+
+            var canPurchase = !entry.IsPurchased
+                && runState != null
+                && item is not EquipmentItemAsset
+                && !runState.ItemInventory.IsFull
+                && runState.Gold >= entry.Price;
+            binding.PurchaseButton.interactable = canPurchase;
+            binding.PurchaseButton.targetGraphic.color = canPurchase
+                ? GameUiPalette.ButtonAccent
+                : GameUiPalette.MissingGraphic;
+            binding.PurchaseLabel.text = GetStatus(
+                entry,
+                item,
+                runState,
+                purchaseEnabled);
+            binding.PurchaseLabel.color = canPurchase
+                ? GameUiPalette.OnAccentText
+                : GameUiPalette.SecondaryText;
+            binding.PurchaseButton.onClick.RemoveAllListeners();
+            if (canPurchase && onPurchase != null)
+            {
+                binding.PurchaseButton.onClick.AddListener(
+                    () => onPurchase(entry.StockId));
+            }
+        }
+
+        internal static string FormatStockDisplayName(
+            ItemAsset item,
+            GeneratedItemData generatedData)
+        {
+            if (item is EquipmentItemAsset
+                && generatedData?.EquipmentSlot.HasValue == true
+                && generatedData.StatChanges.Count >= 2)
+            {
+                return $"{item.DisplayName}（"
+                    + $"{string.Join("/", generatedData.StatChanges.Select(FormatStatChange))}）";
+            }
+
+            if (item is not EngravingItemAsset
+                || generatedData?.StatChanges.Count != 2)
+            {
+                return ItemDisplayNameFormatter.Format(item, generatedData);
+            }
+
+            var main = generatedData.StatChanges.FirstOrDefault(
+                change => change.Amount > 0);
+            var downside = generatedData.StatChanges.FirstOrDefault(
+                change => change.Amount < 0);
+            if (main == null || downside == null)
+            {
+                return ItemDisplayNameFormatter.Format(item, generatedData);
+            }
+
+            return $"{item.DisplayName}（{FormatStatChange(main)}"
+                + $"/{FormatStatChange(downside)}）";
+        }
+
+        internal static string FormatStatChange(GeneratedStatChange change)
+        {
+            var amount = change.Amount > 0
+                ? $"+{change.Amount}"
+                : change.Amount.ToString();
+            if (PachimonStatTypeUtility.TryGetAttribute(
+                    change.StatType,
+                    out var attribute))
+            {
+                var allocationType = (AllocationType)((int)attribute + 1);
+                return $"{AttributeRichText.GetIcon(allocationType)}{amount}";
+            }
+
+            var background = change.StatType switch
+            {
+                PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
+                    RewardElementPalette.ResourceColor,
+                PachimonStatType.Speed or PachimonStatType.Haste =>
+                    RewardElementPalette.TimingColor,
+                PachimonStatType.DamageBonus or PachimonStatType.ResistBonus =>
+                    RewardElementPalette.CombatBonusColor,
+                _ => GameUiPalette.StatCard,
+            };
+            var foreground = AttributeCardPalette.GetReadableTextColor(background);
+            var backgroundHex = ColorUtility.ToHtmlStringRGBA(background);
+            var foregroundHex = ColorUtility.ToHtmlStringRGBA(foreground);
+            return $"<mark=#{backgroundHex}>"
+                + $"<color=#{foregroundHex}>{GetStatLabel(change.StatType)}</color>"
+                + $"</mark>{amount}";
+        }
+
+        internal static Color GetStockAccentColor(
+            ItemAsset item,
+            GeneratedItemData generatedData)
+        {
+            if (item is SkillMachineItemAsset machine && machine.Skill != null)
+            {
+                var colors = AttributeCardPalette.GetSkillColors(machine.Skill);
+                return colors.Count > 0 ? colors[0] : GameUiPalette.SkillChip;
+            }
+
+            if (item is EquipmentItemAsset equipment)
+            {
+                return RewardElementPalette.GetAttributeColor(
+                    equipment.MainAttribute);
+            }
+
+            if (item is EngravingItemAsset)
+            {
+                var main = generatedData?.StatChanges.FirstOrDefault(
+                    change => change.Amount > 0);
+                if (main != null)
                 {
-                    purchaseButton.onClick.AddListener(() => onPurchase(entry.StockId));
+                    return GetStatBackgroundColor(main.StatType);
                 }
             }
+
+            return GameUiPalette.ItemChip;
+        }
+
+        internal static Color GetStockTextColor(
+            ItemAsset item,
+            GeneratedItemData generatedData)
+        {
+            return AttributeCardPalette.GetReadableTextColor(
+                GetStockAccentColor(item, generatedData));
+        }
+
+        private static Color GetStatBackgroundColor(PachimonStatType statType)
+        {
+            if (PachimonStatTypeUtility.TryGetAttribute(
+                    statType,
+                    out var attribute))
+            {
+                return RewardElementPalette.GetAttributeColor(attribute);
+            }
+
+            return statType switch
+            {
+                PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
+                    RewardElementPalette.ResourceColor,
+                PachimonStatType.Speed or PachimonStatType.Haste =>
+                    RewardElementPalette.TimingColor,
+                PachimonStatType.DamageBonus or PachimonStatType.ResistBonus =>
+                    RewardElementPalette.CombatBonusColor,
+                _ => GameUiPalette.StatCard,
+            };
+        }
+
+        private static string GetStatLabel(PachimonStatType statType)
+        {
+            return statType switch
+            {
+                PachimonStatType.MaxHp => "HP",
+                PachimonStatType.MaxMn => "MN",
+                PachimonStatType.Speed => "SPD",
+                PachimonStatType.Haste => "HST",
+                PachimonStatType.DamageBonus => "DB",
+                PachimonStatType.ResistBonus => "RB",
+                _ => EngravingStatName.Get(statType),
+            };
         }
 
         private static string GetStatus(
             CityStockEntry entry,
+            ItemAsset item,
             RunState runState,
             bool purchaseEnabled)
         {
@@ -389,6 +818,11 @@ namespace Pachimon.UI
             if (entry.IsPurchased)
             {
                 return "売り切れ";
+            }
+
+            if (item is EquipmentItemAsset)
+            {
+                return "準備中";
             }
 
             if (runState?.ItemInventory.IsFull ?? true)
@@ -411,6 +845,8 @@ namespace Pachimon.UI
                 ItemCategory.Pharmacy => "薬局",
                 ItemCategory.Other => "その他",
                 ItemCategory.SkillMachine => "技マシーン",
+                ItemCategory.Engraving => "刻印屋",
+                ItemCategory.Equipment => "装備品",
                 _ => category.ToString(),
             };
         }

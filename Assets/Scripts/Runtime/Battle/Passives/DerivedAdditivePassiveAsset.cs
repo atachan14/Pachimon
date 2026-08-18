@@ -12,7 +12,7 @@ namespace Pachimon.Passives
     {
         [SerializeField] private PachimonStatType _targetStat;
         [SerializeField] private PachimonStatType _referenceStat;
-        [SerializeField, Min(0)] private int _percent;
+        [SerializeField, Min(0)] private float _percent;
         [SerializeField] private int _minimumContribution;
         [SerializeField] private bool _floorContribution;
 
@@ -20,7 +20,7 @@ namespace Pachimon.Passives
 
         public PachimonStatType ReferenceStat => _referenceStat;
 
-        public int Percent => _percent;
+        public decimal Percent => (decimal)_percent;
 
         public decimal MinimumContribution => _minimumContribution;
         public bool FloorContribution => _floorContribution;
@@ -41,7 +41,7 @@ namespace Pachimon.Passives
             string description,
             PachimonStatType targetStat,
             PachimonStatType referenceStat,
-            int percent,
+            float percent,
             int minimumContribution)
         {
             ConfigureBaseForEditor(passiveId, displayName, description);

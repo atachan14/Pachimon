@@ -8,5 +8,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.RunningStartPassiveAsset
   _passiveId: 15
   _displayName: 助走
-  _description: Skillの基本発生値の20%だけDamageBonusを得る。
+  _description: "Skillの基本発生値の{value:startupRatio}%だけDamageBonusを得る。"
   _startupDamageBonusRatio: 20

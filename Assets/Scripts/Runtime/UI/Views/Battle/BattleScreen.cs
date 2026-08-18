@@ -206,7 +206,8 @@ namespace Pachimon.UI
                         skillSlotId,
                         label,
                         choice.IsUsable,
-                        () => PreviewOrSubmitPlayerSkill(skillSlotId));
+                        () => PreviewOrSubmitPlayerSkill(skillSlotId),
+                        choice.Skill);
                 })
                 .ToArray();
             LogWindowOption? struggleOption = step.RequiresStruggleConfirmation

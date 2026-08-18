@@ -52,6 +52,24 @@ namespace Pachimon.Battle
                 }
 
                 if (passiveCatalog?.Get(passiveId)
+                    is ThunderManPassiveAsset thunderMan)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ThunderManPassiveLogic(owner, thunderMan);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ParalysisGenerationPassiveAsset paralysisGeneration)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ParalysisGenerationPassiveLogic(
+                            owner,
+                            paralysisGeneration);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
                     is FieldValueAmplificationPassiveAsset fieldAmplification)
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
@@ -74,6 +92,22 @@ namespace Pachimon.Battle
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
                         new PoisonKnightPassiveLogic(owner, poisonKnight);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is PoisonMagicianPassiveAsset poisonMagician)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new PoisonMagicianPassiveLogic(owner, poisonMagician);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is LastTouchPassiveAsset lastTouch)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new LastTouchPassiveLogic(owner, lastTouch);
                     continue;
                 }
 
@@ -142,6 +176,38 @@ namespace Pachimon.Battle
                 }
 
                 if (passiveCatalog?.Get(passiveId)
+                    is WaterCuttingPassiveAsset waterCutting)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WaterCuttingPassiveLogic(owner, waterCutting);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WeaklingBullyPassiveAsset weaklingBully)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WeaklingBullyPassiveLogic(owner, weaklingBully);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is BotanicalGardenPassiveAsset botanicalGarden)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new BotanicalGardenPassiveLogic(owner, botanicalGarden);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is BurningFlowerPassiveAsset burningFlower)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new BurningFlowerPassiveLogic(owner, burningFlower);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
                     is HealthyPlantPassiveAsset healthyPlant)
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
@@ -202,6 +268,22 @@ namespace Pachimon.Battle
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
                         new WeatherChildPassiveLogic(owner, weatherChild);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WindRiderPassiveAsset windRider)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WindRiderPassiveLogic(owner, windRider);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is WindMagicianPassiveAsset windMagician)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new WindMagicianPassiveLogic(owner, windMagician);
                     continue;
                 }
 
@@ -280,6 +362,22 @@ namespace Pachimon.Battle
                 }
 
                 if (passiveCatalog?.Get(passiveId)
+                    is IceArmorPassiveAsset iceArmor)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new IceArmorPassiveLogic(owner, iceArmor);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is ChillSpreadPassiveAsset chillSpread)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new ChillSpreadPassiveLogic(owner, chillSpread);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
                     is ComboMasterPassiveAsset comboMaster)
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
@@ -324,6 +422,16 @@ namespace Pachimon.Battle
                 {
                     _factoriesByPassiveId[passiveId] = owner =>
                         new ManyHitsPassiveLogic(owner, manyHits);
+                    continue;
+                }
+
+                if (passiveCatalog?.Get(passiveId)
+                    is OutgoingAttributeDamagePassiveAsset outgoingAttribute)
+                {
+                    _factoriesByPassiveId[passiveId] = owner =>
+                        new OutgoingAttributeDamagePassiveLogic(
+                            owner,
+                            outgoingAttribute);
                     continue;
                 }
 

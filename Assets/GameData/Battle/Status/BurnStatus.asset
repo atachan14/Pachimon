@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.BurnStatusAsset
   _statusId: 112
   _displayName: 火傷
-  _description: DamageBonusをValue分減少させ、自身のTurn終了時に消滅する。
+  _description: "DamageBonusを{value:totalValue}減少させ、自身のTurn終了時に消滅する。"
   _icon: {fileID: 0}

@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.EntanglingVinePassiveAsset
   _passiveId: 19
   _displayName: 絡まる蔦
-  _description: 自身が与えるSlowのValueをLeafに応じて増加させる。
+  _description: "自身が与える{term:Slow|Slow}のValueを、{icon:Leaf}草に応じて増幅する。草の参照率は{value:leafSlowRatio}%。"
   _leafSlowRatio: 100

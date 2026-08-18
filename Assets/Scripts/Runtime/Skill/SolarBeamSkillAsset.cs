@@ -10,6 +10,7 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseLeafDamage = 200;
         [SerializeField, Min(0)] private int _leafDamageRatio = 100;
         [SerializeField, Min(0)] private int _temperatureStartupRatio = 100;
+
         public int BaseLeafDamage => _baseLeafDamage;
         public int LeafDamageRatio => _leafDamageRatio;
         public int TemperatureStartupRatio => _temperatureStartupRatio;

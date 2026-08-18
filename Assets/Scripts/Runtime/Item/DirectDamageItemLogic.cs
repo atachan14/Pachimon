@@ -4,7 +4,10 @@ namespace Pachimon.Items
 {
     public sealed class DirectDamageItemLogic : IItemLogic
     {
-        public ItemUseFailureReason CanUse(ItemAsset item, ItemUseContext context)
+        public ItemUseFailureReason CanUse(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context)
         {
             if (item is not DamageItemAsset)
             {
@@ -24,7 +27,10 @@ namespace Pachimon.Items
                 : ItemUseFailureReason.NoEffect;
         }
 
-        public int Apply(ItemAsset item, ItemUseContext context)
+        public int Apply(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context)
         {
             if (item is not DamageItemAsset damageItem)
             {

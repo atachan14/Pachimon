@@ -9,14 +9,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 8605a705b7470784690008c2b4e2d3f2, type: 3}
   m_Name: Skill_054
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.IcePebbleSkillAsset
   _skillId: 54
-  _displayName: 冷たい手
+  _displayName: "\u6C37\u306E\u792B"
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 60
+  _description: "敵の先頭へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与え、自身へ値{value:shield}、{value:duration}tickのShieldを付与する。"
+  _baseDamage: 70
+  _baseChill: 35
+  _baseShield: 70
+  _iceRatio: 100
+  _shieldDurationTicks: 100
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

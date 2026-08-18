@@ -8,12 +8,10 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "FlyingAttackSkill", menuName = "Pachimon/Skills/Flying Attack Skill")]
     public sealed class FlyingAttackSkillAsset : SkillAsset
     {
-        [SerializeField, Min(1)] private int _baseStartupTicks = 100;
         [SerializeField, Min(0)] private int _baseWindDamage = 120;
         [SerializeField, Min(0)] private int _windDamageRatio = 100;
         [SerializeField] private FlyingStatusAsset _flyingStatus;
 
-        public override int BaseStartupTicks => _baseStartupTicks;
         public int BaseWindDamage => _baseWindDamage;
         public int WindDamageRatio => _windDamageRatio;
         public FlyingStatusAsset FlyingStatus => _flyingStatus;
@@ -37,7 +35,7 @@ namespace Pachimon.Skills
             base.ConfigureForEditor(skillId, displayName, AllocationType.Wind,
                 true, baseRecoveryTicks, baseCooldownTicks, description,
                 baseManaCost);
-            _baseStartupTicks = baseStartupTicks;
+            SetBaseStartupTicksForEditor(baseStartupTicks);
             _baseWindDamage = baseWindDamage;
             _windDamageRatio = windDamageRatio;
             _flyingStatus = flyingStatus;

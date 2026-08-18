@@ -16,10 +16,12 @@ MonoBehaviour:
   _displayName: "\u708E\u306E\u969C\u58C1"
   _allocationType: 1
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 200
-  _baseCooldownTicks: 300
+  _baseCooldownTicks: 500
   _baseManaCost: 100
-  _description: "\u81EA\u9663\u306B\u3001\u5473\u65B9\u3078\u306E\u653B\u6483\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u708E\u306E\u969C\u58C1\u3092\u751F\u6210\u3059\u308B\u3002"
+  _description: "\u81EA\u9663\u306B\u5024{color:Fire}{value:value}{/color}\u3001HP
+    {value:hp}\u3001\u6301\u7D9A{value:duration}tick\u306E{term:FireBarrier|\u708E\u306E\u969C\u58C1}\u3092\u751F\u6210\u3059\u308B\u3002\u653B\u6483\u3092\u80A9\u4EE3\u308F\u308A\u3057\u3001\u653B\u6483\u8005\u3078\u5024{value:burn}\u306E{term:Burn|\u706B\u50B7}\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u751F\u6210\u8005\u306E\u9632\u5FA1Stat\u3092{value:defenseRatio}%\u5F15\u304D\u7D99\u3050\u3002"
   _baseValue: 200
   _fireValueRatio: 100
   _fieldEffect: {fileID: 11400000, guid: 6107e7bad9b745e9b9876721e113bf8c, type: 2}

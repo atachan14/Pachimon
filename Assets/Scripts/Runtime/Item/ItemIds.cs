@@ -6,6 +6,11 @@ namespace Pachimon.Items
     {
         public const int Potion = 1;
         public const int Stone = 2;
+        public const int MnPotion = 3;
+        public const int FirstEngraving = 100;
+        public const int LastEngraving = 113;
+        public const int FirstEquipment = 200;
+        public const int LastEquipment = 223;
         public const int SkillMachineItemBase = 10000;
 
         public static int GetSkillMachineItemId(int skillId)

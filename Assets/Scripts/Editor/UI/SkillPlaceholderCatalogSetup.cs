@@ -167,7 +167,7 @@ namespace Pachimon.Editor.UI
                         true,
                         BasicRecovery,
                         BasicCooldown,
-                        "v0.3 basic attribute damage Skill placeholder.");
+                        GetBasicSkillDescription(allocationType));
                 }
                 else if (skill is BackfireSkillAsset backfire)
                 {
@@ -211,10 +211,10 @@ namespace Pachimon.Editor.UI
                         displayName: "燃焼",
                         baseRecoveryTicks: 100,
                         baseCooldownTicks: 300,
-                        baseManaCost: 100,
+                        baseManaCost: 40,
                         description:
                             "先頭の敵と自身へFireダメージ。"
-                            + "両者が生存しMNを消費できる間は再発動する。",
+                            + "両者が生存している間はMNを追加消費せず再発動する。",
                         basePower: 100,
                         fireScalingPercent: 100);
                     EditorUtility.SetDirty(combustion);
@@ -297,8 +297,9 @@ namespace Pachimon.Editor.UI
                         baseRecoveryTicks: 150,
                         baseCooldownTicks: 300,
                         description:
-                            "CurrentMNをすべて消費し、消費量とAquaに応じた"
-                            + "Aqua Damageを先頭の敵へ与える。",
+                            "原則CurrentMNをすべて消費し、消費量とAquaに応じた"
+                            + "Aqua Damageを先頭の敵へ与える。"
+                            + "本体だけで戦闘不能にできる場合は必要MNのみ消費する。",
                         aquaDamageRatio: 100);
                     EditorUtility.SetDirty(waterPulse);
                 }
@@ -448,7 +449,7 @@ namespace Pachimon.Editor.UI
                     Undo.RecordObject(healingWind, "Update Healing Wind Skill");
                     healingWind.ConfigureForEditor(
                         31, "治癒の風", 100, 300, 100,
-                        "最もCurrent HPが低い味方を回復し、WindとSpeedを増加させる。",
+                        "HP割合が最も低い味方を回復し、WindとSpeedを増加させる。",
                         100, 50, 50, 100, 200, healingWindStatus);
                     EditorUtility.SetDirty(healingWind);
                 }
@@ -540,7 +541,7 @@ namespace Pachimon.Editor.UI
                     cannon.ConfigureForEditor(
                         skillId: 44,
                         displayName: "電磁砲",
-                        baseStartupTicks: 300,
+                        baseStartupTicks: 100,
                         baseRecoveryTicks: 100,
                         baseCooldownTicks: 500,
                         baseManaCost: 500,
@@ -556,7 +557,7 @@ namespace Pachimon.Editor.UI
                     charge.ConfigureForEditor(
                         skillId: 36,
                         displayName: "充電",
-                        baseStartupTicks: 300,
+                        baseStartupTicks: 100,
                         baseRecoveryTicks: 0,
                         baseCooldownTicks: 500,
                         baseManaCost: 400,
@@ -647,13 +648,14 @@ namespace Pachimon.Editor.UI
                         displayName: "ポイズンシールド",
                         baseRecoveryTicks: 100,
                         baseCooldownTicks: 300,
-                        baseManaCost: 100,
+                        baseManaCost: 50,
                         description:
-                            "自身へPoison依存のShieldを付与し、"
+                            "自身へ80tickのPoison依存Shieldを付与し、"
                             + "自身の毒素をPoison依存の割合で取り除く。",
-                        baseShieldValue: 300,
+                        durationTicks: 80,
+                        baseShieldValue: 100,
                         shieldPoisonScalingPercent: 100,
-                        baseToxinReductionPercent: 50,
+                        baseToxinReductionPercent: 30,
                         reductionPoisonScalingPercent: 100);
                     EditorUtility.SetDirty(poisonShield);
                 }
@@ -667,7 +669,7 @@ namespace Pachimon.Editor.UI
                         true,
                         BasicRecovery,
                         BasicCooldown,
-                        "v0.3 basic attribute damage Skill placeholder.");
+                        GetBasicSkillDescription(allocationType));
                     EditorUtility.SetDirty(skill);
                 }
 
@@ -808,6 +810,32 @@ namespace Pachimon.Editor.UI
                 AllocationType.Ice => "冷たい手",
                 AllocationType.Dragon => "ドラゴンストレート",
                 _ => throw new System.ArgumentOutOfRangeException(nameof(allocationType)),
+            };
+        }
+
+        private static string GetBasicSkillDescription(
+            AllocationType allocationType)
+        {
+            return allocationType switch
+            {
+                AllocationType.Fire =>
+                    "\u6575\u306E\u5148\u982D\u306B\u708E\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                AllocationType.Aqua =>
+                    "\u6575\u306E\u5148\u982D\u306B\u6C34\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                AllocationType.Leaf =>
+                    "\u6575\u306E\u5148\u982D\u306B\u8349\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                AllocationType.Electric =>
+                    "\u6575\u306E\u5148\u982D\u306B\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001\u9EBB\u75FA\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                AllocationType.Poison =>
+                    "\u6575\u306E\u5148\u982D\u306B\u6BD2\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001\u6BD2\u7D20\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                AllocationType.Ice =>
+                    "\u6575\u306E\u5148\u982D\u306B\u6C37\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001\u51B7\u6C17\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                AllocationType.Wind =>
+                    "\u6575\u306E\u5148\u982D\u306B\u98A8\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                AllocationType.Dragon =>
+                    "\u6575\u306E\u5148\u982D\u306B\u7ADC\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                _ => throw new System.ArgumentOutOfRangeException(
+                    nameof(allocationType)),
             };
         }
 

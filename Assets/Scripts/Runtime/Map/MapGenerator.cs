@@ -242,6 +242,7 @@ namespace Pachimon.Map
                 rows[rowIndex][0].NodeType = NodeType.Elite;
             }
 
+            var cityPlacements = new List<CityPlacement>(_settings.CityRows.Length);
             for (var cityIndex = 0; cityIndex < _settings.CityRows.Length; cityIndex++)
             {
                 var rowIndex = _settings.CityRows[cityIndex];
@@ -259,17 +260,30 @@ namespace Pachimon.Map
                 var leftColumn = candidateLeftColumns[random.Next(candidateLeftColumns.Length)];
                 var cityGroupId = $"city_{cityIndex + 1:D2}";
                 var shopSeed = random.Next();
-                var cityContent = new CityNodeContent(
+                cityPlacements.Add(new CityPlacement(
                     cityGroupId,
                     shopSeed,
-                    new CityStockGenerator().Generate(
-                        cityGroupId,
-                        shopSeed,
-                        _itemCatalog));
+                    cityRow[leftColumn],
+                    cityRow[leftColumn + 1]));
+            }
 
-                for (var offset = 0; offset < 2; offset++)
+            var stockRequests = cityPlacements
+                .Select(placement => new CityStockRequest(
+                    placement.CityGroupId,
+                    placement.ShopSeed))
+                .ToArray();
+            var stockByCity = new CityStockGenerator().Generate(
+                stockRequests,
+                _itemCatalog);
+            foreach (var placement in cityPlacements)
+            {
+                var cityContent = new CityNodeContent(
+                    placement.CityGroupId,
+                    placement.ShopSeed,
+                    stockByCity[placement.CityGroupId]);
+
+                foreach (var cityNode in placement.Nodes)
                 {
-                    var cityNode = cityRow[leftColumn + offset];
                     cityNode.NodeType = NodeType.City;
                     cityNode.Content = cityContent;
                 }
@@ -446,28 +460,46 @@ namespace Pachimon.Map
                     $"Expected {gymRewards.Count} Gym nodes, but found {gymNodes.Length}.");
             }
 
+            var gymFavoredAttributes = gymRewards
+                .Select(reward => reward.BadgeAttribute
+                    ?? throw new MapGenerationException("Gym Reward has no Badge attribute."))
+                .ToArray();
+            var gymWeakAttributes = CreateBalancedWeaknesses(
+                gymFavoredAttributes,
+                random);
+
             for (var index = 0; index < gymNodes.Length; index++)
             {
                 var reward = gymRewards[index];
-                var badgeAttribute = reward.BadgeAttribute
-                    ?? throw new MapGenerationException("Gym Reward has no Badge attribute.");
+                var badgeAttribute = gymFavoredAttributes[index];
                 gymNodes[index].NodeReward = reward;
                 gymNodes[index].TrainerProfile = profileFactory.Create(
                     TrainerRole.GymLeader,
-                    TrainerThemeResolver.FromAttribute(badgeAttribute));
+                    TrainerThemeResolver.FromAttribute(badgeAttribute),
+                    badgeAttribute,
+                    gymWeakAttributes[index]);
             }
 
-            var eliteThemes = TrainerThemeUtility.AttributeThemes.ToList();
-            Shuffle(eliteThemes, random);
+            var eliteAttributes = Enum.GetValues(typeof(PachimonAttribute))
+                .Cast<PachimonAttribute>()
+                .ToList();
+            Shuffle(eliteAttributes, random);
             var eliteNodes = rows.SelectMany(row => row)
                 .Where(node => node.NodeType == NodeType.Elite)
                 .OrderBy(node => node.RowIndex)
                 .ToArray();
+            var eliteWeakAttributes = eliteAttributes
+                .Skip(eliteNodes.Length)
+                .ToList();
+            Shuffle(eliteWeakAttributes, random);
             for (var index = 0; index < eliteNodes.Length; index++)
             {
+                var favoredAttribute = eliteAttributes[index];
                 eliteNodes[index].TrainerProfile = profileFactory.Create(
                     TrainerRole.Elite,
-                    eliteThemes[index]);
+                    TrainerThemeResolver.FromAttribute(favoredAttribute),
+                    favoredAttribute,
+                    eliteWeakAttributes[index]);
             }
         }
 
@@ -511,12 +543,14 @@ namespace Pachimon.Map
                 {
                     case NodeType.Start:
                         node.Content = new StartNodeContent(
-                            assignmentsByNode[node.NodeId],
+                            OrderPachimonByMaxHp(
+                                assignmentsByNode[node.NodeId],
+                                pachimonPool),
                             PartySize);
                         break;
                     case NodeType.Battle:
                         node.Content = new BattleNodeContent(
-                            OrderEnemyPartyByMaxHp(
+                            OrderPachimonByMaxHp(
                                 assignmentsByNode[node.NodeId],
                                 pachimonPool),
                             node.NodeReward,
@@ -524,7 +558,7 @@ namespace Pachimon.Map
                         break;
                     case NodeType.Gym:
                         node.Content = new GymNodeContent(
-                            OrderEnemyPartyByMaxHp(
+                            OrderPachimonByMaxHp(
                                 assignmentsByNode[node.NodeId],
                                 pachimonPool),
                             node.NodeReward,
@@ -532,7 +566,7 @@ namespace Pachimon.Map
                         break;
                     case NodeType.Elite:
                         node.Content = new EliteNodeContent(
-                            OrderEnemyPartyByMaxHp(
+                            OrderPachimonByMaxHp(
                                 assignmentsByNode[node.NodeId],
                                 pachimonPool),
                             node.TrainerProfile);
@@ -541,7 +575,7 @@ namespace Pachimon.Map
             }
         }
 
-        private static string[] OrderEnemyPartyByMaxHp(
+        private static string[] OrderPachimonByMaxHp(
             IEnumerable<string> instanceIds,
             RunPachimonPool pachimonPool)
         {
@@ -549,7 +583,7 @@ namespace Pachimon.Map
                 .OrderByDescending(instanceId =>
                     pachimonPool.Get(instanceId)?.MaxHp
                     ?? throw new MapGenerationException(
-                        $"Enemy party references missing Pachimon {instanceId}."))
+                        $"Node content references missing Pachimon {instanceId}."))
                 .ToArray();
         }
 
@@ -1034,6 +1068,8 @@ namespace Pachimon.Map
                 ValidateCityStock(cityGroup.GroupId, members);
             }
 
+            ValidateCityStockDistribution(map);
+
             var reachable = TraverseForward(map, map.StartNodeId);
             if (reachable.Count != map.Nodes.Count)
             {
@@ -1088,14 +1124,9 @@ namespace Pachimon.Map
             }
 
             var stock = contents[0].StockEntries;
-            var expectedCount = CityStockGenerator.SampleCopiesPerItem * 2;
             if (stock == null
-                || stock.Count != expectedCount
-                || stock.Select(entry => entry.StockId).Distinct().Count() != expectedCount
-                || stock.Count(entry => entry.ItemId == ItemIds.Potion)
-                    != CityStockGenerator.SampleCopiesPerItem
-                || stock.Count(entry => entry.ItemId == ItemIds.Stone)
-                    != CityStockGenerator.SampleCopiesPerItem
+                || stock.Count == 0
+                || stock.Select(entry => entry.StockId).Distinct().Count() != stock.Count
                 || stock.Any(entry => entry.IsPurchased))
             {
                 throw new MapGenerationException(
@@ -1106,6 +1137,8 @@ namespace Pachimon.Map
             {
                 var item = _itemCatalog.Get(entry.ItemId);
                 if (item == null
+                    || entry.GeneratedData == null
+                    || entry.GeneratedData.ItemId != entry.ItemId
                     || entry.BasePrice != item.BasePrice
                     || entry.Price < CityStockGenerator.GetMinimumPrice(entry.BasePrice)
                     || entry.Price > CityStockGenerator.GetMaximumPrice(entry.BasePrice))
@@ -1119,6 +1152,289 @@ namespace Pachimon.Map
             {
                 throw new MapGenerationException(
                     $"City group {cityGroupId} stock price total is invalid.");
+            }
+
+            foreach (var itemGroup in stock
+                         .GroupBy(entry => entry.ItemId))
+            {
+                var groupedItem = _itemCatalog.Get(itemGroup.Key);
+                if (groupedItem is EngravingItemAsset engraving)
+                {
+                    ValidateEngravingStock(cityGroupId, engraving, itemGroup.ToArray());
+                    continue;
+                }
+
+                if (groupedItem is EquipmentItemAsset equipment)
+                {
+                    ValidateEquipmentStock(cityGroupId, equipment, itemGroup.ToArray());
+                    continue;
+                }
+
+                if (groupedItem is not HealingItemAsset healingItem)
+                {
+                    continue;
+                }
+
+                var entries = itemGroup.ToArray();
+                var minimumEffect = checked(
+                    ((healingItem.RecoveryPercent
+                        * CityStockGenerator.MinimumEffectPercent) + 99) / 100);
+                var maximumEffect = checked(
+                    (healingItem.RecoveryPercent
+                        * CityStockGenerator.MaximumEffectPercent) / 100);
+                if (entries.Any(entry =>
+                        !entry.GeneratedData.PrimaryEffectValue.HasValue
+                        || entry.GeneratedData.PrimaryEffectValue.Value < minimumEffect
+                        || entry.GeneratedData.PrimaryEffectValue.Value > maximumEffect)
+                    || entries.Sum(entry =>
+                        entry.GeneratedData.PrimaryEffectValue.Value)
+                        != healingItem.RecoveryPercent * entries.Length)
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} Item {itemGroup.Key} effect values are invalid.");
+                }
+
+                foreach (var cheaper in entries)
+                {
+                    if (entries.Any(expensive => expensive.Price > cheaper.Price
+                        && expensive.GeneratedData.PrimaryEffectValue.Value
+                            < cheaper.GeneratedData.PrimaryEffectValue.Value))
+                    {
+                        throw new MapGenerationException(
+                            $"City group {cityGroupId} Item {itemGroup.Key} price and effect ranks differ.");
+                    }
+                }
+            }
+
+            var equipmentEntries = stock
+                .Where(entry => _itemCatalog.Get(entry.ItemId)
+                    is EquipmentItemAsset)
+                .ToArray();
+            foreach (var cheaper in equipmentEntries)
+            {
+                var cheaperValue = GetRankedEquipmentValue(cheaper);
+                if (equipmentEntries.Any(expensive =>
+                        expensive.Price > cheaper.Price
+                        && GetRankedEquipmentValue(expensive) < cheaperValue))
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} Equipment price and effect ranks differ.");
+                }
+            }
+        }
+
+        private int GetRankedEquipmentValue(CityStockEntry entry)
+        {
+            var equipment = _itemCatalog.Get(entry.ItemId) as EquipmentItemAsset;
+            if (equipment == null)
+            {
+                throw new MapGenerationException(
+                    $"Item {entry.ItemId} is not Equipment.");
+            }
+
+            var mainStat = PachimonStatTypeUtility.FromAttribute(
+                equipment.MainAttribute);
+            var mainValue = entry.GeneratedData.StatChanges
+                .Single(change => change.StatType == mainStat)
+                .Amount;
+            return equipment.Slot == EquipmentSlot.Head
+                ? mainValue / 2
+                : mainValue;
+        }
+
+        private void ValidateEngravingStock(
+            string cityGroupId,
+            EngravingItemAsset engraving,
+            IReadOnlyList<CityStockEntry> entries)
+        {
+            var minimumEffect = checked(
+                ((engraving.BaseEffectValue
+                    * CityStockGenerator.MinimumEffectPercent) + 99) / 100);
+            var maximumEffect = checked(
+                (engraving.BaseEffectValue
+                    * CityStockGenerator.MaximumEffectPercent) / 100);
+            foreach (var entry in entries)
+            {
+                var changes = entry.GeneratedData.StatChanges;
+                var main = changes.SingleOrDefault(change => change.Amount > 0);
+                var downside = changes.SingleOrDefault(change => change.Amount < 0);
+                if (changes.Count != 2
+                    || main == null
+                    || downside == null
+                    || main.StatType != engraving.TargetStat
+                    || main.Amount < minimumEffect
+                    || main.Amount > maximumEffect
+                    || downside.StatType == main.StatType)
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} Engraving {engraving.ItemId} effects are invalid.");
+                }
+            }
+
+            if (entries.Sum(entry => entry.GeneratedData.StatChanges
+                    .Single(change => change.Amount > 0).Amount)
+                != engraving.BaseEffectValue * entries.Count)
+            {
+                throw new MapGenerationException(
+                    $"City group {cityGroupId} Engraving {engraving.ItemId} total is invalid.");
+            }
+
+            foreach (var cheaper in entries)
+            {
+                if (entries.Any(expensive => expensive.Price > cheaper.Price
+                    && expensive.GeneratedData.StatChanges
+                        .Single(change => change.Amount > 0).Amount
+                    < cheaper.GeneratedData.StatChanges
+                        .Single(change => change.Amount > 0).Amount))
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} Engraving price and effect ranks differ.");
+                }
+            }
+        }
+
+        private static void ValidateEquipmentStock(
+            string cityGroupId,
+            EquipmentItemAsset equipment,
+            IReadOnlyList<CityStockEntry> entries)
+        {
+            var mainStat = PachimonStatTypeUtility.FromAttribute(
+                equipment.MainAttribute);
+            var mainUnits = equipment.Slot == EquipmentSlot.Head ? 6 : 3;
+            var mainBase = checked(StatUnitValue.Get(mainStat) * mainUnits);
+            var minimumMain = checked(
+                mainBase * CityStockGenerator.MinimumEquipmentEffectPercent / 100);
+            var maximumMain = checked(
+                mainBase * CityStockGenerator.MaximumEquipmentEffectPercent / 100);
+
+            foreach (var entry in entries)
+            {
+                var changes = entry.GeneratedData.StatChanges;
+                var expectedCount = equipment.Slot == EquipmentSlot.Head ? 2 : 3;
+                var main = changes.FirstOrDefault(change => change.StatType == mainStat);
+                var additional = changes.FirstOrDefault(change =>
+                    change.StatType != mainStat
+                    && PachimonStatTypeUtility.TryGetAttribute(
+                        change.StatType,
+                        out _));
+                var fixedStat = equipment.Slot switch
+                {
+                    EquipmentSlot.Body => PachimonStatType.Haste,
+                    EquipmentSlot.Feet => PachimonStatType.Speed,
+                    _ => PachimonStatType.Count,
+                };
+                var fixedChange = fixedStat == PachimonStatType.Count
+                    ? null
+                    : changes.FirstOrDefault(change => change.StatType == fixedStat);
+                if (entry.GeneratedData.EquipmentSlot != equipment.Slot
+                    || changes.Count != expectedCount
+                    || main == null
+                    || main.Amount < minimumMain
+                    || main.Amount > maximumMain
+                    || additional == null
+                    || additional.Amount != Math.Max(1, main.Amount / 3)
+                    || (fixedStat != PachimonStatType.Count
+                        && (fixedChange == null
+                            || fixedChange.Amount != StatUnitValue.Get(fixedStat) * 4)))
+                {
+                    throw new MapGenerationException(
+                        $"City group {cityGroupId} Equipment {equipment.ItemId} effects are invalid.");
+                }
+            }
+        }
+
+        private void ValidateCityStockDistribution(RunMap map)
+        {
+            var cityStocks = map.NodeGroups.Values
+                .Select(group => ((CityNodeContent)map.GetNode(group.NodeIds[0]).Content)
+                    .StockEntries)
+                .ToArray();
+            var allEntries = cityStocks.SelectMany(stock => stock).ToArray();
+            if (allEntries.Count(entry => entry.ItemId == ItemIds.Potion)
+                    != CityStockGenerator.PotionTotalCopies
+                || allEntries.Count(entry => entry.ItemId == ItemIds.MnPotion)
+                    != CityStockGenerator.MnPotionTotalCopies)
+            {
+                throw new MapGenerationException(
+                    "City recovery Item distribution is invalid.");
+            }
+
+            foreach (var stock in cityStocks)
+            {
+                var equipmentCount = stock.Count(entry =>
+                    _itemCatalog.Get(entry.ItemId) is EquipmentItemAsset);
+                if (equipmentCount != CityStockGenerator.EquipmentPerCity)
+                {
+                    throw new MapGenerationException(
+                        "Each City requires exactly six Equipment entries.");
+                }
+
+                var engravingStats = stock
+                    .Select(entry => _itemCatalog.Get(entry.ItemId))
+                    .OfType<EngravingItemAsset>()
+                    .Select(item => item.TargetStat)
+                    .Distinct()
+                    .Count();
+                if (engravingStats != (int)PachimonStatType.Count)
+                {
+                    throw new MapGenerationException(
+                        "Each City requires at least one Engraving for every Stat.");
+                }
+
+                var machines = stock
+                    .Select(entry => _itemCatalog.Get(entry.ItemId))
+                    .OfType<SkillMachineItemAsset>()
+                    .Where(item => item.SkillId >= SkillIdRanges.FirstMachineExclusiveId
+                        && item.SkillId <= SkillIdRanges.LastMachineExclusiveId)
+                    .ToArray();
+                if (machines.Count(item =>
+                        item.Skill.AllocationType == AllocationType.Unassigned)
+                        != CityStockGenerator.MachineCopiesPerPoolPerCity
+                    || machines.Count(item =>
+                        item.Skill.AllocationType != AllocationType.Unassigned)
+                        != CityStockGenerator.MachineCopiesPerPoolPerCity)
+                {
+                    throw new MapGenerationException(
+                        "Each City requires one neutral and one Attribute machine-exclusive Skill.");
+                }
+            }
+
+            foreach (var engraving in _itemCatalog.Items.OfType<EngravingItemAsset>())
+            {
+                if (allEntries.Count(entry => entry.ItemId == engraving.ItemId)
+                    != CityStockGenerator.EngravingCopiesPerStat)
+                {
+                    throw new MapGenerationException(
+                        $"Engraving {engraving.ItemId} distribution is invalid.");
+                }
+            }
+
+            foreach (var equipment in _itemCatalog.Items.OfType<EquipmentItemAsset>())
+            {
+                if (allEntries.Count(entry => entry.ItemId == equipment.ItemId)
+                    != CityStockGenerator.EquipmentCopiesPerDefinition)
+                {
+                    throw new MapGenerationException(
+                        $"Equipment {equipment.ItemId} distribution is invalid.");
+                }
+            }
+
+            var distributedMachineIds = allEntries
+                .Select(entry => _itemCatalog.Get(entry.ItemId))
+                .OfType<SkillMachineItemAsset>()
+                .Where(item => item.SkillId >= SkillIdRanges.FirstMachineExclusiveId
+                    && item.SkillId <= SkillIdRanges.LastMachineExclusiveId)
+                .Select(item => item.ItemId)
+                .ToArray();
+            var expectedMachineCount = _settings.CityRows.Length
+                * CityStockGenerator.MachineCopiesPerPoolPerCity
+                * 2;
+            if (distributedMachineIds.Length != expectedMachineCount
+                || distributedMachineIds.Distinct().Count()
+                    != distributedMachineIds.Length)
+            {
+                throw new MapGenerationException(
+                    "Machine-exclusive City stock contains missing or duplicate Items.");
             }
         }
 
@@ -1361,6 +1677,23 @@ namespace Pachimon.Map
                     gym.TrainerProfile,
                     TrainerRole.GymLeader,
                     TrainerThemeResolver.FromAttribute(attribute));
+                if (gym.TrainerProfile.FavoredAttribute != attribute
+                    || !gym.TrainerProfile.WeakAttribute.HasValue
+                    || gym.TrainerProfile.WeakAttribute == attribute)
+                {
+                    throw new MapGenerationException(
+                        "Gym favored/weak attributes are missing or invalid.");
+                }
+            }
+
+            foreach (PachimonAttribute attribute in Enum.GetValues(typeof(PachimonAttribute)))
+            {
+                if (gyms.Count(content =>
+                        content.TrainerProfile.WeakAttribute == attribute) != 3)
+                {
+                    throw new MapGenerationException(
+                        $"Gym weakness {attribute} must appear 3 times.");
+                }
             }
 
             var elites = map.Nodes.Values
@@ -1368,14 +1701,36 @@ namespace Pachimon.Map
                 .Select(node => (EliteNodeContent)node.Content)
                 .ToArray();
             var eliteThemes = elites
-                .Select(content => ValidateTrainerProfile(
-                    content.TrainerProfile,
-                    TrainerRole.Elite,
-                    null).Theme)
+                .Select(content =>
+                {
+                    var favoredAttribute = content.TrainerProfile.FavoredAttribute
+                        ?? throw new MapGenerationException(
+                            "Elite favored attribute is missing.");
+                    return ValidateTrainerProfile(
+                        content.TrainerProfile,
+                        TrainerRole.Elite,
+                        TrainerThemeResolver.FromAttribute(favoredAttribute)).Theme;
+                })
                 .ToArray();
             if (eliteThemes.Distinct().Count() != elites.Length)
             {
                 throw new MapGenerationException("Elite themes must be unique within a Run.");
+            }
+
+            var eliteFavoredAttributes = elites
+                .Select(content => content.TrainerProfile.FavoredAttribute)
+                .ToArray();
+            var eliteWeakAttributes = elites
+                .Select(content => content.TrainerProfile.WeakAttribute)
+                .ToArray();
+            if (eliteFavoredAttributes.Any(attribute => !attribute.HasValue)
+                || eliteWeakAttributes.Any(attribute => !attribute.HasValue)
+                || eliteFavoredAttributes.Distinct().Count() != elites.Length
+                || eliteWeakAttributes.Distinct().Count() != elites.Length
+                || eliteFavoredAttributes.Intersect(eliteWeakAttributes).Any())
+            {
+                throw new MapGenerationException(
+                    "Elite favored and weak attributes must partition eight attributes.");
             }
 
             var leagueStyleIds = gyms.Select(content => content.TrainerProfile.StyleId)
@@ -1623,6 +1978,28 @@ namespace Pachimon.Map
             }
         }
 
+        private static PachimonAttribute[] CreateBalancedWeaknesses(
+            IReadOnlyList<PachimonAttribute> favoredAttributes,
+            Random random)
+        {
+            const int maximumAttempts = 1000;
+            for (var attempt = 0; attempt < maximumAttempts; attempt++)
+            {
+                var weaknesses = favoredAttributes.ToList();
+                Shuffle(weaknesses, random);
+                if (weaknesses
+                    .Select((attribute, index) =>
+                        attribute != favoredAttributes[index])
+                    .All(isValid => isValid))
+                {
+                    return weaknesses.ToArray();
+                }
+            }
+
+            throw new MapGenerationException(
+                "Could not assign balanced Gym weaknesses without matching favored attributes.");
+        }
+
         private static int GetColumnIndex(string nodeId)
         {
             var separatorIndex = nodeId.LastIndexOf('_');
@@ -1653,6 +2030,26 @@ namespace Pachimon.Map
             public TrainerProfile TrainerProfile { get; set; }
 
             public HashSet<string> NextNodeIds { get; } = new();
+        }
+
+        private sealed class CityPlacement
+        {
+            public CityPlacement(
+                string cityGroupId,
+                int shopSeed,
+                NodeBuilder leftNode,
+                NodeBuilder rightNode)
+            {
+                CityGroupId = cityGroupId;
+                ShopSeed = shopSeed;
+                Nodes = new[] { leftNode, rightNode };
+            }
+
+            public string CityGroupId { get; }
+
+            public int ShopSeed { get; }
+
+            public IReadOnlyList<NodeBuilder> Nodes { get; }
         }
 
         private sealed class PlacementSlot

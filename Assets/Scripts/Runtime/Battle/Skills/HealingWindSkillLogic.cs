@@ -18,7 +18,7 @@ namespace Pachimon.Battle
             if (_skill.StatusDefinition == null)
                 throw new InvalidOperationException("Healing Wind requires a Status Definition.");
 
-            var target = context.Targets.GetLowestHpAlly();
+            var target = context.Targets.GetLowestHpPercentageAlly();
             var healing = Scale(context, _skill.BaseHealing);
             var windBonus = Scale(context, _skill.BaseWindBonus);
             var speedBonus = Scale(context, _skill.BaseSpeedBonus);

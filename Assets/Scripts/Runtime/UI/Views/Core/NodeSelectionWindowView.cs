@@ -94,7 +94,7 @@ namespace Pachimon.UI
             RunState runState,
             bool purchaseEnabled,
             bool showFooter,
-            Action<int> onDetails,
+            Action<CityStockEntry> onDetails,
             Action<string> onPurchase,
             Action onConfirm,
             Action onCancel)

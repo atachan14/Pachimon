@@ -35,6 +35,7 @@ namespace Pachimon.Battle
             for (var index = 0; index < targets.Count; index++)
             {
                 var target = targets[index];
+                var hit = context.BeginAttackHit(target);
                 var isFront = index == 0;
                 var baseDamage = isFront
                     ? _skill.FrontBaseDamage
@@ -64,11 +65,13 @@ namespace Pachimon.Battle
                         target.GetBattleStats(),
                         PachimonAttribute.Ice,
                         isAttack: true,
-                        applyAttackerAttributeMultiplier: false));
+                        applyAttackerAttributeMultiplier: false),
+                    hit);
                 effects.Add(new SkillEffectResult(
                     damageResult.ActualTarget,
                     damageResult.AppliedDamage,
-                    isTrueDamage: false));
+                    isTrueDamage: false,
+                    hit: hit));
 
                 var chill = SignedStatMath.FloorNonNegative(
                     context.ScaleFromAttribute(
@@ -77,8 +80,7 @@ namespace Pachimon.Battle
                         chillRatio));
                 if (chill > 0)
                 {
-                    context.State.Statuses.ApplyAttackStatus(
-                        damageResult.ActualTarget,
+                    hit.ApplyStatus(
                         BattleStatusFactory.CreateSlow(
                             context.User,
                             chill,

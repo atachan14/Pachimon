@@ -5,7 +5,7 @@
 ## 現在地
 
 - `v0.7 City`まで実装・確認済み
-- 次の実装対象は`v0.8 Content`
+- 現在は`v0.8 Content`を進めながら、`v0.8.1 Playtest Build`の公開を目指す
 
 ## Milestones
 
@@ -20,6 +20,7 @@
 | v0.6.5 | Stat Refactor | 統合属性、MN、Speed、DamageBonus / ResistBonusへの横断移行 |
 | v0.7 | City | ShopなどCity内の処理 |
 | v0.8 | Content | Skill / Passive / Item追加と、それに必要な仕組み |
+| v0.8.1 | Playtest Build | 64Species、row敵強化、City追加商品、Expanded通し確認、itch.io限定Web公開 |
 | v0.9 | NormalArea | NormalAreaを通して遊べる状態とバランス調整 |
 | v1.0 | GhostArea | GhostNode群の生成、進行、完走 |
 | v1.1 | Save / Load | Runの保存と再開 |

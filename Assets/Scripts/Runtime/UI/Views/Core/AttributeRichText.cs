@@ -106,6 +106,17 @@ namespace Pachimon.UI
                 return "説明未設定";
             }
 
+            if (skill.Description?.Contains("{", StringComparison.Ordinal) == true
+                && SkillDescriptionValueProviderRegistry.TryCreateContext(
+                    skill,
+                    owner,
+                    out var templateContext))
+            {
+                return DescriptionTemplateFormatter.Format(
+                    skill.Description,
+                    templateContext);
+            }
+
             if (skill is BackfireSkillAsset backfire
                 && owner?.IsRevealed == true
                 && owner.TryGetStat(
@@ -199,8 +210,7 @@ namespace Pachimon.UI
                 return $"先頭の敵に{fireIcon}{enemyDamage}"
                     + $"（軽減前）、自身に{fireIcon}{selfDamage}"
                     + "のFireダメージを与える。"
-                    + $"両者が生存している間、MNを{combustion.BaseManaCost}"
-                    + "消費して再発動する。";
+                    + "両者が生存している間、MNを追加消費せず再発動する。";
             }
 
             if (skill is ChainBurnSkillAsset chainBurn
@@ -355,7 +365,8 @@ namespace Pachimon.UI
                     PoisonShieldMath.CalculateToxinReductionPercent(
                         poisonShield,
                         shieldPoison);
-                return $"自身に{shieldValue}のShieldを付与する。"
+                return $"自身に{shieldValue}のShieldを"
+                    + $"{poisonShield.DurationTicks}tick付与する。"
                     + $"自身の毒素を{reductionPercent:0.##}%取り除く。";
             }
 
@@ -479,7 +490,7 @@ namespace Pachimon.UI
                             baseValue,
                             wind,
                             healingWind.WindRatio));
-                    return "最もCurrent HPが低い味方のHPを"
+                    return "HP割合が最も低い味方のHPを"
                         + $"{Scale(healingWind.BaseHealing)}回復し、"
                         + $"{healingWind.DurationTicks}tickの間Windを"
                         + $"{Scale(healingWind.BaseWindBonus)}、Speedを"
@@ -495,21 +506,37 @@ namespace Pachimon.UI
                 }
             }
 
-            if (owner?.IsRevealed == true
+
+            if (skill is PlaceholderSkillAsset placeholder
+                && owner?.IsRevealed == true
                 && AttributeRichText.TryGetDisplayStat(
                     skill.AllocationType,
                     out var displayStat)
                 && owner.TryGetStat(displayStat, out var attributeValue))
             {
-                const int baseDamage = 100;
-                var displayedDamage = SignedStatMath.FloorNonNegative(
-                    baseDamage * SignedStatMath.AmplificationMultiplier(attributeValue),
-                    1);
-                var icon = AttributeRichText.GetIcon(skill.AllocationType);
-                return $"敵の先頭に{AttributeRichText.Colorize(skill.AllocationType, displayedDamage)}"
-                    + $"（{baseDamage} + {icon}"
-                    + $"{AttributeRichText.Colorize(skill.AllocationType, attributeValue)}"
-                    + $" × {baseDamage}%）の{icon}ダメージを与える。";
+                var context = new DescriptionTemplateContext()
+                    .Set("damage", SignedStatMath.FloorNonNegative(
+                        BasicAttributeDamageSkillLogic.BaseDamage
+                        * SignedStatMath.AmplificationMultiplier(attributeValue),
+                        1))
+                    .Set("baseDamage", BasicAttributeDamageSkillLogic.BaseDamage)
+                    .Set("attribute", attributeValue)
+                    .Set("ratio", 100);
+                if (placeholder.StatusBaseValue > 0)
+                {
+                    context.Set(
+                        "statusValue",
+                        SignedStatMath.FloorNonNegative(
+                            SignedStatMath.ScaleFromBase(
+                                placeholder.StatusBaseValue,
+                                attributeValue,
+                                placeholder.StatusScalingPercent),
+                            1));
+                }
+
+                return DescriptionTemplateFormatter.Format(
+                    skill.Description,
+                    context);
             }
 
             return string.IsNullOrWhiteSpace(skill.Description)

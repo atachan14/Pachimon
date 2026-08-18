@@ -1,3 +1,4 @@
+using System.Linq;
 using Pachimon.Items;
 using Pachimon.Skills;
 using Pachimon.UI;
@@ -14,12 +15,13 @@ namespace Pachimon.Editor.UI
         private const string CatalogPath = DataFolder + "/ItemCatalog.asset";
         private const string PotionPath = DataFolder + "/Item_001_Potion.asset";
         private const string StonePath = DataFolder + "/Item_002_Stone.asset";
+        private const string MnPotionPath = DataFolder + "/Item_003_MnPotion.asset";
         private const string BackfireMachinePath =
             DataFolder + "/Item_10009_TM_Backfire.asset";
         private const string FireArrowMachinePath =
             DataFolder + "/Item_10033_TM_FireArrow.asset";
         private const string CombustionMachinePath =
-            DataFolder + "/Item_10041_TM_Combustion.asset";
+            DataFolder + "/Item_10041_TM_BurningStrike.asset";
         private const string ChainBurnMachinePath =
             DataFolder + "/Item_10017_TM_ChainBurn.asset";
         private const string FireBarrierMachinePath =
@@ -182,11 +184,35 @@ namespace Pachimon.Editor.UI
                 ItemIds.Potion,
                 "きずぐすり",
                 potionIcon,
-                "対象の味方パチモンのHPを300回復する。",
+                "対象の味方パチモンの最大HPの50%を回復する。",
                 ItemCategory.Pharmacy,
                 300);
-            potion.ConfigureHealingForEditor(300, false);
+            potion.ConfigureHealingForEditor(
+                RecoveryResourceType.Hp,
+                50,
+                false);
             EditorUtility.SetDirty(potion);
+
+            var mnPotion = AssetDatabase.LoadAssetAtPath<HealingItemAsset>(MnPotionPath);
+            if (mnPotion == null)
+            {
+                mnPotion = ScriptableObject.CreateInstance<HealingItemAsset>();
+                AssetDatabase.CreateAsset(mnPotion, MnPotionPath);
+            }
+
+            Undo.RecordObject(mnPotion, "Configure MN Potion Item");
+            mnPotion.ConfigureForEditor(
+                ItemIds.MnPotion,
+                "MNポーション",
+                potionIcon,
+                "対象の味方パチモンの最大MNの50%を回復する。",
+                ItemCategory.Pharmacy,
+                300);
+            mnPotion.ConfigureHealingForEditor(
+                RecoveryResourceType.Mn,
+                50,
+                false);
+            EditorUtility.SetDirty(mnPotion);
 
             var stone = AssetDatabase.LoadAssetAtPath<DamageItemAsset>(StonePath);
             if (stone == null)
@@ -219,7 +245,7 @@ namespace Pachimon.Editor.UI
             var combustionMachine = ConfigureSkillMachine(
                 CombustionMachinePath,
                 CombustionSkillPath,
-                "技マシーン[燃焼]",
+                "技マシーン[燃える一撃]",
                 stoneIcon);
             var chainBurnMachine = ConfigureSkillMachine(
                 ChainBurnMachinePath,
@@ -363,10 +389,11 @@ namespace Pachimon.Editor.UI
                 stoneIcon);
 
             Undo.RecordObject(catalog, "Configure Item Catalog");
-            catalog.SetItemsForEditor(new ItemAsset[]
+            var configuredItems = new ItemAsset[]
             {
                 potion,
                 stone,
+                mnPotion,
                 backfireMachine,
                 fireArrowMachine,
                 combustionMachine,
@@ -402,7 +429,14 @@ namespace Pachimon.Editor.UI
                 healingWindMachine,
                 secondWindMachine,
                 dragonJabMachine,
-            });
+            };
+            var mergedItems = catalog.Items
+                .Where(item => item != null)
+                .Concat(configuredItems)
+                .GroupBy(item => item.ItemId)
+                .Select(group => group.Last())
+                .OrderBy(item => item.ItemId);
+            catalog.SetItemsForEditor(mergedItems);
             EditorUtility.SetDirty(catalog);
             AssignCatalogToSceneInstaller(catalog);
             AssetDatabase.SaveAssets();
@@ -562,6 +596,307 @@ namespace Pachimon.Editor.UI
             item.ConfigureSkillForEditor(skill);
             EditorUtility.SetDirty(item);
             return item;
+        }
+    }
+}
+
+namespace Pachimon.Editor.UI
+{
+    public static class EngravingItemSetup
+    {
+        private const string DataFolder = "Assets/GameData/Item/Engraving";
+        private const string CatalogPath = "Assets/GameData/Item/ItemCatalog.asset";
+        private const int BasePrice = 500;
+
+        private static readonly (Pachimon.Run.PachimonStatType Stat, string Name, int Value)[]
+            Definitions =
+            {
+                (Pachimon.Run.PachimonStatType.MaxHp, "生命の刻印", 50),
+                (Pachimon.Run.PachimonStatType.MaxMn, "活力の刻印", 50),
+                (Pachimon.Run.PachimonStatType.Fire, "炎の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Aqua, "水の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Leaf, "草の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Electric, "電の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Poison, "毒の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Ice, "氷の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Wind, "風の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Dragon, "竜の刻印", 30),
+                (Pachimon.Run.PachimonStatType.Speed, "俊足の刻印", 10),
+                (Pachimon.Run.PachimonStatType.Haste, "加速の刻印", 10),
+                (Pachimon.Run.PachimonStatType.DamageBonus, "攻勢の刻印", 10),
+                (Pachimon.Run.PachimonStatType.ResistBonus, "守勢の刻印", 10),
+            };
+
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void ScheduleSetup()
+        {
+            UnityEditor.EditorApplication.delayCall += TryAutoSetup;
+        }
+
+        [UnityEditor.MenuItem("Tools/Pachimon/Data/Create Engraving Items")]
+        public static void Setup()
+        {
+            EnsureAssetFolder(DataFolder);
+            var catalog = UnityEditor.AssetDatabase.LoadAssetAtPath<Pachimon.Items.ItemCatalog>(
+                CatalogPath);
+            if (catalog == null)
+            {
+                UnityEngine.Debug.LogWarning(
+                    "ItemCatalog is missing. Create the Item sample catalog first.");
+                return;
+            }
+
+            var items = Definitions.Select((definition, index) =>
+            {
+                var itemId = Pachimon.Items.ItemIds.FirstEngraving + index;
+                var path = $"{DataFolder}/Item_{itemId:D3}_Engraving_{definition.Stat}.asset";
+                var item = UnityEditor.AssetDatabase
+                    .LoadAssetAtPath<Pachimon.Items.EngravingItemAsset>(path);
+                if (!HasValidScriptReference(item))
+                {
+                    UnityEditor.AssetDatabase.DeleteAsset(path);
+                    item = UnityEngine.ScriptableObject
+                        .CreateInstance<Pachimon.Items.EngravingItemAsset>();
+                    UnityEditor.AssetDatabase.CreateAsset(item, path);
+                }
+
+                item.ConfigureForEditor(
+                    itemId,
+                    definition.Name,
+                    null,
+                    $"対象の{Pachimon.Items.EngravingStatName.Get(definition.Stat)}を恒久的に増加させる。",
+                    Pachimon.Items.ItemCategory.Engraving,
+                    BasePrice);
+                item.ConfigureEngravingForEditor(
+                    definition.Stat,
+                    Pachimon.Items.StatUnitValue.Get(definition.Stat));
+                UnityEditor.EditorUtility.SetDirty(item);
+                return item;
+            }).ToArray();
+
+            catalog.SetItemsForEditor(catalog.Items
+                .Where(item => item != null)
+                .Concat(items)
+                .GroupBy(item => item.ItemId)
+                .Select(group => group.Last())
+                .OrderBy(item => item.ItemId));
+            UnityEditor.EditorUtility.SetDirty(catalog);
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEngine.Debug.Log("Engraving Items were created and registered.", catalog);
+        }
+
+        private static void TryAutoSetup()
+        {
+            if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+
+            var catalog = UnityEditor.AssetDatabase.LoadAssetAtPath<Pachimon.Items.ItemCatalog>(
+                CatalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+
+            var engravings = catalog.Items
+                .OfType<Pachimon.Items.EngravingItemAsset>()
+                .Where(item => item.ItemId >= Pachimon.Items.ItemIds.FirstEngraving
+                    && item.ItemId <= Pachimon.Items.ItemIds.LastEngraving)
+                .ToArray();
+            var count = engravings
+                .Select(item => item.TargetStat)
+                .Distinct()
+                .Count();
+            if (count != (int)Pachimon.Run.PachimonStatType.Count
+                || engravings.Any(item => item.BasePrice != BasePrice
+                    || !HasValidScriptReference(item)))
+            {
+                Setup();
+            }
+        }
+
+        private static void EnsureAssetFolder(string path)
+        {
+            var parts = path.Split('/');
+            var current = parts[0];
+            for (var index = 1; index < parts.Length; index++)
+            {
+                var next = $"{current}/{parts[index]}";
+                if (!UnityEditor.AssetDatabase.IsValidFolder(next))
+                {
+                    UnityEditor.AssetDatabase.CreateFolder(current, parts[index]);
+                }
+                current = next;
+            }
+        }
+
+        private static bool HasValidScriptReference(UnityEngine.ScriptableObject asset)
+        {
+            if (asset == null)
+            {
+                return false;
+            }
+
+            return new UnityEditor.SerializedObject(asset)
+                .FindProperty("m_Script")?.objectReferenceValue != null;
+        }
+    }
+}
+
+namespace Pachimon.Editor.UI
+{
+    public static class EquipmentItemSetup
+    {
+        private const string DataFolder = "Assets/GameData/Item/Equipment";
+        private const string CatalogPath = "Assets/GameData/Item/ItemCatalog.asset";
+        private const int BasePrice = 2000;
+
+        private static readonly (Pachimon.Reward.PachimonAttribute Attribute, string Name)[]
+            Attributes =
+            {
+                (Pachimon.Reward.PachimonAttribute.Fire, "炎"),
+                (Pachimon.Reward.PachimonAttribute.Aqua, "水"),
+                (Pachimon.Reward.PachimonAttribute.Leaf, "草"),
+                (Pachimon.Reward.PachimonAttribute.Electric, "電"),
+                (Pachimon.Reward.PachimonAttribute.Poison, "毒"),
+                (Pachimon.Reward.PachimonAttribute.Ice, "氷"),
+                (Pachimon.Reward.PachimonAttribute.Wind, "風"),
+                (Pachimon.Reward.PachimonAttribute.Dragon, "竜"),
+            };
+
+        [UnityEditor.InitializeOnLoadMethod]
+        private static void ScheduleSetup()
+        {
+            UnityEditor.EditorApplication.delayCall += TryAutoSetup;
+        }
+
+        [UnityEditor.MenuItem("Tools/Pachimon/Data/Create Equipment Items")]
+        public static void Setup()
+        {
+            EnsureAssetFolder(DataFolder);
+            var catalog = UnityEditor.AssetDatabase
+                .LoadAssetAtPath<Pachimon.Items.ItemCatalog>(CatalogPath);
+            if (catalog == null)
+            {
+                UnityEngine.Debug.LogWarning(
+                    "ItemCatalog is missing. Create the Item sample catalog first.");
+                return;
+            }
+
+            var items = new System.Collections.Generic.List<Pachimon.Items.EquipmentItemAsset>();
+            var itemId = Pachimon.Items.ItemIds.FirstEquipment;
+            foreach (Pachimon.Items.EquipmentSlot slot in System.Enum.GetValues(
+                         typeof(Pachimon.Items.EquipmentSlot)))
+            {
+                foreach (var attribute in Attributes)
+                {
+                    var slotName = GetSlotName(slot);
+                    var path = $"{DataFolder}/Item_{itemId:D3}_Equipment_"
+                        + $"{slot}_{attribute.Attribute}.asset";
+                    var item = UnityEditor.AssetDatabase
+                        .LoadAssetAtPath<Pachimon.Items.EquipmentItemAsset>(path);
+                    if (!HasValidScriptReference(item))
+                    {
+                        UnityEditor.AssetDatabase.DeleteAsset(path);
+                        item = UnityEngine.ScriptableObject
+                            .CreateInstance<Pachimon.Items.EquipmentItemAsset>();
+                        UnityEditor.AssetDatabase.CreateAsset(item, path);
+                    }
+
+                    item.ConfigureForEditor(
+                        itemId,
+                        $"{attribute.Name}の{slotName}",
+                        null,
+                        $"{attribute.Name}属性を主効果とする{slotName}。",
+                        Pachimon.Items.ItemCategory.Equipment,
+                        BasePrice);
+                    item.ConfigureEquipmentForEditor(slot, attribute.Attribute);
+                    UnityEditor.EditorUtility.SetDirty(item);
+                    items.Add(item);
+                    itemId++;
+                }
+            }
+
+            catalog.SetItemsForEditor(catalog.Items
+                .Where(item => item != null)
+                .Concat(items)
+                .GroupBy(item => item.ItemId)
+                .Select(group => group.Last())
+                .OrderBy(item => item.ItemId));
+            UnityEditor.EditorUtility.SetDirty(catalog);
+            UnityEditor.AssetDatabase.SaveAssets();
+            UnityEngine.Debug.Log("Equipment Items were created and registered.", catalog);
+        }
+
+        private static void TryAutoSetup()
+        {
+            if (UnityEditor.EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                return;
+            }
+
+            var catalog = UnityEditor.AssetDatabase
+                .LoadAssetAtPath<Pachimon.Items.ItemCatalog>(CatalogPath);
+            if (catalog == null)
+            {
+                return;
+            }
+
+            var equipment = catalog.Items
+                .OfType<Pachimon.Items.EquipmentItemAsset>()
+                .Where(item => item.ItemId >= Pachimon.Items.ItemIds.FirstEquipment
+                    && item.ItemId <= Pachimon.Items.ItemIds.LastEquipment)
+                .ToArray();
+            var uniqueDefinitions = equipment
+                .Select(item => (item.Slot, item.MainAttribute))
+                .Distinct()
+                .Count();
+            if (equipment.Length != 24
+                || uniqueDefinitions != 24
+                || equipment.Any(item => item.BasePrice != BasePrice
+                    || !HasValidScriptReference(item)))
+            {
+                Setup();
+            }
+        }
+
+        private static string GetSlotName(Pachimon.Items.EquipmentSlot slot)
+        {
+            return slot switch
+            {
+                Pachimon.Items.EquipmentSlot.Head => "冠",
+                Pachimon.Items.EquipmentSlot.Body => "勾玉",
+                Pachimon.Items.EquipmentSlot.Feet => "靴",
+                _ => throw new System.ArgumentOutOfRangeException(nameof(slot)),
+            };
+        }
+
+        private static void EnsureAssetFolder(string path)
+        {
+            var parts = path.Split('/');
+            var current = parts[0];
+            for (var index = 1; index < parts.Length; index++)
+            {
+                var next = $"{current}/{parts[index]}";
+                if (!UnityEditor.AssetDatabase.IsValidFolder(next))
+                {
+                    UnityEditor.AssetDatabase.CreateFolder(current, parts[index]);
+                }
+
+                current = next;
+            }
+        }
+
+        private static bool HasValidScriptReference(UnityEngine.ScriptableObject asset)
+        {
+            if (asset == null)
+            {
+                return false;
+            }
+
+            return new UnityEditor.SerializedObject(asset)
+                .FindProperty("m_Script")?.objectReferenceValue != null;
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Pachimon.Data;
+using Pachimon.Items;
 
 namespace Pachimon.Run
 {
@@ -11,6 +12,8 @@ namespace Pachimon.Run
         private readonly List<int> _skillIds = new();
         private readonly List<PachimonSkillSlot> _skillSlots = new();
         private readonly List<int> _passiveIds = new();
+        private readonly List<IStatModifier> _permanentStatModifiers = new();
+        private readonly Dictionary<EquipmentSlot, EquippedItem> _equipment = new();
         private int _nextSkillSlotId = 1;
 
         public PachimonInstance(
@@ -76,6 +79,11 @@ namespace Pachimon.Run
 
         public IReadOnlyList<int> PassiveIds => _passiveIds;
 
+        public IReadOnlyList<IStatModifier> PermanentStatModifiers =>
+            _permanentStatModifiers;
+
+        public IReadOnlyDictionary<EquipmentSlot, EquippedItem> Equipment => _equipment;
+
         public bool CanAddSkill => _skillSlots.Count < MaxSkillSlots;
 
         public bool AddSkill(int skillId)
@@ -98,6 +106,63 @@ namespace Pachimon.Run
 
             _passiveIds.Add(passiveId);
             return true;
+        }
+
+        public bool CanEquip(EquipmentSlot slot)
+        {
+            return !_equipment.ContainsKey(slot);
+        }
+
+        public bool TryEquip(
+            EquipmentItemAsset item,
+            GeneratedItemData generatedData,
+            string sourceId)
+        {
+            if (item == null
+                || generatedData == null
+                || generatedData.EquipmentSlot != item.Slot
+                || generatedData.StatChanges.Count == 0
+                || string.IsNullOrWhiteSpace(sourceId)
+                || !CanEquip(item.Slot))
+            {
+                return false;
+            }
+
+            foreach (var change in generatedData.StatChanges)
+            {
+                AddPermanentStatModifier(
+                    change.StatType,
+                    change.Amount,
+                    sourceId,
+                    item.DisplayName);
+            }
+
+            _equipment.Add(
+                item.Slot,
+                new EquippedItem(item.ItemId, item.DisplayName, generatedData));
+            return true;
+        }
+
+        public void AddPermanentStatModifier(
+            PachimonStatType statType,
+            int amount,
+            string sourceId,
+            string displayName)
+        {
+            if (statType < 0 || statType >= PachimonStatType.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(statType));
+            }
+            if (amount == 0) throw new ArgumentOutOfRangeException(nameof(amount));
+
+            _permanentStatModifiers.Add(new FixedStatModifier(
+                statType,
+                StatModifierOperation.DirectAdditive,
+                amount,
+                new StatModifierSource(
+                    StatModifierSourceType.Item,
+                    sourceId,
+                    displayName)));
         }
 
         public int SetCurrentHp(int currentHp)
@@ -219,5 +284,22 @@ namespace Pachimon.Run
         {
             if (effectiveMaximum < 0) throw new ArgumentOutOfRangeException(parameterName);
         }
+    }
+
+    public sealed class EquippedItem
+    {
+        public EquippedItem(
+            int itemId,
+            string displayName,
+            GeneratedItemData generatedData)
+        {
+            ItemId = itemId;
+            DisplayName = displayName;
+            GeneratedData = generatedData;
+        }
+
+        public int ItemId { get; }
+        public string DisplayName { get; }
+        public GeneratedItemData GeneratedData { get; }
     }
 }

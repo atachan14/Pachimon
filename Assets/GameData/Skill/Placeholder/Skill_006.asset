@@ -13,10 +13,16 @@ MonoBehaviour:
   m_Name: Skill_006
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
   _skillId: 6
-  _displayName: 冷たい手
+  _displayName: "\u51B7\u305F\u3044\u624B"
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 20
+  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Ice}{color:Ice}{value:damage}{/color}\u306E{term:IceDamage|\u6C37\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Chill|\u51B7\u6C17}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _statusBaseValue: 100
+  _statusScalingPercent: 100
+  _toxinStatus: {fileID: 0}
+  _paralysisStatus: {fileID: 0}
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

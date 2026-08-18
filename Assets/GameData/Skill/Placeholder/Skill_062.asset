@@ -9,14 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 1d2e43836fd1d394cb5c5056bc3fab53, type: 3}
   m_Name: Skill_062
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.FrostArrowSkillAsset
   _skillId: 62
-  _displayName: 冷たい手
+  _displayName: "\u30D5\u30ED\u30B9\u30C8\u30A2\u30ED\u30FC"
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseCooldownTicks: 300
+  _baseManaCost: 30
+  _description: "現在HPが最も低い敵へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与える。撃破時、MNを{value:manaRefund}、CDを{value:cooldownRefund}tick還元する。"
+  _baseDamage: 100
+  _baseChill: 30
+  _iceRatio: 100
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

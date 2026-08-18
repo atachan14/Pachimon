@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DarkFlamePassiveAsset
   _passiveId: 9
   _displayName: 闇の炎
-  _description: Fire Damageの軽減前Valueを基に、Poisonで増幅した追加Poison Damageを与える。
+  _description: "{icon:Fire}{term:FireDamage|炎ダメージ}を与えたとき、軽減前Valueを基に{icon:Poison}{term:PoisonDamage|毒ダメージ}を追加する。現在の変換率は{value:conversion}%。"
   _baseConversionPercent: 20
   _poisonScalingPercent: 100

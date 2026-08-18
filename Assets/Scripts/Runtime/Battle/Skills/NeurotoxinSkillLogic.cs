@@ -58,6 +58,7 @@ namespace Pachimon.Battle
             var target = context.Targets.GetBackEnemy()
                 ?? throw new InvalidOperationException(
                     "No living Enemy target was found.");
+            var hit = context.BeginStatusHit(target);
             var poison = context.User.GetBattleStatValue(PachimonStatType.Poison);
             var electric = context.User.GetBattleStatValue(
                 PachimonStatType.Electric);
@@ -69,8 +70,7 @@ namespace Pachimon.Battle
 
             if (stunTicks > 0)
             {
-                context.State.Statuses.ApplyAttackStatus(
-                    target,
+                hit.ApplyStatus(
                     BattleStatusFactory.CreateStun(
                         context.User,
                         stunTicks,
@@ -79,8 +79,7 @@ namespace Pachimon.Battle
 
             if (toxinValue > 0)
             {
-                context.State.Statuses.ApplyAttackStatus(
-                    target,
+                hit.ApplyStatus(
                     BattleStatusFactory.CreateToxin(
                         context.User,
                         toxinValue,

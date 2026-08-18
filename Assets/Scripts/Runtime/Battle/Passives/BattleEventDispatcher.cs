@@ -25,6 +25,15 @@ namespace Pachimon.Battle
             decimal value);
     }
 
+    public interface IShieldModifierProvider
+    {
+        ShieldApplicationPlan ModifyShield(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            ShieldApplicationPlan plan);
+    }
+
     public interface IOutgoingStatusValueModifierProvider
     {
         decimal ModifyOutgoingStatusValue(
@@ -44,6 +53,13 @@ namespace Pachimon.Battle
             BattleUnitState target,
             DamageContext context,
             decimal penetrationPercent);
+    }
+
+    public interface IContinueTurnAfterSkillProvider
+    {
+        bool ShouldContinueTurn(
+            BattleState state,
+            SkillResolution resolution);
     }
 
     public sealed class BattleEventDispatcher

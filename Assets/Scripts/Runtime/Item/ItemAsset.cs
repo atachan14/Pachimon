@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Pachimon.Run;
 using UnityEngine;
 
 namespace Pachimon.Items
@@ -9,6 +10,36 @@ namespace Pachimon.Items
         Pharmacy = 0,
         Other = 1,
         SkillMachine = 2,
+        Engraving = 3,
+        Equipment = 4,
+    }
+
+    public enum EquipmentSlot
+    {
+        Head = 0,
+        Body = 1,
+        Feet = 2,
+    }
+
+    public static class StatUnitValue
+    {
+        public static int Get(PachimonStatType statType)
+        {
+            if (PachimonStatTypeUtility.TryGetAttribute(statType, out _))
+            {
+                return 30;
+            }
+
+            return statType switch
+            {
+                PachimonStatType.MaxHp or PachimonStatType.MaxMn => 50,
+                PachimonStatType.Speed
+                    or PachimonStatType.Haste
+                    or PachimonStatType.DamageBonus
+                    or PachimonStatType.ResistBonus => 10,
+                _ => throw new ArgumentOutOfRangeException(nameof(statType)),
+            };
+        }
     }
 
     public abstract class ItemAsset : ScriptableObject
@@ -59,5 +90,30 @@ namespace Pachimon.Items
             _basePrice = basePrice;
         }
 #endif
+    }
+
+    public static class EngravingStatName
+    {
+        public static string Get(PachimonStatType statType)
+        {
+            return statType switch
+            {
+                PachimonStatType.MaxHp => "MaxHP",
+                PachimonStatType.MaxMn => "MaxMN",
+                PachimonStatType.Fire => "炎",
+                PachimonStatType.Aqua => "水",
+                PachimonStatType.Leaf => "草",
+                PachimonStatType.Electric => "電",
+                PachimonStatType.Poison => "毒",
+                PachimonStatType.Ice => "氷",
+                PachimonStatType.Wind => "風",
+                PachimonStatType.Dragon => "竜",
+                PachimonStatType.Speed => "SPD",
+                PachimonStatType.Haste => "HST",
+                PachimonStatType.DamageBonus => "DB",
+                PachimonStatType.ResistBonus => "RB",
+                _ => throw new ArgumentOutOfRangeException(nameof(statType)),
+            };
+        }
     }
 }

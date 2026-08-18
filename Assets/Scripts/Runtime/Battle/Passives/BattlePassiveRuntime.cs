@@ -65,6 +65,17 @@ namespace Pachimon.Battle
             return value;
         }
 
+        public ShieldApplicationPlan ModifyShield(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            ShieldApplicationPlan plan)
+        {
+            foreach (var provider in _logics.OfType<IShieldModifierProvider>())
+                plan = provider.ModifyShield(state, source, target, plan);
+            return plan;
+        }
+
         public decimal ModifyOutgoingStatusValue(
             BattleState state,
             BattleUnitState source,
@@ -119,6 +130,20 @@ namespace Pachimon.Battle
                     penetration);
             }
             return penetration;
+        }
+
+        public bool ShouldContinueTurn(
+            BattleState state,
+            SkillResolution resolution)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (resolution == null)
+                throw new ArgumentNullException(nameof(resolution));
+
+            return _logics
+                .Where(logic => ReferenceEquals(logic.Owner, resolution.User))
+                .OfType<IContinueTurnAfterSkillProvider>()
+                .Any(provider => provider.ShouldContinueTurn(state, resolution));
         }
     }
 }

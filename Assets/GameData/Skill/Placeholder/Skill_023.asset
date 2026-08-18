@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: 風化の風
   _allocationType: 7
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: 敵全体へWind参照の風化を与える。
+  _baseManaCost: 40
+  _description: "敵全体へ値{color:Wind}{value:erosionValue}{/color}の{term:WindErosion|風化}を付与する。風化はRBをValueだけ減少させ、毎tick1減少する。"
   _baseErosionValue: 20
   _windValueRatio: 100
   _statusDefinition: {fileID: 11400000, guid: 107e040d36bf4f69858cc0db850c0cd8, type: 2}

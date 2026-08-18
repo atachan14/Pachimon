@@ -16,8 +16,11 @@ MonoBehaviour:
   _displayName: "\u30C9\u30E9\u30B4\u30F3\u30D5\u30C3\u30C8\u30EF\u30FC\u30AF"
   _allocationType: 8
   _isMapAssignable: 1
+  _baseStartupTicks: 40
   _baseRecoveryTicks: 80
   _baseCooldownTicks: 300
-  _baseManaCost: 80
-  _description: "\u6B21\u306B\u53D7\u3051\u308B\u653B\u6483\u3092\u56DE\u907F\u3059\u308B\u3002"
+  _baseManaCost: 50
+  _description: "{value:duration}tick\u306E\u9593\u3001\u6B21\u306B\u53D7\u3051\u308B{term:Attack|\u653B\u6483}\u3068\u3001\u305D\u308C\u306B\u4ED8\u968F\u3059\u308B\u72B6\u614B\u3092\u56DE\u907F\u3059\u308B\u3002"
+  _baseDurationTicks: 80
+  _durationDragonRatio: 100
   _footworkStatus: {fileID: 11400000, guid: 807c37d3f01564648b4fbfae297a1bde, type: 2}

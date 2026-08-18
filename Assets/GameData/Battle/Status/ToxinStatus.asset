@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.ToxinStatusAsset
   _statusId: 108
   _displayName: "\u6BD2\u7D20"
-  _description: "\u6BCEtick\u3001\u73FE\u5728Value\u306E1%\u306EPoison\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001Value\u30921%\u6E1B\u5C11\u3055\u305B\u308B\u3002"
+  _description: "毎tick、軽減前{color:Poison}{value:damagePerTick}{/color}の毒ダメージを与え、Valueを{value:decayPerTick}減少させる。現在Valueの{value:damagePerTickRatio}%と{value:decayPerTickRatio}%をそれぞれ蓄積して計算する。"
   _icon: {fileID: 0}
   _damagePerTickRatio: 1
   _decayPerTickRatio: 1

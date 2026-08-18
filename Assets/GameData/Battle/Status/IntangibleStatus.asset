@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d472af3bb445a814dbd53b2f807b57ed, type: 3}
+  m_Name: IntangibleStatus
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.IntangibleStatusAsset
+  _statusId: 138
+  _displayName: "\u7121\u5F62\u5316"
+  _description: "\u767A\u751F\u4E2D\u306B\u53D7\u3051\u308B\u6B63\u306EDamage\u30921\u306B\u3059\u308B\u3002"
+  _icon: {fileID: 0}

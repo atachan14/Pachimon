@@ -76,12 +76,26 @@ namespace Pachimon.Battle
                 ?? throw new InvalidOperationException(
                     $"Pachimon Species '{instance.SpeciesId}' was not found.");
             var effectiveStats = PachimonStatService.Calculate(
-                instance.Stats,
+                instance,
                 modifiers,
-                instance.PassiveIds,
                 _passiveStatModifierRegistry);
             var startingHp = Math.Min(instance.CurrentHp, effectiveStats.MaxHp);
             var startingMn = Math.Min(instance.CurrentMn, effectiveStats.MaxMn);
+            if (side == BattleSide.Enemy)
+            {
+                var unmodifiedStats = PachimonStatService.Calculate(
+                    instance,
+                    null,
+                    _passiveStatModifierRegistry);
+                startingHp = EnemyTrainerScalingService.PreserveMissingResource(
+                    instance.CurrentHp,
+                    unmodifiedStats.MaxHp,
+                    effectiveStats.MaxHp);
+                startingMn = EnemyTrainerScalingService.PreserveMissingResource(
+                    instance.CurrentMn,
+                    unmodifiedStats.MaxMn,
+                    effectiveStats.MaxMn);
+            }
             return new BattleUnitState(
                 instance.InstanceId,
                 instance.SpeciesId,

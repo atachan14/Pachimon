@@ -75,7 +75,8 @@ namespace Pachimon.Battle
                 context.State.SupportEffects.ApplyShield(
                     context.User,
                     context.User,
-                    shieldValue);
+                    shieldValue,
+                    _skill.DurationTicks);
                 context.State.AddLog(
                     $"{context.User.DisplayName}は{shieldValue}のShieldを得た！");
             }

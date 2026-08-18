@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: 治癒の風
   _allocationType: 7
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: 最もCurrent HPが低い味方を回復し、WindとSpeedを増加させる。
+  _baseManaCost: 80
+  _description: "HP割合が最も低い味方を{color:Wind}{value:healing}{/color}回復し、{value:duration}tickの間、{icon:Wind}風を{value:windBonus}、Speedを{value:speedBonus}増加させる。"
   _baseHealing: 100
   _baseWindBonus: 50
   _baseSpeedBonus: 50

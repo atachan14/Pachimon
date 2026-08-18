@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: スモッグ
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: 敵陣に毒素を付与し続けるスモッグを生成する。
+  _baseManaCost: 40
+  _description: "敵陣に値{color:Poison}{value:fieldValue}{/color}の{term:Smog|スモッグ}を生成する。"
   _baseFieldValue: 300
   _poisonScalingPercent: 100
   _fieldEffect: {fileID: 11400000, guid: b5ee990827f94a65b045d5f074c15b1b, type: 2}

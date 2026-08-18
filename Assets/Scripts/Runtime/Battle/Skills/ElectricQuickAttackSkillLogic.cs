@@ -19,34 +19,24 @@ namespace Pachimon.Battle
         {
             ValidateSkill(context);
             var target = GetTarget(context);
+            var hit = context.BeginAttackHit(target);
             var electricResult = ResolveComponent(
                 context,
                 target,
-                PachimonAttribute.Electric);
+                PachimonAttribute.Electric,
+                hit);
             var fireResult = ResolveComponent(
                 context,
                 target,
-                PachimonAttribute.Fire);
-            var effects = ReferenceEquals(
-                    electricResult.ActualTarget,
-                    fireResult.ActualTarget)
-                ? new[]
+                PachimonAttribute.Fire,
+                hit);
+            var effects = new[]
                 {
                     new SkillEffectResult(
-                        fireResult.ActualTarget,
+                        hit.Target,
                         checked(electricResult.AppliedDamage + fireResult.AppliedDamage),
-                        isTrueDamage: false),
-                }
-                : new[]
-                {
-                    new SkillEffectResult(
-                        electricResult.ActualTarget,
-                        electricResult.AppliedDamage,
-                        isTrueDamage: false),
-                    new SkillEffectResult(
-                        fireResult.ActualTarget,
-                        fireResult.AppliedDamage,
-                        isTrueDamage: false),
+                        isTrueDamage: false,
+                        hit: hit),
                 };
             return new SkillResolution(
                 context.User,
@@ -102,9 +92,10 @@ namespace Pachimon.Battle
         private BattleDamageApplicationResult ResolveComponent(
             SkillExecutionContext context,
             BattleUnitState target,
-            PachimonAttribute attribute)
+            PachimonAttribute attribute,
+            SkillHit hit)
         {
-            var result = BattleAttributeDamageService.Apply(
+            return BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
                 target,
@@ -112,8 +103,8 @@ namespace Pachimon.Battle
                     context.State,
                     context.User,
                     target,
-                    attribute).Context);
-            return result;
+                    attribute).Context,
+                hit);
         }
 
         private static BattleUnitState GetTarget(SkillExecutionContext context)

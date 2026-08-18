@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Pachimon.Reward;
 using Pachimon.Run;
 
@@ -11,7 +13,9 @@ namespace Pachimon.Battle
             int finalDamage,
             int appliedDamage,
             int shieldAbsorbedDamage,
-            BattleUnitState actualTarget)
+            BattleUnitState actualTarget,
+            bool wasEvaded = false,
+            SkillHit hit = null)
         {
             Calculation = calculation
                 ?? throw new ArgumentNullException(nameof(calculation));
@@ -20,6 +24,8 @@ namespace Pachimon.Battle
             ShieldAbsorbedDamage = shieldAbsorbedDamage;
             ActualTarget = actualTarget
                 ?? throw new ArgumentNullException(nameof(actualTarget));
+            Hit = hit;
+            WasEvaded = hit?.WasEvaded ?? wasEvaded;
         }
 
         public DamageCalculationResult Calculation { get; }
@@ -27,6 +33,8 @@ namespace Pachimon.Battle
         public int AppliedDamage { get; }
         public int ShieldAbsorbedDamage { get; }
         public BattleUnitState ActualTarget { get; }
+        public bool WasEvaded { get; }
+        public SkillHit Hit { get; }
         public int DamageAfterShield => FinalDamage - ShieldAbsorbedDamage;
     }
 
@@ -36,7 +44,8 @@ namespace Pachimon.Battle
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
-            DamageContext damageContext)
+            DamageContext damageContext,
+            SkillHit hit = null)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -56,10 +65,17 @@ namespace Pachimon.Battle
                     "Source-less damage must be an unmodified Status damage.");
             }
 
-            var actualTarget = state.Statuses.ResolveAttackTarget(
-                source,
-                target,
-                damageContext.IsAttack);
+            if (hit == null && damageContext.IsAttack)
+            {
+                hit = new SkillHit(
+                    state,
+                    source,
+                    target,
+                    damageContext.OriginKind,
+                    damageContext.OriginId);
+            }
+            hit?.Validate(state, source, target);
+            var actualTarget = hit?.Target ?? target;
             if (!ReferenceEquals(actualTarget, target))
             {
                 target = actualTarget;
@@ -77,25 +93,23 @@ namespace Pachimon.Battle
                         damageContext));
             }
             var calculation = AttributeDamageCalculator.Calculate(damageContext);
-            if (damageContext.IsAttack
-                && state.Statuses.TryEvadeAttack(
-                    source,
-                    target,
-                    damageContext.OriginKind,
-                    damageContext.OriginId))
+            var wasEvaded = hit?.WasEvaded ?? false;
+            if (wasEvaded)
             {
                 return new BattleDamageApplicationResult(
                     calculation,
                     finalDamage: 0,
                     appliedDamage: 0,
                     shieldAbsorbedDamage: 0,
-                    actualTarget: target);
+                    actualTarget: target,
+                    hit: hit);
             }
             var beforeDamage = new BeforeAttributeDamageEvent(
                 state,
                 source,
                 target,
-                calculation);
+                calculation,
+                hit);
             if (damageContext.ApplyAttackerAttributeMultiplier)
             {
                 var statType = PachimonStatTypeUtility.FromAttribute(
@@ -111,14 +125,37 @@ namespace Pachimon.Battle
             }
             state.Events.Publish(beforeDamage);
             state.Statuses.ApplyIncomingDamageModifiers(beforeDamage);
+            if (damageContext.IsAttack
+                && state.Fields.TryEvadeSkillAttack(
+                    source,
+                    target,
+                    damageContext.OriginKind,
+                    calculation.PreDefenseDamage
+                        * beforeDamage.OutgoingMultiplier,
+                    hit))
+            {
+                return new BattleDamageApplicationResult(
+                    calculation,
+                    finalDamage: 0,
+                    appliedDamage: 0,
+                    shieldAbsorbedDamage: 0,
+                    actualTarget: target,
+                    hit: hit);
+            }
             var interception = damageContext.IsAttack
                 ? state.Fields.InterceptAttributeAttack(
                     source,
                     target,
                     damageContext.Attribute,
                     calculation.PreDefenseDamage
-                        * beforeDamage.OutgoingMultiplier)
+                        * beforeDamage.OutgoingMultiplier,
+                    damageContext.OriginKind,
+                    damageContext.OriginId)
                 : default;
+            hit?.RecordDamageInterception(
+                interception.FieldEffect,
+                !interception.WasIntercepted
+                || interception.OverflowDamage > 0);
             if (interception.WasIntercepted
                 && interception.OverflowDamage <= 0)
             {
@@ -127,7 +164,8 @@ namespace Pachimon.Battle
                     finalDamage: 0,
                     appliedDamage: 0,
                     shieldAbsorbedDamage: 0,
-                    actualTarget: target);
+                    actualTarget: target,
+                    hit: hit);
             }
 
             var targetUnroundedDamage = interception.WasIntercepted
@@ -140,8 +178,14 @@ namespace Pachimon.Battle
                     target,
                     damageContext.Attribute,
                     targetUnroundedDamage);
-            var finalDamage = AttributeDamageCalculator.FinalizeNormalDamage(
-                targetUnroundedDamage);
+            var finalDamage = state.Statuses.ClampIncomingDamage(
+                target,
+                AttributeDamageCalculator.FinalizeNormalDamage(
+                    targetUnroundedDamage));
+            var activeShieldOrders = target.Shields
+                .Select(current => current.ApplicationOrder)
+                .ToArray();
+            var statusesBeforeDamage = CaptureStatusValues(target);
             var shield = target.AbsorbDamage(finalDamage);
             var hpBefore = target.CurrentHp;
             var appliedDamage = target.ApplyDamage(shield.RemainingDamage);
@@ -164,7 +208,13 @@ namespace Pachimon.Battle
                 finalDamage,
                 appliedDamage,
                 shield.AbsorbedDamage);
+            if (damageContext.Attribute == PachimonAttribute.Electric
+                && appliedDamage + shield.AbsorbedDamage > 0)
+            {
+                state.RecordElectricDamage();
+            }
             state.Events.Publish(appliedEvent);
+            state.Fields.HandleAttributeDamageApplied(appliedEvent);
             PublishAttackReceived(
                 state,
                 source,
@@ -176,7 +226,8 @@ namespace Pachimon.Battle
                 damageContext.Attribute,
                 finalDamage,
                 appliedDamage,
-                shield.AbsorbedDamage);
+                shield.AbsorbedDamage,
+                activeShieldOrders);
             state.Statuses.HandleAttributeDamageApplied(appliedEvent);
             var damageAppliedEvent = new DamageAppliedEvent(
                 state,
@@ -188,7 +239,8 @@ namespace Pachimon.Battle
                 damageContext.Attribute,
                 finalDamage,
                 appliedDamage,
-                shield.AbsorbedDamage);
+                shield.AbsorbedDamage,
+                statusesBeforeDamage);
             state.Events.Publish(damageAppliedEvent);
             state.Statuses.HandleDamageApplied(damageAppliedEvent);
             state.Weather.HandleDamageApplied(damageAppliedEvent);
@@ -197,7 +249,8 @@ namespace Pachimon.Battle
                 finalDamage,
                 appliedDamage,
                 shield.AbsorbedDamage,
-                target);
+                target,
+                hit: hit);
         }
 
         internal static void PublishAttackReceived(
@@ -211,14 +264,15 @@ namespace Pachimon.Battle
             PachimonAttribute? attribute,
             int finalDamage,
             int appliedDamage,
-            int shieldAbsorbedDamage = 0)
+            int shieldAbsorbedDamage = 0,
+            IReadOnlyCollection<long> activeShieldApplicationOrders = null)
         {
             if (!isAttack)
             {
                 return;
             }
 
-            state.Events.Publish(new AttackReceivedEvent(
+            var attackEvent = new AttackReceivedEvent(
                 state,
                 source,
                 target,
@@ -228,7 +282,23 @@ namespace Pachimon.Battle
                 attribute,
                 finalDamage,
                 appliedDamage,
-                shieldAbsorbedDamage));
+                shieldAbsorbedDamage,
+                activeShieldApplicationOrders);
+            state.Events.Publish(attackEvent);
+            state.Statuses.HandleAttackReceived(attackEvent);
+        }
+
+        internal static IReadOnlyDictionary<BattleStatusId, int>
+            CaptureStatusValues(BattleUnitState target)
+        {
+            if (target == null) throw new ArgumentNullException(nameof(target));
+
+            // Timed statuses such as Stun may coexist as independent instances.
+            return target.Statuses
+                .GroupBy(status => status.StatusId)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Sum(status => status.Value));
         }
     }
 
@@ -238,19 +308,25 @@ namespace Pachimon.Battle
             int finalDamage,
             int appliedDamage,
             int shieldAbsorbedDamage,
-            BattleUnitState actualTarget)
+            BattleUnitState actualTarget,
+            bool wasEvaded = false,
+            SkillHit hit = null)
         {
             FinalDamage = finalDamage;
             AppliedDamage = appliedDamage;
             ShieldAbsorbedDamage = shieldAbsorbedDamage;
             ActualTarget = actualTarget
                 ?? throw new ArgumentNullException(nameof(actualTarget));
+            Hit = hit;
+            WasEvaded = hit?.WasEvaded ?? wasEvaded;
         }
 
         public int FinalDamage { get; }
         public int AppliedDamage { get; }
         public int ShieldAbsorbedDamage { get; }
         public BattleUnitState ActualTarget { get; }
+        public bool WasEvaded { get; }
+        public SkillHit Hit { get; }
         public int DamageAfterShield => FinalDamage - ShieldAbsorbedDamage;
     }
 
@@ -260,7 +336,8 @@ namespace Pachimon.Battle
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
-            TrueDamageContext damageContext)
+            TrueDamageContext damageContext,
+            SkillHit hit = null)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -270,31 +347,57 @@ namespace Pachimon.Battle
                 throw new ArgumentNullException(nameof(damageContext));
             }
 
-            target = state.Statuses.ResolveAttackTarget(
-                source,
-                target,
-                damageContext.IsAttack);
-
-            if (damageContext.IsAttack
-                && state.Statuses.TryEvadeAttack(
+            if (hit == null && damageContext.IsAttack)
+            {
+                hit = new SkillHit(
+                    state,
                     source,
                     target,
                     damageContext.OriginKind,
-                    damageContext.OriginId))
+                    damageContext.OriginId);
+            }
+            hit?.Validate(state, source, target);
+            target = hit?.Target ?? target;
+
+            var wasEvaded = hit?.WasEvaded ?? false;
+            if (wasEvaded)
             {
                 return new BattleTrueDamageApplicationResult(
                     finalDamage: 0,
                     appliedDamage: 0,
                     shieldAbsorbedDamage: 0,
-                    actualTarget: target);
+                    actualTarget: target,
+                    hit: hit);
+            }
+
+            if (damageContext.IsAttack
+                && state.Fields.TryEvadeSkillAttack(
+                    source,
+                    target,
+                    damageContext.OriginKind,
+                    damageContext.Damage,
+                    hit))
+            {
+                return new BattleTrueDamageApplicationResult(
+                    finalDamage: 0,
+                    appliedDamage: 0,
+                    shieldAbsorbedDamage: 0,
+                    actualTarget: target,
+                    hit: hit);
             }
 
             var interception = damageContext.IsAttack
                 ? state.Fields.InterceptTrueAttack(
                     source,
                     target,
-                    damageContext.Damage)
+                    damageContext.Damage,
+                    damageContext.OriginKind,
+                    damageContext.OriginId)
                 : default;
+            hit?.RecordDamageInterception(
+                interception.FieldEffect,
+                !interception.WasIntercepted
+                || interception.OverflowDamage > 0);
             if (interception.WasIntercepted
                 && interception.OverflowDamage <= 0)
             {
@@ -302,12 +405,21 @@ namespace Pachimon.Battle
                     finalDamage: 0,
                     appliedDamage: 0,
                     shieldAbsorbedDamage: 0,
-                    actualTarget: target);
+                    actualTarget: target,
+                    hit: hit);
             }
 
             var targetDamage = interception.WasIntercepted
                 ? interception.OverflowDamage
                 : damageContext.Damage;
+            targetDamage = state.Statuses.ClampIncomingDamage(
+                target,
+                targetDamage);
+            var activeShieldOrders = target.Shields
+                .Select(current => current.ApplicationOrder)
+                .ToArray();
+            var statusesBeforeDamage = BattleAttributeDamageService
+                .CaptureStatusValues(target);
             var shield = target.AbsorbDamage(targetDamage);
             var hpBefore = target.CurrentHp;
             var appliedDamage = target.ApplyDamage(shield.RemainingDamage);
@@ -329,7 +441,8 @@ namespace Pachimon.Battle
                 attribute: null,
                 targetDamage,
                 appliedDamage,
-                shield.AbsorbedDamage);
+                shield.AbsorbedDamage,
+                activeShieldOrders);
             var damageAppliedEvent = new DamageAppliedEvent(
                 state,
                 source,
@@ -340,7 +453,8 @@ namespace Pachimon.Battle
                 attribute: null,
                 targetDamage,
                 appliedDamage,
-                shield.AbsorbedDamage);
+                shield.AbsorbedDamage,
+                statusesBeforeDamage);
             state.Events.Publish(damageAppliedEvent);
             state.Statuses.HandleDamageApplied(damageAppliedEvent);
             state.Weather.HandleDamageApplied(damageAppliedEvent);
@@ -348,7 +462,8 @@ namespace Pachimon.Battle
                 targetDamage,
                 appliedDamage,
                 shield.AbsorbedDamage,
-                target);
+                target,
+                hit: hit);
         }
     }
 
@@ -422,6 +537,7 @@ namespace Pachimon.Battle
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
 
+            damage = state.Statuses.ClampIncomingDamage(target, damage);
             var shield = target.AbsorbDamage(damage);
             var hpBefore = target.CurrentHp;
             var appliedDamage = target.ApplyDamage(shield.RemainingDamage);
@@ -456,6 +572,48 @@ namespace Pachimon.Battle
                     defeatedUnit: target));
             }
             return appliedDamage;
+        }
+    }
+
+    public static class BattleExecutionDamageService
+    {
+        public static int Execute(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState target,
+            int passiveId)
+        {
+            if (state == null) throw new ArgumentNullException(nameof(state));
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (target == null) throw new ArgumentNullException(nameof(target));
+            if (passiveId <= 0) throw new ArgumentOutOfRangeException(nameof(passiveId));
+            if (!target.IsAlive) return 0;
+
+            var hpBefore = target.CurrentHp;
+            var incomingDamage = state.Statuses.ClampIncomingDamage(
+                target,
+                hpBefore);
+            var damage = target.ApplyDamage(incomingDamage);
+            state.Presentation.RecordDamage(
+                target,
+                hpBefore,
+                target.CurrentHp,
+                damage,
+                isTrueDamage: true,
+                shieldAbsorbedDamage: 0);
+            state.Events.Publish(new DamageAppliedEvent(
+                state,
+                source,
+                target,
+                DamageOriginKind.Passive,
+                passiveId,
+                isTrueDamage: true,
+                attribute: null,
+                finalDamage: damage,
+                appliedDamage: damage,
+                shieldAbsorbedDamage: 0));
+            state.AddLog($"{target.DisplayName}はラストタッチで戦闘不能になった！");
+            return damage;
         }
     }
 }

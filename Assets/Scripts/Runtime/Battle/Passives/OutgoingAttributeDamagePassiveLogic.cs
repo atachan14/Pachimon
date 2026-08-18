@@ -6,10 +6,11 @@ namespace Pachimon.Battle
 {
     public sealed class OutgoingAttributeDamagePassiveLogic : IPassiveLogic
     {
-        public const int DamagePercent = 130;
+        public const int DefaultDamagePercent = 130;
 
         private readonly int _passiveId;
         private readonly PachimonAttribute _attribute;
+        private readonly int _damagePercent;
 
         public OutgoingAttributeDamagePassiveLogic(
             int passiveId,
@@ -20,6 +21,22 @@ namespace Pachimon.Battle
             _passiveId = passiveId;
             Owner = owner ?? throw new ArgumentNullException(nameof(owner));
             _attribute = attribute;
+            _damagePercent = DefaultDamagePercent;
+        }
+
+        public OutgoingAttributeDamagePassiveLogic(
+            BattleUnitState owner,
+            OutgoingAttributeDamagePassiveAsset definition)
+        {
+            Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+            if (definition == null)
+            {
+                throw new ArgumentNullException(nameof(definition));
+            }
+
+            _passiveId = definition.PassiveId;
+            _attribute = definition.Attribute;
+            _damagePercent = definition.DamagePercent;
         }
 
         public BattleUnitState Owner { get; }
@@ -35,10 +52,10 @@ namespace Pachimon.Battle
                 return;
             }
 
-            damageEvent.MultiplyDamage(DamagePercent);
+            damageEvent.MultiplyDamage(_damagePercent);
             battleEvent.State.AddLog(
                 $"{AttributePlaceholderName.FromCyclicId(_passiveId)} increased "
-                + $"{damageEvent.Attribute} damage by 30%.");
+                + $"{damageEvent.Attribute} damage by {_damagePercent - 100}%.");
         }
     }
 }

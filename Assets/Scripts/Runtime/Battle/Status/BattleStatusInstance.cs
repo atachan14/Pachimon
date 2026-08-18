@@ -36,6 +36,19 @@ namespace Pachimon.Battle
         DragonDance = 126,
         DragonCranker = 127,
         DragonDefense = 128,
+        Weakness = 129,
+        WeaklingBullySpeed = 130,
+        BurningFlowerLeaf = 131,
+        BurningFlowerFire = 132,
+        ElectricShield = 133,
+        PoisonMagicianGrowth = 134,
+        WindRiderGrowth = 135,
+        WindMagicianGrowth = 136,
+        Charm = 137,
+        Intangible = 138,
+        Clone = 139,
+        WindGod = 140,
+        DragonInstall = 141,
     }
 
     [Flags]
@@ -187,6 +200,10 @@ namespace Pachimon.Battle
                 $"氷の刃 Ice +{Value * StackCount}",
             BattleStatusId.LeafGrowth =>
                 $"粉植物 Leaf +{Value * StackCount}",
+            BattleStatusId.BurningFlowerLeaf =>
+                $"{Definition?.DisplayName ?? "燃える花・草"} +{Value * StackCount}",
+            BattleStatusId.BurningFlowerFire =>
+                $"{Definition?.DisplayName ?? "燃える花・炎"} +{Value * StackCount}",
             _ => StatusId.ToString(),
         };
 

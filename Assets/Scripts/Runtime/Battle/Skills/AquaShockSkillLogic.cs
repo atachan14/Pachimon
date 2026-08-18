@@ -18,21 +18,23 @@ namespace Pachimon.Battle
         {
             ValidateSkill(context);
             var target = GetTarget(context);
+            var hit = context.BeginAttackHit(target);
             var electricResult = ResolveComponent(
                 context,
                 target,
-                PachimonAttribute.Electric);
+                PachimonAttribute.Electric,
+                hit);
             var aquaResult = ResolveComponent(
                 context,
                 target,
-                PachimonAttribute.Aqua);
+                PachimonAttribute.Aqua,
+                hit);
 
             var statusTarget = aquaResult.ActualTarget;
             if (statusTarget.IsAlive)
             {
                 var aqua = context.User.GetBattleStatValue(PachimonStatType.Aqua);
-                context.State.Statuses.ApplyAttackStatus(
-                    statusTarget,
+                hit.ApplyStatus(
                     new BattleStatusInstance(
                         BattleStatusId.Leak,
                         BattleStatusCategory.Leak,
@@ -43,26 +45,13 @@ namespace Pachimon.Battle
                             context.GetAttributeRatio(PachimonAttribute.Aqua))));
             }
 
-            var effects = ReferenceEquals(
-                    electricResult.ActualTarget,
-                    aquaResult.ActualTarget)
-                ? new[]
+            var effects = new[]
                 {
                     new SkillEffectResult(
-                        aquaResult.ActualTarget,
+                        hit.Target,
                         checked(electricResult.AppliedDamage + aquaResult.AppliedDamage),
-                        isTrueDamage: false),
-                }
-                : new[]
-                {
-                    new SkillEffectResult(
-                        electricResult.ActualTarget,
-                        electricResult.AppliedDamage,
-                        isTrueDamage: false),
-                    new SkillEffectResult(
-                        aquaResult.ActualTarget,
-                        aquaResult.AppliedDamage,
-                        isTrueDamage: false),
+                        isTrueDamage: false,
+                        hit: hit),
                 };
             return new SkillResolution(
                 context.User,
@@ -118,13 +107,15 @@ namespace Pachimon.Battle
         private BattleDamageApplicationResult ResolveComponent(
             SkillExecutionContext context,
             BattleUnitState target,
-            PachimonAttribute attribute)
+            PachimonAttribute attribute,
+            SkillHit hit)
         {
             return BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
                 target,
-                CreateDamageContext(context.State, context.User, target, attribute));
+                CreateDamageContext(context.State, context.User, target, attribute),
+                hit);
         }
 
         private static BattleUnitState GetTarget(SkillExecutionContext context)

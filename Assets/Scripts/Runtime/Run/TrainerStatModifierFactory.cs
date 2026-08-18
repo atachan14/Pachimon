@@ -29,8 +29,8 @@ namespace Pachimon.Run
                     addition,
                     new StatModifierSource(
                         StatModifierSourceType.TrainerMod,
-                        $"trainer-mod:{statType}",
-                        "Mod")));
+                        $"trainer-status:{statType}",
+                        "Trainer Status")));
             }
 
             for (var index = 0; index <= (int)PachimonAttribute.Dragon; index++)

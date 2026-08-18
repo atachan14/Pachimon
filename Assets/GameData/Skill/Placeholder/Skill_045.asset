@@ -13,14 +13,16 @@ MonoBehaviour:
   m_Name: Skill_045
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PoisonShieldSkillAsset
   _skillId: 45
-  _displayName: ポイズンシールド
+  _displayName: "\u30DD\u30A4\u30BA\u30F3\u30B7\u30FC\u30EB\u30C9"
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _description: 自身へPoison依存のShieldを付与し、自身の毒素をPoison依存の割合で取り除く。
-  _baseManaCost: 100
-  _baseShieldValue: 300
+  _baseManaCost: 50
+  _description: "\u81EA\u8EAB\u3078{color:Poison}{value:shield}{/color}\u306E{term:Shield|Shield}\u3092{value:duration}tick\u4ED8\u4E0E\u3057\u3001\u81EA\u8EAB\u306E{term:Toxin|\u6BD2\u7D20}\u3092{value:toxinReductionPercent}%\u53D6\u308A\u9664\u304F\u3002"
+  _durationTicks: 200
+  _baseShieldValue: 100
   _shieldPoisonScalingPercent: 100
-  _baseToxinReductionPercent: 50
+  _baseToxinReductionPercent: 30
   _reductionPoisonScalingPercent: 100

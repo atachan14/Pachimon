@@ -17,7 +17,8 @@ namespace Pachimon.Battle
                 throw new ArgumentException("Dragon Break Logic received another Skill.", nameof(context));
 
             var target = context.Targets.GetFrontEnemy();
-            var removedShield = target.RemoveAllShields();
+            var removedShield = context.State.SupportEffects
+                .RemoveAllShields(target);
             if (removedShield > 0)
             {
                 context.State.Presentation.RecordLog(

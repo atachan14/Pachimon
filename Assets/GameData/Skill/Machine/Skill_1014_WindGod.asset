@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a0fba36e309cf8240a0b052d07031473, type: 3}
+  m_Name: Skill_1014_WindGod
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.WindGodSkillAsset
+  _skillId: 1014
+  _displayName: "\u98A8\u795E"
+  _allocationType: 7
+  _isMapAssignable: 0
+  _baseStartupTicks: 100
+  _baseRecoveryTicks: 150
+  _baseCooldownTicks: 400
+  _baseManaCost: 100
+  _description: "\u5148\u982D\u306E\u6575\u3078Wind Damage\u3092\u4E0E\u3048\u3001300tick\u306E\u9593\u3001\u81EA\u8EAB\u306E\u5168\u5C5E\u6027\u5024\u3068RB\u30920\u306B\u3059\u308B\u3002"
+  _baseDamage: 500
+  _windRatio: 100
+  _durationTicks: 300
+  _status: {fileID: 11400000, guid: 2b2cefaca0cc18142a6e79307926d0dc, type: 2}

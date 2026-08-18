@@ -20,6 +20,7 @@ Pachimon、Skill、Passive、Itemを追加し、Placeholder中心の状態から
 - [technical/stat-pipeline-refactor.md](./technical/stat-pipeline-refactor.md)
 - [technical/battle-preview-simulation.md](./technical/battle-preview-simulation.md)
 - [technical/battle-presentation-timeline.md](./technical/battle-presentation-timeline.md)
+- [technical/skill-hit-runtime.md](./technical/skill-hit-runtime.md)
 - [technical/passive-data.md](./technical/passive-data.md)
 - [technical/run-startup-profiles.md](./technical/run-startup-profiles.md)
 - [content/README.md](./content/README.md)

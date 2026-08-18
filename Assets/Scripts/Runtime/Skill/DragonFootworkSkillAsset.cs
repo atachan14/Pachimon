@@ -8,8 +8,12 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "DragonFootworkSkill", menuName = "Pachimon/Skills/Dragon Footwork Skill")]
     public sealed class DragonFootworkSkillAsset : SkillAsset
     {
+        [SerializeField, Min(1)] private int _baseDurationTicks = 80;
+        [SerializeField, Min(0)] private int _durationDragonRatio = 100;
         [SerializeField] private FootworkStatusAsset _footworkStatus;
 
+        public int BaseDurationTicks => _baseDurationTicks;
+        public int DurationDragonRatio => _durationDragonRatio;
         public FootworkStatusAsset FootworkStatus => _footworkStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -17,6 +21,10 @@ namespace Pachimon.Skills
             base.CollectValidationErrors(errors);
             if (AllocationType != AllocationType.Dragon)
                 errors?.Add($"Skill {SkillId}: Dragon Footwork must be Dragon.");
+            if (_baseDurationTicks <= 0)
+                errors?.Add($"Skill {SkillId}: Base Duration must be positive.");
+            if (_durationDragonRatio < 0)
+                errors?.Add($"Skill {SkillId}: Duration Dragon Ratio cannot be negative.");
             if (_footworkStatus == null)
                 errors?.Add($"Skill {SkillId}: Footwork Status is required.");
         }
@@ -29,6 +37,8 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
+            int baseDurationTicks,
+            int durationDragonRatio,
             FootworkStatusAsset footworkStatus)
         {
             base.ConfigureForEditor(
@@ -40,6 +50,8 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
+            _baseDurationTicks = baseDurationTicks;
+            _durationDragonRatio = durationDragonRatio;
             _footworkStatus = footworkStatus;
         }
 #endif

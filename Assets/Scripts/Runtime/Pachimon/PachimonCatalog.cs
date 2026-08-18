@@ -123,6 +123,16 @@ namespace Pachimon.Data
             return changed;
         }
 
+        public bool SetSpeciesGraphicsForEditor(
+            int speciesId,
+            Sprite frontSprite,
+            Sprite backSprite)
+        {
+            var definition = Get(speciesId);
+            return definition != null
+                && definition.SetGraphicsForEditor(frontSprite, backSprite);
+        }
+
         public bool SetGraphicsByAllocationTypeForEditor(
             AllocationType allocationType,
             Sprite frontSprite,

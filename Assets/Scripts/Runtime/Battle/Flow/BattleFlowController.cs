@@ -92,7 +92,6 @@ namespace Pachimon.Battle
                     break;
                 }
 
-                _pendingActions.Remove(nextPending);
                 _state.Timeline.AdvanceToTick(nextPendingTick);
                 outcome = _state.EvaluateOutcome();
                 if (outcome != BattleOutcome.Undecided)
@@ -102,11 +101,22 @@ namespace Pachimon.Battle
                 }
                 if (!nextPending.Action.User.IsAlive)
                 {
+                    _pendingActions.Remove(nextPending);
                     return BattleFlowStep.CancelAction(
                         nextPending.Action,
                         nextPending.WasAutomaticallySelected);
                 }
 
+                // Dynamic Speed modifiers can change while time advances, so
+                // a prediction made before AdvanceToTick may be early.
+                if (nextPending.Action.User.Timing.Phase
+                        != BattleActionPhase.Startup
+                    || !nextPending.Action.User.Timing.IsComplete)
+                {
+                    continue;
+                }
+
+                _pendingActions.Remove(nextPending);
                 var pendingResolution = _skillRuntime.ExecutePending(
                     _state,
                     nextPending.Action);

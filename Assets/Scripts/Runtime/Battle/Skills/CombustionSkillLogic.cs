@@ -45,14 +45,20 @@ namespace Pachimon.Battle
                     selfResult.AppliedDamage,
                     isTrueDamage: false));
 
+                var affectedResources = enemyResult.AppliedDamage
+                    + enemyResult.ShieldAbsorbedDamage
+                    + selfResult.AppliedDamage
+                    + selfResult.ShieldAbsorbedDamage;
                 if (!context.User.IsAlive
                     || !target.IsAlive
-                    || !context.TrySpendAdditionalMn(_skill.BaseManaCost))
+                    || affectedResources == 0)
                 {
                     break;
                 }
 
                 context.BeginNextPresentationBlock();
+                context.State.AddLog(
+                    $"{context.User.DisplayName}\u306f\u71c3\u713c\u3057\u3066\u3044\u308b\uff01");
             }
 
             return new SkillResolution(

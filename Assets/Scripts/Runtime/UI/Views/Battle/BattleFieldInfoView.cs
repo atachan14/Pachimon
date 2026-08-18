@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Battle;
+using Pachimon.Reward;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,8 +17,27 @@ namespace Pachimon.UI
         private RectTransform _enemyLane;
         private RectTransform _globalLane;
         private RectTransform _allyLane;
+        private readonly List<FieldCardBinding> _enemyCards = new();
+        private readonly List<FieldCardBinding> _globalCards = new();
+        private readonly List<FieldCardBinding> _allyCards = new();
         private Action<BattleFieldEffectInstance> _detailsRequested;
         private Action<BattleWeatherInstance> _weatherDetailsRequested;
+
+        private sealed class FieldCardBinding
+        {
+            public FieldCardBinding(GameObject root, Image background, Button button, TMP_Text label)
+            {
+                Root = root;
+                Background = background;
+                Button = button;
+                Label = label;
+            }
+
+            public GameObject Root { get; }
+            public Image Background { get; }
+            public Button Button { get; }
+            public TMP_Text Label { get; }
+        }
 
         public void Initialize(
             Action<BattleFieldEffectInstance> detailsRequested,
@@ -33,41 +53,60 @@ namespace Pachimon.UI
             IReadOnlyList<BattleWeatherInstance> weather)
         {
             EnsureLayout();
-            ClearLane(_enemyLane);
-            ClearLane(_globalLane);
-            ClearLane(_allyLane);
+            DeactivateCards(_enemyCards);
+            DeactivateCards(_globalCards);
+            DeactivateCards(_allyCards);
+
+            var enemyIndex = 0;
+            var globalIndex = 0;
+            var allyIndex = 0;
 
             foreach (var effect in effects ?? Array.Empty<BattleFieldEffectInstance>())
             {
-                var lane = effect.EffectId == BattleFieldEffectId.FrozenGround
-                    ? _globalLane
-                    : effect.TargetSide == BattleSide.Player
-                        ? _allyLane
-                        : _enemyLane;
-                CreateCard(lane, effect);
+                if (effect.EffectId == BattleFieldEffectId.FrozenGround)
+                {
+                    BindEffectCard(
+                        GetOrCreateCard(_globalLane, _globalCards, globalIndex++),
+                        effect);
+                }
+                else if (effect.TargetSide == BattleSide.Player)
+                {
+                    BindEffectCard(
+                        GetOrCreateCard(_allyLane, _allyCards, allyIndex++),
+                        effect);
+                }
+                else
+                {
+                    BindEffectCard(
+                        GetOrCreateCard(_enemyLane, _enemyCards, enemyIndex++),
+                        effect);
+                }
             }
 
             foreach (var item in weather ?? Array.Empty<BattleWeatherInstance>())
             {
-                CreateWeatherCard(_globalLane, item);
+                BindWeatherCard(
+                    GetOrCreateCard(_globalLane, _globalCards, globalIndex++),
+                    item);
             }
         }
 
-        private void CreateWeatherCard(
-            RectTransform lane,
+        private void BindWeatherCard(
+            FieldCardBinding binding,
             BattleWeatherInstance weather)
         {
-            var cardObject = CreateCardObject(
-                lane,
-                $"{weather.WeatherId}WeatherCard",
-                GetWeatherAccentColor(
-                    weather.WeatherId,
-                    weather.IsSnow ? -weather.Value : weather.Value));
+            var color = GetWeatherAccentColor(
+                weather.WeatherId,
+                weather.IsSnow ? -weather.Value : weather.Value);
             var valueLabel = weather.WeatherId == BattleWeatherId.Temperature
                 ? weather.Value.ToString("+#;-#;0")
                 : weather.Value.ToString();
-            CreateLabel(cardObject.transform, $"{weather.DisplayName} {valueLabel}");
-            cardObject.GetComponent<Button>().onClick.AddListener(
+            PrepareCard(
+                binding,
+                $"{weather.WeatherId}WeatherCard",
+                color,
+                $"{weather.DisplayName} {valueLabel}");
+            binding.Button.onClick.AddListener(
                 () => _weatherDetailsRequested?.Invoke(weather));
         }
 
@@ -86,8 +125,8 @@ namespace Pachimon.UI
 
             var layout = GetComponent<VerticalLayoutGroup>()
                 ?? gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.padding = new RectOffset(6, 6, 2, 2);
-            layout.spacing = 2f;
+            layout.padding = new RectOffset(6, 6, 0, 0);
+            layout.spacing = 0f;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -101,13 +140,50 @@ namespace Pachimon.UI
 
         private RectTransform CreateLane(string objectName, TextAnchor alignment)
         {
-            var laneObject = new GameObject(
+            var scrollObject = new GameObject(
                 objectName,
                 typeof(RectTransform),
-                typeof(HorizontalLayoutGroup),
+                typeof(ScrollRect),
                 typeof(LayoutElement));
+            scrollObject.layer = gameObject.layer;
+            scrollObject.transform.SetParent(transform, false);
+
+            var laneElement = scrollObject.GetComponent<LayoutElement>();
+            laneElement.minHeight = 0f;
+            laneElement.preferredHeight = 0f;
+            laneElement.flexibleHeight = 1f;
+
+            var viewportObject = new GameObject(
+                "Viewport",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(RectMask2D));
+            viewportObject.layer = gameObject.layer;
+            viewportObject.transform.SetParent(scrollObject.transform, false);
+            var viewport = viewportObject.GetComponent<RectTransform>();
+            Stretch(viewport);
+            viewportObject.GetComponent<Image>().color =
+                new Color(0f, 0f, 0f, 0.001f);
+
+            var laneObject = new GameObject(
+                "Content",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup),
+                typeof(ContentSizeFitter));
             laneObject.layer = gameObject.layer;
-            laneObject.transform.SetParent(transform, false);
+            laneObject.transform.SetParent(viewport, false);
+            var lane = laneObject.GetComponent<RectTransform>();
+            var anchor = alignment switch
+            {
+                TextAnchor.MiddleRight => 1f,
+                TextAnchor.MiddleCenter => 0.5f,
+                _ => 0f,
+            };
+            lane.anchorMin = new Vector2(anchor, 0f);
+            lane.anchorMax = new Vector2(anchor, 1f);
+            lane.pivot = new Vector2(anchor, 0.5f);
+            lane.sizeDelta = Vector2.zero;
 
             var layout = laneObject.GetComponent<HorizontalLayoutGroup>();
             layout.padding = new RectOffset(4, 4, 0, 0);
@@ -118,31 +194,68 @@ namespace Pachimon.UI
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = true;
 
-            laneObject.GetComponent<LayoutElement>().flexibleHeight = 1f;
-            return laneObject.GetComponent<RectTransform>();
+            var fitter = laneObject.GetComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            var scroll = scrollObject.GetComponent<ScrollRect>();
+            scroll.viewport = viewport;
+            scroll.content = lane;
+            scroll.horizontal = true;
+            scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.inertia = true;
+            scroll.scrollSensitivity = CardWidth * 0.5f;
+            return lane;
         }
 
-        private void CreateCard(RectTransform lane, BattleFieldEffectInstance effect)
+        private static void Stretch(RectTransform rect)
         {
-            var cardObject = CreateCardObject(
-                lane,
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = Vector2.zero;
+            rect.offsetMax = Vector2.zero;
+        }
+
+        private void BindEffectCard(
+            FieldCardBinding binding,
+            BattleFieldEffectInstance effect)
+        {
+            var statusLabel = effect.Statuses.Count == 0
+                ? string.Empty
+                : "  [" + string.Join(
+                    " / ",
+                    effect.Statuses.Select(status => status.DisplayName)) + "]";
+            var label = effect.EffectId == BattleFieldEffectId.FireBarrier
+                ? $"{effect.DisplayName} {effect.CurrentHp}/{effect.MaxHp}{statusLabel}"
+                : effect.EffectId == BattleFieldEffectId.IceBlade
+                    ? $"{effect.DisplayName} [{effect.RemainingTicks}]"
+                    : $"{effect.DisplayName} {effect.Value}";
+            PrepareCard(
+                binding,
                 $"{effect.EffectId}Card",
-                GetAccentColor(effect.EffectId));
-            CreateLabel(
-                cardObject.transform,
-                effect.EffectId == BattleFieldEffectId.FireBarrier
-                    ? $"{effect.DisplayName} {effect.CurrentHp}/{effect.MaxHp}"
-                    : effect.EffectId == BattleFieldEffectId.IceBlade
-                        ? $"{effect.DisplayName} [{effect.RemainingTicks}]"
-                    : $"{effect.DisplayName} {effect.Value}");
-            cardObject.GetComponent<Button>().onClick.AddListener(
+                GetAccentColor(effect.EffectId),
+                label);
+            binding.Button.onClick.AddListener(
                 () => _detailsRequested?.Invoke(effect));
         }
 
-        private GameObject CreateCardObject(
+        private FieldCardBinding GetOrCreateCard(
             RectTransform lane,
-            string objectName,
-            Color color)
+            List<FieldCardBinding> cards,
+            int index)
+        {
+            while (cards.Count <= index)
+            {
+                cards.Add(CreateCardObject(lane, $"FieldCard_{cards.Count + 1}"));
+            }
+
+            return cards[index];
+        }
+
+        private FieldCardBinding CreateCardObject(
+            RectTransform lane,
+            string objectName)
         {
             var cardObject = new GameObject(
                 objectName,
@@ -150,7 +263,7 @@ namespace Pachimon.UI
                 typeof(Button), typeof(Outline), typeof(LayoutElement));
             cardObject.layer = gameObject.layer;
             cardObject.transform.SetParent(lane, false);
-            cardObject.GetComponent<Image>().color = color;
+            var background = cardObject.GetComponent<Image>();
             var outline = cardObject.GetComponent<Outline>();
             outline.effectColor = GameUiPalette.Border;
             outline.effectDistance = new Vector2(1f, -1f);
@@ -159,12 +272,31 @@ namespace Pachimon.UI
             element.preferredWidth = CardWidth;
             element.preferredHeight = CardHeight;
             element.minWidth = CardWidth;
-            element.minHeight = CardHeight;
+            // The three field lanes own their height. Cards must not increase
+            // the parent field area's minimum height when they appear.
+            element.minHeight = 0f;
 
-            return cardObject;
+            var label = CreateLabel(cardObject.transform);
+            var button = cardObject.GetComponent<Button>();
+            button.targetGraphic = background;
+            return new FieldCardBinding(cardObject, background, button, label);
         }
 
-        private void CreateLabel(Transform parent, string text)
+        private void PrepareCard(
+            FieldCardBinding binding,
+            string objectName,
+            Color color,
+            string text)
+        {
+            binding.Root.name = objectName;
+            binding.Root.SetActive(true);
+            binding.Background.color = color;
+            binding.Label.text = text;
+            binding.Label.color = AttributeCardPalette.GetReadableTextColor(color);
+            binding.Button.onClick.RemoveAllListeners();
+        }
+
+        private TMP_Text CreateLabel(Transform parent)
         {
             var labelObject = new GameObject(
                 "Label",
@@ -180,8 +312,7 @@ namespace Pachimon.UI
             labelRect.offsetMax = new Vector2(-5f, -1f);
 
             var label = labelObject.GetComponent<TextMeshProUGUI>();
-            label.text = text;
-            label.color = GameUiPalette.OnAccentText;
+            label.color = GameUiPalette.PrimaryText;
             label.fontSize = 16f;
             label.fontStyle = FontStyles.Bold;
             label.alignment = TextAlignmentOptions.Center;
@@ -189,19 +320,15 @@ namespace Pachimon.UI
             label.fontSizeMin = 10f;
             label.fontSizeMax = 16f;
             label.raycastTarget = false;
+            return label;
         }
 
-        private static void ClearLane(RectTransform lane)
+        private static void DeactivateCards(IReadOnlyList<FieldCardBinding> cards)
         {
-            if (lane == null)
+            foreach (var binding in cards)
             {
-                return;
-            }
-
-            foreach (Transform child in lane.Cast<Transform>().ToArray())
-            {
-                child.gameObject.SetActive(false);
-                Destroy(child.gameObject);
+                binding.Root.SetActive(false);
+                binding.Button.onClick.RemoveAllListeners();
             }
         }
 
@@ -220,13 +347,22 @@ namespace Pachimon.UI
         {
             return effectId switch
             {
-                BattleFieldEffectId.Smog => new Color32(0x77, 0x56, 0x8A, 0xFF),
+                BattleFieldEffectId.Smog =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Poison),
                 BattleFieldEffectId.FireBarrier =>
-                    new Color32(0xC9, 0x4F, 0x3D, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Fire),
                 BattleFieldEffectId.FrozenGround =>
-                    new Color32(0x6E, 0xB9, 0xD7, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Ice),
                 BattleFieldEffectId.IceBlade =>
-                    new Color32(0x88, 0xCE, 0xE8, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Ice),
+                BattleFieldEffectId.WaterVeil =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Aqua),
+                BattleFieldEffectId.BeatVine =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Leaf),
+                BattleFieldEffectId.FireVine =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Fire),
+                BattleFieldEffectId.PoisonMist =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Poison),
                 _ => GameUiPalette.StatusChip,
             };
         }
@@ -238,15 +374,20 @@ namespace Pachimon.UI
             return weatherId switch
             {
                 BattleWeatherId.Temperature when value < 0 =>
-                    new Color32(0x55, 0xA6, 0xC8, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Ice),
                 BattleWeatherId.Temperature =>
-                    new Color32(0xE8, 0xA8, 0x35, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Fire),
                 BattleWeatherId.Rain when value < 0 =>
-                    new Color32(0x88, 0xC8, 0xE0, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Ice),
                 BattleWeatherId.Rain =>
-                    new Color32(0x4E, 0x8E, 0xC7, 0xFF),
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Aqua),
+                BattleWeatherId.Thunder =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Electric),
+                BattleWeatherId.Wind =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Wind),
                 _ => GameUiPalette.StatusChip,
             };
         }
+
     }
 }

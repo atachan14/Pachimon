@@ -27,8 +27,7 @@ namespace Pachimon.Battle
             foreach (var target in targets)
             {
                 if (value <= 0) continue;
-                context.State.Statuses.ApplyAttackStatus(
-                    target,
+                context.BeginStatusHit(target).ApplyStatus(
                     new BattleStatusInstance(
                         BattleStatusId.WindErosion,
                         BattleStatusCategory.None,

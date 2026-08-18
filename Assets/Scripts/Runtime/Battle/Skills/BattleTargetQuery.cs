@@ -48,10 +48,11 @@ namespace Pachimon.Battle
                 .FirstOrDefault()
             ?? throw new SkillTargetUnavailableException();
         public IReadOnlyList<BattleUnitState> GetAllEnemies() => GetEnemyTargets();
+        public IReadOnlyList<BattleUnitState> GetAllAllies() => _allies.GetAllLiving();
         public BattleUnitState GetFrontAlly() => _allies.GetFrontLiving();
-        public BattleUnitState GetLowestHpAlly() =>
+        public BattleUnitState GetLowestHpPercentageAlly() =>
             _allies.GetAllLiving()
-                .OrderBy(unit => unit.CurrentHp)
+                .OrderBy(unit => (decimal)unit.CurrentHp / unit.MaxHp)
                 .ThenBy(unit => unit.SlotIndex)
                 .FirstOrDefault()
             ?? throw new SkillTargetUnavailableException();

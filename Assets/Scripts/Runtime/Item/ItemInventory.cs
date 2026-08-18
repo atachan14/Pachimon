@@ -14,6 +14,7 @@ namespace Pachimon.Items
         public IReadOnlyList<ItemInstance> Slots => _slots;
         public int Count => _slots.Count(item => item != null);
         public bool IsFull => Count >= Capacity;
+        public event Action Changed;
 
         public ItemInstance GetAt(int slotIndex)
         {
@@ -30,16 +31,34 @@ namespace Pachimon.Items
 
         public bool TryAdd(int itemId, out ItemInstance item, out int slotIndex)
         {
+            if (itemId <= 0)
+            {
+                item = null;
+                slotIndex = -1;
+                return false;
+            }
+
+            return TryAdd(new GeneratedItemData(itemId), out item, out slotIndex);
+        }
+
+        public bool TryAdd(
+            GeneratedItemData generatedData,
+            out ItemInstance item,
+            out int slotIndex)
+        {
             item = null;
             slotIndex = Array.FindIndex(_slots, slot => slot == null);
-            if (itemId <= 0 || slotIndex < 0)
+            if (generatedData == null || slotIndex < 0)
             {
                 return false;
             }
 
-            item = new ItemInstance($"item_{_nextInstanceNumber:D6}", itemId);
+            item = new ItemInstance(
+                $"item_{_nextInstanceNumber:D6}",
+                generatedData);
             _nextInstanceNumber++;
             _slots[slotIndex] = item;
+            Changed?.Invoke();
             return true;
         }
 
@@ -48,16 +67,37 @@ namespace Pachimon.Items
             int itemId,
             out ItemInstance item)
         {
+            if (itemId <= 0)
+            {
+                ValidateSlotIndex(slotIndex);
+                item = null;
+                return false;
+            }
+
+            return TryAddAt(
+                slotIndex,
+                new GeneratedItemData(itemId),
+                out item);
+        }
+
+        public bool TryAddAt(
+            int slotIndex,
+            GeneratedItemData generatedData,
+            out ItemInstance item)
+        {
             ValidateSlotIndex(slotIndex);
             item = null;
-            if (itemId <= 0 || _slots[slotIndex] != null)
+            if (generatedData == null || _slots[slotIndex] != null)
             {
                 return false;
             }
 
-            item = new ItemInstance($"item_{_nextInstanceNumber:D6}", itemId);
+            item = new ItemInstance(
+                $"item_{_nextInstanceNumber:D6}",
+                generatedData);
             _nextInstanceNumber++;
             _slots[slotIndex] = item;
+            Changed?.Invoke();
             return true;
         }
 
@@ -79,6 +119,7 @@ namespace Pachimon.Items
 
             removedItem = _slots[slotIndex];
             _slots[slotIndex] = null;
+            Changed?.Invoke();
             return true;
         }
 

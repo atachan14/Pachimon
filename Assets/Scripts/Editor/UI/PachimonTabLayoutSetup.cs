@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Pachimon.Reward;
 using Pachimon.UI;
 using TMPro;
 using UnityEditor;
@@ -15,18 +16,18 @@ namespace Pachimon.Editor.UI
 
         private static readonly StatVisual[] StatVisuals =
         {
-            new(PachimonDisplayStat.Fire, "F", "#E84B3C"),
-            new(PachimonDisplayStat.Poison, "P", "#FFA7DF"),
-            new(PachimonDisplayStat.Aqua, "A", "#356AE0"),
-            new(PachimonDisplayStat.Ice, "I", "#62D5E6"),
-            new(PachimonDisplayStat.Leaf, "L", "#288A47"),
-            new(PachimonDisplayStat.Wind, "W", "#91C83E"),
-            new(PachimonDisplayStat.Electric, "E", "#F2C94C"),
-            new(PachimonDisplayStat.Dragon, "D", "#707887"),
-            new(PachimonDisplayStat.Speed, "SPD", "#49A078"),
-            new(PachimonDisplayStat.Haste, "HST", "#3AAFB9"),
-            new(PachimonDisplayStat.DamageBonus, "DB", "#D97945"),
-            new(PachimonDisplayStat.ResistBonus, "RB", "#6B7280"),
+            new(PachimonDisplayStat.Fire, "F"),
+            new(PachimonDisplayStat.Poison, "P"),
+            new(PachimonDisplayStat.Aqua, "A"),
+            new(PachimonDisplayStat.Ice, "I"),
+            new(PachimonDisplayStat.Leaf, "L"),
+            new(PachimonDisplayStat.Wind, "W"),
+            new(PachimonDisplayStat.Electric, "E"),
+            new(PachimonDisplayStat.Dragon, "D"),
+            new(PachimonDisplayStat.Speed, "SPD"),
+            new(PachimonDisplayStat.Haste, "HST"),
+            new(PachimonDisplayStat.DamageBonus, "DB"),
+            new(PachimonDisplayStat.ResistBonus, "RB"),
         };
 
         [MenuItem(MenuPath)]
@@ -97,7 +98,7 @@ namespace Pachimon.Editor.UI
             scrollRect.content = contentRect;
 
             var graphicArea = CreateObject(content.transform, "GraphicArea", typeof(LayoutElement));
-            SetPreferredHeight(graphicArea, 174f);
+            SetPreferredHeight(graphicArea, 300f);
             var graphic = CreateObject(
                 graphicArea.transform,
                 "FrontGraphic",
@@ -106,7 +107,7 @@ namespace Pachimon.Editor.UI
             var graphicRect = (RectTransform)graphic.transform;
             graphicRect.anchorMin = graphicRect.anchorMax = new Vector2(0.5f, 0.5f);
             graphicRect.pivot = new Vector2(0.5f, 0.5f);
-            graphicRect.sizeDelta = new Vector2(160f, 160f);
+            graphicRect.sizeDelta = new Vector2(280f, 280f);
             graphicRect.anchoredPosition = Vector2.zero;
             var frontImage = graphic.GetComponent<Image>();
             frontImage.preserveAspect = true;
@@ -244,7 +245,7 @@ namespace Pachimon.Editor.UI
                 typeof(CanvasRenderer),
                 typeof(Image),
                 typeof(LayoutElement));
-            ColorUtility.TryParseHtmlString(visual.ColorHex, out var iconColor);
+            var iconColor = GetStatColor(visual.Stat);
             var isAttribute = AttributeRichText.IsAttribute(visual.Stat);
             icon.GetComponent<Image>().color = isAttribute
                 ? GameUiPalette.Transparent
@@ -409,18 +410,45 @@ namespace Pachimon.Editor.UI
             return luminance > 0.62f ? new Color(0.08f, 0.09f, 0.09f, 1f) : Color.white;
         }
 
+        private static Color GetStatColor(PachimonDisplayStat stat)
+        {
+            return stat switch
+            {
+                PachimonDisplayStat.Fire =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Fire),
+                PachimonDisplayStat.Aqua =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Aqua),
+                PachimonDisplayStat.Leaf =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Leaf),
+                PachimonDisplayStat.Electric =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Electric),
+                PachimonDisplayStat.Poison =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Poison),
+                PachimonDisplayStat.Ice =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Ice),
+                PachimonDisplayStat.Wind =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Wind),
+                PachimonDisplayStat.Dragon =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Dragon),
+                PachimonDisplayStat.Speed or PachimonDisplayStat.Haste =>
+                    RewardElementPalette.TimingColor,
+                PachimonDisplayStat.DamageBonus
+                    or PachimonDisplayStat.ResistBonus =>
+                    RewardElementPalette.CombatBonusColor,
+                _ => GameUiPalette.StatCard,
+            };
+        }
+
         private readonly struct StatVisual
         {
-            public StatVisual(PachimonDisplayStat stat, string label, string colorHex)
+            public StatVisual(PachimonDisplayStat stat, string label)
             {
                 Stat = stat;
                 Label = label;
-                ColorHex = colorHex;
             }
 
             public PachimonDisplayStat Stat { get; }
             public string Label { get; }
-            public string ColorHex { get; }
         }
     }
 }

@@ -10,10 +10,8 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Charge Skill")]
     public sealed class ChargeSkillAsset : SkillAsset
     {
-        [SerializeField, Min(1)] private int _baseStartupTicks = 300;
         [SerializeField] private ChargeStatusAsset _chargeStatus;
 
-        public override int BaseStartupTicks => _baseStartupTicks;
         public ChargeStatusAsset ChargeStatus => _chargeStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -27,7 +25,7 @@ namespace Pachimon.Skills
             {
                 errors.Add($"Skill {SkillId}: Charge Definition is required.");
             }
-            if (_baseStartupTicks <= 0)
+            if (BaseStartupTicks <= 0)
             {
                 errors.Add($"Skill {SkillId}: Charge requires Startup.");
             }
@@ -53,7 +51,7 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _baseStartupTicks = baseStartupTicks;
+            SetBaseStartupTicksForEditor(baseStartupTicks);
             _chargeStatus = chargeStatus;
         }
 #endif

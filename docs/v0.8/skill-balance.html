@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pachimon Skill Balance Ledger</title>
+  <style>
+    :root {
+      --paper: #f4f0e5;
+      --paper-deep: #e8dfcd;
+      --ink: #20282b;
+      --muted: #667074;
+      --line: #b9b09e;
+      --accent: #d9503f;
+      --accent-dark: #8f2e25;
+      --green: #3f765d;
+      --gold: #d59b2d;
+      --shadow: 0 14px 40px rgba(45, 38, 28, .13);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "BIZ UDPGothic", "Yu Gothic UI", sans-serif;
+      background:
+        linear-gradient(rgba(75, 67, 52, .045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(75, 67, 52, .035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 22px 22px;
+    }
+
+    header {
+      padding: 34px clamp(18px, 4vw, 64px) 26px;
+      color: #fffaf0;
+      background: var(--ink);
+      border-bottom: 7px solid var(--accent);
+    }
+    .eyebrow {
+      margin: 0 0 7px;
+      color: #efb1a7;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-family: "BIZ UDPMincho", "Yu Mincho", serif;
+      font-size: clamp(28px, 4vw, 52px);
+      letter-spacing: .035em;
+    }
+    header p { max-width: 920px; margin: 13px 0 0; color: #d9ddd8; line-height: 1.75; }
+
+    main { padding: 26px clamp(12px, 3vw, 48px) 54px; }
+    .panel {
+      max-width: 1800px;
+      margin: 0 auto 18px;
+      background: rgba(255, 253, 247, .94);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(190px, 1.4fr) repeat(2, minmax(135px, .7fr));
+      gap: 12px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    input[type="search"], select {
+      width: 100%;
+      min-height: 42px;
+      padding: 0 12px;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 700;
+      background: #fffdf8;
+      border: 1px solid #978e7e;
+      border-radius: 0;
+    }
+    .switches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px 18px;
+      align-items: center;
+      padding: 14px 18px 17px;
+      background: #eee8db;
+    }
+    .switches strong { margin-right: 3px; }
+    label { display: inline-flex; gap: 7px; align-items: center; font-size: 13px; font-weight: 700; }
+    input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); }
+    .segmented { display: inline-flex; border: 1px solid #756d60; }
+    .segmented button {
+      min-height: 34px;
+      padding: 0 13px;
+      color: var(--ink);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      background: #fffdf8;
+      border: 0;
+      border-right: 1px solid #756d60;
+      cursor: pointer;
+    }
+    .segmented button:last-child { border-right: 0; }
+    .segmented button.active { color: white; background: var(--accent-dark); }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(150px, 1fr));
+      gap: 1px;
+      background: var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+    .metric { padding: 16px 18px; background: #fffdf8; }
+    .metric span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; }
+    .metric b { display: block; margin-top: 5px; font-size: 22px; }
+    .metric small { color: var(--muted); }
+
+    .table-wrap { overflow: auto; max-height: 72vh; }
+    table { width: 100%; min-width: 1450px; border-collapse: collapse; font-size: 13px; }
+    thead { position: sticky; top: 0; z-index: 5; color: #fff; background: var(--ink); }
+    th {
+      padding: 11px 9px;
+      text-align: right;
+      white-space: nowrap;
+      border-right: 1px solid #485154;
+      cursor: pointer;
+      user-select: none;
+    }
+    th.left { text-align: left; }
+    th[data-sort]::after { content: " ↕"; color: #9aa3a3; font-size: 10px; }
+    th.sorted::after { content: " " attr(data-arrow); color: #ffbaae; }
+    td { padding: 10px 9px; text-align: right; border-bottom: 1px solid #ddd6c8; }
+    td.left { text-align: left; }
+    tbody tr:nth-child(even) { background: rgba(227, 218, 200, .28); }
+    tbody tr:hover { background: #fff0d5; }
+    .skill-name { font-weight: 900; white-space: nowrap; }
+    .tag {
+      display: inline-block;
+      min-width: 60px;
+      padding: 4px 7px;
+      color: var(--tag-ink, white);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 900;
+      background: var(--tag, #777);
+      border: 1px solid rgba(0,0,0,.2);
+    }
+    .note { max-width: 340px; color: #4f585b; line-height: 1.45; }
+    .number-zero { color: #aaa395; }
+    .output-cell { position: relative; min-width: 105px; overflow: hidden; font-weight: 900; }
+    .output-cell::before {
+      content: "";
+      position: absolute;
+      inset: 4px auto 4px 0;
+      z-index: 0;
+      width: var(--bar, 0%);
+      background: rgba(217, 80, 63, .16);
+      border-left: 3px solid var(--accent);
+    }
+    .output-cell span { position: relative; z-index: 1; }
+    .above { color: #a42d23; }
+    .below { color: #35684f; }
+    .legend {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 18px 20px;
+      color: #4e5759;
+      font-size: 13px;
+      line-height: 1.75;
+      background: #e9e2d4;
+      border-left: 5px solid var(--green);
+    }
+    code { padding: 2px 5px; background: rgba(255,255,255,.6); }
+
+    @media (max-width: 760px) {
+      header { padding-top: 24px; }
+      main { padding-inline: 8px; }
+      .controls { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: 1fr 1fr; }
+      .switches { align-items: flex-start; flex-direction: column; }
+      .panel { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">v0.8 balance worksheet</p>
+    <h1>Skill Balance Ledger</h1>
+    <p>使用者・対象とも全Attribute 100、DB/RB・Speed/Haste 0を基準にした暫定比較。Damageは対象のAttribute・RBによる軽減後。Damage・回復・Shieldは1:1で合算し、時間依存効果や状態の価値は注記として分離する。</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <div class="controls">
+        <input id="search" type="search" placeholder="Skill名・注記を検索">
+        <select id="attribute"><option value="">すべての属性</option></select>
+        <select id="kind"><option value="">すべての分類</option></select>
+      </div>
+      <div class="switches">
+        <strong>比較範囲</strong>
+        <div class="segmented" id="scenario">
+          <button class="active" data-value="one">1体基準</button>
+          <button data-value="three">3対3合計</button>
+        </div>
+        <strong>Outputへ算入</strong>
+        <label><input id="useDamage" type="checkbox" checked>Damage</label>
+        <label><input id="useHealing" type="checkbox" checked>回復</label>
+        <label><input id="useShield" type="checkbox" checked>Shield</label>
+        <label><input id="useSelf" type="checkbox" checked>自傷を減算</label>
+      </div>
+
+      <div class="summary">
+        <div class="metric"><span>表示件数</span><b id="count">64</b><small>Skill</small></div>
+        <div class="metric"><span>基本攻撃 Repeat OPT</span><b>0.500</b><small>150 Damage / 300tick</small></div>
+        <div class="metric"><span>中央値 Repeat OPT</span><b id="median">-</b><small>現在の絞り込み</small></div>
+        <div class="metric"><span>最大 Output</span><b id="maximum">-</b><small id="maximumName">-</small></div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th class="left" data-sort="id">ID</th>
+            <th class="left" data-sort="name">Skill</th>
+            <th class="left" data-sort="attribute">属性</th>
+            <th class="left" data-sort="kind">分類</th>
+            <th data-sort="damage">Damage<br><small>軽減後</small></th>
+            <th data-sort="healing">回復</th>
+            <th data-sort="shield">Shield<br><small>実効値</small></th>
+            <th data-sort="selfDamage">自傷</th>
+            <th data-sort="output">Output</th>
+            <th data-sort="actionTicks">行動tick</th>
+            <th data-sort="repeatTicks">再使用tick</th>
+            <th data-sort="mn">MN</th>
+            <th data-sort="actionOpt">Action OPT</th>
+            <th data-sort="repeatOpt">Repeat OPT</th>
+            <th data-sort="perMn">Output/MN</th>
+            <th class="left">条件・未換算効果</th>
+          </tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <aside class="legend">
+      <b>計算:</b> <code>Output = Damage + 回復 + Shield - 自傷</code>、<code>Action OPT = Output / (発生 + 硬直)</code>、<code>Repeat OPT = Output / max(行動tick, CD)</code>。<br>
+      Damage列は対象のAttribute 100・RB 0による軽減後。Shield列はSOのBase値ではなく、基準Attribute 100を適用した実効値。Water VeilはValueを全量使い切る理論回復量、炎の障壁はBarrier HPをShieldとして計上。Overheal、Shield期限切れ、状態、Stat変化、Field追撃は未換算なので、Outputは最終的な強さではなく一次スクリーニング用。Skill SO保存後にUnity Editorが生成データを自動更新する。
+    </aside>
+  </main>
+
+  <script>
+    const A = {
+      Fire:["#d65343","#fff"], Aqua:["#4d94bd","#fff"], Leaf:["#75a94d","#14210e"],
+      Electric:["#e5c43d","#211d08"], Poison:["#a568a4","#fff"], Ice:["#8fd6e1","#142226"],
+      Wind:["#a9cb58","#17220a"], Dragon:["#9a704e","#fff"], Mixed:["#525b5e","#fff"]
+    };
+    const S = (id,name,attribute,kind,startup,recovery,cd,mn,d1=0,d3=d1,h1=0,h3=h1,shield=0,selfDamage=0,note="",actionTicks=null,repeatTicks=null) => ({
+      id,name,attribute,kind,startup,recovery,cd,mn,d1,d3,h1,h3,shield,selfDamage,note,
+      actionTicks: actionTicks ?? startup + recovery,
+      repeatTicks: repeatTicks ?? Math.max(startup + recovery, cd)
+    });
+// GENERATED SKILL DATA START
+    const skills = [
+      S(1,"ひのこ","Fire","攻撃",100,100,300,20,150,150,0,0,0,0,"Base 150 → 軽減前300（Fire 100）の基準攻撃",200,300),
+      S(2,"みずでっぽう","Aqua","未分類",100,100,300,20,150,150,0,0,0,0,"",200,300),
+      S(3,"はっぱスライサー","Leaf","未分類",100,100,300,20,150,150,0,0,0,0,"",200,300),
+      S(4,"ビリビリショック","Electric","攻撃＋状態",100,100,300,20,150,150,0,0,0,0,"Base 150 → 軽減前300・麻痺を付与",200,300),
+      S(5,"どくばり","Poison","攻撃＋状態",100,100,300,20,150,150,0,0,0,0,"Base 150 → 軽減前300・毒素を付与",200,300),
+      S(6,"冷たい手","Ice","攻撃＋状態",100,100,300,20,150,150,0,0,0,0,"Base 150 → 軽減前300・冷気を付与",200,300),
+      S(7,"かぜでっぽう","Wind","未分類",100,100,300,20,150,150,0,0,0,0,"",200,300),
+      S(8,"ドラゴンストレート","Dragon","未分類",100,100,300,20,150,150,0,0,0,0,"",200,300),
+      S(9,"バックファイア","Fire","攻撃",100,100,300,25,111,111,0,0,0,0,"最後尾へ攻撃・20%貫通",200,300),
+      S(10,"水の波動","Aqua","可変攻撃",100,150,300,40,120,120,0,0,0,0,"MaxMN1000の例。MaxMNの4%（40MN）を消費し、消費MN×3×Aqua補正で算出",250,300),
+      S(11,"日光浴","Leaf","回復",100,100,400,70,0,0,200,200,0,0,"気温・雨で増減",200,400),
+      S(12,"アクアショック","Mixed","攻撃＋状態",100,80,300,40,120,120,0,0,0,0,"Electric 160＋Aqua 80（各Attribute 100）・漏電",180,300),
+      S(13,"神経毒","Poison","状態",100,100,400,40,0,0,0,0,0,0,"Stun・毒素",200,400),
+      S(14,"氷の盾","Ice","Shield",100,100,300,40,0,0,0,0,200,0,"Base 100 → 実効200（Ice 100）・無期限",200,300),
+      S(15,"フライングアタック","Wind","攻撃＋状態",200,100,400,30,180,180,0,0,0,0,"発生中に飛行・Speed増加",300,400),
+      S(16,"ドラゴンジャブ","Dragon","攻撃＋状態",40,60,100,20,75,75,0,0,0,0,"ワン・ツーを獲得",100,100),
+      S(17,"チェインバーン","Fire","連鎖攻撃",100,100,300,40,120,120,0,0,0,0,"初期2Hit。アドチェインで増加",200,300),
+      S(18,"あまごい","Aqua","天候",100,100,300,40,0,0,0,0,0,0,"雨を生成",200,300),
+      S(19,"連鎖する蔦","Leaf","連鎖攻撃",100,100,250,50,105,105,0,0,0,0,"Slow・アドチェイン",200,250),
+      S(20,"電気爆発","Electric","攻撃",100,100,250,25,222,222,0,0,0,0,"Fire参照・20%貫通",200,250),
+      S(21,"スモッグ","Poison","Field",100,100,300,40,0,0,0,0,0,0,"毒素を継続付与",200,300),
+      S(22,"アイスシャード","Ice","全体攻撃",100,100,300,60,100,200,0,0,0,0,"前100・後方各50、全体冷気",200,300),
+      S(23,"風化の風","Wind","状態",100,100,300,40,0,0,0,0,0,0,"風化を付与",200,300),
+      S(24,"ドラゴンフットワーク","Dragon","状態",40,80,300,50,0,0,0,0,0,0,"回避",120,300),
+      S(25,"炎の障壁","Fire","Field＋Shield",100,200,500,100,0,0,0,0,400,0,"Base Value 200 → HP/持続ともに400（Fire 100）。防御継承・火傷あり",300,500),
+      S(26,"進水式","Aqua","状態",100,20,120,0,0,0,0,0,0,0,"MN軽減状態",120,120),
+      S(27,"ソーラービーム","Leaf","攻撃",200,100,300,30,200,200,0,0,0,0,"正の気温で発生短縮",300,300),
+      S(28,"電光石火","Mixed","高速攻撃",20,54,201,30,100,100,0,0,0,0,"Electric 150＋Fire 50。Wind 100の固有短縮込み",74,201),
+      S(29,"毒渡し","Poison","状態操作",100,100,300,20,0,0,0,0,0,0,"毒素を移動",200,300),
+      S(30,"寒冷化","Ice","天候",100,100,300,60,0,0,0,0,0,0,"気温を低下",200,300),
+      S(31,"治癒の風","Wind","回復＋強化",100,100,300,80,0,0,200,200,0,0,"HP割合最低の味方を回復・Wind/Speed増加",200,300),
+      S(32,"龍の舞","Dragon","恒久強化",100,100,300,60,0,0,0,0,0,0,"Battle中恒久",200,300),
+      S(33,"ファイアアロー","Fire","条件攻撃",100,100,250,20,100,100,0,0,0,0,"撃破時は追加MNで次へ。最大3体300",200,250),
+      S(34,"水のベール","Aqua","Field＋回復",100,160,300,100,0,0,300,900,0,0,"Field Base 150 → Value 300。理論最大・毎tick全員回復＋Aqua/Fire軽減",260,300),
+      S(35,"絡み合う蔓","Leaf","状態操作",100,100,300,20,0,0,0,0,0,0,"Stun・対象操作",200,300),
+      S(36,"充電","Electric","状態",300,0,500,60,0,0,0,0,0,0,"充電完了へ移行",300,500),
+      S(37,"毒爆破","Mixed","全体攻撃",100,100,400,40,100,300,0,0,0,0,"最大毒素を消費。3体合計へ消費毒素×1.5加算",200,400),
+      S(38,"氷の刃","Ice","Field",100,100,300,40,0,0,0,0,0,0,"反撃Damageは未換算",200,300),
+      S(39,"セカンドウィンド","Wind","Shield＋状態",100,100,400,30,0,0,0,0,200,0,"Wind×200%で実効200・200tick・無風",200,400),
+      S(40,"ドラゴンブレイク","Dragon","攻撃＋破壊",100,120,300,30,150,150,0,0,0,0,"Base 150 → 軽減前300（Dragon 100）・対象Shieldを全破壊",220,300),
+      S(41,"燃える一撃","Fire","攻撃＋自傷",100,100,300,60,300,300,0,0,0,100,"敵へ300・自身へ100・火傷",200,300),
+      S(42,"ウォーターカッター","Aqua","攻撃",100,100,300,25,125,125,0,0,0,0,"Wind参照・40%貫通",200,300),
+      S(43,"しびれ粉","Leaf","状態",100,100,300,40,0,0,0,0,0,0,"全体麻痺",200,300),
+      S(44,"電磁砲","Electric","攻撃",300,100,500,80,400,400,0,0,0,0,"Overkillを後方へ転送。総Damageは400以内",400,500),
+      S(45,"ポイズンシールド","Poison","Shield",100,100,300,50,0,0,0,0,200,0,"Base 100 → 実効200（Poison 100）・200tick・自身の毒素を軽減",200,300),
+      S(46,"フローズンブレイク","Ice","条件攻撃／回復",100,200,300,50,100,100,0,0,0,0,"低HP時はDamageなし、理論回復220＋対象外",300,300),
+      S(47,"暴風","Wind","天候",100,100,300,40,0,0,0,0,0,0,"暴風",200,300),
+      S(48,"ドラゴンフック","Dragon","攻撃＋状態",100,100,300,30,100,100,0,0,0,0,"ドラゴンクランカー",200,300),
+      S(49,"温暖化","Fire","天候",100,100,300,60,0,0,0,0,0,0,"気温を上昇",200,300),
+      S(50,"泥水","Aqua","攻撃＋状態",100,100,300,30,100,100,0,0,0,0,"Poison参照Slow",200,300),
+      S(51,"ビートヴァイン","Leaf","Field",100,100,300,40,0,0,0,0,0,0,"追撃Damageは未換算",200,300),
+      S(52,"雷雲","Electric","Field",100,100,300,40,0,0,0,0,0,0,"Field効果は未換算",200,300),
+      S(53,"毒の霧","Poison","Field",100,100,300,40,0,0,0,0,0,0,"弱い攻撃を回避",200,300),
+      S(54,"氷の礫","Ice","攻撃＋Shield",100,100,300,60,70,70,0,0,140,0,"Shield Base 70 → 実効140（Ice 100）・100tick・冷気",200,300),
+      S(55,"きりきり舞い","Wind","連鎖攻撃",100,100,300,50,248,199,0,0,0,0,"初期3Hit・風化・アドチェイン",200,300),
+      S(56,"ドラゴンアッパー","Dragon","攻撃＋状態",100,120,400,40,100,100,0,0,0,0,"100tickノックアウト",220,400),
+      S(57,"蒸発","Mixed","攻撃＋状態",100,120,300,40,233,233,0,0,0,0,"Fire/Aqua参照・80%貫通・弱点",220,300),
+      S(58,"しおふき","Aqua","攻撃",100,120,350,30,187,187,0,0,0,0,"Base 150 ×（Aqua倍率2.0＋現在HP1000/2000）",220,350),
+      S(59,"ファイアヴァイン","Mixed","Field",100,100,300,40,0,0,0,0,0,0,"追撃Damageは未換算",200,300),
+      S(60,"エレキシールド","Electric","Shield＋状態",100,150,300,50,0,0,0,0,200,0,"Base 150 → 実効300（Electric 100）・200tick・自己麻痺・反撃麻痺",250,300),
+      S(61,"ファーストタッチ","Poison","条件攻撃",0,100,300,30,375,375,0,0,0,0,"最大HP対象には合計375＋毒素",100,300),
+      S(62,"フロストアロー","Ice","攻撃＋状態",100,100,300,30,100,100,0,0,0,0,"冷気・撃破時MN/CD返却",200,300),
+      S(63,"花鳥風月","Mixed","複合攻撃",100,100,300,25,225,225,0,0,0,0,"Fire/Aqua/Wind各75",200,300),
+      S(64,"ドラゴンディフェンス","Dragon","未分類",100,150,400,60,0,0,0,0,250,0,"",250,400)
+    ];
+    // GENERATED SKILL DATA END
+    const state = { scenario:"one", sort:"id", direction:1 };
+    const $ = id => document.getElementById(id);
+    const searchInput=$("search"), attributeSelect=$("attribute"), kindSelect=$("kind");
+    const useDamage=$("useDamage"), useHealing=$("useHealing"), useShield=$("useShield"), useSelf=$("useSelf");
+    const scenarioControl=$("scenario"), rowBody=$("rows");
+    const countOutput=$("count"), medianOutput=$("median");
+    const maximumOutput=$("maximum"), maximumNameOutput=$("maximumName");
+    const unique = key => [...new Set(skills.map(x => x[key]))].sort((a,b) => a.localeCompare(b,"ja"));
+    unique("attribute").forEach(v => $("attribute").insertAdjacentHTML("beforeend", `<option>${v}</option>`));
+    unique("kind").forEach(v => $("kind").insertAdjacentHTML("beforeend", `<option>${v}</option>`));
+
+    function values(skill) {
+      const three = state.scenario === "three";
+      const damage = three ? skill.d3 : skill.d1;
+      const healing = three ? skill.h3 : skill.h1;
+      const shield = skill.shield;
+      const selfDamage = skill.selfDamage;
+      const output = (useDamage.checked ? damage : 0)
+        + (useHealing.checked ? healing : 0)
+        + (useShield.checked ? shield : 0)
+        - (useSelf.checked ? selfDamage : 0);
+      return {
+        ...skill, damage, healing, shield, selfDamage, output,
+        actionOpt: skill.actionTicks ? output / skill.actionTicks : 0,
+        repeatOpt: skill.repeatTicks ? output / skill.repeatTicks : 0,
+        perMn: skill.mn ? output / skill.mn : (output > 0 ? Infinity : 0)
+      };
+    }
+
+    function filtered() {
+      const q = searchInput.value.trim().toLowerCase();
+      return skills.map(values).filter(x =>
+        (!q || `${x.name} ${x.note}`.toLowerCase().includes(q))
+        && (!attributeSelect.value || x.attribute === attributeSelect.value)
+        && (!kindSelect.value || x.kind === kindSelect.value));
+    }
+
+    function format(v, digits=0) {
+      if (!Number.isFinite(v)) return "∞";
+      return digits ? v.toFixed(digits) : Math.round(v).toLocaleString("ja-JP");
+    }
+    function numberCell(v, digits=0, cls="") {
+      return `<td class="${v === 0 ? "number-zero " : ""}${cls}">${format(v,digits)}</td>`;
+    }
+    function render() {
+      const list = filtered();
+      list.sort((a,b) => {
+        const av=a[state.sort], bv=b[state.sort];
+        return (typeof av === "string" ? av.localeCompare(bv,"ja") : av-bv) * state.direction;
+      });
+      const maxOutput = Math.max(1, ...list.map(x => x.output));
+      rowBody.innerHTML = list.map(x => {
+        const colors=A[x.attribute] || A.Mixed;
+        const ratio=x.repeatOpt / .5;
+        const ratioClass=ratio >= 1.5 ? "above" : ratio <= .6 ? "below" : "";
+        return `<tr>
+          <td class="left">${x.id}</td><td class="left skill-name">${x.name}</td>
+          <td class="left"><span class="tag" style="--tag:${colors[0]};--tag-ink:${colors[1]}">${x.attribute}</span></td>
+          <td class="left">${x.kind}</td>
+          ${numberCell(x.damage)}${numberCell(x.healing)}${numberCell(x.shield)}${numberCell(x.selfDamage)}
+          <td class="output-cell" style="--bar:${x.output/maxOutput*100}%"><span>${format(x.output)}</span></td>
+          ${numberCell(x.actionTicks)}${numberCell(x.repeatTicks)}${numberCell(x.mn)}
+          ${numberCell(x.actionOpt,3)}${numberCell(x.repeatOpt,3,ratioClass)}${numberCell(x.perMn,2)}
+          <td class="left note">${x.note || "-"}</td></tr>`;
+      }).join("");
+      countOutput.textContent=list.length;
+      const opts=list.map(x=>x.repeatOpt).sort((a,b)=>a-b);
+      medianOutput.textContent=opts.length ? format(opts[Math.floor(opts.length/2)],3) : "-";
+      const top=[...list].sort((a,b)=>b.output-a.output)[0];
+      maximumOutput.textContent=top ? format(top.output) : "-";
+      maximumNameOutput.textContent=top?.name || "-";
+    }
+
+    [searchInput,attributeSelect,kindSelect,useDamage,useHealing,useShield,useSelf].forEach(el => el.addEventListener("input",render));
+    scenarioControl.addEventListener("click", e => {
+      const button=e.target.closest("button"); if(!button) return;
+      state.scenario=button.dataset.value;
+      scenarioControl.querySelectorAll("button").forEach(x=>x.classList.toggle("active",x===button));
+      render();
+    });
+    document.querySelectorAll("th[data-sort]").forEach(th => th.addEventListener("click",() => {
+      state.direction = state.sort === th.dataset.sort ? -state.direction : 1;
+      state.sort=th.dataset.sort;
+      document.querySelectorAll("th").forEach(x=>x.classList.remove("sorted"));
+      th.classList.add("sorted"); th.dataset.arrow=state.direction===1 ? "▲" : "▼";
+      render();
+    }));
+    render();
+  </script>
+</body>
+</html>

@@ -36,6 +36,7 @@ namespace Pachimon.Run
         private string _inspectedNodeId;
         private IReadOnlyList<string> _inspectedEnemyIds = Array.Empty<string>();
         private bool _rightPaneShowsActiveBattle;
+        private ItemUseService _itemUseService;
 
         public MapRunController(
             GameRootView gameRootView,
@@ -74,6 +75,8 @@ namespace Pachimon.Run
         public void StartRun(RunContext context)
         {
             Context = context;
+            _itemUseService = new ItemUseService(Context.ItemCatalog);
+            _headerView?.BindItemInventory(Context.RunState.ItemInventory);
             Context.RunState.CurrentNodeId = Context.RunMap.StartNodeId;
             _startNodeId = null;
             _startPreviewCandidateId = null;
@@ -192,18 +195,22 @@ namespace Pachimon.Run
                     return false;
                 }
 
-                var effectiveMaxHp = PachimonStatService.Calculate(
-                    runTarget.Stats,
+                var effectiveStats = PachimonStatService.Calculate(
+                    runTarget,
                     Context.RunState.PlayerModifiers,
-                    runTarget.PassiveIds,
-                    Context.PassiveStatModifierRegistry).MaxHp;
+                    Context.PassiveStatModifierRegistry);
                 useContext = ItemUseContext.ForRun(
                     runTarget,
-                    effectiveMaxHp,
-                    ItemTargetAffiliation.Ally);
+                    effectiveStats.MaxHp,
+                    effectiveStats.MaxMn,
+                    ItemTargetAffiliation.Ally,
+                    () => PachimonStatService.Calculate(
+                        runTarget,
+                        Context.RunState.PlayerModifiers,
+                        Context.PassiveStatModifierRegistry));
             }
 
-            var result = new ItemUseService(Context.ItemCatalog).TryUse(
+            var result = _itemUseService.TryUse(
                 Context.RunState.ItemInventory,
                 item.InstanceId,
                 useContext);
@@ -231,6 +238,67 @@ namespace Pachimon.Run
             rightWindow?.ShowTab(rightTab);
             _gameRootView?.RefreshItemPanel(true);
             return true;
+        }
+
+        public bool CanUseItemOnPlayer(ItemInstance item, int partyIndex)
+        {
+            if (Context == null
+                || item == null
+                || partyIndex < 0
+                || partyIndex >= RunState.PartySize)
+            {
+                return false;
+            }
+
+            ItemUseContext useContext;
+            if (_activeBattleState != null)
+            {
+                if (!_battleScreen.CanUseItems)
+                {
+                    return false;
+                }
+
+                var battleTarget = _activeBattleState.Player.GetUnitAt(partyIndex);
+                if (battleTarget == null)
+                {
+                    return false;
+                }
+
+                useContext = ItemUseContext.ForBattle(
+                    battleTarget,
+                    ItemTargetAffiliation.Ally,
+                    Context.PachimonPool.Get(battleTarget.InstanceId),
+                    _activeBattleState);
+            }
+            else
+            {
+                if (partyIndex >= Context.RunState.PlayerPachimonIds.Count)
+                {
+                    return false;
+                }
+
+                var runTarget = Context.PachimonPool.Get(
+                    Context.RunState.PlayerPachimonIds[partyIndex]);
+                if (runTarget == null)
+                {
+                    return false;
+                }
+
+                var effectiveStats = PachimonStatService.Calculate(
+                    runTarget,
+                    Context.RunState.PlayerModifiers,
+                    Context.PassiveStatModifierRegistry);
+                useContext = ItemUseContext.ForRun(
+                    runTarget,
+                    effectiveStats.MaxHp,
+                    effectiveStats.MaxMn,
+                    ItemTargetAffiliation.Ally);
+            }
+
+            return _itemUseService.CanUse(
+                Context.RunState.ItemInventory,
+                item.InstanceId,
+                useContext) == ItemUseFailureReason.None;
         }
 
         public bool TryUseItemOnEnemy(ItemInstance item, int enemyIndex)
@@ -282,7 +350,7 @@ namespace Pachimon.Run
                     ItemTargetAffiliation.Enemy);
             }
 
-            var result = new ItemUseService(Context.ItemCatalog).TryUse(
+            var result = _itemUseService.TryUse(
                 Context.RunState.ItemInventory,
                 item.InstanceId,
                 useContext);
@@ -312,6 +380,58 @@ namespace Pachimon.Run
             return true;
         }
 
+        public bool CanUseItemOnEnemy(ItemInstance item, int enemyIndex)
+        {
+            if (Context == null || item == null || enemyIndex < 0)
+            {
+                return false;
+            }
+
+            ItemUseContext useContext;
+            if (_activeBattleState != null && !_battleScreen.CanUseItems)
+            {
+                return false;
+            }
+
+            if (_activeBattleState != null && _rightPaneShowsActiveBattle)
+            {
+                if (enemyIndex >= _activeBattleState.Enemy.Units.Count)
+                {
+                    return false;
+                }
+
+                var battleTarget = _activeBattleState.Enemy.GetUnitAt(enemyIndex);
+                useContext = ItemUseContext.ForBattle(
+                    battleTarget,
+                    ItemTargetAffiliation.Enemy,
+                    Context.PachimonPool.Get(battleTarget.InstanceId),
+                    _activeBattleState);
+            }
+            else
+            {
+                if (enemyIndex >= _inspectedEnemyIds.Count)
+                {
+                    return false;
+                }
+
+                var runTarget = Context.PachimonPool.Get(_inspectedEnemyIds[enemyIndex]);
+                if (runTarget == null)
+                {
+                    return false;
+                }
+
+                useContext = ItemUseContext.ForRun(
+                    runTarget,
+                    runTarget.MaxHp,
+                    ItemTargetAffiliation.Enemy);
+            }
+
+            return _itemUseService.CanUse(
+                Context.RunState.ItemInventory,
+                item.InstanceId,
+                useContext) == ItemUseFailureReason.None;
+        }
+
         public bool TryUseItemOnBattleEnemy(ItemInstance item, int enemyIndex)
         {
             if (_activeBattleState == null
@@ -324,7 +444,7 @@ namespace Pachimon.Run
             }
 
             var battleTarget = _activeBattleState.Enemy.GetUnitAt(enemyIndex);
-            var result = new ItemUseService(Context.ItemCatalog).TryUse(
+            var result = _itemUseService.TryUse(
                 Context.RunState.ItemInventory,
                 item.InstanceId,
                 ItemUseContext.ForBattle(
@@ -348,6 +468,28 @@ namespace Pachimon.Run
             rightWindow?.ShowTab(rightTab);
             _gameRootView?.RefreshItemPanel(true);
             return true;
+        }
+
+        public bool CanUseItemOnBattleEnemy(ItemInstance item, int enemyIndex)
+        {
+            if (_activeBattleState == null
+                || !_battleScreen.CanUseItems
+                || item == null
+                || enemyIndex < 0
+                || enemyIndex >= _activeBattleState.Enemy.Units.Count)
+            {
+                return false;
+            }
+
+            var battleTarget = _activeBattleState.Enemy.GetUnitAt(enemyIndex);
+            return _itemUseService.CanUse(
+                Context.RunState.ItemInventory,
+                item.InstanceId,
+                ItemUseContext.ForBattle(
+                    battleTarget,
+                    ItemTargetAffiliation.Enemy,
+                    Context.PachimonPool.Get(battleTarget.InstanceId),
+                    _activeBattleState)) == ItemUseFailureReason.None;
         }
 
         public MapNode GetCurrentNode()
@@ -413,22 +555,40 @@ namespace Pachimon.Run
             switch (node.Content)
             {
                 case BattleNodeContent battle:
+                    var battleModifiers = BuildEnemyTrainerModifiers(node);
                     ShowBattleNodeDetails(
-                        BuildTrainerPreview(battle.TrainerProfile, battle.NodeReward),
+                        BuildTrainerPreview(
+                            battle.TrainerProfile,
+                            battle.NodeReward,
+                            node.RowIndex,
+                            battleModifiers),
                         battle.EnemyPachimonInstanceIds,
-                        canMoveToNode);
+                        canMoveToNode,
+                        battleModifiers);
                     break;
                 case GymNodeContent gym:
+                    var gymModifiers = BuildEnemyTrainerModifiers(node);
                     ShowBattleNodeDetails(
-                        BuildTrainerPreview(gym.TrainerProfile, gym.NodeReward),
+                        BuildTrainerPreview(
+                            gym.TrainerProfile,
+                            gym.NodeReward,
+                            node.RowIndex,
+                            gymModifiers),
                         gym.EnemyPachimonInstanceIds,
-                        canMoveToNode);
+                        canMoveToNode,
+                        gymModifiers);
                     break;
                 case EliteNodeContent elite:
+                    var eliteModifiers = BuildEnemyTrainerModifiers(node);
                     ShowBattleNodeDetails(
-                        BuildTrainerPreview(elite.TrainerProfile, null),
+                        BuildTrainerPreview(
+                            elite.TrainerProfile,
+                            null,
+                            node.RowIndex,
+                            eliteModifiers),
                         elite.EnemyPachimonInstanceIds,
-                        canMoveToNode);
+                        canMoveToNode,
+                        eliteModifiers);
                     break;
                 case CityNodeContent city:
                     ShowCityNodeDetails(node, city, canMoveToNode);
@@ -455,10 +615,11 @@ namespace Pachimon.Run
         private void ShowBattleNodeDetails(
             TrainerPreviewContent trainerPreview,
             IEnumerable<string> enemyIds,
-            bool canMoveToNode)
+            bool canMoveToNode,
+            TrainerModifierSet modifiers)
         {
             _inspectedEnemyIds = enemyIds.ToArray();
-            var previews = BuildPachimonPreviews(_inspectedEnemyIds);
+            var previews = BuildPachimonPreviews(_inspectedEnemyIds, modifiers);
             if (canMoveToNode)
             {
                 _rightPaneView?.ShowBattleNodeSelection(
@@ -483,8 +644,7 @@ namespace Pachimon.Run
                     city,
                     Context.ItemCatalog,
                     Context.RunState,
-                    ShowCityItemDetails,
-                    TryPurchaseCurrentCityStock);
+                    ShowCityItemDetails);
                 return;
             }
 
@@ -529,7 +689,9 @@ namespace Pachimon.Run
 
         private TrainerPreviewContent BuildTrainerPreview(
             TrainerProfile trainerProfile,
-            NodeReward reward)
+            NodeReward reward,
+            int rowIndex,
+            TrainerModifierSet modifiers)
         {
             var style = Context.TrainerStyleCatalog.Get(trainerProfile.StyleId);
             var trainerName = Context.TrainerNameCatalog.Get(trainerProfile.NameId);
@@ -545,8 +707,13 @@ namespace Pachimon.Run
             return new TrainerPreviewContent(
                 style?.BattleGraphic,
                 displayName,
+                rowIndex,
+                BuildTrainerStatPreviews(modifiers),
+                BuildTrainerBadgePreviews(modifiers, false),
                 BuildTrainerRewardIcons(reward),
-                reward?.Gold);
+                _headerView?.GoldIconSprite,
+                GetDisplayedRewardGold(reward),
+                reward != null);
         }
 
         private TrainerPreviewContent BuildPlayerTrainerPreview()
@@ -554,8 +721,122 @@ namespace Pachimon.Run
             return new TrainerPreviewContent(
                 Context.TrainerStyleCatalog.PlayerBattleGraphic,
                 $"トレーナーの{Context.RunState.PlayerName}",
+                GetCurrentNode()?.RowIndex ?? 0,
+                BuildTrainerStatPreviews(Context.RunState.PlayerModifiers),
+                BuildTrainerBadgePreviews(Context.RunState.PlayerModifiers, true),
                 System.Array.Empty<TrainerRewardIconContent>(),
-                null);
+                _headerView?.GoldIconSprite,
+                null,
+                false);
+        }
+
+        private static IReadOnlyList<TrainerStatPreview> BuildTrainerStatPreviews(
+            TrainerModifierSet modifiers)
+        {
+            modifiers ??= new TrainerModifierSet();
+            return Enumerable.Range(0, (int)PachimonStatType.Count)
+                .Select(index => (PachimonStatType)index)
+                .Select(statType => new TrainerStatPreview(
+                    statType,
+                    modifiers.GetStatAddition(statType)))
+                .ToArray();
+        }
+
+        private static IReadOnlyList<TrainerBadgePreview> BuildTrainerBadgePreviews(
+            TrainerModifierSet modifiers,
+            bool includeEmptySlots)
+        {
+            modifiers ??= new TrainerModifierSet();
+            return Enum.GetValues(typeof(PachimonAttribute))
+                .Cast<PachimonAttribute>()
+                .Select(attribute => new TrainerBadgePreview(
+                    attribute,
+                    modifiers.GetBadgeCount(attribute)))
+                .Where(preview => includeEmptySlots || preview.Count > 0)
+                .ToArray();
+        }
+
+        private static TrainerModifierSet BuildEnemyTrainerModifiers(MapNode node)
+        {
+            var modifiers = new TrainerModifierSet();
+            switch (node?.Content)
+            {
+                case BattleNodeContent battle:
+                    ApplyRewardTrainerStatus(modifiers, battle.NodeReward);
+                    break;
+                case GymNodeContent gym
+                    when gym.NodeReward?.BadgeAttribute is PachimonAttribute attribute:
+                    modifiers.AddBadge(attribute);
+                    break;
+                case EliteNodeContent:
+                    foreach (PachimonAttribute eliteAttribute in
+                             Enum.GetValues(typeof(PachimonAttribute)))
+                    {
+                        modifiers.AddBadge(eliteAttribute);
+                    }
+                    break;
+            }
+
+            ApplyEnemyRowTrainerStatus(modifiers, node);
+            return modifiers;
+        }
+
+        private static void ApplyRewardTrainerStatus(
+            TrainerModifierSet modifiers,
+            NodeReward reward)
+        {
+            if (modifiers == null || reward == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < reward.Elements.Count; index++)
+            {
+                var element = reward.Elements[index];
+                if (element == null || element.Kind == RewardElementKind.BonusGold)
+                {
+                    continue;
+                }
+
+                var statType = element.Kind switch
+                {
+                    RewardElementKind.Attribute when element.Attribute.HasValue =>
+                        PachimonStatTypeUtility.FromAttribute(element.Attribute.Value),
+                    RewardElementKind.MaxHp => PachimonStatType.MaxHp,
+                    RewardElementKind.MaxMn => PachimonStatType.MaxMn,
+                    RewardElementKind.Speed => PachimonStatType.Speed,
+                    RewardElementKind.DamageBonus => PachimonStatType.DamageBonus,
+                    RewardElementKind.ResistBonus => PachimonStatType.ResistBonus,
+                    _ => PachimonStatType.Count,
+                };
+                if (statType == PachimonStatType.Count)
+                {
+                    continue;
+                }
+
+                modifiers.AddStat(
+                    statType,
+                    ModValueSettings.RuntimeDefault.GetAmount(
+                        element.Kind,
+                        index == 1));
+            }
+        }
+
+        private static void ApplyEnemyRowTrainerStatus(
+            TrainerModifierSet modifiers,
+            MapNode node)
+        {
+            var profile = node?.Content switch
+            {
+                BattleNodeContent battle => battle.TrainerProfile,
+                GymNodeContent gym => gym.TrainerProfile,
+                EliteNodeContent elite => elite.TrainerProfile,
+                _ => null,
+            };
+            EnemyTrainerScalingService.Apply(
+                modifiers,
+                node?.RowIndex ?? 0,
+                profile);
         }
 
         private static IReadOnlyList<TrainerRewardIconContent> BuildTrainerRewardIcons(
@@ -566,17 +847,75 @@ namespace Pachimon.Run
                 return new[]
                 {
                     new TrainerRewardIconContent(
-                        $"{GetAttributeInitial(badgeAttribute)}\nBADGE",
-                        GetAttributeColor(badgeAttribute)),
+                        $"{badgeAttribute}Badge",
+                        GetAttributeColor(badgeAttribute),
+                        amount: 1,
+                        useColoredBackground: true),
                 };
             }
 
             return reward?.Elements
-                .Select(element => new TrainerRewardIconContent(
-                    GetRewardElementLabel(element),
-                    GetRewardElementColor(element)))
+                .Select((element, index) => new { Element = element, Index = index })
+                .Where(item => item.Element.Kind != RewardElementKind.BonusGold)
+                .Select(item => CreateTrainerRewardContent(
+                    item.Element,
+                    ModValueSettings.RuntimeDefault.GetAmount(
+                        item.Element.Kind,
+                        item.Index == 1)))
                 .ToArray()
                 ?? System.Array.Empty<TrainerRewardIconContent>();
+        }
+
+        private static int? GetDisplayedRewardGold(NodeReward reward)
+        {
+            if (reward == null)
+            {
+                return null;
+            }
+
+            var total = reward.Gold;
+            for (var index = 0; index < reward.Elements.Count; index++)
+            {
+                var element = reward.Elements[index];
+                if (element.Kind == RewardElementKind.BonusGold)
+                {
+                    total = checked(total + ModValueSettings.RuntimeDefault.GetAmount(
+                        element.Kind,
+                        index == 1));
+                }
+            }
+
+            return total;
+        }
+
+        private static TrainerRewardIconContent CreateTrainerRewardContent(
+            RewardElement element,
+            int amount)
+        {
+            if (element.Attribute is PachimonAttribute attribute)
+            {
+                var icon = AttributeRichText.GetIcon(
+                    (AllocationType)((int)attribute + 1));
+                return new TrainerRewardIconContent(
+                    icon,
+                    GetAttributeColor(attribute),
+                    amount: amount);
+            }
+
+            var label = element.Kind switch
+            {
+                RewardElementKind.Speed => "SPD",
+                RewardElementKind.MaxHp => "HP",
+                RewardElementKind.MaxMn => "MN",
+                RewardElementKind.DamageBonus => "DB",
+                RewardElementKind.ResistBonus => "RB",
+                _ => GetRewardElementLabel(element),
+            };
+            return new TrainerRewardIconContent(
+                label,
+                GetRewardElementColor(element),
+                amount: amount,
+                useColoredBackground: true);
         }
 
         private static string GetAttributeInitial(PachimonAttribute attribute)
@@ -622,17 +961,23 @@ namespace Pachimon.Run
         }
 
         private IReadOnlyList<PachimonPreviewContent> BuildPachimonPreviews(
-            IEnumerable<string> enemyIds)
+            IEnumerable<string> enemyIds,
+            TrainerModifierSet modifiers)
         {
             return enemyIds
-                .Select(instanceId => BuildPachimonPreview(instanceId, true))
+                .Select(instanceId => BuildPachimonPreview(
+                    instanceId,
+                    true,
+                    modifiers,
+                    true))
                 .ToArray();
         }
 
         private PachimonPreviewContent BuildPachimonPreview(
             string instanceId,
             bool isRevealed,
-            TrainerModifierSet modifiers = null)
+            TrainerModifierSet modifiers = null,
+            bool includeTrainerResourceIncrease = false)
         {
             if (!isRevealed)
             {
@@ -645,7 +990,8 @@ namespace Pachimon.Run
                 Context.PachimonCatalog,
                 Context.SkillCatalog,
                 Context.PassiveCatalog,
-                Context.PassiveStatModifierRegistry);
+                Context.PassiveStatModifierRegistry,
+                includeTrainerResourceIncrease);
         }
 
         private void ConfirmNodeSelection()
@@ -699,28 +1045,9 @@ namespace Pachimon.Run
         {
             if (_headerView.GoldText != null)
             {
-                _headerView.GoldText.text = $"Gold: {Context.RunState.Gold}";
+                _headerView.GoldText.text = Context.RunState.Gold.ToString();
             }
 
-            var currentNode = GetCurrentNode();
-            if (_headerView.StageText != null)
-            {
-                var stage = currentNode != null ? currentNode.RowIndex : 0;
-                _headerView.StageText.text = $"Stage: {stage}";
-            }
-
-            if (_headerView.BadgeText != null)
-            {
-                _headerView.BadgeText.text = $"Badges: {Context.RunState.BadgeCount}";
-            }
-
-            foreach (var attribute in Enum.GetValues(typeof(PachimonAttribute))
-                         .Cast<PachimonAttribute>())
-            {
-                _headerView.SetBadgeCount(
-                    (AllocationType)((int)attribute + 1),
-                    Context.RunState.GetBadgeCount(attribute));
-            }
         }
 
         private void ApplyMapOverlayState()
@@ -1078,89 +1405,242 @@ namespace Pachimon.Run
                 return;
             }
 
-            var message = "シティへようこそ。\nRightPaneの商品を選んで購入できます。";
+            var message = "シティへようこそ。\nMainPaneのショップを選んでください。";
             if (!string.IsNullOrWhiteSpace(statusMessage))
             {
                 message += $"\n\n{statusMessage}";
             }
 
             _mainPaneView.LogWindowView?.SetLogText(message);
-            _mainPaneView.LogWindowView?.ShowSingleOption("進む", CompleteCurrentNode);
+            _mainPaneView.LogWindowView?.ClearOptions();
+            _cityScreen?.Bind(
+                content,
+                Context.ItemCatalog,
+                Context.RunState,
+                BuildCityPachimonOptions(),
+                statusMessage,
+                ShowCityItemDetails,
+                TryPurchaseCityItems,
+                TryApplyCityEngravings,
+                TryTeachCitySkill,
+                TryEquipCityItem,
+                CompleteCurrentNode);
             _rightPaneView?.ShowCityShop(
                 content,
                 Context.ItemCatalog,
                 Context.RunState,
-                ShowCityItemDetails,
-                TryPurchaseCurrentCityStock);
+                ShowCityItemDetails);
         }
 
-        private void ShowCityItemDetails(int itemId)
+        private IReadOnlyList<CityPachimonOption> BuildCityPachimonOptions()
         {
-            _gameRootView?.ShowItemDetails(itemId);
+            return Context.RunState.PlayerPachimonIds
+                .Select(instanceId => Context.PachimonPool.Get(instanceId))
+                .Where(instance => instance != null)
+                .Select(instance =>
+                {
+                    var definition = Context.PachimonCatalog.Get(instance.SpeciesId);
+                    return new CityPachimonOption(
+                        instance.InstanceId,
+                        definition?.DisplayName ?? $"Pachimon {instance.SpeciesId}",
+                        definition?.FrontSprite,
+                        instance.SkillIds.Count,
+                        instance.Equipment.Keys);
+                })
+                .ToArray();
         }
 
-        private void TryPurchaseCurrentCityStock(string stockId)
+        private void TryPurchaseCityItems(IReadOnlyList<CityStockEntry> entries)
         {
-            var currentNode = GetCurrentNode();
-            if (currentNode?.Content is not CityNodeContent content)
+            if (!TryValidateCityTransaction(entries, out var totalPrice, out var error))
             {
+                ShowCurrentCityShop(error);
                 return;
             }
 
-            var entry = content.StockEntries?
-                .FirstOrDefault(candidate => candidate.StockId == stockId);
-            if (entry == null)
+            if (entries.Any(entry => Context.ItemCatalog.Get(entry.ItemId)
+                    is not HealingItemAsset))
             {
-                ShowCurrentCityShop("商品が見つかりません。");
+                ShowCurrentCityShop("薬局の商品ではありません。");
                 return;
             }
 
-            if (entry.IsPurchased)
+            var freeSlots = ItemInventory.Capacity - Context.RunState.ItemInventory.Count;
+            if (entries.Count > freeSlots)
             {
-                ShowCurrentCityShop("その商品は売り切れです。");
+                ShowCurrentCityShop("バッグがいっぱいだ！");
                 return;
             }
 
-            if (Context.ItemCatalog.Get(entry.ItemId) == null)
+            var addedItems = new List<ItemInstance>();
+            foreach (var entry in entries)
             {
-                ShowCurrentCityShop("商品データが見つかりません。");
-                return;
+                if (!Context.RunState.ItemInventory.TryAdd(
+                        entry.GeneratedData,
+                        out var item,
+                        out _))
+                {
+                    foreach (var added in addedItems)
+                        Context.RunState.ItemInventory.TryRemove(added.InstanceId, out _);
+                    ShowCurrentCityShop("Itemを追加できませんでした。");
+                    return;
+                }
+                addedItems.Add(item);
             }
 
-            if (Context.RunState.ItemInventory.IsFull)
-            {
-                ShowCurrentCityShop("Item Slotがいっぱいです。");
-                return;
-            }
-
-            if (Context.RunState.Gold < entry.Price)
-            {
-                ShowCurrentCityShop("Goldが足りません。");
-                return;
-            }
-
-            if (!Context.RunState.ItemInventory.TryAdd(
-                    entry.ItemId,
-                    out var itemInstance,
-                    out _))
-            {
-                ShowCurrentCityShop("Itemを追加できませんでした。");
-                return;
-            }
-
-            if (!entry.TryMarkPurchased())
-            {
-                Context.RunState.ItemInventory.TryRemove(itemInstance.InstanceId, out _);
-                ShowCurrentCityShop("その商品は売り切れです。");
-                return;
-            }
-
-            Context.RunState.Gold -= entry.Price;
-            ApplyHeaderState();
+            CommitCityStock(entries, totalPrice);
             _gameRootView?.RefreshItemPanel(true);
-            var item = Context.ItemCatalog.Get(entry.ItemId);
-            ShowCurrentCityShop(
-                $"{item?.DisplayName ?? "Item"}を{entry.Price} Goldで購入しました。");
+            ShowCurrentCityShop($"{entries.Count}個の商品を購入しました。");
+        }
+
+        private void TryApplyCityEngravings(
+            IReadOnlyList<CityStockEntry> entries,
+            string targetInstanceId)
+        {
+            if (!TryValidateCityTransaction(entries, out var totalPrice, out var error)
+                || entries.Any(entry => Context.ItemCatalog.Get(entry.ItemId)
+                    is not EngravingItemAsset))
+            {
+                ShowCurrentCityShop(error ?? "刻印を適用できませんでした。");
+                return;
+            }
+
+            var target = Context.PachimonPool.Get(targetInstanceId);
+            if (target == null)
+            {
+                ShowCurrentCityShop("対象のパチモンが見つかりません。");
+                return;
+            }
+
+            foreach (var entry in entries)
+            {
+                ApplyPermanentCityChanges(
+                    target,
+                    entry.GeneratedData.StatChanges,
+                    $"city:{entry.StockId}",
+                    Context.ItemCatalog.Get(entry.ItemId).DisplayName);
+            }
+            CommitCityStock(entries, totalPrice);
+            RefreshPlayerPartyPane();
+            ShowCurrentCityShop($"{entries.Count}個の刻印を適用しました。");
+        }
+
+        private void TryTeachCitySkill(CityStockEntry entry, string targetInstanceId)
+        {
+            if (!TryValidateCityTransaction(new[] { entry }, out var totalPrice, out var error)
+                || Context.ItemCatalog.Get(entry.ItemId) is not SkillMachineItemAsset machine)
+            {
+                ShowCurrentCityShop(error ?? "Skillを習得できませんでした。");
+                return;
+            }
+
+            var target = Context.PachimonPool.Get(targetInstanceId);
+            if (target == null || !target.AddSkill(machine.SkillId))
+            {
+                ShowCurrentCityShop("これ以上おぼえられない。");
+                return;
+            }
+
+            CommitCityStock(new[] { entry }, totalPrice);
+            RefreshPlayerPartyPane();
+            ShowCurrentCityShop($"{machine.Skill.DisplayName}を習得しました。");
+        }
+
+        private void TryEquipCityItem(CityStockEntry entry, string targetInstanceId)
+        {
+            if (!TryValidateCityTransaction(new[] { entry }, out var totalPrice, out var error)
+                || Context.ItemCatalog.Get(entry.ItemId) is not EquipmentItemAsset equipment)
+            {
+                ShowCurrentCityShop(error ?? "装備できませんでした。");
+                return;
+            }
+
+            var target = Context.PachimonPool.Get(targetInstanceId);
+            if (target == null
+                || !target.TryEquip(
+                    equipment,
+                    entry.GeneratedData,
+                    $"equipment:{entry.StockId}"))
+            {
+                ShowCurrentCityShop("この部位はすでに装備済みです。");
+                return;
+            }
+
+            CommitCityStock(new[] { entry }, totalPrice);
+            RefreshPlayerPartyPane();
+            ShowCurrentCityShop($"{equipment.DisplayName}を装備しました。");
+        }
+
+        private bool TryValidateCityTransaction(
+            IReadOnlyList<CityStockEntry> entries,
+            out int totalPrice,
+            out string error)
+        {
+            totalPrice = 0;
+            error = null;
+            var currentNode = GetCurrentNode();
+            if (currentNode?.Content is not CityNodeContent city
+                || entries == null
+                || entries.Count == 0
+                || entries.Any(entry => entry == null
+                    || entry.IsPurchased
+                    || !city.StockEntries.Contains(entry)))
+            {
+                error = "商品が見つからないか、すでに売り切れです。";
+                return false;
+            }
+
+            totalPrice = entries.Sum(entry => entry.Price);
+            if (Context.RunState.Gold < totalPrice)
+            {
+                error = "Goldが足りません。";
+                return false;
+            }
+            return true;
+        }
+
+        private void CommitCityStock(
+            IEnumerable<CityStockEntry> entries,
+            int totalPrice)
+        {
+            foreach (var entry in entries) entry.TryMarkPurchased();
+            Context.RunState.Gold -= totalPrice;
+            ApplyHeaderState();
+        }
+
+        private void ApplyPermanentCityChanges(
+            PachimonInstance target,
+            IReadOnlyList<GeneratedStatChange> changes,
+            string sourceId,
+            string displayName)
+        {
+            var current = PachimonStatService.Calculate(
+                target,
+                Context.RunState.PlayerModifiers,
+                Context.PassiveStatModifierRegistry);
+            var useContext = ItemUseContext.ForRun(
+                target,
+                current.MaxHp,
+                current.MaxMn,
+                ItemTargetAffiliation.Ally,
+                () => PachimonStatService.Calculate(
+                    target,
+                    Context.RunState.PlayerModifiers,
+                    Context.PassiveStatModifierRegistry));
+            useContext.ApplyPermanentStatChanges(
+                changes,
+                sourceId,
+                displayName);
+        }
+
+        private void ShowCityItemDetails(CityStockEntry entry)
+        {
+            if (entry != null)
+            {
+                _gameRootView?.ShowItemDetails(
+                    entry.ItemId,
+                    entry.GeneratedData);
+            }
         }
 
         private void ApplyBattleNode(MapNode node)
@@ -1224,15 +1704,18 @@ namespace Pachimon.Run
                 Context.PachimonCatalog,
                 Context.PassiveCatalog,
                 Context.PassiveStatModifierRegistry);
+            var enemyModifiers = BuildEnemyTrainerModifiers(node);
             var battleState = stateFactory.Create(
                 CreateBattleSeed(node),
                 Context.RunState.PlayerPachimonIds,
                 enemyPachimonIds,
                 Context.RunState.PlayerModifiers,
-                new TrainerModifierSet());
+                enemyModifiers);
             var enemyTrainerPreview = BuildTrainerPreview(
                 enemyTrainerProfile,
-                nodeReward);
+                nodeReward,
+                node.RowIndex,
+                enemyModifiers);
             _activeBattleState = battleState;
             _activeEnemyTrainerPreview = enemyTrainerPreview;
             RefreshBattlePanes(battleState, enemyTrainerPreview);

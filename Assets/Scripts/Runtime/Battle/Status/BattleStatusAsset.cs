@@ -49,6 +49,11 @@ namespace Pachimon.Battle
         }
 
 #if UNITY_EDITOR
+        public void SetDescriptionTemplateForEditor(string description)
+        {
+            _description = description ?? string.Empty;
+        }
+
         protected void ConfigureDefinitionForEditor(
             BattleStatusId statusId,
             string displayName,

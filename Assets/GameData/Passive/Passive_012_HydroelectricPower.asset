@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DerivedAdditivePassiveAsset
   _passiveId: 12
   _displayName: 水力発電
-  _description: Aquaの30%をElectricへ加算する。加算値の下限は0。
+  _description: "{icon:Aqua}水の{value:percent}%を{icon:Electric}電気へ加算する。現在の加算値は{value:contribution}。"
   _targetStat: 5
   _referenceStat: 3
   _percent: 30

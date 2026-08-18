@@ -16,9 +16,10 @@ MonoBehaviour:
   _displayName: "\u30D5\u30A1\u30A4\u30A2\u30A2\u30ED\u30FC"
   _allocationType: 1
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 250
-  _baseManaCost: 100
-  _description: "CurrentHP\u304C\u6700\u3082\u4F4E\u3044\u6575\u3078Fire\u30C0\u30E1\u30FC\u30B8\u3002\u6226\u95D8\u4E0D\u80FD\u306B\u3057\u305F\u5834\u5408\u306FMN\u3092\u6D88\u8CBB\u3057\u3066\u518D\u767A\u52D5\u3059\u308B\u3002"
+  _baseManaCost: 20
+  _description: "Current HPが最も低い敵へ{icon:Fire}{color:Fire}{value:damage}{/color}の{term:FireDamage|炎ダメージ}を与える。戦闘不能にした場合、MNを{value:repeatManaCost}消費して次の対象へ再発動する。"
   _basePower: 100
   _fireScalingPercent: 100

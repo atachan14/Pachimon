@@ -17,9 +17,9 @@ MonoBehaviour:
   _description: "Electric\u3092\u4FDD\u5B58\u3057\u3001\u5145\u96FB\u4E2D\u304B\u3089\u5145\u96FB\u5B8C\u4E86\u3078\u79FB\u884C\u3059\u308B\u3002"
   _icon: {fileID: 0}
   _chargingDisplayName: "\u5145\u96FB\u4E2D"
-  _chargingDescription: "ResistBonus\u3092\u52A0\u7B97\u3057\u3001Electric\u3092\u4E57\u7B97\u3059\u308B\u3002"
+  _chargingDescription: "充電中。ResistBonusが{value:resistBonus}増加し、電気が{value:electricMultiplier}%になる。保存Valueは{value:value}。"
   _chargedDisplayName: "\u5145\u96FB\u5B8C\u4E86"
-  _chargedDescription: "Speed\u3092\u52A0\u7B97\u3057\u3001Electric\u3092\u4E57\u7B97\u3059\u308B\u3002"
+  _chargedDescription: "充電完了。Speedが{value:speedBonus}増加し、電気が{value:electricMultiplier}%になる。残り{value:remainingTicks}tick。"
   _chargingResistBonusRatio: 40
   _chargingElectricRatio: 50
   _chargedDurationRatio: 200

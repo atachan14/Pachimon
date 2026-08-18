@@ -24,6 +24,7 @@ namespace Pachimon.Battle
         public int RemainingTicks => (int)Math.Ceiling(RemainingWork);
         public bool IsPaused { get; private set; }
         public bool IsComplete => RemainingWork <= 0m;
+        public string CurrentActionName { get; private set; } = string.Empty;
 
         public float Progress =>
             TotalWork <= 0m
@@ -35,18 +36,23 @@ namespace Pachimon.Battle
             BeginTimedPhase(BattleActionPhase.InitialDelay, work);
         }
 
-        internal void BeginStartup(decimal work)
+        internal void BeginStartup(decimal work, string actionName = null)
         {
             if (work <= 0m)
             {
                 throw new ArgumentOutOfRangeException(nameof(work));
             }
 
+            CurrentActionName = actionName ?? string.Empty;
             BeginTimedPhase(BattleActionPhase.Startup, work);
         }
 
-        internal void BeginRecovery(decimal work)
+        internal void BeginRecovery(decimal work, string actionName = null)
         {
+            if (actionName != null)
+            {
+                CurrentActionName = actionName;
+            }
             BeginTimedPhase(BattleActionPhase.Recovery, work);
         }
 
@@ -56,6 +62,7 @@ namespace Pachimon.Battle
             TotalWork = 0m;
             RemainingWork = 0m;
             IsPaused = false;
+            CurrentActionName = string.Empty;
         }
 
         internal void MarkDefeated()
@@ -64,6 +71,7 @@ namespace Pachimon.Battle
             TotalWork = 0m;
             RemainingWork = 0m;
             IsPaused = false;
+            CurrentActionName = string.Empty;
         }
 
         internal void SetPaused(bool isPaused)
@@ -103,6 +111,7 @@ namespace Pachimon.Battle
                 TotalWork = TotalWork,
                 RemainingWork = RemainingWork,
                 IsPaused = IsPaused,
+                CurrentActionName = CurrentActionName,
             };
         }
 
@@ -113,6 +122,7 @@ namespace Pachimon.Battle
             TotalWork = source.TotalWork;
             RemainingWork = source.RemainingWork;
             IsPaused = source.IsPaused;
+            CurrentActionName = source.CurrentActionName;
         }
 
         private void BeginTimedPhase(

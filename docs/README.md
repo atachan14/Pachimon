@@ -1,13 +1,14 @@
 # Pachimon Documentation
 
-[`v0.6.5 Stat Refactor`](./v0.6.5/README.md)まで実装・通し確認済み。
-現在の実装対象は[`v0.7 City`](./roadmap.md#milestones)。
+`v0.7 City`まで実装・確認済み。
+現在の実装対象は[`v0.8.1 Playtest Build`](./v0.8.1/README.md)。
 
 ## 読み始める場所
 
 1. [`roadmap.md`](./roadmap.md): 全体計画と現在地
-2. [`v0.6.5/README.md`](./v0.6.5/README.md): 完了したStat Refactor
-3. [`v0.6.5/stat-refactor-plan.md`](./v0.6.5/stat-refactor-plan.md): Stat Refactorの実装手順
+2. [`v0.8.1/README.md`](./v0.8.1/README.md): 最初の限定Webプレイテストまでの実装順
+   - [`v0.8.1/editor-test-checklist.md`](./v0.8.1/editor-test-checklist.md): Unity Editorでの確認待ち
+3. [`v0.8/README.md`](./v0.8/README.md): Skill / Passiveを中心としたコンテンツ追加
 4. [`v0.1/pachimon-stats.md`](./v0.1/pachimon-stats.md): Statと生成仕様の正本
 5. [`v0.1/map-generation.md`](./v0.1/map-generation.md): Map、Reward Deck、個体配置
 6. [`v0.3/battle-state.md`](./v0.3/battle-state.md): Run個体とBattle Stateの境界

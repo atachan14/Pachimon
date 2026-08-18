@@ -35,17 +35,20 @@ namespace Pachimon.Skills
             int baseManaCost,
             string description,
             int basePower,
-            int fireScalingPercent)
+            int fireScalingPercent,
+            bool isMapAssignable = true,
+            int baseStartupTicks = 100)
         {
             base.ConfigureForEditor(
                 skillId,
                 displayName,
                 AllocationType.Fire,
-                isMapAssignable: true,
+                isMapAssignable,
                 baseRecoveryTicks,
                 baseCooldownTicks,
                 description,
-                baseManaCost);
+                baseManaCost,
+                baseStartupTicks);
             _basePower = basePower;
             _fireScalingPercent = fireScalingPercent;
         }

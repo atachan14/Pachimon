@@ -8,5 +8,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.DragonBoxerStatusAsset
   _statusId: 123
   _displayName: ドラゴンボクサー
-  _description: 竜ダメージがスタック数に応じて増加する。
+  _description: "竜ダメージが合計スタックValue {value:totalValue}%に応じて増加する。"
   _icon: {fileID: 0}

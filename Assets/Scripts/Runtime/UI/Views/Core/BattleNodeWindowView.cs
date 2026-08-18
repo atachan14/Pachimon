@@ -239,10 +239,14 @@ namespace Pachimon.UI
 
     internal sealed class PaneTabNavigationView : MonoBehaviour
     {
+        private const float ViewportEdgePadding = 4f;
+
         private RectTransform _root;
         private RectTransform _graphicRect;
         private Button _previousButton;
         private Button _nextButton;
+        private bool _hasInitialTopInset;
+        private float _initialTopInset;
 
         public static PaneTabNavigationView GetOrCreate(
             RectTransform graphicRect,
@@ -344,15 +348,51 @@ namespace Pachimon.UI
             var graphicBounds = RectTransformUtility.CalculateRelativeRectTransformBounds(
                 _root,
                 _graphicRect);
-            SetButtonPosition(_previousButton, 4f, graphicBounds.center.y);
-            SetButtonPosition(_nextButton, -4f, graphicBounds.center.y);
+            var buttonHeight = Mathf.Max(
+                GetButtonHeight(_previousButton),
+                GetButtonHeight(_nextButton));
+            var halfButtonHeight = buttonHeight * 0.5f;
+            var visibleRect = _root.rect;
+            // Inactive tab panels have not completed layout yet. Capturing their
+            // bounds here pins navigation to the viewport top when first opened.
+            if (!_hasInitialTopInset
+                && _root.gameObject.activeInHierarchy
+                && _graphicRect.gameObject.activeInHierarchy
+                && visibleRect.height > 0f
+                && _graphicRect.rect.height > 0f)
+            {
+                _initialTopInset = visibleRect.yMax - graphicBounds.center.y;
+                _hasInitialTopInset = true;
+            }
+
+            var minimumY = visibleRect.yMin + halfButtonHeight + ViewportEdgePadding;
+            var maximumY = visibleRect.yMax - halfButtonHeight - ViewportEdgePadding;
+            var initialY = _hasInitialTopInset
+                ? visibleRect.yMax - _initialTopInset
+                : graphicBounds.center.y;
+            var targetY = minimumY <= maximumY
+                ? Mathf.Clamp(initialY, minimumY, maximumY)
+                : visibleRect.center.y;
+            SetButtonPosition(_previousButton, 4f, targetY);
+            SetButtonPosition(_nextButton, -4f, targetY);
+        }
+
+        private static float GetButtonHeight(Button button)
+        {
+            return button?.transform is RectTransform rect
+                ? rect.rect.height
+                : 0f;
         }
 
         private static void SetButtonPosition(Button button, float x, float y)
         {
             if (button?.transform is RectTransform rect)
             {
-                rect.anchoredPosition = new Vector2(x, y);
+                var position = new Vector2(x, y);
+                if (rect.anchoredPosition != position)
+                {
+                    rect.anchoredPosition = position;
+                }
             }
         }
 

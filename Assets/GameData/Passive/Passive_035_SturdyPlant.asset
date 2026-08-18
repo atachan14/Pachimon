@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.SturdyPlantPassiveAsset
   _passiveId: 35
   _displayName: 堅牢な植物
-  _description: 発生中またはStun中、Leafの60%だけResistBonusが増加する。
+  _description: "自身が発生中または{term:Stun|Stun}中、{icon:Leaf}草の{value:leafResistRatio}%をResistBonusへ加算する。現在の加算値は{value:currentResistBonus}。"
   _leafResistBonusRatio: 60

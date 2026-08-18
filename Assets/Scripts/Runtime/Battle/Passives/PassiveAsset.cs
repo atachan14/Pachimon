@@ -27,6 +27,11 @@ namespace Pachimon.Passives
         }
 
 #if UNITY_EDITOR
+        public void SetDescriptionTemplateForEditor(string descriptionTemplate)
+        {
+            _description = descriptionTemplate ?? string.Empty;
+        }
+
         protected void ConfigureBaseForEditor(
             int passiveId,
             string displayName,

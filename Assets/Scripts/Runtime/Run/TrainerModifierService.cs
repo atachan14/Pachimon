@@ -43,9 +43,8 @@ namespace Pachimon.Run
                 instance =>
                 {
                     var stats = PachimonStatService.Calculate(
-                        instance.Stats,
+                        instance,
                         modifiers,
-                        instance.PassiveIds,
                         passiveStatModifierRegistry);
                     return statType == PachimonStatType.MaxHp ? stats.MaxHp : stats.MaxMn;
                 });
@@ -54,9 +53,8 @@ namespace Pachimon.Run
             foreach (var instance in instances)
             {
                 var stats = PachimonStatService.Calculate(
-                    instance.Stats,
+                    instance,
                     modifiers,
-                    instance.PassiveIds,
                     passiveStatModifierRegistry);
                 if (statType == PachimonStatType.MaxHp)
                 {

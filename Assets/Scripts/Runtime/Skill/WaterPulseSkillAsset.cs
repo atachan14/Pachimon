@@ -30,17 +30,20 @@ namespace Pachimon.Skills
             int baseRecoveryTicks,
             int baseCooldownTicks,
             string description,
-            int aquaDamageRatio)
+            int aquaDamageRatio,
+            bool isMapAssignable = true,
+            int baseStartupTicks = 100)
         {
             base.ConfigureForEditor(
                 skillId,
                 displayName,
                 AllocationType.Aqua,
-                isMapAssignable: true,
+                isMapAssignable,
                 baseRecoveryTicks,
                 baseCooldownTicks,
                 description,
-                baseManaCost: 0);
+                baseManaCost: 0,
+                baseStartupTicks);
             _aquaDamageRatio = aquaDamageRatio;
         }
 #endif

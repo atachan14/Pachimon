@@ -63,6 +63,7 @@ namespace Pachimon.UI
         private ResourceGaugeView _mnGaugeView;
         private Image _actionElapsed;
         private Image _actionRemaining;
+        private TMP_Text _actionNameText;
         private TMP_Text _actionValueText;
         private ActionGaugeView _actionGaugeView;
         private Image _graphic;
@@ -81,10 +82,14 @@ namespace Pachimon.UI
             RenderGraphic(unit, pachimonCatalog, useBackSprite);
         }
 
-        public void ConfigureItemDrop(Func<ItemInstance, bool> tryUse)
+        public void ConfigureItemDrop(
+            Func<ItemInstance, bool> canUse,
+            Func<ItemInstance, bool> tryUse)
         {
             EnsureInteractionRoot();
-            _interactionRoot?.GetComponent<ItemDropTargetView>()?.Configure(tryUse);
+            _interactionRoot?.GetComponent<ItemDropTargetView>()?.Configure(
+                canUse,
+                tryUse);
         }
 
         public void ConfigureClick(Action onClicked)
@@ -256,7 +261,7 @@ namespace Pachimon.UI
             _nameText.fontStyle = FontStyles.Bold;
             SetAnchors(
                 _nameText.rectTransform,
-                new Vector2(0f, 0.77f),
+                new Vector2(0f, 0.81f),
                 new Vector2(1f, 0.98f),
                 new Vector2(4f, 0f),
                 new Vector2(-4f, 0f));
@@ -264,8 +269,8 @@ namespace Pachimon.UI
             var track = GetOrCreateImage(_gaugeRoot, "HpGauge", HpTrackColor);
             SetAnchors(
                 track.rectTransform,
-                new Vector2(0.04f, 0.53f),
-                new Vector2(0.96f, 0.75f),
+                new Vector2(0.04f, 0.62f),
+                new Vector2(0.96f, 0.79f),
                 Vector2.zero,
                 Vector2.zero);
 
@@ -307,8 +312,8 @@ namespace Pachimon.UI
             var mnTrack = GetOrCreateImage(_gaugeRoot, "MnGauge", HpTrackColor);
             SetAnchors(
                 mnTrack.rectTransform,
-                new Vector2(0.04f, 0.28f),
-                new Vector2(0.96f, 0.50f),
+                new Vector2(0.04f, 0.43f),
+                new Vector2(0.96f, 0.60f),
                 Vector2.zero,
                 Vector2.zero);
 
@@ -337,14 +342,36 @@ namespace Pachimon.UI
                 ?? mnTrack.gameObject.AddComponent<ResourceGaugeView>();
             _mnGaugeView.Configure("MN", _mnFill, _mnValueText);
 
+            _actionNameText = GetOrCreateLabel(
+                _gaugeRoot,
+                "ActionName",
+                TextAlignmentOptions.Left,
+                15f);
+            _actionNameText.font = _nameText.font;
+            _actionNameText.fontSharedMaterial = _nameText.fontSharedMaterial;
+            _actionNameText.color = new Color(0.04f, 0.05f, 0.06f, 1f);
+            _actionNameText.fontStyle = FontStyles.Bold;
+            _actionNameText.textWrappingMode = TextWrappingModes.NoWrap;
+            _actionNameText.overflowMode = TextOverflowModes.Overflow;
+            _actionNameText.enableAutoSizing = true;
+            _actionNameText.fontSizeMin = 8f;
+            _actionNameText.fontSizeMax = 15f;
+            _actionNameText.margin = Vector4.zero;
+            SetAnchors(
+                _actionNameText.rectTransform,
+                new Vector2(0.04f, 0.23f),
+                new Vector2(0.72f, 0.40f),
+                Vector2.zero,
+                Vector2.zero);
+
             var actionTrack = GetOrCreateImage(
                 _gaugeRoot,
                 "ActionGauge",
                 HpTrackColor);
             SetAnchors(
                 actionTrack.rectTransform,
-                new Vector2(0.04f, 0.10f),
-                new Vector2(0.72f, 0.17f),
+                new Vector2(0.04f, 0.12f),
+                new Vector2(0.72f, 0.19f),
                 Vector2.zero,
                 Vector2.zero);
 
@@ -363,17 +390,24 @@ namespace Pachimon.UI
                 _gaugeRoot,
                 "ActionGaugeValue",
                 TextAlignmentOptions.Left,
-                13f);
+                15f);
+            _actionValueText.font = _nameText.font;
+            _actionValueText.fontSharedMaterial = _nameText.fontSharedMaterial;
             _actionValueText.color = InitialElapsedColor;
             _actionValueText.fontStyle = FontStyles.Bold;
+            _actionValueText.enableAutoSizing = true;
+            _actionValueText.fontSizeMin = 8f;
+            _actionValueText.fontSizeMax = 15f;
+            _actionValueText.margin = Vector4.zero;
             SetAnchors(
                 _actionValueText.rectTransform,
-                new Vector2(0.75f, 0.03f),
-                new Vector2(0.99f, 0.24f),
+                new Vector2(0.75f, 0.10f),
+                new Vector2(0.99f, 0.40f),
                 Vector2.zero,
                 Vector2.zero);
             _hpValueText.transform.SetAsLastSibling();
             _mnValueText.transform.SetAsLastSibling();
+            _actionNameText.transform.SetAsLastSibling();
             _actionValueText.transform.SetAsLastSibling();
             _actionGaugeView = actionTrack.GetComponent<ActionGaugeView>()
                 ?? actionTrack.gameObject.AddComponent<ActionGaugeView>();
@@ -476,6 +510,7 @@ namespace Pachimon.UI
         {
             if (_actionElapsed == null
                 || _actionRemaining == null
+                || _actionNameText == null
                 || _actionValueText == null)
             {
                 return;
@@ -483,6 +518,7 @@ namespace Pachimon.UI
 
             if (unit == null || unit.IsDefeated)
             {
+                _actionNameText.text = unit == null ? "---" : "DOWN";
                 PresentActionGauge(
                     BattleActionPhase.Defeated,
                     0f,
@@ -500,6 +536,7 @@ namespace Pachimon.UI
             var ratio = Mathf.Clamp01(timing.Progress);
             if (timing.Phase == BattleActionPhase.Ready)
             {
+                _actionNameText.text = "行動選択";
                 PresentActionGauge(
                     timing.Phase,
                     1f,
@@ -517,6 +554,7 @@ namespace Pachimon.UI
             if (actionLock?.RemainingTicks is int lockRemaining
                 && actionLock.RuntimeData is FrozenBreakRuntimeState lockRuntime)
             {
+                _actionNameText.text = "Action Lock";
                 var lockTotal = lockRuntime.TotalDurationTicks;
                 var lockRatio = lockTotal > 0
                     ? Mathf.Clamp01(1f - (float)lockRemaining / lockTotal)
@@ -540,15 +578,24 @@ namespace Pachimon.UI
             var valueColor = InitialElapsedColor;
             if (timing.Phase == BattleActionPhase.Startup)
             {
+                _actionNameText.text = string.IsNullOrWhiteSpace(
+                    timing.CurrentActionName)
+                    ? "Skill"
+                    : timing.CurrentActionName;
                 elapsedColor = StartupElapsedColor;
                 remainingColor = StartupRemainingColor;
                 valueColor = StartupElapsedColor;
             }
             else if (timing.Phase == BattleActionPhase.Recovery)
             {
+                _actionNameText.text = "Recovery";
                 elapsedColor = RecoveryElapsedColor;
                 remainingColor = RecoveryRemainingColor;
                 valueColor = RecoveryElapsedColor;
+            }
+            else
+            {
+                _actionNameText.text = "---";
             }
 
             if (timing.IsPaused)

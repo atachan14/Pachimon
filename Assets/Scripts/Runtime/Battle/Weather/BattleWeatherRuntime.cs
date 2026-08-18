@@ -30,6 +30,7 @@ namespace Pachimon.Battle
         public int Value { get; private set; }
         public decimal DecayWork { get; private set; }
         public decimal LeakAccumulationWork { get; private set; }
+        public int ApplicationWork { get; private set; }
         public bool IsSnow { get; private set; }
         public string DisplayName => IsSnow
             && Definition is RainWeatherAsset rain
@@ -79,6 +80,16 @@ namespace Pachimon.Battle
             LeakAccumulationWork = 0m;
         }
 
+        internal bool AdvanceApplication(int intervalTicks)
+        {
+            if (intervalTicks <= 0)
+                throw new ArgumentOutOfRangeException(nameof(intervalTicks));
+            ApplicationWork++;
+            if (ApplicationWork < intervalTicks) return false;
+            ApplicationWork -= intervalTicks;
+            return true;
+        }
+
         internal BattleWeatherInstance CreateSimulationClone(
             BattleUnitState sourceClone)
         {
@@ -86,6 +97,7 @@ namespace Pachimon.Battle
             {
                 DecayWork = DecayWork,
                 LeakAccumulationWork = LeakAccumulationWork,
+                ApplicationWork = ApplicationWork,
                 IsSnow = IsSnow,
             };
         }
@@ -110,6 +122,8 @@ namespace Pachimon.Battle
             item.WeatherId == BattleWeatherId.Rain);
         private BattleWeatherInstance Wind => _weather.FirstOrDefault(item =>
             item.WeatherId == BattleWeatherId.Wind);
+        private BattleWeatherInstance Thunder => _weather.FirstOrDefault(item =>
+            item.WeatherId == BattleWeatherId.Thunder);
         public int Temperature => _weather.FirstOrDefault(item =>
             item.WeatherId == BattleWeatherId.Temperature)?.Value ?? 0;
         public bool IsSnowing => Temperature < 0 && Has(BattleWeatherId.Rain);
@@ -290,6 +304,13 @@ namespace Pachimon.Battle
                     _ => 1m,
                 };
             }
+            if (Thunder?.Definition is ThunderWeatherAsset thunderDefinition
+                && attribute == PachimonAttribute.Electric)
+            {
+                multiplier *= SignedStatMath.AmplificationMultiplier(
+                    Thunder.Value
+                    * thunderDefinition.ElectricRatioScalingPercent / 100m);
+            }
             return multiplier;
         }
 
@@ -304,20 +325,30 @@ namespace Pachimon.Battle
             BattleUnitState unit)
         {
             if (unit == null) throw new ArgumentNullException(nameof(unit));
-            if (Wind?.Definition is not WindWeatherAsset definition)
+            if (Wind?.Definition is WindWeatherAsset windDefinition)
             {
-                yield break;
+                yield return new DerivedStatModifier(
+                    PachimonStatType.Speed,
+                    StatModifierOperation.DerivedAdditive,
+                    stats => stats.GetValue(PachimonStatType.Wind)
+                        * windDefinition.SpeedFromWindRatio / 100m,
+                    new StatModifierSource(
+                        StatModifierSourceType.FieldEffect,
+                        "weather:wind",
+                        Wind.DisplayName));
             }
-
-            yield return new DerivedStatModifier(
-                PachimonStatType.Speed,
-                StatModifierOperation.DerivedAdditive,
-                stats => stats.GetValue(PachimonStatType.Wind)
-                    * definition.SpeedFromWindRatio / 100m,
-                new StatModifierSource(
-                    StatModifierSourceType.FieldEffect,
-                    "weather:wind",
-                    Wind.DisplayName));
+            if (Thunder?.Definition is ThunderWeatherAsset thunderDefinition)
+            {
+                yield return new DerivedStatModifier(
+                    PachimonStatType.Speed,
+                    StatModifierOperation.DerivedAdditive,
+                    stats => stats.GetValue(PachimonStatType.Electric)
+                        * thunderDefinition.SpeedFromElectricRatio / 100m,
+                    new StatModifierSource(
+                        StatModifierSourceType.FieldEffect,
+                        "weather:thunder",
+                        Thunder.DisplayName));
+            }
         }
 
         public void HandleDamageApplied(DamageAppliedEvent damageEvent)
@@ -383,6 +414,12 @@ namespace Pachimon.Battle
                     var previousValue = item.Value;
                     item.Advance(beforeDecay.DecayPerTick);
                     contextChanged |= item.Value != previousValue;
+                    if (item.Value > 0
+                        && item.Definition is ThunderWeatherAsset thunder
+                        && item.AdvanceApplication(thunder.AttackIntervalTicks))
+                    {
+                        ApplyThunderDamage(item, thunder);
+                    }
                     if (item.Value <= 0)
                     {
                         _weather.Remove(item);
@@ -401,6 +438,33 @@ namespace Pachimon.Battle
                 }
 
                 AccumulateLeakOneTick();
+            }
+        }
+
+        private void ApplyThunderDamage(
+            BattleWeatherInstance thunder,
+            ThunderWeatherAsset definition)
+        {
+            var damage = thunder.Value / definition.DamageDivisor;
+            if (damage <= 0) return;
+            _state.AddLog($"{thunder.DisplayName}の攻撃！");
+            foreach (var target in GetAllUnits().Where(unit => unit.IsAlive).ToArray())
+            {
+                BattleAttributeDamageService.Apply(
+                    _state,
+                    thunder.Source,
+                    target,
+                    new DamageContext(
+                        DamageOriginKind.Field,
+                        (int)BattleWeatherId.Thunder,
+                        damage,
+                        thunder.Source.GetBattleStats(),
+                        target.GetBattleStats(),
+                        PachimonAttribute.Electric,
+                        isAttack: false,
+                        applyAttackerAttributeMultiplier: false,
+                        applyDamageBonusMultiplier: false,
+                        applyOutgoingModifiers: false));
             }
         }
 

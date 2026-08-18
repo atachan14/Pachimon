@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24fff46843f27de4fa3ecf903f5c324d, type: 3}
+  m_Name: BurningFlowerLeafGrowth
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.BurningFlowerGrowthStatusAsset
+  _statusId: 131
+  _displayName: "\u71C3\u3048\u308B\u82B1\u30FB\u8349"
+  _description: "炎ダメージが発生するたび草が増加する。現在の増加値は{value:totalValue}。"
+  _icon: {fileID: 0}

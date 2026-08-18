@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e339cc923c8a4d448b7a582694800a5, type: 3}
+  m_Name: Passive_007_AttributeDamage
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.OutgoingAttributeDamagePassiveAsset
+  _passiveId: 7
+  _displayName: "\u98A8001"
+  _description: "\u4E0E\u3048\u308B{icon:Wind}{term:WindDamage|\u98A8\u30C0\u30E1\u30FC\u30B8}\u304C{value:increasePercent}%\u5897\u52A0\u3059\u308B\u3002"
+  _attribute: 6
+  _damagePercent: 130

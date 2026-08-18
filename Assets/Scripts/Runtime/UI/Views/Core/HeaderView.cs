@@ -1,51 +1,38 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Pachimon.Data;
+using Pachimon.Items;
 using TMPro;
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace Pachimon.UI
 {
     public sealed class HeaderView : MonoBehaviour
     {
-        private static readonly BadgePaletteEntry[] BadgePalette =
-        {
-            new(AllocationType.Fire, "FireArea", "#E84B3C"),
-            new(AllocationType.Aqua, "AquaArea", "#356AE0", "WaterArea"),
-            new(AllocationType.Leaf, "LeafArea", "#288A47"),
-            new(AllocationType.Electric, "ElecArea", "#F2C94C", "ElectricArea"),
-            new(AllocationType.Poison, "PoisonArea", "#FFA7DF"),
-            new(AllocationType.Ice, "IceArea", "#62D5E6"),
-            new(AllocationType.Wind, "WindArea", "#91C83E", "GroundArea"),
-            new(AllocationType.Dragon, "DragonArea", "#707887"),
-        };
+        private ItemInventory _itemInventory;
 
-        private readonly Dictionary<AllocationType, TMP_Text> _badgeTexts = new();
+        private static readonly Color ItemCountColor =
+            new Color32(0xD7, 0x35, 0x2A, 0xFF);
+
+        [SerializeField] private TMP_Text _itemCountText;
+        private Image _goldIcon;
 
         [field: SerializeField] public TMP_Text GoldText { get; private set; }
-        [field: FormerlySerializedAs("RowText")]
-        [field: SerializeField] public TMP_Text StageText { get; private set; }
-        [field: SerializeField] public TMP_Text BadgeText { get; private set; }
         [field: SerializeField] public Button MapButton { get; private set; }
         [field: SerializeField] public Button ItemButton { get; private set; }
         [field: SerializeField] public Button SettingsButton { get; private set; }
         public Button PartyPaneButton { get; private set; }
         public Button InfoPaneButton { get; private set; }
+        public Sprite GoldIconSprite => _goldIcon != null ? _goldIcon.sprite : null;
 
         public void Initialize(
             TMP_Text goldText,
-            TMP_Text stageText,
-            TMP_Text badgeText,
             Button mapButton,
             Button itemButton,
             Button settingsButton)
         {
             GoldText = goldText;
-            StageText = stageText;
-            BadgeText = badgeText;
             MapButton = mapButton;
             ItemButton = itemButton;
             SettingsButton = settingsButton;
@@ -53,17 +40,35 @@ namespace Pachimon.UI
 
         private void Awake()
         {
+            _goldIcon = GetComponentsInChildren<Image>(true)
+                .FirstOrDefault(image => image.name == "GoldIcon");
             ApplyPalette();
-            InitializeBadgeDetails();
+            ConfigureItemCountText();
             LogMissingReferences();
         }
 
-        public void SetBadgeCount(AllocationType allocationType, int count)
+        private void OnDestroy()
         {
-            if (_badgeTexts.TryGetValue(allocationType, out var badgeText))
+            if (_itemInventory != null)
             {
-                badgeText.text = Mathf.Max(0, count).ToString();
+                _itemInventory.Changed -= RefreshItemCount;
             }
+        }
+
+        public void BindItemInventory(ItemInventory itemInventory)
+        {
+            if (_itemInventory != null)
+            {
+                _itemInventory.Changed -= RefreshItemCount;
+            }
+
+            _itemInventory = itemInventory;
+            if (_itemInventory != null)
+            {
+                _itemInventory.Changed += RefreshItemCount;
+            }
+
+            RefreshItemCount();
         }
 
         public void ConfigureCompactPaneButtons(
@@ -165,48 +170,6 @@ namespace Pachimon.UI
             }
         }
 
-        private void InitializeBadgeDetails()
-        {
-            _badgeTexts.Clear();
-            var detailArea = GetComponentsInChildren<Transform>(true)
-                .FirstOrDefault(child => child.name == "DetailArea");
-            if (detailArea == null)
-            {
-                Debug.LogWarning("Header Badge DetailArea was not found.", this);
-                return;
-            }
-
-            for (var index = 0; index < BadgePalette.Length; index++)
-            {
-                var palette = BadgePalette[index];
-                var area = FindDirectChild(detailArea, palette.AreaName, palette.LegacyAreaName);
-                if (area == null)
-                {
-                    Debug.LogWarning($"Header Badge area {palette.AreaName} was not found.", this);
-                    continue;
-                }
-
-                area.name = palette.AreaName;
-                area.SetSiblingIndex(index);
-
-                var icon = area.GetComponentsInChildren<Image>(true)
-                    .FirstOrDefault(image => image.name == "BadgeIcon");
-                if (icon != null)
-                {
-                    icon.color = palette.Color;
-                }
-
-                var badgeText = area.GetComponentsInChildren<TMP_Text>(true)
-                    .FirstOrDefault(text => text.name == "BadgeText");
-                if (badgeText != null)
-                {
-                    badgeText.text = "0";
-                    badgeText.color = GameUiPalette.HeaderText;
-                    _badgeTexts[palette.AllocationType] = badgeText;
-                }
-            }
-        }
-
         private void ApplyPalette()
         {
             if (TryGetComponent<Image>(out var background))
@@ -220,21 +183,78 @@ namespace Pachimon.UI
             }
         }
 
-        private static Transform FindDirectChild(
-            Transform parent,
-            string areaName,
-            string legacyAreaName)
+        private void ConfigureItemCountText()
         {
-            for (var index = 0; index < parent.childCount; index++)
+            if (_itemCountText == null || ItemButton == null)
             {
-                var child = parent.GetChild(index);
-                if (child.name == areaName || child.name == legacyAreaName)
-                {
-                    return child;
-                }
+                return;
             }
 
-            return null;
+            _itemCountText.gameObject.SetActive(true);
+            _itemCountText.enableAutoSizing = false;
+            _itemCountText.fontSize = 14f;
+            _itemCountText.fontStyle = FontStyles.Bold;
+            _itemCountText.color = ItemCountColor;
+            _itemCountText.raycastTarget = false;
+            _itemCountText.textWrappingMode = TextWrappingModes.NoWrap;
+            _itemCountText.overflowMode = TextOverflowModes.Overflow;
+            _itemCountText.margin = Vector4.zero;
+            _itemCountText.ForceMeshUpdate();
+            EnsureItemCountBadge(_itemCountText.rectTransform);
+        }
+
+        private RectTransform EnsureItemCountBadge(RectTransform textRect)
+        {
+            if (ItemButton == null || textRect == null)
+            {
+                return null;
+            }
+
+            var badgeTransform = ItemButton.transform.Find("ItemCountBadge");
+            if (badgeTransform == null)
+            {
+                var badgeObject = new GameObject(
+                    "ItemCountBadge",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(CircularBadgeGraphic),
+                    typeof(LayoutElement));
+                badgeObject.layer = ItemButton.gameObject.layer;
+                badgeTransform = badgeObject.transform;
+                badgeTransform.SetParent(ItemButton.transform, false);
+            }
+
+            var badgeRect = (RectTransform)badgeTransform;
+            const float badgeSize = 24f;
+            var textSize = textRect.rect.size;
+            badgeRect.anchorMin = textRect.anchorMin;
+            badgeRect.anchorMax = textRect.anchorMax;
+            badgeRect.pivot = textRect.pivot;
+            badgeRect.anchoredPosition = textRect.anchoredPosition
+                + (Vector2.one * 0.5f - textRect.pivot)
+                * (textSize - Vector2.one * badgeSize);
+            badgeRect.sizeDelta = Vector2.one * badgeSize;
+            badgeRect.localRotation = Quaternion.identity;
+            badgeRect.localScale = Vector3.one;
+
+            var layoutElement = badgeRect.GetComponent<LayoutElement>();
+            layoutElement.ignoreLayout = true;
+
+            var badgeGraphic = badgeRect.GetComponent<CircularBadgeGraphic>();
+            badgeGraphic.raycastTarget = false;
+            badgeGraphic.Configure(Color.white, ItemCountColor, 2f);
+            badgeRect.SetSiblingIndex(textRect.GetSiblingIndex());
+            return badgeRect;
+        }
+
+        private void RefreshItemCount()
+        {
+            if (_itemCountText == null)
+            {
+                return;
+            }
+
+            _itemCountText.text = (_itemInventory?.Count ?? 0).ToString();
         }
 
 #if UNITY_EDITOR
@@ -249,8 +269,6 @@ namespace Pachimon.UI
             var missing = new List<string>();
 
             if (GoldText == null) missing.Add(nameof(GoldText));
-            if (StageText == null) missing.Add(nameof(StageText));
-            if (BadgeText == null) missing.Add(nameof(BadgeText));
             if (MapButton == null) missing.Add(nameof(MapButton));
             if (ItemButton == null) missing.Add(nameof(ItemButton));
             if (SettingsButton == null) missing.Add(nameof(SettingsButton));
@@ -263,29 +281,5 @@ namespace Pachimon.UI
             Debug.LogWarning($"{nameof(HeaderView)} on '{name}' is missing references: {string.Join(", ", missing)}", this);
         }
 
-        private readonly struct BadgePaletteEntry
-        {
-            public BadgePaletteEntry(
-                AllocationType allocationType,
-                string areaName,
-                string htmlColor,
-                string legacyAreaName = null)
-            {
-                AllocationType = allocationType;
-                AreaName = areaName;
-                LegacyAreaName = legacyAreaName;
-                if (!ColorUtility.TryParseHtmlString(htmlColor, out var color))
-                {
-                    throw new ArgumentException($"Invalid Badge color: {htmlColor}", nameof(htmlColor));
-                }
-
-                Color = color;
-            }
-
-            public AllocationType AllocationType { get; }
-            public string AreaName { get; }
-            public string LegacyAreaName { get; }
-            public Color Color { get; }
-        }
     }
 }

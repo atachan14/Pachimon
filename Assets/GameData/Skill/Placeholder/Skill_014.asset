@@ -16,9 +16,10 @@ MonoBehaviour:
   _displayName: "\u6C37\u306E\u76FE"
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: "\u5148\u982D\u306E\u751F\u5B58\u5473\u65B9\u3078Ice\u4F9D\u5B58\u306EShield\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
-  _baseShieldValue: 300
+  _baseManaCost: 40
+  _description: "\u5148\u982D\u306E\u751F\u5B58\u5473\u65B9\u306B{color:Ice}{value:shield}{/color}\u306E{term:Shield|Shield}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _baseShieldValue: 100
   _iceShieldRatio: 100

@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u6C37\u306E\u5203"
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: "\u81EA\u9663\u306B\u3001\u51B7\u6C17\u3092\u53D7\u3051\u305F\u6575\u3078\u8FFD\u52A0Ice Damage\u3092\u4E0E\u3048\u308B\u6C37\u306E\u5203\u3092\u751F\u6210\u3059\u308B\u3002"
+  _baseManaCost: 40
+  _description: "自陣に{value:duration}tickの{term:IceBlade|氷の刃}を生成する。敵へ冷気を付与するたび、その付与Valueと同値の氷ダメージを追加する。"
   _baseDurationTicks: 200
   _scalingDurationTicks: 100
   _iceDurationRatio: 100

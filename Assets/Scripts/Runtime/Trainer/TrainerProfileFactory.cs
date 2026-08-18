@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Reward;
 
 namespace Pachimon.Trainer
 {
@@ -22,7 +23,11 @@ namespace Pachimon.Trainer
             _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
-        public TrainerProfile Create(TrainerRole role, TrainerTheme theme)
+        public TrainerProfile Create(
+            TrainerRole role,
+            TrainerTheme theme,
+            PachimonAttribute? favoredAttribute = null,
+            PachimonAttribute? weakAttribute = null)
         {
             var category = role == TrainerRole.Normal
                 ? TrainerStyleCategory.Normal
@@ -45,7 +50,12 @@ namespace Pachimon.Trainer
             }
 
             var name = TakeName(style.Gender);
-            return new TrainerProfile(role, style.StyleId, name.NameId);
+            return new TrainerProfile(
+                role,
+                style.StyleId,
+                name.NameId,
+                favoredAttribute,
+                weakAttribute);
         }
 
         private TrainerNameDefinition TakeName(TrainerGender gender)

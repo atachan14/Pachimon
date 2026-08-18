@@ -1,7 +1,6 @@
 using TMPro;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -10,16 +9,17 @@ namespace Pachimon.UI
 {
     public sealed class LogWindowView : MonoBehaviour
     {
-        private const float OptionAreaMinHeight = 56f;
         private const float OptionButtonWidth = 180f;
         private const float OptionButtonMinWidth = 120f;
         private const float OptionButtonHeight = 44f;
-        private const float OptionButtonFontSize = 20f;
-        private const float SkillAreaHeight = 176f;
         private const float SkillButtonHeight = 48f;
+        private const int TotalLayoutRows = 4;
         private const float MinimumTextLineHeightMultiplier = 1.4f;
+        private const float OptionFontScale = 0.72f;
+        private const float MinimumLogFontSize = 12f;
+        private const float MinimumOptionFontSize = 10f;
         private const float TextHorizontalPadding = 14f;
-        private const float TextVerticalPadding = 12f;
+        private const float TextVerticalPadding = 4f;
         private const float DefaultCharactersPerSecond = 30f;
         private static readonly Color SelectedSkillBorderColor =
             new(0.96f, 0.62f, 0.12f, 1f);
@@ -28,16 +28,22 @@ namespace Pachimon.UI
         [field: SerializeField] public RectTransform SelectGridRoot { get; private set; }
         [SerializeField, Min(1f)] private float _charactersPerSecond =
             DefaultCharactersPerSecond;
-        [SerializeField, Min(1)] private int _dialogueVisibleLineCount = 3;
+        [SerializeField, Min(1)] private int _dialogueVisibleLineCount = 4;
         private RectTransform _runtimeOptionContainer;
         private RectTransform _contentRoot;
         private LayoutElement _textLogLayout;
         private LayoutElement _selectGridLayout;
+        private VerticalLayoutGroup _contentLayout;
+        private GridLayoutGroup _runtimeSkillGrid;
+        private bool _isOptionAreaVisible;
+        private int _visibleOptionRows;
+        private float _fixedLogFontSize;
         private RectTransform _advanceOverlay;
         private RectTransform _textRevealOverlay;
         private UnityAction _advanceAction;
         private TMP_Text _advanceIndicator;
         private bool _layoutRefreshPending;
+        private bool _showOptionContainerAfterLayout;
         private bool _isRevealingText;
         private int _targetVisibleCharacterCount;
         private float _visibleCharacterProgress;
@@ -64,10 +70,25 @@ namespace Pachimon.UI
 
             _layoutRefreshPending = false;
             Canvas.ForceUpdateCanvases();
+            if (_showOptionContainerAfterLayout && _contentRoot.rect.height <= 1f)
+            {
+                _layoutRefreshPending = true;
+                return;
+            }
+
             UpdateTextPreferredHeight(TextLogText != null ? TextLogText.text : string.Empty);
+            UpdateFourRowLayout();
+            RefreshOptionTypography();
             LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
             if (_runtimeOptionContainer != null)
             {
+                if (_showOptionContainerAfterLayout)
+                {
+                    _showOptionContainerAfterLayout = false;
+                    _runtimeOptionContainer.gameObject.SetActive(true);
+                    Canvas.ForceUpdateCanvases();
+                }
+
                 LayoutRebuilder.ForceRebuildLayoutImmediate(_runtimeOptionContainer);
             }
         }
@@ -134,6 +155,8 @@ namespace Pachimon.UI
                 Destroy(option);
             }
 
+            _runtimeOptionContainer.gameObject.SetActive(false);
+            _showOptionContainerAfterLayout = false;
             SetOptionAreaVisible(false);
         }
 
@@ -156,24 +179,27 @@ namespace Pachimon.UI
         {
             ClearOptions();
             EnsureRuntimeOptionContainer();
+            _runtimeOptionContainer.gameObject.SetActive(false);
             var horizontalLayout = _runtimeOptionContainer.GetComponent<HorizontalLayoutGroup>();
             if (horizontalLayout != null)
             {
                 horizontalLayout.enabled = true;
             }
 
-            if (options == null)
+            var optionCount = options?.Length ?? 0;
+            PrepareOptionArea(optionCount > 0);
+            if (optionCount == 0)
             {
                 return;
             }
 
-            for (var i = 0; i < options.Length; i++)
+            for (var i = 0; i < optionCount; i++)
             {
                 CreateOptionButton(i, options[i].Label, options[i].Action);
             }
 
-            SetOptionAreaVisible(options.Length > 0);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(_runtimeOptionContainer);
+            _showOptionContainerAfterLayout = true;
+            RequestLayoutRefresh();
         }
 
         public void ShowSkillOptions(
@@ -182,11 +208,14 @@ namespace Pachimon.UI
         {
             ClearOptions();
             EnsureRuntimeOptionContainer();
+            _runtimeOptionContainer.gameObject.SetActive(false);
             var horizontalLayout = _runtimeOptionContainer.GetComponent<HorizontalLayoutGroup>();
             if (horizontalLayout != null)
             {
                 horizontalLayout.enabled = false;
             }
+
+            PrepareOptionArea(true);
 
             var gridObject = new GameObject(
                 "RuntimeSkillGrid",
@@ -198,6 +227,7 @@ namespace Pachimon.UI
             Stretch(gridRect, new Vector2(8f, 6f), new Vector2(-8f, -6f));
 
             var grid = gridObject.GetComponent<GridLayoutGroup>();
+            _runtimeSkillGrid = grid;
             grid.padding = new RectOffset(6, 6, 6, 6);
             grid.spacing = new Vector2(8f, 8f);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
@@ -218,8 +248,23 @@ namespace Pachimon.UI
                         option.Action,
                         option.IsInteractable,
                         false);
+                    var buttonObject = gridRect
+                        .GetChild(gridRect.childCount - 1)?.gameObject;
+                    var skillColors = option.IsInteractable
+                        ? AttributeCardPalette.GetSkillColors(option.Skill)
+                        : Array.Empty<Color>();
+                    var textColor = option.IsInteractable
+                        ? AttributeCardPalette.Apply(buttonObject, skillColors)
+                        : Color.white;
+                    var buttonLabel = buttonObject
+                        ?.GetComponentInChildren<TMP_Text>();
+                    if (buttonLabel != null && option.IsInteractable)
+                    {
+                        buttonLabel.color = textColor;
+                        buttonLabel.faceColor = textColor;
+                    }
                     RegisterSkillSelectionOutline(
-                        gridRect.GetChild(gridRect.childCount - 1)?.gameObject,
+                        buttonObject,
                         option.SelectionId);
                 }
             }
@@ -229,8 +274,8 @@ namespace Pachimon.UI
                 CreateStruggleOverlay(struggleOption.Value);
             }
 
-            SetOptionAreaVisible(true, SkillAreaHeight);
-            LayoutRebuilder.ForceRebuildLayoutImmediate(gridRect);
+            _showOptionContainerAfterLayout = true;
+            RequestLayoutRefresh();
         }
 
         public void SetSelectedSkillOption(int? selectionId)
@@ -314,9 +359,17 @@ namespace Pachimon.UI
             ApplyDefaultFont(labelText);
 
             labelText.alignment = TextAlignmentOptions.Center;
+            var optionFontSize = Mathf.Max(
+                MinimumOptionFontSize,
+                _fixedLogFontSize * OptionFontScale);
             labelText.fontSize = isEmphasized
-                ? OptionButtonFontSize + 4f
-                : OptionButtonFontSize;
+                ? optionFontSize * 1.15f
+                : optionFontSize;
+            var optionTypography = labelText.GetComponent<ResponsiveTypographySize>()
+                ?? labelText.gameObject.AddComponent<ResponsiveTypographySize>();
+            optionTypography.SetLayoutControlledFontSize(
+                labelText,
+                labelText.fontSize);
             labelText.color = isInteractable
                 ? Color.white
                 : new Color(0.25f, 0.25f, 0.25f, 1f);
@@ -572,61 +625,11 @@ namespace Pachimon.UI
 
         private void BuildDialogueSegments(DialoguePage page)
         {
-            if (page == null)
+            foreach (var segment in DialoguePlaybackPlan.Create(
+                page,
+                _dialogueVisibleLineCount))
             {
-                return;
-            }
-
-            var capacity = Mathf.Max(1, _dialogueVisibleLineCount);
-            var visibleHistory = new List<DialogueLine>(capacity);
-            foreach (var block in page.Blocks)
-            {
-                if (block?.Lines == null || block.Lines.Count == 0)
-                {
-                    continue;
-                }
-
-                if (block.Lines.Count <= capacity)
-                {
-                    var visibleLines = visibleHistory
-                        .Concat(block.Lines)
-                        .TakeLast(capacity)
-                        .ToArray();
-                    var firstNewLine = visibleLines.Length - block.Lines.Count;
-                    _dialogueSegments.Enqueue(new DialoguePlaybackSegment(
-                        visibleLines,
-                        Enumerable.Range(firstNewLine, block.Lines.Count)
-                            .ToArray(),
-                        firstNewLine));
-                    visibleHistory.Clear();
-                    visibleHistory.AddRange(visibleLines);
-                    continue;
-                }
-
-                // A block longer than the window fills it once, then advances
-                // one line at a time while preserving the current page.
-                for (var lineIndex = 0;
-                    lineIndex < block.Lines.Count;
-                    lineIndex += lineIndex == 0 ? capacity : 1)
-                {
-                    var addedLineCount = lineIndex == 0 ? capacity : 1;
-                    var addedLines = block.Lines
-                        .Skip(lineIndex)
-                        .Take(addedLineCount)
-                        .ToArray();
-                    var visibleLines = visibleHistory
-                        .Concat(addedLines)
-                        .TakeLast(capacity)
-                        .ToArray();
-                    var firstNewLine = visibleLines.Length - addedLines.Length;
-                    _dialogueSegments.Enqueue(new DialoguePlaybackSegment(
-                        visibleLines,
-                        Enumerable.Range(firstNewLine, addedLines.Length)
-                            .ToArray(),
-                        firstNewLine));
-                    visibleHistory.Clear();
-                    visibleHistory.AddRange(visibleLines);
-                }
+                _dialogueSegments.Enqueue(segment);
             }
         }
 
@@ -641,7 +644,7 @@ namespace Pachimon.UI
             }
 
             var segment = _dialogueSegments.Dequeue();
-            var text = string.Join("\n", segment.Lines.Select(line => line.Text));
+            var text = segment.Text;
             TextLogText.text = text;
             TextLogText.ForceMeshUpdate(
                 ignoreActiveState: true,
@@ -830,6 +833,7 @@ namespace Pachimon.UI
 
             var verticalLayout = _contentRoot.GetComponent<VerticalLayoutGroup>()
                 ?? _contentRoot.gameObject.AddComponent<VerticalLayoutGroup>();
+            _contentLayout = verticalLayout;
             verticalLayout.spacing = 8f;
             verticalLayout.childAlignment = TextAnchor.UpperCenter;
             verticalLayout.childControlWidth = true;
@@ -853,11 +857,13 @@ namespace Pachimon.UI
             _selectGridLayout.minHeight = 0f;
             _selectGridLayout.preferredHeight = 0f;
             _selectGridLayout.flexibleHeight = 0f;
+
+            _dialogueVisibleLineCount = TotalLayoutRows;
+            UpdateFourRowLayout();
         }
 
         private void SetOptionAreaVisible(
-            bool isVisible,
-            float visibleHeight = OptionAreaMinHeight)
+            bool isVisible)
         {
             EnsureLogLayout();
             if (_selectGridLayout == null)
@@ -865,15 +871,63 @@ namespace Pachimon.UI
                 return;
             }
 
-            _selectGridLayout.minHeight = isVisible ? visibleHeight : 0f;
-            _selectGridLayout.preferredHeight = isVisible ? visibleHeight : 0f;
-            _selectGridLayout.flexibleHeight = isVisible ? 1f : 0f;
+            _isOptionAreaVisible = isVisible;
+            UpdateFourRowLayout();
             if (_selectGridLayout.transform.parent is RectTransform parent)
             {
                 LayoutRebuilder.ForceRebuildLayoutImmediate(parent);
             }
 
             RequestLayoutRefresh();
+        }
+
+        private void PrepareOptionArea(bool isVisible)
+        {
+            SetOptionAreaVisible(isVisible);
+            Canvas.ForceUpdateCanvases();
+            UpdateFourRowLayout();
+            if (_contentRoot != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
+            }
+
+            if (SelectGridRoot != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(SelectGridRoot);
+            }
+        }
+
+        private void RefreshOptionTypography()
+        {
+            if (_runtimeOptionContainer == null)
+            {
+                return;
+            }
+
+            var optionFontSize = Mathf.Max(
+                MinimumOptionFontSize,
+                _fixedLogFontSize * OptionFontScale);
+            var labels = _runtimeOptionContainer.GetComponentsInChildren<TMP_Text>(true);
+            foreach (var label in labels)
+            {
+                if (label == null
+                    || label.transform.parent == null
+                    || label.transform.parent.GetComponent<Button>() == null)
+                {
+                    continue;
+                }
+
+                var buttonLayout = label.transform.parent.GetComponent<LayoutElement>();
+                var isEmphasized = buttonLayout != null
+                    && buttonLayout.preferredHeight > OptionButtonHeight;
+                var fontSize = isEmphasized
+                    ? optionFontSize * 1.15f
+                    : optionFontSize;
+                label.fontSize = fontSize;
+                var typography = label.GetComponent<ResponsiveTypographySize>()
+                    ?? label.gameObject.AddComponent<ResponsiveTypographySize>();
+                typography.SetLayoutControlledFontSize(label, fontSize);
+            }
         }
 
         private void UpdateTextPreferredHeight(string text)
@@ -883,33 +937,84 @@ namespace Pachimon.UI
                 return;
             }
 
-            var width = Mathf.Max(1f, TextLogText.rectTransform.rect.width);
-            var preferred = TextLogText.GetPreferredValues(text ?? string.Empty, width, 0f);
-            _textLogLayout.preferredHeight = Mathf.Max(
-                TextLogText.fontSize * MinimumTextLineHeightMultiplier,
-                preferred.y);
+            UpdateFourRowLayout();
+        }
+
+        private void UpdateFourRowLayout()
+        {
+            if (_contentRoot == null
+                || _textLogLayout == null
+                || _selectGridLayout == null)
+            {
+                return;
+            }
+
+            var spacing = _isOptionAreaVisible
+                ? _contentLayout?.spacing ?? 0f
+                : 0f;
+            var availableHeight = Mathf.Max(
+                1f,
+                _contentRoot.rect.height - spacing);
+            var rowHeight = availableHeight / TotalLayoutRows;
+            _fixedLogFontSize = Mathf.Max(
+                MinimumLogFontSize,
+                (rowHeight - (TextVerticalPadding * 2f))
+                / MinimumTextLineHeightMultiplier);
+            TextLogText.enableAutoSizing = false;
+            TextLogText.fontSize = _fixedLogFontSize;
+            var typography = TextLogText.GetComponent<ResponsiveTypographySize>()
+                ?? TextLogText.gameObject.AddComponent<ResponsiveTypographySize>();
+            typography.SetLayoutControlledFontSize(
+                TextLogText,
+                _fixedLogFontSize);
+
+            _visibleOptionRows = _isOptionAreaVisible
+                ? TotalLayoutRows - CalculateVisibleTextRows()
+                : 0;
+            var optionHeight = rowHeight * _visibleOptionRows;
+            var textHeight = availableHeight - optionHeight;
+
+            _textLogLayout.minHeight = textHeight;
+            _textLogLayout.preferredHeight = textHeight;
+            _textLogLayout.flexibleHeight = 0f;
+            _selectGridLayout.minHeight = optionHeight;
+            _selectGridLayout.preferredHeight = optionHeight;
+            _selectGridLayout.flexibleHeight = 0f;
+
+            if (_runtimeSkillGrid != null && _visibleOptionRows > 0)
+            {
+                const float nestedVerticalInset = 24f;
+                var cellHeight = Mathf.Max(
+                    1f,
+                    (optionHeight
+                        - nestedVerticalInset
+                        - (_runtimeSkillGrid.spacing.y * 2f))
+                    / 3f);
+                _runtimeSkillGrid.cellSize = new Vector2(
+                    _runtimeSkillGrid.cellSize.x,
+                    Mathf.Min(SkillButtonHeight, cellHeight));
+            }
+        }
+
+        private int CalculateVisibleTextRows()
+        {
+            if (TextLogText == null)
+            {
+                return 1;
+            }
+
+            TextLogText.ForceMeshUpdate(
+                ignoreActiveState: true,
+                forceTextReparsing: true);
+            return Mathf.Clamp(
+                TextLogText.textInfo?.lineCount ?? 1,
+                1,
+                TotalLayoutRows - 1);
         }
 
         private void RequestLayoutRefresh()
         {
             _layoutRefreshPending = true;
-        }
-
-        private sealed class DialoguePlaybackSegment
-        {
-            public DialoguePlaybackSegment(
-                IReadOnlyList<DialogueLine> lines,
-                IReadOnlyList<int> startedLineIndices,
-                int revealFromLineIndex)
-            {
-                Lines = lines;
-                StartedLineIndices = startedLineIndices;
-                RevealFromLineIndex = revealFromLineIndex;
-            }
-
-            public IReadOnlyList<DialogueLine> Lines { get; }
-            public IReadOnlyList<int> StartedLineIndices { get; }
-            public int RevealFromLineIndex { get; }
         }
 
         private readonly struct DialogueLineCue
@@ -944,17 +1049,20 @@ namespace Pachimon.UI
             int selectionId,
             string label,
             bool isInteractable,
-            UnityAction action)
+            UnityAction action,
+            Pachimon.Skills.SkillAsset skill = null)
         {
             SelectionId = selectionId;
             Label = label;
             IsInteractable = isInteractable;
             Action = action;
+            Skill = skill;
         }
 
         public int SelectionId { get; }
         public string Label { get; }
         public bool IsInteractable { get; }
         public UnityAction Action { get; }
+        public Pachimon.Skills.SkillAsset Skill { get; }
     }
 }

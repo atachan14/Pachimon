@@ -22,26 +22,17 @@
 - MapにSearch機能をつける
     - Map右上に配置予定
     - 文字列を入力して検索すると、文字列を含むSkillやPassiveやItemを含んだNodeがリストアップされる感じ。詳細は後で。
+
 - battleのUX/UI
     - log送りの表示方法推敲
     - logに表示する内容の精査。
 
-- 各詳細Overlay
-    - 状態異常詳細
-        - Skill/Passive/Item詳細と同様に表示。それぞれの状態異常が持つ値も表示し、実際の効果や計算式も説明文の中で表示。
-    - PassiveやSkill
-        - 実際の値を反映した具体的な軽減前ダメージや効果量や、それを算出する計算式を説明文の中で表示。
-- 状態異常のoverlay
-- Skill/Passive/状態詳細の整理、値の引用方法確認
 - ログ履歴
-- item欄周り
-    - item使用時（不可時）のdialog
-        - 画面下部の既存dialogはitemで隠れるから使わない
-        - 案1：画面中央に新しく1行のmessagelog
-    - ドラッグ使用時のUI改善
-        - ドラッグ元アイテムの透過画像移動をやめて、矢印を伸ばすようなUIに変更
-            - ドラッグ中、ドラッグ元をborderで囲う。
-            - ドラッグ中、ドラッグ先として可能なエリアもborderで囲う。
+
+- Statusの詳細
+- skillのバランス調整
+- 
+
 
 ## Next
 
@@ -130,6 +121,7 @@
 
 - 現在は実行時生成TMPを拾うため、GameRoot配下を低頻度で定期走査している
 - UI要素が大幅に増えて負荷が問題になった場合、生成時登録または更新通知方式へ置き換える
+- 同一倍率の再適用は省略済み。定期走査自体の廃止は、生成時登録へ統一する段階で行う
 
 ### B-013: LayoutMode往復の回帰テストを行う
 
@@ -137,6 +129,12 @@
 
 - Map / Left Drawer / Right Drawerを開いた各状態でExpandedとCompactを往復する
 - Pane内容、最前面状態、StartNodeの進行状態、文字倍率が維持されることを確認する
+- 最小HierarchyでPaneの親子関係と選択状態を検証するEditMode Testを追加済み
+- Overlayの表示判定と最前面切替を`OverlayLayerCoordinator`へ集約し、EditMode Testを追加済み
+- Map / Item / Settings / 詳細Overlayの縦スライド処理を`VerticalSlideTransition`へ集約済み
+- Responsive採寸を`ResponsiveUiGeometry`へ分離し、Expanded / Compactの寸法テストを追加済み
+- DialogueのPage→Segment変換を`DialoguePlaybackPlan`へ分離し、Block送りのテストを追加済み
+- Map / Item / Settings / 詳細Overlayを含む実Scene確認は引き続き必要
 
 ## 推奨着手順
 

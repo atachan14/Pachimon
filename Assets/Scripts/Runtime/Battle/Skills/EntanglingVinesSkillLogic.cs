@@ -17,8 +17,17 @@ namespace Pachimon.Battle
             if (target == null) return new SkillResolution(context.User, _skill, Array.Empty<SkillEffectResult>(), wasTargetUnavailable: true);
             var duration = Math.Max(1, SignedStatMath.FloorNonNegative(
                 context.ScaleFromAttribute(_skill.BaseStun, PachimonAttribute.Leaf, _skill.StunLeafRatio)));
-            context.State.Statuses.ApplyAttackStatus(target, BattleStatusFactory.CreateStun(context.User, duration, _skill.StunStatus));
-            context.State.Statuses.ApplyAttackStatus(context.User, BattleStatusFactory.CreateStun(context.User, duration, _skill.StunStatus));
+            context.BeginStatusHit(target).ApplyStatus(
+                BattleStatusFactory.CreateStun(
+                    context.User,
+                    duration,
+                    _skill.StunStatus));
+            context.State.Statuses.ApplyStatus(
+                context.User,
+                BattleStatusFactory.CreateStun(
+                    context.User,
+                    duration,
+                    _skill.StunStatus));
             return new SkillResolution(context.User, _skill, Array.Empty<SkillEffectResult>());
         }
     }

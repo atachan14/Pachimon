@@ -103,7 +103,7 @@ namespace Pachimon.UI
             CityNodeContent city,
             ItemCatalog itemCatalog,
             RunState runState,
-            Action<int> onDetails,
+            Action<CityStockEntry> onDetails,
             Action onConfirm,
             Action onCancel)
         {
@@ -124,7 +124,7 @@ namespace Pachimon.UI
             CityNodeContent city,
             ItemCatalog itemCatalog,
             RunState runState,
-            Action<int> onDetails)
+            Action<CityStockEntry> onDetails)
         {
             NodeSelectionWindow?.ShowCity(
                 city,
@@ -143,17 +143,16 @@ namespace Pachimon.UI
             CityNodeContent city,
             ItemCatalog itemCatalog,
             RunState runState,
-            Action<int> onDetails,
-            Action<string> onPurchase)
+            Action<CityStockEntry> onDetails)
         {
             NodeSelectionWindow?.ShowCity(
                 city,
                 itemCatalog,
                 runState,
-                true,
+                false,
                 false,
                 onDetails,
-                onPurchase,
+                null,
                 null,
                 null);
             ContentShown?.Invoke();
@@ -175,7 +174,9 @@ namespace Pachimon.UI
             NodeSelectionWindow?.ApplyLayoutMode(layoutMode);
         }
 
-        public void ConfigureItemDrop(Func<ItemInstance, int, bool> tryUse)
+        public void ConfigureItemDrop(
+            Func<ItemInstance, int, bool> canUse,
+            Func<ItemInstance, int, bool> tryUse)
         {
             var dropTarget = GetComponent<ItemDropTargetView>();
             if (dropTarget == null)
@@ -183,14 +184,23 @@ namespace Pachimon.UI
                 dropTarget = gameObject.AddComponent<ItemDropTargetView>();
             }
 
-            dropTarget.Configure(item =>
-            {
-                var selectedIndex =
-                    (NodeSelectionWindow?.BattleWindow?.SelectedTabIndex ?? 0) - 1;
-                return selectedIndex >= 0
-                    && tryUse != null
-                    && tryUse(item, selectedIndex);
-            });
+            dropTarget.Configure(
+                item =>
+                {
+                    var selectedIndex =
+                        (NodeSelectionWindow?.BattleWindow?.SelectedTabIndex ?? 0) - 1;
+                    return selectedIndex >= 0
+                        && canUse != null
+                        && canUse(item, selectedIndex);
+                },
+                item =>
+                {
+                    var selectedIndex =
+                        (NodeSelectionWindow?.BattleWindow?.SelectedTabIndex ?? 0) - 1;
+                    return selectedIndex >= 0
+                        && tryUse != null
+                        && tryUse(item, selectedIndex);
+                });
         }
     }
 }

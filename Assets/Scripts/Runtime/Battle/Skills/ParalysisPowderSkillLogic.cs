@@ -24,8 +24,11 @@ namespace Pachimon.Battle
                     BattleStatusCategory.Slow, raw);
                 var value = SignedStatMath.FloorNonNegative(raw);
                 if (value <= 0) continue;
-                context.State.Statuses.ApplyAttackStatus(target,
-                    BattleStatusFactory.CreateSlow(context.User, value, _skill.ParalysisStatus));
+                context.BeginStatusHit(target).ApplyStatus(
+                    BattleStatusFactory.CreateSlow(
+                        context.User,
+                        value,
+                        _skill.ParalysisStatus));
             }
             return new SkillResolution(context.User, _skill, Array.Empty<SkillEffectResult>(), wasTargetUnavailable: targets.Count == 0);
         }

@@ -70,9 +70,8 @@ namespace Pachimon.Run
             foreach (var instance in party)
             {
                 var effectiveStats = PachimonStatService.Calculate(
-                    instance.Stats,
+                    instance,
                     runState.PlayerModifiers,
-                    instance.PassiveIds,
                     passiveStatModifierRegistry);
                 var effectiveMaxHp = effectiveStats.MaxHp;
                 var healAmount = CalculateHealAmount(effectiveMaxHp, healPercent);

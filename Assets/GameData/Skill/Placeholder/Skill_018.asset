@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u3042\u307E\u3054\u3044"
   _allocationType: 2
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: "Aqua\u306B\u5FDC\u3058\u305FValue\u306E\u96E8\u3092\u767A\u751F\u3055\u305B\u308B\u3002"
+  _baseManaCost: 40
+  _description: "値{color:Aqua}{value:rainValue}{/color}の{term:Rain|雨}を発生させる。"
   _baseValue: 400
   _aquaValueRatio: 100
   _rainDefinition: {fileID: 11400000, guid: 64c8822d2d084587b332417a7b4ea895, type: 2}

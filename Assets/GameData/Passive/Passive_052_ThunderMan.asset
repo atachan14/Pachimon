@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b66851c69e200ff4c949f9212884797c, type: 3}
+  m_Name: Passive_052_ThunderMan
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.ThunderManPassiveAsset
+  _passiveId: 52
+  _displayName: "\u96F7\u7537"
+  _description: "雷が存在する間、Speedが{value:speedBonus}増加する。"
+  _speedBonus: 40

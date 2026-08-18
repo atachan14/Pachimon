@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Pachimon.Battle;
 using Pachimon.Run;
+using Pachimon.Skills;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,16 +40,30 @@ namespace Pachimon.UI
         public PachimonAbilityPreview(
             PachimonAbilityKind kind,
             int id,
-            string displayName)
+            string displayName,
+            SkillAsset skill = null)
         {
             Kind = kind;
             Id = id;
             DisplayName = displayName ?? string.Empty;
+            Skill = skill;
         }
 
         public PachimonAbilityKind Kind { get; }
         public int Id { get; }
         public string DisplayName { get; }
+        public SkillAsset Skill { get; }
+    }
+
+    public readonly struct PachimonStatusPreview
+    {
+        public PachimonStatusPreview(BattleStatusInstance instance)
+        {
+            Instance = instance;
+        }
+
+        public BattleStatusInstance Instance { get; }
+        public string DisplayName => Instance?.DisplayName ?? string.Empty;
     }
 
     public sealed class PachimonPreviewContent
@@ -63,7 +79,7 @@ namespace Pachimon.UI
             int currentMn,
             int maxMn,
             IEnumerable<PachimonStatPreview> stats,
-            IEnumerable<string> statusEffects,
+            IEnumerable<PachimonStatusPreview> statusEffects,
             IEnumerable<PachimonAbilityPreview> skills,
             IEnumerable<PachimonAbilityPreview> passives,
             StatCalculationResult statCalculation = null)
@@ -77,7 +93,8 @@ namespace Pachimon.UI
             CurrentMn = currentMn;
             MaxMn = maxMn;
             _stats = stats?.ToDictionary(item => item.Stat, item => item.Value) ?? new();
-            StatusEffects = statusEffects?.ToArray() ?? Array.Empty<string>();
+            StatusEffects = statusEffects?.ToArray()
+                ?? Array.Empty<PachimonStatusPreview>();
             Skills = skills?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
             Passives = passives?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
             StatCalculation = statCalculation;
@@ -86,7 +103,7 @@ namespace Pachimon.UI
         private PachimonPreviewContent()
         {
             _stats = new Dictionary<PachimonDisplayStat, int>();
-            StatusEffects = Array.Empty<string>();
+            StatusEffects = Array.Empty<PachimonStatusPreview>();
             Skills = Array.Empty<PachimonAbilityPreview>();
             Passives = Array.Empty<PachimonAbilityPreview>();
         }
@@ -99,7 +116,7 @@ namespace Pachimon.UI
         public int CurrentShield { get; }
         public int CurrentMn { get; }
         public int MaxMn { get; }
-        public IReadOnlyList<string> StatusEffects { get; }
+        public IReadOnlyList<PachimonStatusPreview> StatusEffects { get; }
         public IReadOnlyList<PachimonAbilityPreview> Skills { get; }
         public IReadOnlyList<PachimonAbilityPreview> Passives { get; }
         public StatCalculationResult StatCalculation { get; }
@@ -147,6 +164,7 @@ namespace Pachimon.UI
         public RectTransform GraphicRect => _frontGraphic?.rectTransform;
         public event Action<PachimonAbilityPreview, PachimonPreviewContent>
             AbilityDetailsRequested;
+        public event Action<PachimonStatusPreview> StatusDetailsRequested;
 
         private void LateUpdate()
         {
@@ -234,11 +252,22 @@ namespace Pachimon.UI
                     : "?");
             }
 
-            RebuildChips(
-                _statusContainer,
-                _statusTemplate,
-                revealed ? preview.StatusEffects : new[] { "?" },
-                "なし");
+            if (revealed)
+            {
+                RebuildStatusChips(
+                    _statusContainer,
+                    _statusTemplate,
+                    preview.StatusEffects,
+                    RequestStatusDetails);
+            }
+            else
+            {
+                RebuildChips(
+                    _statusContainer,
+                    _statusTemplate,
+                    new[] { "?" },
+                    "なし");
+            }
 
             for (var index = 0; index < _skillSlots.Length; index++)
             {
@@ -252,6 +281,8 @@ namespace Pachimon.UI
                     _skillSlots[index]?.Bind(
                         ability.DisplayName,
                         () => RequestAbilityDetails(ability));
+                    _skillSlots[index]?.SetAttributeColors(
+                        AttributeCardPalette.GetSkillColors(ability.Skill));
                 }
                 else
                 {
@@ -280,6 +311,11 @@ namespace Pachimon.UI
         private void RequestAbilityDetails(PachimonAbilityPreview ability)
         {
             AbilityDetailsRequested?.Invoke(ability, _boundPreview);
+        }
+
+        private void RequestStatusDetails(PachimonStatusPreview status)
+        {
+            StatusDetailsRequested?.Invoke(status);
         }
 
         private void EnsureRuntimeHpBar()
@@ -352,6 +388,11 @@ namespace Pachimon.UI
             }
 
             var source = _hpText.rectTransform;
+            if (HasSameGeometry(_runtimeHpBar, source))
+            {
+                return;
+            }
+
             _runtimeHpBar.anchorMin = source.anchorMin;
             _runtimeHpBar.anchorMax = source.anchorMax;
             _runtimeHpBar.pivot = source.pivot;
@@ -416,11 +457,25 @@ namespace Pachimon.UI
             }
 
             var source = _mnText.rectTransform;
+            if (HasSameGeometry(_runtimeMnBar, source))
+            {
+                return;
+            }
+
             _runtimeMnBar.anchorMin = source.anchorMin;
             _runtimeMnBar.anchorMax = source.anchorMax;
             _runtimeMnBar.pivot = source.pivot;
             _runtimeMnBar.anchoredPosition = source.anchoredPosition;
             _runtimeMnBar.sizeDelta = source.sizeDelta;
+        }
+
+        private static bool HasSameGeometry(RectTransform target, RectTransform source)
+        {
+            return target.anchorMin == source.anchorMin
+                && target.anchorMax == source.anchorMax
+                && target.pivot == source.pivot
+                && target.anchoredPosition == source.anchoredPosition
+                && target.sizeDelta == source.sizeDelta;
         }
 
         private void SetRuntimeHpFill(
@@ -490,18 +545,14 @@ namespace Pachimon.UI
         {
             if (container == null || template == null) return;
 
-            for (var index = container.childCount - 1; index >= 0; index--)
-            {
-                var child = container.GetChild(index);
-                if (child != template.transform) Destroy(child.gameObject);
-            }
+            DeactivateChipPool(container, template);
 
             var values = labels.Count > 0 ? labels : new[] { emptyLabel };
-            foreach (var label in values)
+            for (var index = 0; index < values.Count; index++)
             {
-                var chip = Instantiate(template, container, false);
+                var chip = GetOrCreatePooledChip(container, template, index);
                 chip.gameObject.SetActive(true);
-                chip.Bind(label);
+                chip.Bind(values[index]);
             }
 
             template.gameObject.SetActive(false);
@@ -516,24 +567,21 @@ namespace Pachimon.UI
         {
             if (container == null || template == null) return;
 
-            for (var index = container.childCount - 1; index >= 0; index--)
-            {
-                var child = container.GetChild(index);
-                if (child != template.transform) Destroy(child.gameObject);
-            }
+            DeactivateChipPool(container, template);
 
             if (abilities.Count == 0)
             {
-                var emptyChip = Instantiate(template, container, false);
+                var emptyChip = GetOrCreatePooledChip(container, template, 0);
                 emptyChip.gameObject.SetActive(true);
                 emptyChip.Bind("なし");
             }
             else
             {
-                foreach (var ability in abilities)
+                for (var index = 0; index < abilities.Count; index++)
                 {
+                    var ability = abilities[index];
                     var capturedAbility = ability;
-                    var chip = Instantiate(template, container, false);
+                    var chip = GetOrCreatePooledChip(container, template, index);
                     chip.gameObject.SetActive(true);
                     chip.Bind(
                         ability.DisplayName,
@@ -543,6 +591,88 @@ namespace Pachimon.UI
 
             template.gameObject.SetActive(false);
             container.GetComponent<ResponsiveGridLayout>()?.RefreshLayout();
+        }
+
+
+        private static void RebuildStatusChips(
+            Transform container,
+            TextChipView template,
+            IReadOnlyList<PachimonStatusPreview> statuses,
+            Action<PachimonStatusPreview> onClicked)
+        {
+            if (container == null || template == null) return;
+
+            DeactivateChipPool(container, template);
+
+            if (statuses.Count == 0)
+            {
+                var emptyChip = GetOrCreatePooledChip(container, template, 0);
+                emptyChip.gameObject.SetActive(true);
+                emptyChip.Bind("なし");
+            }
+            else
+            {
+                for (var index = 0; index < statuses.Count; index++)
+                {
+                    var status = statuses[index];
+                    var capturedStatus = status;
+                    var chip = GetOrCreatePooledChip(container, template, index);
+                    chip.gameObject.SetActive(true);
+                    chip.Bind(
+                        status.DisplayName,
+                        () => onClicked?.Invoke(capturedStatus));
+                    chip.SetAttributeColors(
+                        AttributeCardPalette.GetStatusColors(status.Instance));
+                }
+            }
+
+            template.gameObject.SetActive(false);
+            container.GetComponent<ResponsiveGridLayout>()?.RefreshLayout();
+        }
+
+        private static void DeactivateChipPool(
+            Transform container,
+            TextChipView template)
+        {
+            foreach (Transform child in container)
+            {
+                if (child != template.transform)
+                {
+                    child.gameObject.SetActive(false);
+                }
+            }
+        }
+
+        private static TextChipView GetOrCreatePooledChip(
+            Transform container,
+            TextChipView template,
+            int poolIndex)
+        {
+            var currentIndex = 0;
+            foreach (Transform child in container)
+            {
+                if (child == template.transform)
+                {
+                    continue;
+                }
+
+                var chip = child.GetComponent<TextChipView>();
+                if (chip == null)
+                {
+                    continue;
+                }
+
+                if (currentIndex == poolIndex)
+                {
+                    return chip;
+                }
+
+                currentIndex++;
+            }
+
+            var created = Instantiate(template, container, false);
+            created.name = $"{template.name}_Pooled_{currentIndex + 1:D2}";
+            return created;
         }
     }
 }

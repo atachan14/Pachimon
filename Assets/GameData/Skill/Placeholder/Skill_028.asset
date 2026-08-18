@@ -13,13 +13,14 @@ MonoBehaviour:
   m_Name: Skill_028
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.ElectricQuickAttackSkillAsset
   _skillId: 28
-  _displayName: 電光石火
+  _displayName: "\u96FB\u5149\u77F3\u706B"
   _allocationType: 4
   _isMapAssignable: 1
-  _baseRecoveryTicks: 60
-  _baseCooldownTicks: 100
-  _baseManaCost: 60
-  _description: ElectricとFireの複合攻撃。Windに応じて硬直とCDを軽減する。
-  _electricBasePower: 25
-  _fireBasePower: 10
-  _windTimingPercent: 100
+  _baseStartupTicks: 20
+  _baseRecoveryTicks: 80
+  _baseCooldownTicks: 300
+  _baseManaCost: 30
+  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:electricDamage}{/color}\u306E{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3068\u3001{icon:Fire}{color:Fire}{value:fireDamage}{/color}\u306E{term:FireDamage|\u708E\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u73FE\u5728\u306E\u786C\u76F4\u306F{value:recovery}tick\u3001CD\u306F{value:cooldown}tick\u3002"
+  _electricBasePower: 75
+  _fireBasePower: 25
+  _windTimingPercent: 50

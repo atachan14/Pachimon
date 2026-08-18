@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: わるあがき
   _allocationType: 0
   _isMapAssignable: 0
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 0
   _description: System Skill used when no regular Skill is available.

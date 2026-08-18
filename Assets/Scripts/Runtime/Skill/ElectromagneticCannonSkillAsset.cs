@@ -9,10 +9,7 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Electromagnetic Cannon Skill")]
     public sealed class ElectromagneticCannonSkillAsset : SkillAsset
     {
-        [SerializeField, Min(1)] private int _baseStartupTicks = 300;
         [SerializeField, Min(0)] private int _basePower = 400;
-
-        public override int BaseStartupTicks => _baseStartupTicks;
 
         public int BasePower => _basePower;
 
@@ -25,7 +22,7 @@ namespace Pachimon.Skills
                     $"Skill {SkillId}: Electromagnetic Cannon must be Electric.");
             }
 
-            if (_baseStartupTicks <= 0)
+            if (BaseStartupTicks <= 0)
             {
                 errors.Add(
                     $"Skill {SkillId}: Electromagnetic Cannon requires Startup.");
@@ -58,7 +55,7 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _baseStartupTicks = baseStartupTicks;
+            SetBaseStartupTicksForEditor(baseStartupTicks);
             _basePower = basePower;
         }
 #endif

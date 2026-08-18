@@ -20,6 +20,7 @@ namespace Pachimon.Battle
                 throw new InvalidOperationException("Dragon Hook requires Dragon Cranker Status.");
 
             var target = context.Targets.GetFrontEnemy();
+            var hit = context.BeginAttackHit(target);
             var damage = context.ScaleFromAttribute(
                 _skill.BaseDragonDamage,
                 PachimonAttribute.Dragon,
@@ -36,7 +37,8 @@ namespace Pachimon.Battle
                     target.GetBattleStats(),
                     PachimonAttribute.Dragon,
                     isAttack: true,
-                    applyAttackerAttributeMultiplier: false));
+                    applyAttackerAttributeMultiplier: false),
+                hit);
 
             var actualTarget = result.ActualTarget;
             if (actualTarget.IsAlive && result.FinalDamage > 0)
@@ -50,8 +52,7 @@ namespace Pachimon.Battle
                         clampToNonNegative: false));
                 if (crankerValue > 0)
                 {
-                    context.State.Statuses.ApplyAttackStatus(
-                        actualTarget,
+                    hit.ApplyStatus(
                         new BattleStatusInstance(
                             BattleStatusId.DragonCranker,
                             BattleStatusCategory.None,
@@ -69,7 +70,8 @@ namespace Pachimon.Battle
                     new SkillEffectResult(
                         actualTarget,
                         result.AppliedDamage,
-                        false),
+                        false,
+                        hit: hit),
                 });
         }
     }

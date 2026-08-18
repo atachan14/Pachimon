@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.ToxinGrowthPassiveAsset
   _passiveId: 13
   _displayName: 毒素適応
-  _description: 自身が毒素を付与するたび、Battle中のPoisonが10%増加する。
+  _description: "自身が{term:Toxin|毒素}を付与するたび、Battle中の{icon:Poison}毒が{value:poisonPercent}%増加する。"
   _poisonPercentPerApplication: 10

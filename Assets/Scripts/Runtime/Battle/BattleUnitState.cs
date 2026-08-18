@@ -11,8 +11,10 @@ namespace Pachimon.Battle
         private readonly List<int> _skillIds;
         private readonly int[] _passiveIds;
         private readonly Dictionary<int, BattleSkillCooldownState> _cooldowns = new();
+        private readonly HashSet<int> _oncePerBattleUsedSkillSlots = new();
         private readonly List<BattleStatusInstance> _statuses = new();
         private readonly List<BattleShieldInstance> _shields = new();
+        private readonly List<IStatModifier> _permanentItemModifiers = new();
         private readonly PachimonStats _battleBaseStats;
         private EffectivePachimonStats _battleStats;
         private Func<IEnumerable<IStatModifier>> _battleModifierProvider;
@@ -89,9 +91,9 @@ namespace Pachimon.Battle
         public int SlotIndex { get; }
         public EffectivePachimonStats StartingStats { get; }
         public int CurrentHp { get; private set; }
-        public int MaxHp => StartingStats.MaxHp;
+        public int MaxHp => GetBattleStats().MaxHp;
         public int CurrentMn { get; private set; }
-        public int MaxMn => StartingStats.MaxMn;
+        public int MaxMn => GetBattleStats().MaxMn;
         public IReadOnlyList<PachimonSkillSlot> SkillSlots => _skillSlots;
         public IReadOnlyList<int> SkillIds => _skillIds;
         public IReadOnlyList<int> PassiveIds => _passiveIds;
@@ -134,6 +136,18 @@ namespace Pachimon.Battle
             return GetCooldownRemainingTicks(slotId) == 0;
         }
 
+        public bool HasUsedOncePerBattleSkill(int slotId)
+        {
+            ValidateSkillSlotId(slotId);
+            return _oncePerBattleUsedSkillSlots.Contains(slotId);
+        }
+
+        public bool TryUseOncePerBattleSkill(int slotId)
+        {
+            ValidateSkillSlotId(slotId);
+            return _oncePerBattleUsedSkillSlots.Add(slotId);
+        }
+
         public bool AddSkill(int skillId)
         {
             if (skillId <= 0 || !CanAddSkill)
@@ -157,6 +171,12 @@ namespace Pachimon.Battle
             ValidateSkillSlotId(slotId);
             if (totalWork < 0m) throw new ArgumentOutOfRangeException(nameof(totalWork));
             _cooldowns[slotId] = new BattleSkillCooldownState(totalWork, totalWork);
+        }
+
+        internal void ClearCooldown(int slotId)
+        {
+            ValidateSkillSlotId(slotId);
+            _cooldowns.Remove(slotId);
         }
 
         internal void AdvanceClocksOneTick()
@@ -245,6 +265,10 @@ namespace Pachimon.Battle
                 clone._cooldowns[cooldown.Key] =
                     cooldown.Value.CreateSimulationClone();
             }
+            clone._oncePerBattleUsedSkillSlots.UnionWith(
+                _oncePerBattleUsedSkillSlots);
+            clone._permanentItemModifiers.AddRange(_permanentItemModifiers);
+            clone.InvalidateBattleStats();
 
             clone.Timing.CopyFrom(Timing);
             clone.TiePriority = TiePriority;
@@ -389,6 +413,40 @@ namespace Pachimon.Battle
             return restoredMn;
         }
 
+        public void AddPermanentItemStatModifier(
+            PachimonStatType statType,
+            int amount,
+            string sourceId,
+            string displayName)
+        {
+            var oldMaxHp = MaxHp;
+            var oldMaxMn = MaxMn;
+            _permanentItemModifiers.Add(new FixedStatModifier(
+                statType,
+                StatModifierOperation.DirectAdditive,
+                amount,
+                new StatModifierSource(
+                    StatModifierSourceType.Item,
+                    sourceId,
+                    displayName)));
+            InvalidateBattleStats();
+
+            if (statType == PachimonStatType.MaxHp)
+            {
+                CurrentHp = Math.Clamp(
+                    CurrentHp + Math.Max(0, MaxHp - oldMaxHp),
+                    0,
+                    MaxHp);
+            }
+            else if (statType == PachimonStatType.MaxMn)
+            {
+                CurrentMn = Math.Clamp(
+                    CurrentMn + Math.Max(0, MaxMn - oldMaxMn),
+                    0,
+                    MaxMn);
+            }
+        }
+
         public void ApplyOrReplaceStatus(BattleStatusInstance status)
         {
             if (status == null) throw new ArgumentNullException(nameof(status));
@@ -465,6 +523,7 @@ namespace Pachimon.Battle
                 _battleStats = EffectivePachimonStats.Calculate(
                     _battleBaseStats,
                     BattleStatusStatModifierFactory.Create(_statuses)
+                        .Concat(_permanentItemModifiers)
                         .Concat(_battleModifierProvider?.Invoke()
                             ?? Enumerable.Empty<IStatModifier>()));
                 _battleStatsDirty = false;
@@ -490,7 +549,8 @@ namespace Pachimon.Battle
             BattleStatusCategory categories,
             BattleUnitState source,
             int value,
-            int stackCount)
+            int stackCount,
+            BattleStatusAsset definition = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
@@ -505,7 +565,8 @@ namespace Pachimon.Battle
                 categories,
                 source,
                 value,
-                checked((existing?.StackCount ?? 0) + stackCount)));
+                checked((existing?.StackCount ?? 0) + stackCount),
+                definition: definition ?? existing?.Definition));
         }
 
         public bool TryConsumeStatus(

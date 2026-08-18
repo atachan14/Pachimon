@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u30A2\u30AF\u30A2\u30B7\u30E7\u30C3\u30AF"
   _allocationType: 4
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 80
-  _baseCooldownTicks: 200
-  _baseManaCost: 80
-  _description: "Electric\u3068Aqua\u306E\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001\u6F0F\u96FB\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
-  _electricBasePower: 10
-  _aquaBasePower: 10
-  _leakBaseValue: 10
+  _baseCooldownTicks: 300
+  _baseManaCost: 40
+  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:electricDamage}{/color}\u306E{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3068{icon:Aqua}{color:Aqua}{value:aquaDamage}{/color}\u306E{term:AquaDamage|\u6C34\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u3001\u5024{value:leakValue}\u306E{term:Leak|\u6F0F\u96FB}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _electricBasePower: 80
+  _aquaBasePower: 40
+  _leakBaseValue: 100

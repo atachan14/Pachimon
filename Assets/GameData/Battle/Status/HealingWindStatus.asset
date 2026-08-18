@@ -8,5 +8,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.HealingWindStatusAsset
   _statusId: 120
   _displayName: 治癒の風
-  _description: WindとSpeedが増加する。
+  _description: "風が{value:windBonus}、Speedが{value:speedBonus}増加する。残り{value:remainingTicks}tick。"
   _icon: {fileID: 0}

@@ -14,11 +14,12 @@ namespace Pachimon.UI
         private RectTransform _rectTransform;
         private CanvasGroup _canvasGroup;
         private GridLayoutGroup _grid;
+        private TMP_Text _messageText;
         private readonly ItemSlotView[] _slots = new ItemSlotView[ItemInventory.Capacity];
         private ItemInventory _inventory;
         private ItemCatalog _catalog;
-        private Coroutine _transitionRoutine;
-        private float _slideDistance;
+        private VerticalSlideTransition _slideTransition;
+        private Coroutine _messageRoutine;
         private bool _initialized;
 
         public bool IsOpen { get; private set; }
@@ -47,12 +48,22 @@ namespace Pachimon.UI
             EnsureInitialized();
         }
 
+        private void OnEnable()
+        {
+            ItemDragSession.UseResultReported += ShowUseResult;
+        }
+
+        private void OnDisable()
+        {
+            ItemDragSession.UseResultReported -= ShowUseResult;
+        }
+
         private void OnRectTransformDimensionsChange()
         {
             RefreshGridCellSize();
             if (!IsOpen && _rectTransform != null)
             {
-                ApplyProgress(0f);
+                _slideTransition?.Snap(0f);
             }
         }
 
@@ -66,10 +77,10 @@ namespace Pachimon.UI
 
         public void SetSlideDistance(float distance)
         {
-            _slideDistance = Mathf.Max(0f, distance);
-            if (!IsOpen && _transitionRoutine == null)
+            _slideTransition?.SetSlideDistance(distance);
+            if (!IsOpen && _slideTransition?.IsRunning != true)
             {
-                ApplyProgress(0f);
+                _slideTransition?.Snap(0f);
             }
         }
 
@@ -81,7 +92,7 @@ namespace Pachimon.UI
         public void Open()
         {
             EnsureInitialized();
-            if (IsOpen && _transitionRoutine == null)
+            if (IsOpen && _slideTransition?.IsRunning != true)
             {
                 return;
             }
@@ -89,7 +100,7 @@ namespace Pachimon.UI
             IsOpen = true;
             Refresh();
             gameObject.SetActive(true);
-            StartTransition(1f);
+            _slideTransition.Play(1f, _transitionDuration);
         }
 
         public void ReplayOpenTransition()
@@ -97,16 +108,16 @@ namespace Pachimon.UI
             EnsureInitialized();
             IsOpen = true;
             gameObject.SetActive(true);
-            ApplyProgress(0f);
-            StartTransition(1f);
+            _slideTransition.Snap(0f);
+            _slideTransition.Play(1f, _transitionDuration);
         }
 
         public void Close()
         {
             EnsureInitialized();
-            if (!IsOpen && _transitionRoutine == null)
+            if (!IsOpen && _slideTransition?.IsRunning != true)
             {
-                ApplyProgress(0f);
+                _slideTransition?.Snap(0f);
                 return;
             }
 
@@ -117,7 +128,7 @@ namespace Pachimon.UI
                 Closed?.Invoke();
             }
 
-            StartTransition(0f);
+            _slideTransition.Play(0f, _transitionDuration);
         }
 
         public void Refresh()
@@ -148,6 +159,11 @@ namespace Pachimon.UI
 
             _rectTransform = GetComponent<RectTransform>();
             _canvasGroup = GetComponent<CanvasGroup>();
+            _slideTransition = new VerticalSlideTransition(
+                this,
+                _rectTransform,
+                _canvasGroup,
+                () => IsOpen);
             var background = GetComponent<Image>();
             background.color = new Color32(239, 244, 241, 250);
             background.raycastTarget = true;
@@ -159,7 +175,7 @@ namespace Pachimon.UI
             gridObject.layer = gameObject.layer;
             var gridRect = gridObject.GetComponent<RectTransform>();
             gridRect.SetParent(transform, false);
-            Stretch(gridRect, new Vector2(14f, 12f), new Vector2(-14f, -12f));
+            Stretch(gridRect, new Vector2(14f, 44f), new Vector2(-14f, -12f));
             _grid = gridObject.GetComponent<GridLayoutGroup>();
             _grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             _grid.constraintCount = 3;
@@ -172,9 +188,64 @@ namespace Pachimon.UI
                 _slots[index] = CreateSlot(index);
             }
 
+            _messageText = CreateMessageText();
+
             _initialized = true;
             RefreshGridCellSize();
-            ApplyProgress(0f);
+            _slideTransition.Snap(0f);
+        }
+
+        private TMP_Text CreateMessageText()
+        {
+            var messageObject = new GameObject(
+                "ItemUseMessage",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(TextMeshProUGUI));
+            messageObject.layer = gameObject.layer;
+            var rect = messageObject.GetComponent<RectTransform>();
+            rect.SetParent(transform, false);
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 7f);
+            rect.sizeDelta = new Vector2(-28f, 30f);
+            var text = messageObject.GetComponent<TextMeshProUGUI>();
+            if (TMP_Settings.defaultFontAsset != null)
+            {
+                text.font = TMP_Settings.defaultFontAsset;
+            }
+
+            text.fontSize = 20f;
+            text.fontStyle = FontStyles.Bold;
+            text.alignment = TextAlignmentOptions.Center;
+            text.color = GameUiPalette.PrimaryText;
+            text.raycastTarget = false;
+            text.text = string.Empty;
+            return text;
+        }
+
+        private void ShowUseResult(bool succeeded)
+        {
+            if (_messageRoutine != null)
+            {
+                StopCoroutine(_messageRoutine);
+            }
+
+            _messageRoutine = StartCoroutine(ShowUseResultRoutine(succeeded));
+        }
+
+        private IEnumerator ShowUseResultRoutine(bool succeeded)
+        {
+            _messageText.text = succeeded
+                ? "アイテムを使用した！"
+                : "その対象には使用できない！";
+            _messageText.color = succeeded
+                ? new Color32(36, 116, 62, 255)
+                : new Color32(174, 50, 44, 255);
+            yield return new WaitForSecondsRealtime(1.5f);
+            _messageText.text = string.Empty;
+            _messageRoutine = null;
         }
 
         private ItemSlotView CreateSlot(int slotIndex)
@@ -230,73 +301,10 @@ namespace Pachimon.UI
             }
 
             var width = Mathf.Max(1f, _rectTransform.rect.width - 28f);
-            var height = Mathf.Max(1f, _rectTransform.rect.height - 24f);
+            var height = Mathf.Max(1f, _rectTransform.rect.height - 56f);
             _grid.cellSize = new Vector2(
                 Mathf.Max(1f, (width - _grid.spacing.x * 2f) / 3f),
                 Mathf.Max(1f, (height - _grid.spacing.y * 2f) / 3f));
-        }
-
-        private void StartTransition(float targetProgress)
-        {
-            if (_transitionRoutine != null)
-            {
-                StopCoroutine(_transitionRoutine);
-            }
-
-            if (!isActiveAndEnabled || _transitionDuration <= 0f)
-            {
-                ApplyProgress(targetProgress);
-                _transitionRoutine = null;
-                return;
-            }
-
-            _transitionRoutine = StartCoroutine(AnimateTransition(targetProgress));
-        }
-
-        private IEnumerator AnimateTransition(float targetProgress)
-        {
-            var distance = GetSlideDistance();
-            var startProgress = distance <= 0f
-                ? targetProgress
-                : 1f - Mathf.Clamp01(_rectTransform.anchoredPosition.y / distance);
-            var elapsed = 0f;
-            while (elapsed < _transitionDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                var progress = Mathf.Clamp01(elapsed / _transitionDuration);
-                var eased = progress * progress * (3f - 2f * progress);
-                ApplyProgress(Mathf.Lerp(startProgress, targetProgress, eased));
-                yield return null;
-            }
-
-            ApplyProgress(targetProgress);
-            _transitionRoutine = null;
-        }
-
-        private void ApplyProgress(float progress)
-        {
-            progress = Mathf.Clamp01(progress);
-            if (_rectTransform != null)
-            {
-                _rectTransform.anchoredPosition = new Vector2(
-                    0f,
-                    Mathf.Lerp(GetSlideDistance(), 0f, progress));
-            }
-
-            if (_canvasGroup != null)
-            {
-                _canvasGroup.alpha = progress;
-                var interactive = IsOpen && progress >= 0.999f;
-                _canvasGroup.interactable = interactive;
-                _canvasGroup.blocksRaycasts = interactive;
-            }
-        }
-
-        private float GetSlideDistance()
-        {
-            return _slideDistance > 0f
-                ? _slideDistance
-                : Mathf.Max(1f, _rectTransform?.rect.height ?? 1f);
         }
 
         private static void Stretch(

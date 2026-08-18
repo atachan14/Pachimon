@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: "\u6E29\u6696\u5316"
   _allocationType: 1
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: "Fire\u306B\u5FDC\u3058\u3066Battle\u4E2D\u306E\u6C17\u6E29\u3092\u6052\u4E45\u7684\u306B\u4E0A\u6607\u3055\u305B\u308B\u3002"
-  _baseValue: 400
+  _baseManaCost: 60
+  _description: "Battle\u4E2D\u306E\u6C17\u6E29\u3092{color:Fire}{value:temperature}{/color}\u4E0A\u6607\u3055\u305B\u308B\u3002\u6C17\u6E29\u306FBattle\u7D42\u4E86\u307E\u3067\u6E1B\u8870\u3057\u306A\u3044\u3002"
+  _baseValue: 20
   _fireValueRatio: 100
   _temperatureDefinition: {fileID: 11400000, guid: 6a490000000000000000000000000001, type: 2}

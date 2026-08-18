@@ -9,16 +9,25 @@ namespace Pachimon.Battle
 {
     public sealed class SkillEffectResult
     {
-        public SkillEffectResult(BattleUnitState target, int damage, bool isTrueDamage)
+        public SkillEffectResult(
+            BattleUnitState target,
+            int damage,
+            bool isTrueDamage,
+            bool wasEvaded = false,
+            SkillHit hit = null)
         {
             Target = target ?? throw new ArgumentNullException(nameof(target));
             Damage = damage;
             IsTrueDamage = isTrueDamage;
+            WasEvaded = hit?.WasEvaded ?? wasEvaded;
+            Hit = hit;
         }
 
         public BattleUnitState Target { get; }
         public int Damage { get; }
         public bool IsTrueDamage { get; }
+        public bool WasEvaded { get; }
+        public SkillHit Hit { get; }
     }
 
     public sealed class SkillResolution
@@ -39,6 +48,22 @@ namespace Pachimon.Battle
             WasTargetUnavailable = wasTargetUnavailable;
             ActualManaSpent = actualManaSpent;
             EffectiveManaSpent = effectiveManaSpent;
+            RefundCooldown = false;
+        }
+
+        private SkillResolution(
+            BattleUnitState user,
+            SkillAsset skill,
+            IEnumerable<SkillEffectResult> effects,
+            BattlePresentationTimeline presentation,
+            bool wasTargetUnavailable,
+            int actualManaSpent,
+            decimal effectiveManaSpent,
+            bool refundCooldown)
+            : this(user, skill, effects, presentation, wasTargetUnavailable,
+                actualManaSpent, effectiveManaSpent)
+        {
+            RefundCooldown = refundCooldown;
         }
 
         public BattleUnitState User { get; }
@@ -48,6 +73,14 @@ namespace Pachimon.Battle
         public bool WasTargetUnavailable { get; }
         public int ActualManaSpent { get; }
         public decimal EffectiveManaSpent { get; }
+        public bool RefundCooldown { get; private set; }
+
+        public SkillResolution WithCooldownRefund()
+        {
+            return new SkillResolution(User, Skill, Effects, Presentation,
+                WasTargetUnavailable, ActualManaSpent, EffectiveManaSpent,
+                refundCooldown: true);
+        }
 
         public SkillResolution WithPresentation(
             BattlePresentationTimeline presentation)
@@ -59,7 +92,8 @@ namespace Pachimon.Battle
                 presentation,
                 WasTargetUnavailable,
                 ActualManaSpent,
-                EffectiveManaSpent);
+                EffectiveManaSpent,
+                RefundCooldown);
         }
 
         public SkillResolution WithManaSpent(
@@ -73,7 +107,8 @@ namespace Pachimon.Battle
                 Presentation,
                 WasTargetUnavailable,
                 actualManaSpent,
-                effectiveManaSpent);
+                effectiveManaSpent,
+                RefundCooldown);
         }
     }
 
@@ -125,7 +160,8 @@ namespace Pachimon.Battle
             SkillAsset skill,
             object runtimeData = null,
             int actualManaSpent = 0,
-            decimal effectiveManaSpent = 0m)
+            decimal effectiveManaSpent = 0m,
+            int skillSlotId = 0)
         {
             State = state ?? throw new ArgumentNullException(nameof(state));
             User = user ?? throw new ArgumentNullException(nameof(user));
@@ -133,6 +169,7 @@ namespace Pachimon.Battle
             RuntimeData = runtimeData;
             ActualManaSpent = actualManaSpent;
             EffectiveManaSpent = effectiveManaSpent;
+            SkillSlotId = skillSlotId;
             Targets = new BattleTargetQuery(state, user);
         }
 
@@ -142,7 +179,28 @@ namespace Pachimon.Battle
         public object RuntimeData { get; }
         public int ActualManaSpent { get; }
         public decimal EffectiveManaSpent { get; }
+        public int SkillSlotId { get; }
         public BattleTargetQuery Targets { get; }
+
+        public SkillHit BeginAttackHit(BattleUnitState target)
+        {
+            return new SkillHit(
+                State,
+                User,
+                target,
+                DamageOriginKind.Skill,
+                Skill.SkillId);
+        }
+
+        public SkillHit BeginStatusHit(BattleUnitState target)
+        {
+            return new SkillHit(
+                State,
+                User,
+                target,
+                DamageOriginKind.Skill,
+                Skill.SkillId);
+        }
 
         public int GetAttributeValue(PachimonAttribute attribute)
         {
@@ -170,17 +228,38 @@ namespace Pachimon.Battle
 
         public bool TrySpendAdditionalMn(int amount)
         {
-            var before = User.CurrentMn;
-            if (!User.TrySpendMn(amount))
+            return TrySpendAdditionalMn(User, amount);
+        }
+
+        public bool TrySpendAdditionalMn(BattleUnitState unit, int amount)
+        {
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
+            var before = unit.CurrentMn;
+            if (!unit.TrySpendMn(amount))
             {
                 return false;
             }
 
             State.Presentation.RecordAdditionalManaSpent(
+                unit,
+                before,
+                unit.CurrentMn);
+            if (amount > 0)
+                State.Events.Publish(new MnSpentEvent(State, unit, amount));
+            return true;
+        }
+
+        public int RefundSpentMana()
+        {
+            if (ActualManaSpent <= 0) return 0;
+            var before = User.CurrentMn;
+            var restored = User.RestoreMn(ActualManaSpent);
+            State.Presentation.RecordAdditionalManaSpent(
                 User,
                 before,
                 User.CurrentMn);
-            return true;
+            return restored;
         }
 
         public void BeginNextPresentationBlock()

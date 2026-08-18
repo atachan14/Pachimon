@@ -37,13 +37,8 @@ namespace Pachimon.UI
                 _label.text = content.Label;
                 if (_background != null)
                 {
-                    var backgroundColor = _background.color;
-                    var luminance = (0.299f * backgroundColor.r)
-                        + (0.587f * backgroundColor.g)
-                        + (0.114f * backgroundColor.b);
-                    _label.color = luminance > 0.62f
-                        ? new Color(0.08f, 0.09f, 0.09f, 1f)
-                        : Color.white;
+                    _label.color = AttributeCardPalette.GetReadableTextColor(
+                        _background.color);
                 }
                 _label.gameObject.SetActive(content.Sprite == null);
             }

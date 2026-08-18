@@ -5,9 +5,9 @@
 ### パチナミ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `10`
+- モチーフ: 波のしっぽを持つ水獣
+- 狙い: 全MNを波へ変換する、水の波動と生命の水の使い手
 
 #### Fixed Skill
 
@@ -15,7 +15,7 @@
 - 対象:先頭の敵
 - 硬直:150
 - CD:300
-- 消費MN: 使用時のCurrentMNをすべて消費する
+- 消費MN: 原則、使用時のCurrentMNをすべて消費する
 - 効果: 効果計算用MN消費量とAquaを参照し、Aqua Damageを与える
 
 実装案:
@@ -31,6 +31,9 @@ Damage
 - CurrentMNが1以上の場合だけ使用できる
 - 通常時の効果計算用MN消費量は実消費MNと同じにする
 - `進水式`の状態中だけ、実消費MNと効果計算用MN消費量が異なり得る
+- 水の波動本体だけで対象を戦闘不能にできる場合は、戦闘不能に必要な最小MNのみ消費する
+- 必要MNの判定には水の波動本体によるHP DamageとShield吸収を含め、Passive・状態・フィールドなどが後から発生させる追加Damageは含めない
+- 水の波動本体が回避される場合や、CurrentMNを全消費しても本体だけでは戦闘不能にできない場合は、CurrentMNをすべて消費する
 - `AquaDamageRatio`は`WaterPulseSkillAsset`から調整可能にする
 
 #### Passive
@@ -57,12 +60,12 @@ Damage
 - Skillの基本MN、追加MN、全MN消費をすべて集計対象にする
 - 1回の効果解決中に複数回MNを消費した場合、その効果解決で使用した効果計算用MN消費量の合計を参照する
 
-### [Pachimon名]3
+### アメガエル
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `18`
+- モチーフ: 雨雲を背負うカエル
+- 狙い: 雨を呼び、雨量に応じて素早くなる天候型
 
 #### Fixed Skill
 
@@ -129,9 +132,9 @@ Speed倍率%
 ### パチフネ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `26`
+- モチーフ: 小舟型の甲羅を背負う水棲獣
+- 狙い: 進水式で次のSkillを補助し、MaxMNをAquaへ変換する
 
 #### Fixed Skill
 
@@ -181,9 +184,9 @@ Aqua派生加算
 ### パチベール
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `34`
+- モチーフ: 水膜をまとうクラゲ
+- 狙い: 水のベールを生成し、味方への回復を強化する防御型
 
 #### Fixed Skill
 
@@ -246,5 +249,118 @@ Aqua派生加算
 - 回復増加率の下限は0とし、Aquaが負でも回復量を減少させない
 - 非Battle中のItemやRestSpotによる回復には適用しない
 
+### ミズノコ
+
+- Status: `Implemented`
+- Species ID: `42`
+- モチーフ: 水刃のヒレを持つノコギリエイ
+- 狙い: 貫通攻撃で敵を倒し、追加Turnへつなげる攻撃型
+
+#### Fixed Skill
+
+- 名前:ウォーターカッター
+- 硬直:100
+- CD:300
+- 消費MN:100
+- 効果:先頭の敵にWind参照の貫通を持つAqua Damageを与える
+
+実装式:
+
+```text
+Damage
+= floor(BaseAquaDamage 100
+  × AmplificationMultiplier(Aqua × AquaDamageRatio 100%))
+
+貫通率
+= floor(BasePenetrationPercent 20
+  × AmplificationMultiplier(Wind × WindPenetrationRatio 100%))
+```
+
+- Damageと貫通率はSkill SOから調整可能にする
+- 貫通率は対象のAquaとResistBonusによる防御値へ適用する
+
+#### Passive
+
+- 名前:水切り
+- 効果:自身のSkillで敵を戦闘不能にしたとき、続けてTurnを行う
+- 硬直を0にするだけではなく、同tickの待機者より優先して自身のTurnを開始する
+- 複数の敵を同時に戦闘不能にしても、追加Turnは1回だけ得る
+- 戦闘が終了した場合は追加Turnを開始しない
+
+### ロカドン
+
+- Status: `Implemented`
+- Species ID: `50`
+- モチーフ: 泥をろ過する両生獣
+- 狙い: 泥水でSlowを与え、PoisonをAquaへ変換する複合型
+
+#### Fixed Skill
+
+- 名前:泥水
+- 硬直:100
+- CD:300
+- 消費MN:100
+- 効果:先頭の敵にAqua DamageとPoison参照のSlowを与える
+
+実装式:
+
+```text
+Damage
+= floor(BaseAquaDamage 100
+  × AmplificationMultiplier(Aqua × AquaDamageRatio 100%))
+
+Slow Value
+= floor(BaseSlow 100
+  × AmplificationMultiplier(Poison × PoisonSlowRatio 100%))
+```
+
+- DamageとSlowは同じSkill Hitとして扱う
+- 回避や肩代わりが発生した場合、DamageとSlowの対象を分離しない
+- 各BaseとRatio、Slow DefinitionはSkill SOから調整可能にする
+
+#### Passive
+
+- 名前:ろ過水
+- 効果:AquaをPoisonの30%増加する
+- 既存Stat Calculatorの派生加算段階で処理する
+- 非Battle中のPachimonTabにも反映する
+- RatioはPassive SOから調整可能にする
+
+### クジラン
+
+- Status: `Implemented`
+- Species ID: `58`
+- モチーフ: 潮模様を持つ小型クジラ
+- 狙い: 高い現在HPとMaxHPをAqua攻撃へ変換する重量型
+
+#### Fixed Skill
+
+- 名前:しおふき
+- 硬直:120
+- CD:350
+- 消費MN:120
+- 効果:先頭の敵にAquaと現在HPを参照するAqua Damageを与える
+
+実装式:
+
+```text
+Damage
+= floor(BaseAquaDamage 100 × (
+    AmplificationMultiplier(Aqua × AquaDamageRatio 100%)
+    + CurrentHP / CurrentHpDivisor 2000
+  ))
+```
+
+- 現在HPはSkill効果解決時の値を参照する
+- 各Base、Ratio、DivisorはSkill SOから調整可能にする
+
+#### Passive
+
+- 名前:クジラ
+- 効果:AquaをMaxHPの1.5%増加する
+- 既存Stat Calculatorの派生加算段階で処理する
+- 非Battle中のPachimonTabにも反映する
+- 小数Ratioを扱えるよう、派生加算PassiveのRatioはfloatで保持する
+- RatioはPassive SOから調整可能にする
 
 ## Ideas

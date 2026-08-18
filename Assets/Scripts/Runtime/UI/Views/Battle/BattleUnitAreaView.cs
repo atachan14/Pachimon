@@ -12,12 +12,15 @@ namespace Pachimon.UI
         [SerializeField] private BattleUnitSlotView[] _slots =
             Array.Empty<BattleUnitSlotView>();
 
-        public void ConfigureItemDrops(Func<ItemInstance, int, bool> tryUse)
+        public void ConfigureItemDrops(
+            Func<ItemInstance, int, bool> canUse,
+            Func<ItemInstance, int, bool> tryUse)
         {
             for (var slotIndex = 0; slotIndex < _slots.Length; slotIndex++)
             {
                 var capturedIndex = slotIndex;
                 _slots[slotIndex]?.ConfigureItemDrop(
+                    item => canUse != null && canUse(item, capturedIndex),
                     item => tryUse != null && tryUse(item, capturedIndex));
             }
         }

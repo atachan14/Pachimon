@@ -23,6 +23,8 @@ namespace Pachimon.Battle
         public int ChargedDurationRatio => _chargedDurationRatio;
         public int ChargedElectricRatio => _chargedElectricRatio;
         public int ChargedSpeedRatio => _chargedSpeedRatio;
+        public string ChargingDescription => _chargingDescription;
+        public string ChargedDescription => _chargedDescription;
 
         public override string GetDisplayName(BattleStatusInstance instance)
         {
@@ -70,6 +72,14 @@ namespace Pachimon.Battle
         }
 
 #if UNITY_EDITOR
+        public void SetPhaseDescriptionTemplatesForEditor(
+            string chargingDescription,
+            string chargedDescription)
+        {
+            _chargingDescription = chargingDescription ?? string.Empty;
+            _chargedDescription = chargedDescription ?? string.Empty;
+        }
+
         public void ConfigureForEditor(
             string displayName,
             string description,

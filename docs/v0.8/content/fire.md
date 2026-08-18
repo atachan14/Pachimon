@@ -2,12 +2,12 @@
 
 ## Pachimon
 
-### [Pachimon名]2
+### ススヤモリ
 
 - Status: `Implemented`
 - Species ID: `9`
-- モチーフ:
-- 狙い:
+- モチーフ: 煤まみれのヤモリ、排気管のような尻尾、逆流する黒炎
+- 狙い: `バックファイア`と`闇の炎`を、黒い体色と後方へ噴く炎で視覚化する
 
 #### Fixed Skill
 
@@ -57,12 +57,12 @@ PoisonScalingPercent = 100%
 - 元のFire Damageで対象が戦闘不能になった場合は追加Damageを発生させない
 - `BaseConversionPercent / PoisonScalingPercent`はSOで調整可能にする
 
-### [Pachimon名]3
+### ツラネコ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `17`
+- モチーフ: 身軽な火猫、尻尾に数珠状に連なる3つの火球
+- 狙い: `チェインバーン`の連続Hitと`コンボマスター`を、連なる火球と跳びかかる姿勢で視覚化する
 #### Fixed Skill
 
 - Implementation: `Implemented`
@@ -139,18 +139,18 @@ DamageBonusPerChain = 10（仮値）
 - 補正はBattle終了時に破棄する
 - `DamageBonusPerChain`はSOで調整可能にする
 
-### [Pachimon名]4
+### カマドン
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `25`
+- モチーフ: かまど、煉瓦殻のアルマジロ、盾のような前脚
+- 狙い: `炎の障壁`の肩代わり役を低重心の炉と防御的な輪郭で視覚化する
 
 #### Fixed Skill
 
 - 名前: 炎の障壁
 - Implementation: `Implemented`
-- BaseValue: `100`
+- BaseValue: `200`
 - FireValueRatio: `100`
 - 効果:
   - 自陣へ[生成物: 炎の障壁]を生成する
@@ -187,6 +187,13 @@ DamageBonusPerChain = 10（仮値）
 - 障壁の現在HPを超えた余剰Damageは、元の対象へ引き継ぐ
 - 元の対象へ引き継いだ余剰Damageには、対象自身の属性値とResistBonusによる軽減を適用する
 - 元の対象が保持するShieldは、引き継いだ余剰Damageを通常どおり吸収できる
+- 炎の障壁は完全なBattle Unitではなく、Damageと一部の状態を受け取れる軽量なField Entityとして扱う
+- Shield破壊効果の対象となり、現在HPの全量をShield量として破壊する
+- [状態: 毒素]・[状態: 弱点]・[状態: 風化]を保持できる
+- 毒素は障壁のPoisonとResistBonusで軽減し、tickごとに障壁へDamageを与える
+- 弱点は次に障壁が受ける攻撃で消費し、そのDamageを増加させる
+- 風化は障壁のResistBonusを低下させ、通常どおり時間経過で減衰する
+- Slow・Stunなど行動順へ作用する状態は保持しない
 - 攻撃を受けたとき、攻撃者へ[状態: 火傷]を付与する
 - HPが0になるか、効果時間が0になると消滅する
 - 同じ陣営へ再生成した場合、Value・現在HP・最大HP・残り時間を加算する
@@ -213,12 +220,12 @@ DamageBonusPerChain = 10（仮値）
 - `DamagePercent = 130`をSOで調整可能にする
 
 
-### [Pachimon名]5
+### ヤジリス
 
 - Status: `Implemented`
 - Species ID: `33`
-- モチーフ:
-- 狙い:
+- モチーフ: 火リス、弓形の尻尾、矢尻形の炎
+- 狙い: `ファイアアロー`の精密射撃と再発動を、尻尾を引き絞る射撃姿勢で視覚化する
 
 #### Fixed Skill
 
@@ -263,12 +270,12 @@ FireScalingPercent = 100%
 - 追加Fire Damageには闇の炎など、Damage適用後に反応する別Passiveを適用できる
 - `MissingHpPercent / FireScalingPercent`はSOで調整可能にする
 
-### [Pachimon名]6
+### バクヤギ
 
 - Status: `Implemented`
 - Species ID: `41`
-- モチーフ:
-- 狙い:
+- モチーフ: 火山ヤギ、導火線のような螺旋角、全身を走る溶岩の亀裂
+- 狙い: `燃焼`の自傷と`燃える男`の被Damage強化を、傷つくほど発光する体で視覚化する
 
 #### Fixed Skill
 
@@ -276,11 +283,12 @@ FireScalingPercent = 100%
 - Implementation: `Implemented`
 - 硬直: `100`
 - CD: `300`
-- MN: `100`
+- MN: `40`（初回のみ）
 - 対象: 先頭の敵と自身
 - 効果:
   - 先頭の敵と自身に、それぞれ`100 × AmplificationMultiplier(Fire × 100%)`のFireダメージを与える
-  - 両者が生存し、MNを追加消費できる間は再発動する
+  - 両者が生存している間は、MNを追加消費せず再発動する
+  - 再発動時は「XXは燃焼している！」と表示する
 - 補足仕様:
   - 1回の発動で敵へのDamage、自傷Damageの順に両方を解決する
   - 敵が戦闘不能になった発動でも自傷Damageは発生する
@@ -303,12 +311,12 @@ FireScalingPercent = 100%
 - 増加分はBattle終了時に破棄する
 - `FireIncreasePerDamage = 20`をSOで調整可能にする
 
-### [Pachimon名]7
+### ヒデリコ
 
 - Status: `Implemented`
 - Species ID: `49`
-- モチーフ:
-- 狙い:
+- モチーフ: 太陽を追うミーアキャット、日輪の襟、太陽形の尾
+- 狙い: `温暖化`と正の気温によるSpeed上昇を、明るい体色と走る姿勢で視覚化する
 
 #### Fixed Skill
 
@@ -397,5 +405,72 @@ ColdIceRatioMultiplier
 - Speed倍率`130%`はSOで調整可能にする
 - 気温が0以下の場合は補正しない
 - 気温によるAttribute Ratio補正は攻撃・効果値の計算にのみ使用し、防御側の属性軽減には使用しない
+
+
+### ユゲイヌ
+
+- Status: `Implemented`
+- Species ID: `57`
+- モチーフ: 蒸気ジャッカル、赤熱部と冷却部、背中の蒸気孔
+- 狙い: FireとAquaを合算する`蒸発`を二色の熱勾配で表し、狡猾な表情で`弱いものイジメ`も視覚化する
+
+#### Fixed Skill
+
+- 名前:蒸発
+- 硬直: `120`（仮値・SOで調整可能）
+- CD: `300`（仮値・SOで調整可能）
+- MN: `120`（仮値・SOで調整可能）
+- 対象: 先頭の敵
+- 効果:FireとAquaを参照した単一のFire Damageを与え、[弱点]を付与する
+
+```text
+Damage
+= floor(
+    BaseFireDamage 70
+    × AmplificationMultiplier(Fire × FireDamageRatio 100%)
+  + BaseAquaDamage 70
+    × AmplificationMultiplier(Aqua × AquaDamageRatio 100%)
+  )
+
+貫通率
+= floor(
+    BaseFirePenetration 20
+    × AmplificationMultiplier(Fire × FirePenetrationRatio 100%)
+  + BaseAquaPenetration 20
+    × AmplificationMultiplier(Aqua × AquaPenetrationRatio 100%)
+  )
+
+弱点Value
+= floor(
+    BaseFireWeakness 10
+    × AmplificationMultiplier(Fire × FireWeaknessRatio 100%)
+  + BaseAquaWeakness 10
+    × AmplificationMultiplier(Aqua × AquaWeaknessRatio 100%)
+  )
+```
+
+- DamageはFire/Aquaの2Hitへ分割せず、合算後に1回のFire Damageとして解決する
+- 合算した貫通率を対象のFireとResistBonusによる防御値へ適用する
+- Damageと弱点付与は同じSkill Hitとして扱い、回避・肩代わり先を共有する
+- 対象がDamageで戦闘不能になった場合、弱点は付与しない
+- 各BaseとRatio、Weakness DefinitionはSkill SOから調整可能にする
+
+[弱点]
+
+- 次に受けるSkill Hit内の全Attribute DamageがValue%増加する
+- Damage倍率は`1 + Value / 100`
+- Skill Hit開始時にValueを記録して弱点を消費し、同じHitの全Damage成分へ記録値を適用する
+- 弱点を付与した蒸発自身のDamageには適用しない
+- 現状はAttribute Damageを対象とし、True DamageとStatus Damageには適用しない
+
+#### Passive
+
+- 名前:弱いものイジメ
+- 効果:弱点を保持している敵へのAttribute Damageが1.3倍になり、100tickの間Speedが30増加する
+- Damage倍率`130%`、Speed増加値`30`、効果時間`100tick`はPassive SOから調整可能にする
+- 弱点自身のDamage倍率とは乗算する
+- `ApplyOutgoingModifiers = true`のAttribute Damageを対象にする
+- 再発動時はSpeed増加値を加算せず、残り時間を100tickへ更新する
+- Speed BuffはBattle終了時に破棄する
 
 ## Ideas

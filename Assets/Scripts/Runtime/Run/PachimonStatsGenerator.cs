@@ -4,6 +4,28 @@ namespace Pachimon.Run
 {
     public sealed class PachimonStatsGenerator
     {
+        private static readonly int[] AttributeStatIndices =
+        {
+            (int)PachimonStatType.Fire,
+            (int)PachimonStatType.Aqua,
+            (int)PachimonStatType.Leaf,
+            (int)PachimonStatType.Electric,
+            (int)PachimonStatType.Poison,
+            (int)PachimonStatType.Ice,
+            (int)PachimonStatType.Wind,
+            (int)PachimonStatType.Dragon,
+        };
+
+        private static readonly int[] CommonStatIndices =
+        {
+            (int)PachimonStatType.MaxHp,
+            (int)PachimonStatType.MaxMn,
+            (int)PachimonStatType.Speed,
+            (int)PachimonStatType.Haste,
+            (int)PachimonStatType.DamageBonus,
+            (int)PachimonStatType.ResistBonus,
+        };
+
         private readonly PachimonStatGenerationSettings _settings;
 
         public PachimonStatsGenerator(PachimonStatGenerationSettings settings = null)
@@ -17,11 +39,39 @@ namespace Pachimon.Run
 
             var statCount = (int)PachimonStatType.Count;
             var valueUnits = new int[statCount];
-            valueUnits[(int)PachimonStatType.MaxHp] = _settings.MaxHpMinimumValueUnits;
-            valueUnits[(int)PachimonStatType.MaxMn] = _settings.MaxMnMinimumValueUnits;
-            var remainingBudget = _settings.AllocationBudget;
-            var initialOrder = CreateShuffledStatOrder(statCount, random);
+            valueUnits[(int)PachimonStatType.MaxHp] = _settings.ResourceMinimumValueUnits;
+            valueUnits[(int)PachimonStatType.MaxMn] = _settings.ResourceMinimumValueUnits;
+            AllocateBudget(
+                valueUnits,
+                AttributeStatIndices,
+                _settings.AttributeAllocationBudget,
+                random);
+            AllocateBudget(
+                valueUnits,
+                CommonStatIndices,
+                _settings.CommonAllocationBudget,
+                random);
 
+            var stats = new PachimonStats(
+                valueUnits,
+                _settings.ResourceDisplayMultiplier,
+                specialStatDivisor: 1);
+            if (stats.GetTotalValueUnits() != _settings.TotalValueUnits)
+            {
+                throw new InvalidOperationException("Pachimon stat generation did not spend its full value budget.");
+            }
+
+            return stats;
+        }
+
+        private void AllocateBudget(
+            int[] valueUnits,
+            int[] statIndices,
+            int budget,
+            Random random)
+        {
+            var remainingBudget = budget;
+            var initialOrder = CreateShuffledOrder(statIndices, random);
             foreach (var statIndex in initialOrder)
             {
                 if (remainingBudget == 0) break;
@@ -33,29 +83,17 @@ namespace Pachimon.Run
 
             while (remainingBudget > 0)
             {
-                var statIndex = random.Next(0, statCount);
+                var statIndex = statIndices[random.Next(0, statIndices.Length)];
                 var allocation = random.Next(1, _settings.AdditionalMaxAllocation + 1);
                 allocation = Math.Min(allocation, remainingBudget);
                 valueUnits[statIndex] += allocation;
                 remainingBudget -= allocation;
             }
-
-            var stats = new PachimonStats(
-                valueUnits,
-                _settings.ResourceDisplayMultiplier,
-                _settings.SpecialStatDivisor);
-            if (stats.GetTotalValueUnits() != _settings.TotalValueUnits)
-            {
-                throw new InvalidOperationException("Pachimon stat generation did not spend its full value budget.");
-            }
-
-            return stats;
         }
 
-        private static int[] CreateShuffledStatOrder(int statCount, Random random)
+        private static int[] CreateShuffledOrder(int[] statIndices, Random random)
         {
-            var indices = new int[statCount];
-            for (var index = 0; index < statCount; index++) indices[index] = index;
+            var indices = (int[])statIndices.Clone();
             for (var index = indices.Length - 1; index > 0; index--)
             {
                 var swapIndex = random.Next(0, index + 1);

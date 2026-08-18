@@ -69,6 +69,8 @@ namespace Pachimon.Battle
             {
                 CurrentTick = source.CurrentTick,
             };
+            simulationState.SetElectricDamageCountForSimulation(
+                source.ElectricDamageCount);
 
             foreach (var original in originalUnits)
             {

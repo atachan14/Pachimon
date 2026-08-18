@@ -25,15 +25,131 @@ namespace Pachimon.Battle
                 AddFireGrowthModifier(status, modifiers);
                 AddIceGrowthModifier(status, modifiers);
                 AddLeafGrowthModifier(status, modifiers);
+                AddBurningFlowerModifiers(status, modifiers);
+                AddPoisonMagicianModifier(status, modifiers);
+                AddWindGrowthModifiers(status, modifiers);
                 AddComboMasterModifier(status, modifiers);
                 AddBurnModifier(status, modifiers);
                 AddLaunchCeremonyModifier(status, modifiers);
                 AddWindModifiers(status, modifiers);
                 AddSweetScienceModifier(status, modifiers);
+                AddWeaklingBullySpeedModifier(status, modifiers);
                 AddDragonDanceModifiers(status, modifiers);
+                AddWindGodModifiers(status, modifiers);
+                AddDragonInstallModifiers(status, modifiers);
             }
 
             return modifiers;
+        }
+
+        private static void AddWindGodModifiers(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            if (status.Definition is not WindGodStatusAsset) return;
+            var source = CreateSource(status);
+            foreach (var stat in new[]
+                     {
+                         PachimonStatType.Fire, PachimonStatType.Aqua,
+                         PachimonStatType.Leaf, PachimonStatType.Electric,
+                         PachimonStatType.Poison, PachimonStatType.Ice,
+                         PachimonStatType.Wind, PachimonStatType.Dragon,
+                         PachimonStatType.ResistBonus,
+                     })
+            {
+                modifiers.Add(new FixedStatModifier(
+                    stat,
+                    StatModifierOperation.DirectMultiplicative,
+                    0m,
+                    source));
+            }
+        }
+
+        private static void AddDragonInstallModifiers(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            if (status.Definition is not DragonInstallStatusAsset) return;
+            var source = CreateSource(status);
+            var multiplier = status.Value / 100m;
+            foreach (var stat in new[]
+                     {
+                         PachimonStatType.Dragon,
+                         PachimonStatType.Speed,
+                         PachimonStatType.Haste,
+                     })
+            {
+                modifiers.Add(new FixedStatModifier(
+                    stat,
+                    StatModifierOperation.DirectMultiplicative,
+                    multiplier,
+                    source));
+            }
+        }
+
+        private static void AddWindGrowthModifiers(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            var statType = status.StatusId switch
+            {
+                BattleStatusId.WindRiderGrowth => PachimonStatType.Speed,
+                BattleStatusId.WindMagicianGrowth => PachimonStatType.Wind,
+                _ => (PachimonStatType?)null,
+            };
+            if (!statType.HasValue) return;
+            modifiers.Add(new FixedStatModifier(
+                statType.Value,
+                StatModifierOperation.DirectAdditive,
+                checked(status.Value * status.StackCount),
+                CreateSource(status)));
+        }
+
+        private static void AddPoisonMagicianModifier(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            if (status.StatusId != BattleStatusId.PoisonMagicianGrowth)
+                return;
+            modifiers.Add(new FixedStatModifier(
+                PachimonStatType.Poison,
+                StatModifierOperation.DirectAdditive,
+                checked(status.Value * status.StackCount),
+                CreateSource(status)));
+        }
+
+        private static void AddBurningFlowerModifiers(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            var targetStat = status.StatusId switch
+            {
+                BattleStatusId.BurningFlowerLeaf => PachimonStatType.Leaf,
+                BattleStatusId.BurningFlowerFire => PachimonStatType.Fire,
+                _ => (PachimonStatType?)null,
+            };
+            if (!targetStat.HasValue) return;
+            modifiers.Add(new FixedStatModifier(
+                targetStat.Value,
+                StatModifierOperation.DirectAdditive,
+                checked(status.Value * status.StackCount),
+                CreateSource(status)));
+        }
+
+        private static void AddWeaklingBullySpeedModifier(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            if (status.Definition is not WeaklingBullySpeedStatusAsset)
+            {
+                return;
+            }
+
+            modifiers.Add(new FixedStatModifier(
+                PachimonStatType.Speed,
+                StatModifierOperation.DirectAdditive,
+                status.Value,
+                CreateSource(status)));
         }
 
         private static void AddDragonDanceModifiers(

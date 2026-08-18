@@ -160,11 +160,13 @@ namespace Pachimon.UI
         }
 
         public void ConfigureItemDrops(
+            Func<ItemInstance, int, bool> canUseOnAlly,
             Func<ItemInstance, int, bool> tryUseOnAlly,
+            Func<ItemInstance, int, bool> canUseOnEnemy,
             Func<ItemInstance, int, bool> tryUseOnEnemy)
         {
-            AllyArea?.ConfigureItemDrops(tryUseOnAlly);
-            EnemyArea?.ConfigureItemDrops(tryUseOnEnemy);
+            AllyArea?.ConfigureItemDrops(canUseOnAlly, tryUseOnAlly);
+            EnemyArea?.ConfigureItemDrops(canUseOnEnemy, tryUseOnEnemy);
         }
 
         public void ConfigureUnitClicks(

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pachimon.Items
 {
@@ -24,6 +25,10 @@ namespace Pachimon.Items
                 {
                     _logicByItemId[item.ItemId] = new SkillMachineItemLogic();
                 }
+                else if (item is EngravingItemAsset)
+                {
+                    _logicByItemId[item.ItemId] = new EngravingItemLogic();
+                }
             }
         }
 
@@ -36,6 +41,45 @@ namespace Pachimon.Items
         {
             if (itemId <= 0) throw new ArgumentOutOfRangeException(nameof(itemId));
             _logicByItemId[itemId] = logic ?? throw new ArgumentNullException(nameof(logic));
+        }
+    }
+
+    public sealed class EngravingItemLogic : IItemLogic
+    {
+        public ItemUseFailureReason CanUse(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context)
+        {
+            if (item is not EngravingItemAsset
+                || itemInstance?.GeneratedData?.StatChanges == null
+                || itemInstance.GeneratedData.StatChanges.Count != 2
+                || context?.Affiliation != ItemTargetAffiliation.Ally
+                || context.RunTarget == null)
+            {
+                return ItemUseFailureReason.InvalidTarget;
+            }
+
+            return itemInstance.GeneratedData.StatChanges.Any(
+                change => change.Amount > 0)
+                && itemInstance.GeneratedData.StatChanges.Any(
+                    change => change.Amount < 0)
+                    ? ItemUseFailureReason.None
+                    : ItemUseFailureReason.InvalidTarget;
+        }
+
+        public int Apply(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context)
+        {
+            context.ApplyPermanentStatChanges(
+                itemInstance.GeneratedData.StatChanges,
+                $"item:{itemInstance.InstanceId}",
+                item.DisplayName);
+            return itemInstance.GeneratedData.StatChanges
+                .Where(change => change.Amount > 0)
+                .Sum(change => change.Amount);
         }
     }
 }

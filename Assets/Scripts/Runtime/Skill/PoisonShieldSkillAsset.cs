@@ -9,11 +9,13 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Poison Shield Skill")]
     public sealed class PoisonShieldSkillAsset : SkillAsset
     {
+        [SerializeField, Min(1)] private int _durationTicks = 80;
         [SerializeField, Min(0)] private int _baseShieldValue = 300;
         [SerializeField, Min(0)] private int _shieldPoisonScalingPercent = 100;
         [SerializeField, Min(0)] private int _baseToxinReductionPercent = 50;
         [SerializeField, Min(0)] private int _reductionPoisonScalingPercent = 100;
 
+        public int DurationTicks => _durationTicks;
         public int BaseShieldValue => _baseShieldValue;
         public int ShieldPoisonScalingPercent => _shieldPoisonScalingPercent;
         public int BaseToxinReductionPercent => _baseToxinReductionPercent;
@@ -37,6 +39,7 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
+            int durationTicks,
             int baseShieldValue,
             int shieldPoisonScalingPercent,
             int baseToxinReductionPercent,
@@ -51,6 +54,7 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
+            _durationTicks = durationTicks;
             _baseShieldValue = baseShieldValue;
             _shieldPoisonScalingPercent = shieldPoisonScalingPercent;
             _baseToxinReductionPercent = baseToxinReductionPercent;

@@ -16,9 +16,10 @@ MonoBehaviour:
   _displayName: 毒渡し
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
-  _baseManaCost: 100
-  _description: 最も毒素が多い敵から50%を取り除き、別の最少対象へ除去量の200%を付与する。
+  _baseManaCost: 20
+  _description: "最も{term:Toxin|毒素}が多い敵から{value:removalPercent}%を取り除き、別の最少対象へ除去量の{value:applicationPercent}%を付与する。"
   _removalPercent: 50
   _applicationPercent: 200

@@ -16,8 +16,9 @@ MonoBehaviour:
   _displayName: "\u9032\u6C34\u5F0F"
   _allocationType: 2
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 20
   _baseCooldownTicks: 120
   _baseManaCost: 0
-  _description: "\u6B21\u306ESkill\u3092\u5F37\u5316\u3057\u3001MN\u6D88\u8CBB\u3092\u8EFD\u6E1B\u3059\u308B\u3002"
+  _description: "次に使用するSkillの{icon:Aqua}水を{value:aquaMultiplier}%にし、MN消費を水に応じて軽減する。現在のMN消費倍率は{value:currentManaMultiplier}倍。Skill効果解決後に消費する。"
   _statusDefinition: {fileID: 11400000, guid: d0260000000000000000000000000001, type: 2}

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,6 +11,7 @@ namespace Pachimon.UI
         Passive,
         Item,
         FieldEffect,
+        Status,
     }
 
     public sealed class ContentDetailOverlayContent
@@ -42,15 +42,12 @@ namespace Pachimon.UI
         private const float TransitionDuration = 0.25f;
         private const float PanelInset = 36f;
 
-        private RectTransform _rect;
-        private CanvasGroup _canvasGroup;
         private TMP_Text _kind;
         private TMP_Text _title;
         private TMP_Text _metadata;
         private TMP_Text _description;
         private Image _accent;
-        private Coroutine _transition;
-        private float _slideDistance = 1f;
+        private VerticalSlideTransition _slideTransition;
 
         public bool IsOpen { get; private set; }
         public ContentDetailKind? ShownKind { get; private set; }
@@ -72,16 +69,16 @@ namespace Pachimon.UI
             rect.offsetMax = new Vector2(-PanelInset, -PanelInset);
             var view = rootObject.GetComponent<ContentDetailOverlayView>();
             view.Build();
-            view.ApplyProgress(0f);
+            view._slideTransition.Snap(0f);
             return view;
         }
 
         public void SetSlideDistance(float distance)
         {
-            _slideDistance = Mathf.Max(1f, distance);
-            if (!IsOpen && _transition == null)
+            _slideTransition?.SetSlideDistance(Mathf.Max(1f, distance));
+            if (!IsOpen && _slideTransition?.IsRunning != true)
             {
-                ApplyProgress(0f);
+                _slideTransition?.Snap(0f);
             }
         }
 
@@ -107,25 +104,32 @@ namespace Pachimon.UI
             ShownKind = content.Kind;
             IsOpen = true;
             gameObject.SetActive(true);
-            StartTransition(1f);
+            _slideTransition.Play(1f, TransitionDuration);
         }
 
         public void Close()
         {
-            if (!IsOpen && _transition == null)
+            if (!IsOpen && _slideTransition?.IsRunning != true)
             {
-                ApplyProgress(0f);
+                _slideTransition?.Snap(0f);
                 return;
             }
 
             IsOpen = false;
-            StartTransition(0f);
+            _slideTransition.Play(
+                0f,
+                TransitionDuration,
+                deactivateWhenClosed: true);
         }
 
         private void Build()
         {
-            _rect = GetComponent<RectTransform>();
-            _canvasGroup = GetComponent<CanvasGroup>();
+            _slideTransition = new VerticalSlideTransition(
+                this,
+                GetComponent<RectTransform>(),
+                GetComponent<CanvasGroup>(),
+                () => IsOpen,
+                blockRaycastsWhileMoving: true);
             GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.98f);
 
             _accent = CreateImage("Accent", transform, GameUiPalette.SkillChip);
@@ -194,59 +198,9 @@ namespace Pachimon.UI
                 ContentDetailKind.Passive => "PASSIVE",
                 ContentDetailKind.Item => "ITEM",
                 ContentDetailKind.FieldEffect => "FIELD",
+                ContentDetailKind.Status => "STATUS",
                 _ => string.Empty,
             };
-        }
-
-        private void StartTransition(float target)
-        {
-            if (_transition != null)
-            {
-                StopCoroutine(_transition);
-            }
-
-            _transition = StartCoroutine(Animate(target));
-        }
-
-        private IEnumerator Animate(float target)
-        {
-            var start = GetProgress();
-            var elapsed = 0f;
-            while (elapsed < TransitionDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                var t = Mathf.Clamp01(elapsed / TransitionDuration);
-                var eased = t * t * (3f - (2f * t));
-                ApplyProgress(Mathf.Lerp(start, target, eased));
-                yield return null;
-            }
-
-            ApplyProgress(target);
-            _transition = null;
-            if (!IsOpen)
-            {
-                gameObject.SetActive(false);
-            }
-        }
-
-        private float GetProgress()
-        {
-            return Mathf.Clamp01(1f - (_rect.anchoredPosition.y / _slideDistance));
-        }
-
-        private void ApplyProgress(float progress)
-        {
-            if (_rect == null || _canvasGroup == null)
-            {
-                return;
-            }
-
-            _rect.anchoredPosition = new Vector2(
-                0f,
-                Mathf.Lerp(_slideDistance, 0f, progress));
-            _canvasGroup.alpha = progress;
-            _canvasGroup.interactable = progress >= 0.999f;
-            _canvasGroup.blocksRaycasts = progress > 0.01f;
         }
 
         private static Image CreateImage(string objectName, Transform parent, Color color)

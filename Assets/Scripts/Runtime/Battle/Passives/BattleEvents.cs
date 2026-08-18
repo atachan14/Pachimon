@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Pachimon.Reward;
 using Pachimon.Skills;
 
@@ -82,7 +83,8 @@ namespace Pachimon.Battle
             BattleUnitState source,
             BattleUnitState target,
             PachimonAttribute attribute,
-            decimal unroundedDamage)
+            decimal unroundedDamage,
+            SkillHit hit = null)
             : base(state, source, target)
         {
             if (unroundedDamage < 0m)
@@ -92,20 +94,24 @@ namespace Pachimon.Battle
 
             Attribute = attribute;
             UnroundedDamage = unroundedDamage;
+            Hit = hit;
+            WeaknessValue = hit?.WeaknessValue ?? 0;
         }
 
         public BeforeAttributeDamageEvent(
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
-            DamageCalculationResult calculation)
+            DamageCalculationResult calculation,
+            SkillHit hit = null)
             : this(
                 state,
                 source,
                 target,
                 calculation?.Context.Attribute
                     ?? throw new ArgumentNullException(nameof(calculation)),
-                calculation.UnroundedDamage)
+                calculation.UnroundedDamage,
+                hit)
         {
             Calculation = calculation;
         }
@@ -114,6 +120,8 @@ namespace Pachimon.Battle
         public DamageCalculationResult Calculation { get; }
         public decimal UnroundedDamage { get; private set; }
         public decimal OutgoingMultiplier { get; private set; } = 1m;
+        public SkillHit Hit { get; }
+        public int WeaknessValue { get; }
 
         public void MultiplyDamage(int percent)
         {
@@ -193,6 +201,61 @@ namespace Pachimon.Battle
         public int ShieldAbsorbedDamage { get; }
     }
 
+    public sealed class FieldEffectDamageAppliedEvent : BattleEvent
+    {
+        public FieldEffectDamageAppliedEvent(
+            BattleState state,
+            BattleUnitState source,
+            BattleUnitState protectedTarget,
+            BattleFieldEffectInstance targetEffect,
+            DamageOriginKind originKind,
+            int originId,
+            PachimonAttribute? attribute,
+            int appliedDamage)
+            : base(state, source, protectedTarget)
+        {
+            TargetEffect = targetEffect
+                ?? throw new ArgumentNullException(nameof(targetEffect));
+            if (originId <= 0) throw new ArgumentOutOfRangeException(nameof(originId));
+            if (appliedDamage < 0)
+                throw new ArgumentOutOfRangeException(nameof(appliedDamage));
+            OriginKind = originKind;
+            OriginId = originId;
+            Attribute = attribute;
+            AppliedDamage = appliedDamage;
+        }
+
+        public BattleUnitState ProtectedTarget => Target;
+        public BattleFieldEffectInstance TargetEffect { get; }
+        public DamageOriginKind OriginKind { get; }
+        public int OriginId { get; }
+        public PachimonAttribute? Attribute { get; }
+        public int AppliedDamage { get; }
+    }
+
+    public sealed class FieldEffectStatusAppliedEvent : BattleEvent
+    {
+        public FieldEffectStatusAppliedEvent(
+            BattleState state,
+            BattleUnitState source,
+            BattleFieldEffectInstance targetEffect,
+            BattleStatusId statusId,
+            int appliedValue)
+            : base(state, source)
+        {
+            TargetEffect = targetEffect
+                ?? throw new ArgumentNullException(nameof(targetEffect));
+            if (appliedValue <= 0)
+                throw new ArgumentOutOfRangeException(nameof(appliedValue));
+            StatusId = statusId;
+            AppliedValue = appliedValue;
+        }
+
+        public BattleFieldEffectInstance TargetEffect { get; }
+        public BattleStatusId StatusId { get; }
+        public int AppliedValue { get; }
+    }
+
     public sealed class AttackReceivedEvent : BattleEvent
     {
         public AttackReceivedEvent(
@@ -205,7 +268,8 @@ namespace Pachimon.Battle
             PachimonAttribute? attribute,
             int finalDamage,
             int appliedDamage,
-            int shieldAbsorbedDamage = 0)
+            int shieldAbsorbedDamage = 0,
+            IReadOnlyCollection<long> activeShieldApplicationOrders = null)
             : base(state, source, target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -221,6 +285,8 @@ namespace Pachimon.Battle
             FinalDamage = finalDamage;
             AppliedDamage = appliedDamage;
             ShieldAbsorbedDamage = shieldAbsorbedDamage;
+            ActiveShieldApplicationOrders = activeShieldApplicationOrders
+                ?? Array.Empty<long>();
         }
 
         public DamageOriginKind OriginKind { get; }
@@ -230,6 +296,7 @@ namespace Pachimon.Battle
         public int FinalDamage { get; }
         public int AppliedDamage { get; }
         public int ShieldAbsorbedDamage { get; }
+        public IReadOnlyCollection<long> ActiveShieldApplicationOrders { get; }
     }
 
     public sealed class AttackEvadedEvent : BattleEvent
@@ -294,7 +361,8 @@ namespace Pachimon.Battle
             PachimonAttribute? attribute,
             int finalDamage,
             int appliedDamage,
-            int shieldAbsorbedDamage)
+            int shieldAbsorbedDamage,
+            IReadOnlyDictionary<BattleStatusId, int> statusesBeforeDamage = null)
             : base(state, source, target)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -313,6 +381,8 @@ namespace Pachimon.Battle
             FinalDamage = finalDamage;
             AppliedDamage = appliedDamage;
             ShieldAbsorbedDamage = shieldAbsorbedDamage;
+            StatusesBeforeDamage = statusesBeforeDamage
+                ?? new Dictionary<BattleStatusId, int>();
         }
 
         public DamageOriginKind OriginKind { get; }
@@ -323,6 +393,14 @@ namespace Pachimon.Battle
         public int AppliedDamage { get; }
         public int ShieldAbsorbedDamage { get; }
         public int ReceivedDamage => checked(AppliedDamage + ShieldAbsorbedDamage);
+        public IReadOnlyDictionary<BattleStatusId, int> StatusesBeforeDamage { get; }
+
+        public int GetStatusValueBeforeDamage(BattleStatusId statusId)
+        {
+            return StatusesBeforeDamage.TryGetValue(statusId, out var value)
+                ? value
+                : 0;
+        }
     }
 
     public sealed class ToxinAppliedEvent : BattleEvent
@@ -452,6 +530,23 @@ namespace Pachimon.Battle
         }
 
         public SkillResolution Resolution { get; }
+    }
+
+    public sealed class MnSpentEvent : BattleEvent
+    {
+        public MnSpentEvent(
+            BattleState state,
+            BattleUnitState unit,
+            int spentValue)
+            : base(state, unit, unit)
+        {
+            if (unit == null) throw new ArgumentNullException(nameof(unit));
+            if (spentValue <= 0)
+                throw new ArgumentOutOfRangeException(nameof(spentValue));
+            SpentValue = spentValue;
+        }
+
+        public int SpentValue { get; }
     }
 
     public sealed class ChainResolvedEvent : BattleEvent

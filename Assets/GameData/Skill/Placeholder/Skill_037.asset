@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: 毒爆破
   _allocationType: 5
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 400
-  _baseManaCost: 200
-  _description: 最も多い敵の毒素を全消費し、PoisonとFireを加えたPoisonダメージを敵全体へ与える。
+  _baseManaCost: 40
+  _description: "最も{term:Toxin|毒素}が多い敵の毒素をすべて消費し、敵全体へStat由来の{icon:Poison}{color:Poison}{value:fixedDamage}{/color}に消費Valueの{value:toxinConversion}%を加えた毒ダメージを与える。"
   _toxinConversionPercent: 100
   _basePoisonPower: 50
   _poisonScalingPercent: 100

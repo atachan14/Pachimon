@@ -271,65 +271,42 @@ namespace Pachimon.Editor.UI
                 return;
             }
 
-            // Unfinished types keep Pachigidane as their temporary graphic.
-            var changed = catalog.SetAllSpeciesGraphicsForEditor(
-                pachigidaneFront,
-                pachigidaneBack);
-
-            if (pachikageFront != null && pachikageBack != null)
+            var fallbackGraphics = new Dictionary<AllocationType, (Sprite Front, Sprite Back)>
             {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Fire,
-                    pachikageFront,
-                    pachikageBack);
-            }
+                [AllocationType.Fire] = (pachikageFront, pachikageBack),
+                [AllocationType.Aqua] = (pachigameFront, pachigameBack),
+                [AllocationType.Electric] = (pachichuFront, pachichuBack),
+                [AllocationType.Poison] = (pachimushiFront, pachimushiBack),
+                [AllocationType.Ice] = (pachigooriFront, pachigooriBack),
+                [AllocationType.Wind] = (pachikazeFront, pachikazeBack),
+                [AllocationType.Dragon] = (pachidragonFront, pachidragonBack),
+            };
 
-            if (pachigameFront != null && pachigameBack != null)
+            var changed = false;
+            foreach (var definition in catalog.Species.Where(item => item != null))
             {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Aqua,
-                    pachigameFront,
-                    pachigameBack);
-            }
+                if (!TryLoadSpeciesGraphics(
+                        definition.SpeciesId,
+                        out var front,
+                        out var back))
+                {
+                    if (!fallbackGraphics.TryGetValue(
+                            definition.AllocationType,
+                            out var fallback)
+                        || fallback.Front == null
+                        || fallback.Back == null)
+                    {
+                        fallback = (pachigidaneFront, pachigidaneBack);
+                    }
 
-            if (pachichuFront != null && pachichuBack != null)
-            {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Electric,
-                    pachichuFront,
-                    pachichuBack);
-            }
+                    front = fallback.Front;
+                    back = fallback.Back;
+                }
 
-            if (pachimushiFront != null && pachimushiBack != null)
-            {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Poison,
-                    pachimushiFront,
-                    pachimushiBack);
-            }
-
-            if (pachigooriFront != null && pachigooriBack != null)
-            {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Ice,
-                    pachigooriFront,
-                    pachigooriBack);
-            }
-
-            if (pachikazeFront != null && pachikazeBack != null)
-            {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Wind,
-                    pachikazeFront,
-                    pachikazeBack);
-            }
-
-            if (pachidragonFront != null && pachidragonBack != null)
-            {
-                changed |= catalog.SetGraphicsByAllocationTypeForEditor(
-                    AllocationType.Dragon,
-                    pachidragonFront,
-                    pachidragonBack);
+                changed |= catalog.SetSpeciesGraphicsForEditor(
+                    definition.SpeciesId,
+                    front,
+                    back);
             }
 
             if (!changed)
@@ -339,8 +316,48 @@ namespace Pachimon.Editor.UI
 
             EditorUtility.SetDirty(catalog);
             Debug.Log(
-                "Available Pachimon graphics were assigned by Allocation Type.",
+                "Available species graphics and type placeholders were assigned.",
                 catalog);
+        }
+
+        private static bool TryLoadSpeciesGraphics(
+            int speciesId,
+            out Sprite front,
+            out Sprite back)
+        {
+            front = null;
+            back = null;
+            const string artFolder = "Assets/Art/Pachimon";
+            var folderPrefix = $"Species{speciesId:D3}_";
+            var speciesFolder = Directory
+                .GetDirectories(artFolder, folderPrefix + "*", SearchOption.TopDirectoryOnly)
+                .OrderBy(path => path)
+                .FirstOrDefault();
+            if (string.IsNullOrEmpty(speciesFolder))
+            {
+                return false;
+            }
+
+            var frontPath = Directory
+                .GetFiles(speciesFolder, "*_front.png", SearchOption.TopDirectoryOnly)
+                .OrderBy(path => path)
+                .FirstOrDefault();
+            var backPath = Directory
+                .GetFiles(speciesFolder, "*_back.png", SearchOption.TopDirectoryOnly)
+                .OrderBy(path => path)
+                .FirstOrDefault();
+            if (string.IsNullOrEmpty(frontPath) || string.IsNullOrEmpty(backPath))
+            {
+                return false;
+            }
+
+            frontPath = frontPath.Replace('\\', '/');
+            backPath = backPath.Replace('\\', '/');
+            PrepareIllustrationSprite(frontPath);
+            PrepareIllustrationSprite(backPath);
+            front = AssetDatabase.LoadAssetAtPath<Sprite>(frontPath);
+            back = AssetDatabase.LoadAssetAtPath<Sprite>(backPath);
+            return front != null && back != null;
         }
 
         private static void PrepareIllustrationSprite(string assetPath)

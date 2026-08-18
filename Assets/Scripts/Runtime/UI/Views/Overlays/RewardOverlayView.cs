@@ -103,11 +103,18 @@ namespace Pachimon.UI
         private const float RewardButtonCloseDuration = 0.22f;
         private const float SelectionOpenDuration = 0.25f;
         private const float SelectionCloseDuration = 0.38f;
+        private static readonly Color RewardButtonColor =
+            new Color32(45, 57, 61, 255);
+        private static readonly Color EnabledTargetColor =
+            new Color32(225, 235, 218, 255);
+        private static readonly Color DisabledTargetColor =
+            new Color32(175, 178, 175, 255);
 
         [field: SerializeField] public TMP_Text TitleText { get; private set; }
         [field: SerializeField] public TMP_Text BodyText { get; private set; }
 
         private readonly Dictionary<BattleRewardSlot, Button> _rewardButtons = new();
+        private readonly List<TargetButtonBinding> _targetButtons = new();
         private RectTransform _runtimeRoot;
         private RectTransform _buttonContainer;
         private RectTransform _selectionRoot;
@@ -120,6 +127,20 @@ namespace Pachimon.UI
         private int _selectedChoiceId;
         private int _claimedCount;
         private bool _isClosing;
+
+        private sealed class TargetButtonBinding
+        {
+            public TargetButtonBinding(Button button, Image graphic, TMP_Text label)
+            {
+                Button = button;
+                Graphic = graphic;
+                Label = label;
+            }
+
+            public Button Button { get; }
+            public Image Graphic { get; }
+            public TMP_Text Label { get; }
+        }
 
         public void Initialize(TMP_Text titleText, TMP_Text bodyText)
         {
@@ -134,7 +155,7 @@ namespace Pachimon.UI
             _isClosing = false;
             gameObject.SetActive(true);
             EnsureRuntimeRoot();
-            RebuildMainContent();
+            PrepareMainContent();
             StartCoroutine(AnimateOpen());
         }
 
@@ -187,11 +208,39 @@ namespace Pachimon.UI
             Stretch(_runtimeRoot, new Vector2(28f, 24f), new Vector2(-28f, -24f));
         }
 
-        private void RebuildMainContent()
+        private void PrepareMainContent()
         {
-            ClearChildren(_runtimeRoot);
+            if (_buttonContainer == null)
+            {
+                BuildMainContent();
+            }
+
+            if (_selectionRoot != null)
+            {
+                _selectionRoot.gameObject.SetActive(false);
+                Destroy(_selectionRoot.gameObject);
+                _selectionRoot = null;
+                _targetButtons.Clear();
+            }
+
+            SetButtonLabel(
+                _rewardButtons[BattleRewardSlot.Gold],
+                $"Gold  +{_content.Gold}");
+            SetButtonLabel(
+                _rewardButtons[BattleRewardSlot.Secondary],
+                _content.UsesBadge ? "バッジ" : "ステータス");
+            foreach (var button in _rewardButtons.Values)
+            {
+                button.gameObject.SetActive(true);
+                button.interactable = true;
+                button.transform.localScale = Vector3.one;
+                button.transform.localRotation = Quaternion.identity;
+            }
+        }
+
+        private void BuildMainContent()
+        {
             _rewardButtons.Clear();
-            _selectionRoot = null;
 
             TitleText = CreateText(
                 "RewardTitle",
@@ -255,7 +304,7 @@ namespace Pachimon.UI
                 _buttonContainer,
                 label,
                 action,
-                new Color32(45, 57, 61, 255),
+                RewardButtonColor,
                 Color.white);
             var layout = button.gameObject.AddComponent<LayoutElement>();
             layout.preferredHeight = 58f;
@@ -287,6 +336,7 @@ namespace Pachimon.UI
 
         private void BuildSelectionWindow()
         {
+            _targetButtons.Clear();
             var selectionObject = new GameObject(
                 "RewardSelectionWindow",
                 typeof(RectTransform),
@@ -415,40 +465,76 @@ namespace Pachimon.UI
 
         private void RebuildTargetGrid()
         {
-            ClearChildren(_targetGrid);
-            foreach (var target in _content.Targets)
+            foreach (var binding in _targetButtons)
             {
-                var capturedTarget = target;
+                binding.Button.gameObject.SetActive(false);
+            }
+
+            for (var index = 0; index < _content.Targets.Count; index++)
+            {
+                var target = _content.Targets[index];
                 var canGrant = _selectedChoiceId > 0
                     && _content.CanGrant?.Invoke(
                         _selectionKind,
                         _selectedChoiceId,
                         target.InstanceId) == true;
-                var button = CreateButton(
-                    $"RewardTarget{target.InstanceId}",
-                    _targetGrid,
-                    target.DisplayName,
-                    () => GrantToTarget(capturedTarget),
-                    canGrant
-                        ? new Color32(225, 235, 218, 255)
-                        : new Color32(175, 178, 175, 255),
-                    Color.black);
-                button.interactable = canGrant;
-                var graphic = CreatePachimonGraphic(button.transform, target.FrontSprite, 116f);
-                graphic.transform.SetAsFirstSibling();
-
-                var layout = button.gameObject.AddComponent<VerticalLayoutGroup>();
-                layout.padding = new RectOffset(6, 6, 8, 8);
-                layout.spacing = 4f;
-                layout.childAlignment = TextAnchor.MiddleCenter;
-                layout.childControlWidth = true;
-                layout.childControlHeight = true;
-                layout.childForceExpandWidth = true;
-                layout.childForceExpandHeight = false;
-
-                var label = button.GetComponentInChildren<TMP_Text>();
-                label.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+                var binding = GetOrCreateTargetButton(index);
+                BindTargetButton(binding, target, canGrant);
             }
+        }
+
+        private TargetButtonBinding GetOrCreateTargetButton(int index)
+        {
+            while (_targetButtons.Count <= index)
+            {
+                _targetButtons.Add(CreateTargetButton(_targetButtons.Count));
+            }
+
+            return _targetButtons[index];
+        }
+
+        private TargetButtonBinding CreateTargetButton(int index)
+        {
+            var button = CreateButton(
+                $"RewardTarget_{index + 1}",
+                _targetGrid,
+                string.Empty,
+                null,
+                DisabledTargetColor,
+                Color.black);
+            var graphic = CreatePachimonGraphic(button.transform, null, 116f);
+            graphic.transform.SetAsFirstSibling();
+
+            var layout = button.gameObject.AddComponent<VerticalLayoutGroup>();
+            layout.padding = new RectOffset(6, 6, 8, 8);
+            layout.spacing = 4f;
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = false;
+
+            var label = button.GetComponentInChildren<TMP_Text>();
+            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+            return new TargetButtonBinding(button, graphic, label);
+        }
+
+        private void BindTargetButton(
+            TargetButtonBinding binding,
+            RewardTargetPachimonContent target,
+            bool canGrant)
+        {
+            binding.Button.gameObject.name = $"RewardTarget{target.InstanceId}";
+            binding.Button.gameObject.SetActive(true);
+            binding.Button.interactable = canGrant;
+            binding.Button.targetGraphic.color = canGrant
+                ? EnabledTargetColor
+                : DisabledTargetColor;
+            binding.Graphic.sprite = target.FrontSprite;
+            binding.Graphic.enabled = target.FrontSprite != null;
+            binding.Label.text = target.DisplayName;
+            binding.Button.onClick.RemoveAllListeners();
+            binding.Button.onClick.AddListener(() => GrantToTarget(target));
         }
 
         private void GrantToTarget(RewardTargetPachimonContent target)
@@ -551,6 +637,7 @@ namespace Pachimon.UI
             }
 
             Destroy(closingRoot.gameObject);
+            _targetButtons.Clear();
             StartCoroutine(AnimateRewardButtonClaim(_rewardButtons[slot]));
         }
 
@@ -791,18 +878,17 @@ namespace Pachimon.UI
             return button;
         }
 
-        private static void ClearChildren(Transform parent)
+        private static void SetButtonLabel(Button button, string label)
         {
-            if (parent == null)
+            if (button == null)
             {
                 return;
             }
 
-            for (var index = parent.childCount - 1; index >= 0; index--)
+            var text = button.GetComponentInChildren<TMP_Text>(true);
+            if (text != null)
             {
-                var child = parent.GetChild(index);
-                child.gameObject.SetActive(false);
-                Destroy(child.gameObject);
+                text.text = label ?? string.Empty;
             }
         }
 

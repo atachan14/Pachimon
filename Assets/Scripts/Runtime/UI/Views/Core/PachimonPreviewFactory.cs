@@ -17,7 +17,8 @@ namespace Pachimon.UI
             PachimonCatalog pachimonCatalog,
             SkillCatalog skillCatalog,
             PassiveCatalog passiveCatalog,
-            PassiveStatModifierRegistry passiveStatModifierRegistry)
+            PassiveStatModifierRegistry passiveStatModifierRegistry,
+            bool includeTrainerResourceIncrease = false)
         {
             if (instance?.Stats == null)
             {
@@ -26,16 +27,32 @@ namespace Pachimon.UI
 
             var definition = pachimonCatalog?.Get(instance.SpeciesId);
             var stats = PachimonStatService.Calculate(
-                instance.Stats,
+                instance,
                 modifiers,
-                instance.PassiveIds,
                 passiveStatModifierRegistry);
+            var currentHp = Math.Min(instance.CurrentHp, stats.MaxHp);
+            var currentMn = Math.Min(instance.CurrentMn, stats.MaxMn);
+            if (includeTrainerResourceIncrease)
+            {
+                var unmodifiedStats = PachimonStatService.Calculate(
+                    instance,
+                    null,
+                    passiveStatModifierRegistry);
+                currentHp = EnemyTrainerScalingService.PreserveMissingResource(
+                    instance.CurrentHp,
+                    unmodifiedStats.MaxHp,
+                    stats.MaxHp);
+                currentMn = EnemyTrainerScalingService.PreserveMissingResource(
+                    instance.CurrentMn,
+                    unmodifiedStats.MaxMn,
+                    stats.MaxMn);
+            }
             return Create(
                 instance.SpeciesId,
                 definition,
-                Math.Min(instance.CurrentHp, stats.MaxHp),
+                currentHp,
                 0,
-                Math.Min(instance.CurrentMn, stats.MaxMn),
+                currentMn,
                 stats,
                 instance.SkillIds,
                 instance.PassiveIds,
@@ -68,7 +85,7 @@ namespace Pachimon.UI
                 passiveCatalog,
                 unit.Statuses
                     .Where(status => status.IsVisible)
-                    .Select(status => status.DisplayName));
+                    .Select(status => new PachimonStatusPreview(status)));
         }
 
         private static PachimonPreviewContent Create(
@@ -82,13 +99,18 @@ namespace Pachimon.UI
             IEnumerable<int> passiveIds,
             SkillCatalog skillCatalog,
             PassiveCatalog passiveCatalog,
-            IEnumerable<string> statusEffects)
+            IEnumerable<PachimonStatusPreview> statusEffects)
         {
             var skills = skillIds
-                .Select(skillId => new PachimonAbilityPreview(
-                    PachimonAbilityKind.Skill,
-                    skillId,
-                    skillCatalog?.Get(skillId)?.DisplayName ?? $"Skill #{skillId}"))
+                .Select(skillId =>
+                {
+                    var skill = skillCatalog?.Get(skillId);
+                    return new PachimonAbilityPreview(
+                        PachimonAbilityKind.Skill,
+                        skillId,
+                        skill?.DisplayName ?? $"Skill #{skillId}",
+                        skill);
+                })
                 .ToArray();
             return new PachimonPreviewContent(
                 definition?.FrontSprite,
@@ -99,7 +121,7 @@ namespace Pachimon.UI
                 currentMn,
                 stats.MaxMn,
                 BuildStatPreviews(stats),
-                statusEffects?.ToArray() ?? Array.Empty<string>(),
+                statusEffects?.ToArray() ?? Array.Empty<PachimonStatusPreview>(),
                 skills,
                 passiveIds.Select(passiveId => new PachimonAbilityPreview(
                     PachimonAbilityKind.Passive,

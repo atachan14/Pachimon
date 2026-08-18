@@ -2,7 +2,7 @@
 
 ## Pachimon
 
-### [Pachimon名]1
+### パチムシ
 #### 既存共通Skill：どくばり
 
 - Status: `Implemented`
@@ -22,12 +22,12 @@ PoisonScalingPercent = 100%
 `BaseToxinValue / PoisonScalingPercent`はSOで調整可能にする。
 
 
-### [Pachimon名]2
+### シンケイド
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `13`
+- モチーフ: 神経回路が発光するムカデ型の毒獣
+- 狙い: PoisonとElectricからStunと毒素を同時に与える妨害型
 
 #### Fixed Skill
 
@@ -114,12 +114,12 @@ DecayWork += TickAmount
 
 
 
-### [Pachimon名]3
+### スモッグン
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `21`
+- モチーフ: 背中の実験槽でスモッグを作る研究獣
+- 狙い: 敵陣へ継続的に毒素を撒き、生成物を強化する展開型
 
 #### Fixed Skill
 
@@ -169,12 +169,12 @@ DecayWork += TickAmount
 - 生成物固有のValue計算後、フィールドへ追加する直前に適用する
 - `PoisonScalingPercent = 30`をSOで調整可能にする
 
-### [Pachimon名]4
+### ドクハコビ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `29`
+- モチーフ: 天秤棒で二つの毒壺を運ぶ俊足獣
+- 狙い: 敵同士で毒素を移し替え、PoisonからSpeedを得る操作型
 
 #### Fixed Skill
 
@@ -208,12 +208,12 @@ Speed加算値
 - 全ての非派生加算補正後のPoisonを参照する
 - `Percent = 30 / MinimumContribution = 0`をSOで調整可能にする
 
-### [Pachimon名]5
+### バクドクガ
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `37`
+- モチーフ: 火種の腹と毒袋を持つ爆発蛾
+- 狙い: 蓄積した毒素を炎とPoisonで爆破する全体攻撃型
 
 #### Fixed Skill
 
@@ -251,25 +251,26 @@ Poison加算値
 - 全ての非派生加算補正後のFireを参照する
 - `Percent = 100 / MinimumContribution = 0`をSOで調整可能にする
 
-### [Pachimon名]6
+### ドクナイト
 
 - Status: `Implemented`
-- Species ID:
-- モチーフ:
-- 狙い:
+- Species ID: `45`
+- モチーフ: 毒液の甲羅と注射槍を備えた重装騎士獣
+- 狙い: 自身を解毒しながらShieldを張り、味方にも防御を共有する支援型
 
 #### Fixed Skill
 
 - 名前:ポイズンシールド
 - 効果:自身に毒依存のシールドを付与する。
 また、自身に付与されている毒素を毒依存の割合で減少させる（回復効果）。
+- Shield効果時間: `200tick`
 
 ```text
 ShieldValue
-= 300 × AmplificationMultiplier(Poison × 100%)
+= 100 × AmplificationMultiplier(Poison × 100%)
 
 毒素減少率
-= 50% × AmplificationMultiplier(Poison × 100%)
+= 30% × AmplificationMultiplier(Poison × 100%)
 
 毒素減少Value
 = floor(CurrentToxin × 毒素減少率)
@@ -306,5 +307,52 @@ PoisonScalingPercent = 100%
 - 共有によって発生したShield・回復効果から、別の`毒の騎士`を再発動させない
 - Battle中のItemによるHP回復も発動条件に含む
 - `BaseSharePercent / PoisonScalingPercent`はSOで調整可能にする
+
+### キリマジョ
+
+- Status: `Implemented`
+- 実装ID: Skill / Passive `53`
+- モチーフ: 薬雫を吊るした毒霧の浮遊魔術獣
+
+#### Fixed Skill: 毒の霧
+自陣に[効果時間=水 * 75% + 風 * 25% , value = 100 * 毒参照 ]の毒の霧を生成する。
+
+[毒の霧]
+味方がvalue以下の軽減前ダメージを受けるとき、回避する。
+
+- 効果時間は`floor(Aqua * 75% + Wind * 25%)`、最低`1tick`
+- Valueは`floor(100 * AmplificationMultiplier(Poison * 100%))`
+- 属性・確定ダメージを問わず、敵PachimonのSkill攻撃をShield判定前に回避する
+- Self / Status / Field由来のダメージは回避しない
+- 再生成時は統合せず、各`毒の霧`が独立したValueと効果時間を持つ
+
+#### Passive: 毒の魔術師
+自身のskillで毒以外のダメージを与えるたびに、自身の毒を20増加する。
+
+- 7属性のSkillダメージが実際にHPまたはShieldへ1以上適用されたHitごとに発動する
+- Poison / True / Status / Field / Selfダメージでは発動しない
+- 全体攻撃では、条件を満たした対象数だけ発動する
+
+### サキドク
+
+- Status: `Implemented`
+- 実装ID: Skill / Passive `61`
+- モチーフ: 葉刃を構えて初撃を狙う伏撃獣
+
+#### Fixed Skill: ファーストタッチ
+先頭の敵に75 * 毒参照の毒ダメージを与える。
+対象のHPが100%未満だった場合、50 * 毒参照の毒素を与える。
+対象のHPが100%だった場合、追加で300 * 毒参照のダメージと150 * 毒参照の毒素を与える。
+
+- HP100%判定とPoisonはSkill解決開始時の値を使用する
+- 基本Hitで戦闘不能になった場合は追加Hitを行わない
+- 追加ダメージは独立した2Hit目とし、2Hit目が回避された場合は毒素も付与しない
+
+#### Passive: ラストタッチ
+自身のSkillでダメージを与えたとき、対象のHPが毒 * 4%以下なら戦闘不能にする（残りHP分の確定ダメージを追加で与える）。
+
+- 例：Poison`100`なら最大HPの`4%`、Poison`250`なら`10%`が閾値
+- HP判定は各Skillダメージ適用後に行う
+- 処刑ダメージはShieldを消費せず、対象の残りHPへ直接適用する
 
 ## Ideas

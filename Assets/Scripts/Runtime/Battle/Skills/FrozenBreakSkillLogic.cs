@@ -32,6 +32,7 @@ namespace Pachimon.Battle
         private SkillResolution ResolveAttack(SkillExecutionContext context)
         {
             var target = context.Targets.GetFrontEnemy();
+            var hit = context.BeginAttackHit(target);
             var damage = context.ScaleFromAttribute(
                 _skill.BaseIceDamage,
                 PachimonAttribute.Ice,
@@ -48,10 +49,10 @@ namespace Pachimon.Battle
                     target.GetBattleStats(),
                     PachimonAttribute.Ice,
                     isAttack: true,
-                    applyAttackerAttributeMultiplier: false));
+                    applyAttackerAttributeMultiplier: false),
+                hit);
             var duration = CalculateDuration(context);
-            context.State.Statuses.ApplyAttackStatus(
-                result.ActualTarget,
+            hit.ApplyStatus(
                 new BattleStatusInstance(
                     BattleStatusId.Freeze,
                     BattleStatusCategory.Stun,
@@ -67,7 +68,8 @@ namespace Pachimon.Battle
                     new SkillEffectResult(
                         result.ActualTarget,
                         result.AppliedDamage,
-                        isTrueDamage: false),
+                        isTrueDamage: false,
+                        hit: hit),
                 });
         }
 

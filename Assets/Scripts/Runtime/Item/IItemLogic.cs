@@ -2,8 +2,14 @@ namespace Pachimon.Items
 {
     public interface IItemLogic
     {
-        ItemUseFailureReason CanUse(ItemAsset item, ItemUseContext context);
+        ItemUseFailureReason CanUse(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context);
 
-        int Apply(ItemAsset item, ItemUseContext context);
+        int Apply(
+            ItemAsset item,
+            ItemInstance itemInstance,
+            ItemUseContext context);
     }
 }

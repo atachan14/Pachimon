@@ -3,6 +3,18 @@ using System.Linq;
 
 namespace Pachimon.Battle
 {
+    public readonly struct ShieldApplicationPlan
+    {
+        public ShieldApplicationPlan(decimal value, decimal? durationTicks)
+        {
+            Value = value;
+            DurationTicks = durationTicks;
+        }
+
+        public decimal Value { get; }
+        public decimal? DurationTicks { get; }
+    }
+
     public sealed class BattleSupportEffectRuntime
     {
         private readonly BattleState _state;
@@ -23,6 +35,18 @@ namespace Pachimon.Battle
             if (source != null) ValidateUnit(source, nameof(source));
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
 
+            var plan = _state.Passives.ModifyShield(
+                _state,
+                source,
+                target,
+                new ShieldApplicationPlan(value, durationTicks));
+            value = Pachimon.Run.SignedStatMath.FloorNonNegative(plan.Value);
+            durationTicks = plan.DurationTicks.HasValue
+                ? Math.Max(1, Pachimon.Run.SignedStatMath.CeilPositive(
+                    plan.DurationTicks.Value))
+                : null;
+            if (value <= 0)
+                throw new InvalidOperationException("Modified Shield value must be positive.");
             var shield = target.AddShield(value, durationTicks);
             _state.Events.Publish(new ShieldAppliedEvent(
                 _state,
@@ -32,6 +56,14 @@ namespace Pachimon.Battle
                 durationTicks,
                 isSharedEffect));
             return shield;
+        }
+
+        public int RemoveAllShields(BattleUnitState target)
+        {
+            ValidateUnit(target, nameof(target));
+            return checked(
+                target.RemoveAllShields()
+                + _state.Fields.RemoveShieldEffects(target.Side));
         }
 
         public int RestoreHp(

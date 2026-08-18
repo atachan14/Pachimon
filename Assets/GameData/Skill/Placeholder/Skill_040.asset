@@ -16,10 +16,10 @@ MonoBehaviour:
   _displayName: "\u30C9\u30E9\u30B4\u30F3\u30D6\u30EC\u30A4\u30AF"
   _allocationType: 8
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 120
-  _baseCooldownTicks: 350
-  _baseManaCost: 100
-  _description: "\u5148\u982D\u306E\u6575\u306EShield\u3092\u5168\u3066\u7834\u58CA\u3057\u3066\u3001Dragon
-    Damage\u3092\u4E0E\u3048\u308B\u3002"
-  _baseDragonDamage: 100
+  _baseCooldownTicks: 300
+  _baseManaCost: 30
+  _description: "\u5148\u982D\u306E\u6575\u306EShield\u3092\u3059\u3079\u3066\u7834\u58CA\u3057\u3001{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E{term:DragonDamage|\u7ADC\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002"
+  _baseDragonDamage: 150
   _dragonDamageRatio: 100

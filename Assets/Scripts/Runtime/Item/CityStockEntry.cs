@@ -9,15 +9,23 @@ namespace Pachimon.Items
             int itemId,
             int basePrice,
             int price)
+            : this(
+                stockId,
+                new GeneratedItemData(itemId),
+                basePrice,
+                price)
+        {
+        }
+
+        public CityStockEntry(
+            string stockId,
+            GeneratedItemData generatedData,
+            int basePrice,
+            int price)
         {
             if (string.IsNullOrWhiteSpace(stockId))
             {
                 throw new ArgumentException("Stock ID is required.", nameof(stockId));
-            }
-
-            if (itemId <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(itemId));
             }
 
             if (basePrice <= 0)
@@ -31,13 +39,15 @@ namespace Pachimon.Items
             }
 
             StockId = stockId;
-            ItemId = itemId;
+            GeneratedData = generatedData
+                ?? throw new ArgumentNullException(nameof(generatedData));
             BasePrice = basePrice;
             Price = price;
         }
 
         public string StockId { get; }
-        public int ItemId { get; }
+        public GeneratedItemData GeneratedData { get; }
+        public int ItemId => GeneratedData.ItemId;
         public int BasePrice { get; }
         public int Price { get; }
         public bool IsPurchased { get; private set; }

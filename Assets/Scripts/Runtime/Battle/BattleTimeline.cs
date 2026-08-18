@@ -13,6 +13,7 @@ namespace Pachimon.Battle
         private readonly BattleState _state;
         private readonly Queue<BattleUnitState> _sameTickQueue = new();
         private BattleUnitState _currentActor;
+        private BattleUnitState _priorityNextActor;
 
         internal BattleTimeline(
             BattleState state,
@@ -46,6 +47,23 @@ namespace Pachimon.Battle
             if (_state.EvaluateOutcome() != BattleOutcome.Undecided)
             {
                 return false;
+            }
+
+            if (_priorityNextActor != null)
+            {
+                var priorityActor = _priorityNextActor;
+                _priorityNextActor = null;
+                if (priorityActor.IsAlive
+                    && !priorityActor.Timing.IsPaused
+                    && priorityActor.Timing.IsComplete
+                    && IsTurnClockPhase(priorityActor.Timing.Phase))
+                {
+                    priorityActor.Timing.MarkReady();
+                    priorityActor.NotifyBattleContextChanged();
+                    _currentActor = priorityActor;
+                    actor = priorityActor;
+                    return true;
+                }
             }
 
             while (true)
@@ -109,7 +127,8 @@ namespace Pachimon.Battle
         public int BeginStartup(
             BattleUnitState actor,
             int usedSkillSlotId,
-            BattleSkillTimingPlan timing)
+            BattleSkillTimingPlan timing,
+            string actionName = null)
         {
             ValidateCurrentActor(actor, usedSkillSlotId);
             if (timing.StartupWork <= 0m)
@@ -120,7 +139,7 @@ namespace Pachimon.Battle
             }
 
             StartCooldown(actor, usedSkillSlotId, timing.CooldownWork);
-            actor.Timing.BeginStartup(timing.StartupWork);
+            actor.Timing.BeginStartup(timing.StartupWork, actionName);
             actor.NotifyBattleContextChanged();
             _currentActor = null;
             return actor.GetActionRemainingTicks();
@@ -129,18 +148,28 @@ namespace Pachimon.Battle
         public void CompleteImmediateAction(
             BattleUnitState actor,
             int usedSkillSlotId,
-            BattleSkillTimingPlan timing)
+            BattleSkillTimingPlan timing,
+            bool continueTurn = false,
+            string actionName = null)
         {
             ValidateCurrentActor(actor, usedSkillSlotId);
             StartCooldown(actor, usedSkillSlotId, timing.CooldownWork);
-            CompleteRecovery(actor, timing.RecoveryWork);
+            CompleteRecovery(
+                actor,
+                continueTurn ? 0m : timing.RecoveryWork,
+                actionName);
+            if (continueTurn)
+            {
+                _priorityNextActor = actor;
+            }
             _currentActor = null;
             _state.EvaluateOutcome();
         }
 
         public void CompleteDelayedAction(
             BattleUnitState actor,
-            BattleSkillTimingPlan timing)
+            BattleSkillTimingPlan timing,
+            bool continueTurn = false)
         {
             if (actor == null) throw new ArgumentNullException(nameof(actor));
             if (_currentActor != null)
@@ -149,7 +178,14 @@ namespace Pachimon.Battle
                     "A delayed action cannot resolve during an active turn.");
             }
 
-            CompleteRecovery(actor, timing.RecoveryWork);
+            CompleteRecovery(
+                actor,
+                continueTurn ? 0m : timing.RecoveryWork,
+                actor.Timing.CurrentActionName);
+            if (continueTurn)
+            {
+                _priorityNextActor = actor;
+            }
             _state.EvaluateOutcome();
         }
 
@@ -198,9 +234,10 @@ namespace Pachimon.Battle
 
         private static void CompleteRecovery(
             BattleUnitState actor,
-            decimal recoveryWork)
+            decimal recoveryWork,
+            string actionName)
         {
-            actor.Timing.BeginRecovery(recoveryWork);
+            actor.Timing.BeginRecovery(recoveryWork, actionName);
             actor.NotifyBattleContextChanged();
         }
 

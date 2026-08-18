@@ -11,6 +11,7 @@ namespace Pachimon.Skills
         [SerializeField] private string _displayName;
         [SerializeField] private AllocationType _allocationType;
         [SerializeField] private bool _isMapAssignable;
+        [SerializeField, Min(0)] private int _baseStartupTicks;
         [SerializeField, Min(0)] private int _baseRecoveryTicks;
         [SerializeField, Min(0)] private int _baseCooldownTicks;
         [SerializeField, Min(0)] private int _baseManaCost;
@@ -20,7 +21,7 @@ namespace Pachimon.Skills
         public string DisplayName => _displayName;
         public AllocationType AllocationType => _allocationType;
         public bool IsMapAssignable => _isMapAssignable;
-        public virtual int BaseStartupTicks => 0;
+        public int BaseStartupTicks => _baseStartupTicks;
         public int BaseRecoveryTicks => _baseRecoveryTicks;
         public int BaseCooldownTicks => _baseCooldownTicks;
         public virtual int BaseManaCost => _baseManaCost;
@@ -64,6 +65,16 @@ namespace Pachimon.Skills
         }
 
 #if UNITY_EDITOR
+        public void SetDescriptionTemplateForEditor(string descriptionTemplate)
+        {
+            _description = descriptionTemplate ?? string.Empty;
+        }
+
+        protected void SetBaseStartupTicksForEditor(int baseStartupTicks)
+        {
+            _baseStartupTicks = baseStartupTicks;
+        }
+
         public void ConfigureForEditor(
             int skillId,
             string displayName,
@@ -72,12 +83,14 @@ namespace Pachimon.Skills
             int baseRecoveryTicks,
             int baseCooldownTicks,
             string description,
-            int baseManaCost = 0)
+            int baseManaCost = 0,
+            int baseStartupTicks = 100)
         {
             _skillId = skillId;
             _displayName = displayName;
             _allocationType = allocationType;
             _isMapAssignable = isMapAssignable;
+            _baseStartupTicks = baseStartupTicks;
             _baseRecoveryTicks = baseRecoveryTicks;
             _baseCooldownTicks = baseCooldownTicks;
             _baseManaCost = baseManaCost;

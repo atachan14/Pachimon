@@ -16,10 +16,11 @@ MonoBehaviour:
   _displayName: セカンドウィンド
   _allocationType: 7
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 400
-  _baseManaCost: 100
-  _description: Wind参照のShieldを得て、200tickの間Windが0になる。
+  _baseManaCost: 30
+  _description: "自身に{color:Wind}{value:shield}{/color}のShieldを付与し、{value:duration}tickの間{term:StillAir|無風}になって風を0にする。"
   _windShieldRatio: 200
   _durationTicks: 200
   _stillAirStatus: {fileID: 11400000, guid: 036a03906eb94f02a0fee340f14c0155, type: 2}

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f56221417d7a9ff4d8a54777973775a1, type: 3}
+  m_Name: Item_210_Equipment_Body_Leaf
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.EquipmentItemAsset
+  _itemId: 210
+  _displayName: "\u8349\u306E\u52FE\u7389"
+  _icon: {fileID: 0}
+  _description: "\u8349\u5C5E\u6027\u3092\u4E3B\u52B9\u679C\u3068\u3059\u308B\u52FE\u7389\u3002"
+  _category: 4
+  _basePrice: 2000
+  _slot: 1
+  _mainAttribute: 2

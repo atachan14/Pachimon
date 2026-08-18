@@ -96,7 +96,7 @@ RewardElementの仮配色:
 | Speed | `#8E63CE` |
 | MaxHp | `#F4F4EF` |
 | MaxMn | `#5EC4D6` |
-| BonusGold | `#E59A23` |
+| BonusGold | `#FF8A00` |
 | DamageBonus | `#252A30` |
 | ResistBonus | `#A7B5C0` |
 

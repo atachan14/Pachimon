@@ -6,7 +6,7 @@ namespace Pachimon.Battle
 {
     public sealed class BasicAttributeDamageSkillLogic : ISkillLogic
     {
-        public const int BaseDamage = 100;
+        public const int BaseDamage = 150;
         private readonly PachimonAttribute _attribute;
 
         public BasicAttributeDamageSkillLogic(PachimonAttribute attribute)
@@ -18,6 +18,7 @@ namespace Pachimon.Battle
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
             var target = GetFrontTarget(context);
+            var hit = context.BeginAttackHit(target);
             var result = BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
@@ -29,7 +30,8 @@ namespace Pachimon.Battle
                     context.User.GetBattleStats(),
                     target.GetBattleStats(),
                     _attribute,
-                    isAttack: true));
+                    isAttack: true),
+                hit);
             return new SkillResolution(
                 context.User,
                 context.Skill,
@@ -38,7 +40,8 @@ namespace Pachimon.Battle
                     new SkillEffectResult(
                         result.ActualTarget,
                         result.AppliedDamage,
-                        isTrueDamage: false),
+                        isTrueDamage: false,
+                        hit: hit),
                 });
         }
 
@@ -84,8 +87,7 @@ namespace Pachimon.Battle
                         scalingPercent)));
             if (toxinValue > 0)
             {
-                context.State.Statuses.ApplyAttackStatus(
-                    target,
+                resolution.Effects[0].Hit.ApplyStatus(
                     BattleStatusFactory.CreateToxin(
                         context.User,
                         toxinValue,
@@ -109,8 +111,7 @@ namespace Pachimon.Battle
 
             var resolution = _damageLogic.Resolve(context);
             var target = resolution.Effects[0].Target;
-            context.State.Statuses.ApplyAttackStatus(
-                target,
+            resolution.Effects[0].Hit.ApplyStatus(
                 BattleStatusFactory.CreateSlow(
                     context.User,
                     ElectricShockMath.CalculateSlowValue(
@@ -169,8 +170,7 @@ namespace Pachimon.Battle
 
             var resolution = _damageLogic.Resolve(context);
             var target = resolution.Effects[0].Target;
-            context.State.Statuses.ApplyAttackStatus(
-                target,
+            resolution.Effects[0].Hit.ApplyStatus(
                 BattleStatusFactory.CreateSlow(
                     context.User,
                     ColdHandMath.CalculateChillValue(

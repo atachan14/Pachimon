@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: 冷たい手
   _allocationType: 6
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 200
   _description: v0.3 basic attribute damage Skill placeholder.

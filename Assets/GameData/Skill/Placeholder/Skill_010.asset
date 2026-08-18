@@ -9,15 +9,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a0100000000000000000000000000001, type: 3}
+  m_Script: {fileID: 11500000, guid: 8024d50e1a91f5d41be316236bb471a5, type: 3}
   m_Name: Skill_010
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.WaterPulseSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.WaterPulseReplacementSkillAsset
   _skillId: 10
-  _displayName: 水の波動
+  _displayName: "\u6C34\u306E\u6CE2\u52D5"
   _allocationType: 2
   _isMapAssignable: 1
+  _baseStartupTicks: 100
   _baseRecoveryTicks: 150
   _baseCooldownTicks: 300
   _baseManaCost: 0
-  _description: CurrentMNをすべて消費し、消費量とAquaに応じたAqua Damageを先頭の敵へ与える。
+  _description: "MaxMN\u306E4%\u3092\u6D88\u8CBB\u3057\u3001\u6D88\u8CBBMN\u306E3\u500D\u3092\u57FA\u790E\u5024\u3068\u3059\u308BAqua
+    Damage\u3092\u5148\u982D\u306E\u6575\u3078\u4E0E\u3048\u308B\u3002"
+  _maxMnCostPercent: 4
+  _damagePerMana: 3
   _aquaDamageRatio: 100

@@ -62,8 +62,8 @@ GymはModを持たず、第2枠をBadgeへ置き換える。
 | Element | FirstElement | SecondElement |
 | --- | ---: | ---: |
 | 8属性 | +60 | +30 |
-| MaxHP | +500 | +250 |
-| MaxMN | +500 | +250 |
+| MaxHP | +100 | +50 |
+| MaxMN | +100 | +50 |
 | Speed | +20 | +10 |
 | DamageBonus | +20 | +10 |
 | ResistBonus | +20 | +10 |

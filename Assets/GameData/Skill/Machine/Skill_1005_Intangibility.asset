@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5cee5983baf706a4aadfe504abd40caa, type: 3}
+  m_Name: Skill_1005_Intangibility
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.IntangibilitySkillAsset
+  _skillId: 1005
+  _displayName: "\u7121\u5F62\u5316"
+  _allocationType: 0
+  _isMapAssignable: 0
+  _baseStartupTicks: 200
+  _baseRecoveryTicks: 0
+  _baseCooldownTicks: 600
+  _baseManaCost: 0
+  _description: "\u767A\u751F\u4E2D\u3001\u53D7\u3051\u308B\u6B63\u306EDamage\u3092\u3059\u3079\u30661\u306B\u3059\u308B\u3002"
+  _status: {fileID: 11400000, guid: f3cb75e9379cb604a8fd27e85ef66d06, type: 2}

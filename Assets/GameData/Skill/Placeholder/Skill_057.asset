@@ -9,13 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 1ac6c7af6f1edb643952b1bbd391b537, type: 3}
   m_Name: Skill_057
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.EvaporationSkillAsset
   _skillId: 57
-  _displayName: ひのこ
+  _displayName: "\u84B8\u767A"
   _allocationType: 1
   _isMapAssignable: 1
-  _baseRecoveryTicks: 100
-  _baseCooldownTicks: 200
-  _description: v0.3 basic attribute damage Skill placeholder.
+  _baseStartupTicks: 100
+  _baseRecoveryTicks: 120
+  _baseCooldownTicks: 300
+  _baseManaCost: 40
+  _description: "敵の先頭へ{icon:Fire}{color:Fire}{value:damage}{/color}の炎ダメージを与える。この攻撃は{value:penetration}%貫通し、値{value:weakness}の弱点を付与する。"
+  _baseFireDamage: 70
+  _fireDamageRatio: 100
+  _baseAquaDamage: 70
+  _aquaDamageRatio: 100
+  _baseFirePenetration: 20
+  _firePenetrationRatio: 100
+  _baseAquaPenetration: 20
+  _aquaPenetrationRatio: 100
+  _baseFireWeakness: 10
+  _fireWeaknessRatio: 100
+  _baseAquaWeakness: 10
+  _aquaWeaknessRatio: 100
+  _weaknessStatus: {fileID: 11400000, guid: 8704caba705a10c4a9ad36050d1688ac, type: 2}

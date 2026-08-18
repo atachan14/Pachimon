@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.ComboMasterPassiveAsset
   _passiveId: 17
   _displayName: コンボマスター
-  _description: Battle中の最大追加連鎖回数に応じてDamageBonusが増加する。
+  _description: "Battle中に完了した最大追加連鎖回数1回につき、DamageBonusが{value:damageBonusPerChain}増加する。"
   _damageBonusPerChain: 10

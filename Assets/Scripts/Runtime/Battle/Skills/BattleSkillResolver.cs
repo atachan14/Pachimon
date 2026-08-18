@@ -13,7 +13,8 @@ namespace Pachimon.Battle
             ISkillLogic logic,
             object runtimeData = null,
             int actualManaSpent = 0,
-            decimal effectiveManaSpent = 0m)
+            decimal effectiveManaSpent = 0m,
+            int skillSlotId = 0)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (user == null) throw new ArgumentNullException(nameof(user));
@@ -32,7 +33,8 @@ namespace Pachimon.Battle
                         skill,
                         runtimeData,
                         actualManaSpent,
-                        effectiveManaSpent));
+                        effectiveManaSpent,
+                        skillSlotId));
                 var statusEffects = state.Statuses.EndSkillResolution();
                 if (statusEffects.Count > 0)
                 {
