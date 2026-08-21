@@ -6,10 +6,10 @@ namespace Pachimon.Skills
     public sealed class ChainThunderSkillAsset : MachineExclusiveSkillAsset
     {
         [SerializeField, Min(0)] private int _baseDamage = 80;
-        [SerializeField, Min(0)] private int _electricRatio = 100;
+        [SerializeField, HideInInspector] private int _electricRatio = 100;
 
         public int BaseDamage => _baseDamage;
-        public int ElectricRatio => _electricRatio;
+        public int ElectricRatio => AttributeDamageRules.ScalingRatio;
 
 #if UNITY_EDITOR
         public void ConfigureForEditor(int id, int startup, int recovery,

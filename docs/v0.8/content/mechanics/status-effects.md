@@ -106,7 +106,7 @@ Battle終了時
 
 - 表示名は`毒素`、内部Status IDは`Toxin`とする案を採用する
 - 属性StatとDamage Typeは従来どおり`Poison`を使用する
-- Valueの1%を毎tick小数Workへ移し、整数化できた分だけDamageとValue減少へ反映する
+- Valueの1%を毎tick小数Workへ移してDamageへ反映し、Value自体は毎tick固定値だけ減少する
 - 具体仕様は[Poison Content](../poison.md#状態毒素--toxin)を参照する
 
 ## 実装済み
@@ -115,7 +115,7 @@ Battle終了時
 
 - `StatusId`: `Toxin`
 - `Category`: `Toxin`
-- 名前、説明、毎tick Damage Ratio、毎tick減衰Ratioを`ToxinStatusAsset`へ保持する
+- 名前、説明、毎tick Damage Ratio、毎tick減衰値を`ToxinStatusAsset`へ保持する
 - 毒素を直接付与するSkill SO、または毒素を生成するField Effect SOから`ToxinStatusAsset`を参照する
 
 ### 漏電

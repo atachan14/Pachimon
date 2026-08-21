@@ -65,8 +65,8 @@ StunTicks
 - 効果時間を持たず、Value自体を寿命として使用する
 - 付与Valueを対象のPoisonによって軽減する
 - 付与履歴には軽減後Valueを記録する
-- `DamageWork`と`DecayWork`を小数で保持する
-- 毎tick、tick開始時の現在Valueの1%を両方のWorkへ加算する
+- `DamageWork`を小数で保持する
+- 毎tick、tick開始時の現在Valueの1%をDamage成分とする
 - 毎tickのDamage成分へ対象のPoisonと`ResistBonus`による軽減を適用してから`DamageWork`へ加算する
 - `floor(DamageWork)`をHPへ適用し、適用分をWorkから減算する
 - 毒素Damageには最低1 Damage保証を適用しない
@@ -74,11 +74,11 @@ StunTicks
 - 毎tickのDamageへ付与者の`DamageBonus`を適用しない
 - 毒素Damageは`IsAttack = false`とする
 - Damage Originは`Status / Toxin`とし、発生源Unitを持たない
-- `floor(DecayWork)`を現在Valueから減算し、減少分をWorkから減算する
+- 毎tick、現在Valueを`DecayPerTick`だけ減少させる（初期値1）
 - 同じtickではDamageを先、Value減少を後に処理する
 - Valueが0になった場合は解除する
 - 同じ毒素を再付与した場合、既存Valueへ新しいValueを加算する
-- 再付与時も蓄積済み`DamageWork / DecayWork`を維持する
+- 再付与時も蓄積済み`DamageWork`を維持する
 - 付与時に即時Damageは発生させない
 
 ```text
@@ -91,11 +91,11 @@ UnroundedDamage
 × DefenseMultiplier(対象ResistBonus)
 
 DamageWork += UnroundedDamage
-DecayWork += TickAmount
+CurrentValue -= min(CurrentValue, DecayPerTick)
 ```
 
-- Valueが100未満でも小数Workを持ち越すため、いずれDamageとValue減少が発生する
-- Valueの増加は次のtickからDamage量と減衰量の両方へ反映する
+- Valueが100未満でも小数Workを持ち越すため、蓄積値が1以上になればDamageが発生する
+- Valueの増加は次のtickからDamage量へ反映する
 - 毎tickの毒素DamageはDialogへ流さない
 - 前回の表示から次のTurnまでに受けた毒素DamageをUnitごとに合算する
 - 次のTurn表示前に、合算DamageをHPGauge上へ紫色で一時表示してからHPを減少させる
@@ -315,16 +315,21 @@ PoisonScalingPercent = 100%
 - モチーフ: 薬雫を吊るした毒霧の浮遊魔術獣
 
 #### Fixed Skill: 毒の霧
-自陣に[効果時間=水 * 75% + 風 * 25% , value = 100 * 毒参照 ]の毒の霧を生成する。
+自陣に[Aqua参照の効果時間、Poison参照の初期Value、Wind参照の最小Value]を持つ毒の霧を生成する。
 
 [毒の霧]
-味方がvalue以下の軽減前ダメージを受けるとき、回避する。
+味方が現在Value以下の軽減前ダメージを受けるとき、回避する。
 
-- 効果時間は`floor(Aqua * 75% + Wind * 25%)`、最低`1tick`
-- Valueは`floor(100 * AmplificationMultiplier(Poison * 100%))`
+- 効果時間は`floor(75 * AmplificationMultiplier(Aqua * 100%))`、最低`1tick`
+- 初期Valueは`floor(100 * AmplificationMultiplier(Poison * 100%))`
+- 最小Valueは`floor(20 * AmplificationMultiplier(Wind * 100%))`
+- 最小Valueが初期Valueを超える場合は、初期Valueを上限とする
+- 効果時間をかけて、初期Valueから最小Valueまで直線的に減衰する
+- 全属性値100の場合は`効果時間150tick / 初期Value200 / 最小Value40`
 - 属性・確定ダメージを問わず、敵PachimonのSkill攻撃をShield判定前に回避する
 - Self / Status / Field由来のダメージは回避しない
-- 再生成時は統合せず、各`毒の霧`が独立したValueと効果時間を持つ
+- 効果時間中に再生成した場合は、現在Value・残り効果時間・最小Valueへ新しい各値を加算する
+- 統合後は、加算後の現在Valueから最小Valueまで、加算後の残り時間をかけて減衰し直す
 
 #### Passive: 毒の魔術師
 自身のskillで毒以外のダメージを与えるたびに、自身の毒を20増加する。

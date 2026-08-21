@@ -9,17 +9,14 @@ namespace Pachimon.Skills
     public sealed class ChainVinesSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseLeafDamage = 70;
-        [SerializeField, Min(0)] private int _leafDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseSlow = 25;
-        [SerializeField, Min(0)] private int _slowLeafRatio = 100;
         [SerializeField, Min(0)] private int _baseChainCount = 2;
         [SerializeField, Min(1)] private int _addChainGainUnits = 50;
         [SerializeField] private SlowStatusAsset _slowStatus;
 
         public int BaseLeafDamage => _baseLeafDamage;
-        public int LeafDamageRatio => _leafDamageRatio;
         public int BaseSlow => _baseSlow;
-        public int SlowLeafRatio => _slowLeafRatio;
+        public int SlowLeafRatio => AttributeDamageRules.ScalingRatio;
         public int BaseChainCount => _baseChainCount;
         public int AddChainGainUnits => _addChainGainUnits;
         public SlowStatusAsset SlowStatus => _slowStatus;

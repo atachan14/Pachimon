@@ -22,6 +22,6 @@ MonoBehaviour:
   _baseManaCost: 30
   _description: "\u6575\u306E\u5148\u982D\u3078{icon:Aqua}{color:Aqua}{value:damage}{/color}\u306E\u6C34\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002\u30C0\u30E1\u30FC\u30B8\u306F\u73FE\u5728HP
     {value:currentHp}\u306B\u5FDC\u3058\u3066\u5897\u52A0\u3059\u308B\u3002"
-  _baseAquaDamage: 150
+  _baseAquaDamage: 180
   _aquaDamageRatio: 100
   _currentHpDivisor: 2000

@@ -16,8 +16,8 @@ MonoBehaviour:
   _displayName: "\u708E\u306E\u969C\u58C1"
   _allocationType: 1
   _isMapAssignable: 1
-  _baseStartupTicks: 100
-  _baseRecoveryTicks: 200
+  _baseStartupTicks: 150
+  _baseRecoveryTicks: 250
   _baseCooldownTicks: 500
   _baseManaCost: 100
   _description: "\u81EA\u9663\u306B\u5024{color:Fire}{value:value}{/color}\u3001HP

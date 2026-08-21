@@ -19,21 +19,19 @@ namespace Pachimon.Battle
             if (!ReferenceEquals(context?.Skill, _skill))
                 throw new ArgumentException("Poison Mist received another Skill.");
 
-            var value = SignedStatMath.FloorNonNegative(
-                context.ScaleFromAttribute(
-                    _skill.BaseMistValue,
-                    PachimonAttribute.Poison,
-                    _skill.PoisonValueRatio));
-            var duration = Math.Max(1, SignedStatMath.FloorNonNegative(
-                context.GetAttributeValue(PachimonAttribute.Aqua)
-                    * _skill.AquaDurationRatio / 100m
-                + context.GetAttributeValue(PachimonAttribute.Wind)
-                    * _skill.WindDurationRatio / 100m));
+            var value = _skill.CalculateMistValue(
+                context.GetAttributeValue(PachimonAttribute.Poison));
+            var duration = _skill.CalculateDurationTicks(
+                context.GetAttributeValue(PachimonAttribute.Aqua));
+            var minimumValue = _skill.CalculateMinimumValue(
+                context.GetAttributeValue(PachimonAttribute.Poison),
+                context.GetAttributeValue(PachimonAttribute.Wind));
             context.State.Fields.CreatePoisonMist(
                 context.User,
                 _skill.FieldEffect,
-                Math.Max(1, value),
-                duration);
+                value,
+                duration,
+                minimumValue);
             return new SkillResolution(
                 context.User,
                 _skill,

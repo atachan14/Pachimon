@@ -11,11 +11,11 @@ namespace Pachimon.Skills
     public sealed class HeavySnowSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseValue = 400;
-        [SerializeField, Min(0)] private int _iceValueRatio = 100;
+        [SerializeField, HideInInspector] private int _iceValueRatio = 100;
         [SerializeField] private SunnyWeatherAsset _temperatureDefinition;
 
         public int BaseValue => _baseValue;
-        public int IceValueRatio => _iceValueRatio;
+        public int IceValueRatio => AttributeDamageRules.ScalingRatio;
         public SunnyWeatherAsset TemperatureDefinition => _temperatureDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)

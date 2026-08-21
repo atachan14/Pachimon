@@ -1,0 +1,37 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad635de4b7b54a05b53c901ed327b6b3, type: 3}
+  m_Name: Pachimon_017
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Data.PachimonSpeciesAsset
+  _speciesId: 17
+  _displayName: "\u30C4\u30E9\u30CD\u30B3"
+  _allocationType: 1
+  _isRunEnabled: 1
+  _frontSprite: {fileID: 21300000, guid: 48de96169ff748a7b58e7da093774e61, type: 3}
+  _backSprite: {fileID: 21300000, guid: 66e517193aac4bc8ab45f8d058035089, type: 3}
+  _fixedSkill: {fileID: 11400000, guid: 31b6524240fc9944a812e11a7f947c7b, type: 2}
+  _passive: {fileID: 11400000, guid: 2e24522c96d84031a273dc8928f31249, type: 2}
+  _initialStats:
+    _maxHp: 0
+    _maxMn: 0
+    _fire: 100
+    _poison: 0
+    _aqua: 0
+    _ice: 0
+    _leaf: 0
+    _wind: 0
+    _electric: 0
+    _dragon: 0
+    _speed: 0
+    _haste: 0
+    _damageBonus: 0
+    _resistBonus: 0

@@ -16,12 +16,12 @@ MonoBehaviour:
   _displayName: "\u30C9\u30E9\u30B4\u30F3\u30B8\u30E3\u30D6"
   _allocationType: 8
   _isMapAssignable: 1
-  _baseStartupTicks: 40
-  _baseRecoveryTicks: 60
+  _baseStartupTicks: 30
+  _baseRecoveryTicks: 30
   _baseCooldownTicks: 100
   _baseManaCost: 20
   _description: "\u6575\u306E\u5148\u982D\u306B{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E{term:DragonDamage|\u7ADC\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u3001{term:OneTwo|\u30EF\u30F3\u30FB\u30C4\u30FC}Value\u3092{value:oneTwoValue}\u7372\u5F97\u3059\u308B\u3002"
-  _baseDragonDamage: 75
+  _baseDragonDamage: 50
   _dragonDamageRatio: 100
   _oneTwoValue: 30
   _oneTwoStatus: {fileID: 11400000, guid: 1cc763a82fa2429fa539eea80e5b9ecf, type: 2}

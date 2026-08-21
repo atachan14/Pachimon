@@ -70,31 +70,50 @@ EffectValue
 ## 初期Stat生成
 
 初期Statは、属性Statと共通Statを別々のBudgetから生成する。
+各Speciesは`PachimonSpeciesAsset`に固有の初期Statを持ち、その価値を
+先にBudgetから消費してから残りをRunごとにランダム振り分けする。
+
+- 固有初期Statは全14StatをInspectorへ明示する
+- `MaxHP / MaxMN`は表示値で設定し、内部では`5`で割った価値単位へ変換する
+- `MaxHP / MaxMN`の固有値は`5`刻みとする
+- 固有初期StatがグループのBudgetを超えるSpeciesは生成エラーとする
+- 全Species共通の`MaxHP / MaxMN`最低値`500`は固有値とは別に加算する
 
 ### 属性Stat
 
 - 対象は`Fire / Aqua / Leaf / Electric / Poison / Ice / Wind / Dragon`
-- 属性Budget `800`を8属性へランダムに全量振り分ける
-- 各属性の平均は`100`となる
+- 暫定値として、全SpeciesはAllocation Typeと一致する属性を固有初期値`100`として持つ
+- 属性Budget `800`からSpecies固有初期Statを引き、残りを8属性へランダムに全量振り分ける
+- 固有初期Statを含む属性合計は常に`800`となる
 
 ### 共通Stat
 
 - 対象は`MaxHP / MaxMN / Speed / Haste / DamageBonus / ResistBonus`
-- 共通Budget `600`を6Statへランダムに全量振り分ける
+- 共通Budget `200`からSpecies固有初期Statの価値を引き、残りを6Statへランダムに全量振り分ける
 - `MaxHP / MaxMN`は振分前に最低値`500`を持つ
 - `MaxHP / MaxMN`は共通Budgetの振分値`1`につき`5`増加する
 - その他の共通Statは振分値`1`につき`1`増加する
-- 各共通Statの振分値の平均は`100`となる
-- したがって`MaxHP / MaxMN`の平均は約`1000`、その他4Statの平均は約`100`となる
+- 固有初期Statがすべて`0`の場合、各共通Statの振分値の平均は約`33`となる
+- 同条件では`MaxHP / MaxMN`の平均は約`667`、その他4Statの平均は約`33`となる
 
 各グループのBudget合計は個体間で一致させる。個別Statは大きく揺らぎ、`MaxHP / MaxMN`以外は`0`を許容する。
 
 ## Skill振り分け
 
+- Startと通常Battleで追加する最初の2Skillは、SpeciesのAllocation Type一致を1つ、不一致を1つとする
+- Rowによる3個目以降の追加Skillは全候補から使用回数の少ないものを優先する
+- Gym / Eliteは専用の一致Skill振り分けを先に行い、通常追加枠は従来どおり全候補から振り分ける
 - Mapへ追加振り分けするSkillは、Run参加Speciesの固定Skillから選ぶ
 - Runへ参加しないPlaceholder Speciesの固定Skillは候補へ含めない
 - 固定Skillは`isMapAssignable`でなければならない
 - 各属性にType一致Skill候補を最低4つ要求する
+
+## Speciesデータ
+
+- 1Speciesにつき1つの`PachimonSpeciesAsset`を持つ
+- `PachimonCatalog`は151個のSpecies Asset参照だけを保持する
+- Species Assetは名前、画像、Allocation Type、Run有効フラグ、固定Skill参照、Passive参照、固有初期Statを保持する
+- Run用の`PachimonInstance`生成時にSkill / Passive参照からIDを取り出し、Battle中は従来どおりIDで扱う
 
 ## 未決事項
 

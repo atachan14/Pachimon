@@ -7,17 +7,17 @@ namespace Pachimon.Skills
     public sealed class KachofugetsuSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseFireDamage = 50;
-        [SerializeField, Min(0)] private int _fireDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _fireDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseAquaDamage = 50;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseWindDamage = 50;
-        [SerializeField, Min(0)] private int _windDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _windDamageRatio = 100;
         public int BaseFireDamage => _baseFireDamage;
-        public int FireDamageRatio => _fireDamageRatio;
+        public int FireDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseAquaDamage => _baseAquaDamage;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseWindDamage => _baseWindDamage;
-        public int WindDamageRatio => _windDamageRatio;
+        public int WindDamageRatio => AttributeDamageRules.ScalingRatio;
 #if UNITY_EDITOR
         public void ConfigureForEditor(int id, string name, int recovery,
             int cooldown, int mana, string description, int baseFireDamage,

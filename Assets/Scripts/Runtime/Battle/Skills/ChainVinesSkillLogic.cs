@@ -31,7 +31,9 @@ namespace Pachimon.Battle
                 var skillHit = context.BeginAttackHit(target);
 
                 var ratio = ChainTargetNavigator.GetDamageRatio(hit, chainCount);
-                var damage = context.ScaleFromAttribute(_skill.BaseLeafDamage, PachimonAttribute.Leaf, _skill.LeafDamageRatio) * ratio;
+                var damage = context.ScaleFromAttribute(
+                    _skill.BaseLeafDamage,
+                    PachimonAttribute.Leaf) * ratio;
                 var result = BattleAttributeDamageService.Apply(context.State, context.User, target,
                     new DamageContext(DamageOriginKind.Skill, _skill.SkillId, damage,
                         context.User.GetBattleStats(), target.GetBattleStats(), PachimonAttribute.Leaf,

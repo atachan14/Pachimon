@@ -9,19 +9,19 @@ namespace Pachimon.Skills
     public sealed class BurningStrikeSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _selfBaseDamage = 100;
-        [SerializeField, Min(0)] private int _selfFireRatio = 100;
+        [SerializeField, HideInInspector] private int _selfFireRatio = 100;
         [SerializeField, Min(0)] private int _enemyBaseDamage = 300;
-        [SerializeField, Min(0)] private int _enemyFireRatio = 100;
+        [SerializeField, HideInInspector] private int _enemyFireRatio = 100;
         [SerializeField, Min(0)] private int _baseBurnValue = 20;
-        [SerializeField, Min(0)] private int _burnFireRatio = 100;
+        [SerializeField, HideInInspector] private int _burnFireRatio = 100;
         [SerializeField] private BurnStatusAsset _burnStatus;
 
         public int SelfBaseDamage => _selfBaseDamage;
-        public int SelfFireRatio => _selfFireRatio;
+        public int SelfFireRatio => AttributeDamageRules.ScalingRatio;
         public int EnemyBaseDamage => _enemyBaseDamage;
-        public int EnemyFireRatio => _enemyFireRatio;
+        public int EnemyFireRatio => AttributeDamageRules.ScalingRatio;
         public int BaseBurnValue => _baseBurnValue;
-        public int BurnFireRatio => _burnFireRatio;
+        public int BurnFireRatio => AttributeDamageRules.ScalingRatio;
         public BurnStatusAsset BurnStatus => _burnStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

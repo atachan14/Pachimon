@@ -20,9 +20,11 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 40
-  _description: "自陣に値{color:Poison}{value:value}{/color}、{value:duration}tickの{term:PoisonMist|毒の霧}を生成する。弱い敵Skill攻撃を回避する。"
+  _description: "自陣に初期値{color:Poison}{value:value}{/color}、最小値{color:Wind}{value:minimumValue}{/color}、{value:duration}tickの{term:PoisonMist|毒の霧}を生成する。現在Value以下の軽減前Damageとなる敵Skill攻撃を回避する。"
   _baseMistValue: 100
   _poisonValueRatio: 100
-  _aquaDurationRatio: 75
-  _windDurationRatio: 25
+  _baseDurationTicks: 75
+  _aquaDurationRatio: 100
+  _baseMinimumValue: 20
+  _windMinimumValueRatio: 100
   _fieldEffect: {fileID: 11400000, guid: 75ef4361bd6a0c04890c781529a2d0f1, type: 2}

@@ -11,11 +11,11 @@ namespace Pachimon.Skills
     public sealed class SmogSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseFieldValue = 300;
-        [SerializeField, Min(0)] private int _poisonScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _poisonScalingPercent = 100;
         [SerializeField] private SmogFieldEffectAsset _fieldEffect;
 
         public int BaseFieldValue => _baseFieldValue;
-        public int PoisonScalingPercent => _poisonScalingPercent;
+        public int PoisonScalingPercent => AttributeDamageRules.ScalingRatio;
         public SmogFieldEffectAsset FieldEffect => _fieldEffect;
 
         public override void CollectValidationErrors(ICollection<string> errors)

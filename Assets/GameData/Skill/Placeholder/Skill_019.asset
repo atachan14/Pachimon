@@ -21,7 +21,7 @@ MonoBehaviour:
   _baseCooldownTicks: 250
   _baseManaCost: 50
   _description: "\u5148\u982D\u304B\u3089\u5F8C\u65B9\u3078{value:hitCount}\u56DE\u9023\u9396\u3057\u3001\u521D\u6483\u3067{icon:Leaf}{color:Leaf}{value:damage}{/color}\u306E{term:LeafDamage|\u8349\u30C0\u30E1\u30FC\u30B8}\u3068\u5024{value:slow}\u306E{term:Slow|Slow}\u3092\u4E0E\u3048\u308B\u3002\u4EE5\u964D\u306F\u9023\u9396\u9806\u306B\u6E1B\u8870\u3059\u308B\u3002\u4F7F\u7528\u3054\u3068\u306B{term:AddChain|\u30A2\u30C9\u30C1\u30A7\u30A4\u30F3}\u3092{value:addChain}\u7372\u5F97\u3059\u308B\u3002"
-  _baseLeafDamage: 70
+  _baseLeafDamage: 80
   _leafDamageRatio: 100
   _baseSlow: 25
   _slowLeafRatio: 100

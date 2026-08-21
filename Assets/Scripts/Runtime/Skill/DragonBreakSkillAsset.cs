@@ -8,10 +8,10 @@ namespace Pachimon.Skills
     public sealed class DragonBreakSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseDragonDamage = 100;
-        [SerializeField, Min(0)] private int _dragonDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _dragonDamageRatio = 100;
 
         public int BaseDragonDamage => _baseDragonDamage;
-        public int DragonDamageRatio => _dragonDamageRatio;
+        public int DragonDamageRatio => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

@@ -203,7 +203,7 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 自身のHPが5割以上のとき
 - 硬直：200
 - 先頭の敵に凍結（Ice 0で70tick、Ice 100で110tick、Ice 200で150tick）とIce Damageを与える
-- 仮Damageは`BaseIceDamage 100`、`IceDamageRatio 100%`
+- 仮Damageは`BaseIceDamage 100`とし、Iceを100%参照する
 
 自身のHPが5割未満のとき
 - 硬直：1
@@ -256,13 +256,13 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - 1つのHitとしてIceダメージと冷気を適用する
 
 ```text
-Iceダメージ = floor(70 × AmplificationMultiplier(Ice × IceRatio 100%))
+Iceダメージ = floor(70 × AmplificationMultiplier(Ice))
 冷気Value = floor(35 × AmplificationMultiplier(Ice × IceRatio 100%))
 Shield Value = floor(70 × AmplificationMultiplier(Ice × IceRatio 100%))
 Shield効果時間 = 100tick
 ```
 
-- Base値・Ice Ratio・Shield効果時間は`IcePebbleSkillAsset`から調整可能
+- Damage、冷気、Shieldの各Base値、効果Value用Ice Ratio、Shield効果時間は`IcePebbleSkillAsset`から調整可能
 
 #### Passive
 
@@ -299,11 +299,11 @@ Shield補正倍率 = AmplificationMultiplier(Ice × IceScalingPercent 20%)
 - 1つのHitとしてIceダメージと冷気を適用する
 
 ```text
-Iceダメージ = floor(100 × AmplificationMultiplier(Ice × IceRatio 100%))
+Iceダメージ = floor(100 × AmplificationMultiplier(Ice))
 冷気Value = floor(30 × AmplificationMultiplier(Ice × IceRatio 100%))
 ```
 
-- Base値とIce Ratioは`FrostArrowSkillAsset`から調整可能
+- Damageと冷気のBase値、冷気Value用Ice Ratioは`FrostArrowSkillAsset`から調整可能
 
 #### Passive
 

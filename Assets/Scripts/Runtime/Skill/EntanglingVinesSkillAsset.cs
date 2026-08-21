@@ -9,10 +9,9 @@ namespace Pachimon.Skills
     public sealed class EntanglingVinesSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseStun = 100;
-        [SerializeField, Min(0)] private int _stunLeafRatio = 100;
         [SerializeField] private StunStatusAsset _stunStatus;
         public int BaseStun => _baseStun;
-        public int StunLeafRatio => _stunLeafRatio;
+        public int StunLeafRatio => AttributeDamageRules.ScalingRatio;
         public StunStatusAsset StunStatus => _stunStatus;
         public override void CollectValidationErrors(ICollection<string> errors)
         {

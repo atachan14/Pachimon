@@ -12,7 +12,7 @@ namespace Pachimon.Skills
     {
         [SerializeField, Min(0)] private int _lowHpRecoveryTicks = 1;
         [SerializeField, Min(0)] private int _baseIceDamage = 100;
-        [SerializeField, Min(0)] private int _iceDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _iceDamageRatio = 100;
         [SerializeField, Min(1)] private int _baseDuration = 70;
         [SerializeField, Min(0)] private int _durationIceRatio = 40;
         [SerializeField, Min(0)] private int _baseHealPerTick = 1;
@@ -22,7 +22,7 @@ namespace Pachimon.Skills
 
         public int LowHpRecoveryTicks => _lowHpRecoveryTicks;
         public int BaseIceDamage => _baseIceDamage;
-        public int IceDamageRatio => _iceDamageRatio;
+        public int IceDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseDuration => _baseDuration;
         public int DurationIceRatio => _durationIceRatio;
         public int BaseHealPerTick => _baseHealPerTick;

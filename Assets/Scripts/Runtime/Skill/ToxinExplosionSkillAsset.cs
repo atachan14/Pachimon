@@ -11,15 +11,15 @@ namespace Pachimon.Skills
     {
         [SerializeField, Min(0)] private int _toxinConversionPercent = 100;
         [SerializeField, Min(0)] private int _basePoisonPower = 50;
-        [SerializeField, Min(0)] private int _poisonScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _poisonScalingPercent = 100;
         [SerializeField, Min(0)] private int _baseFirePower = 50;
-        [SerializeField, Min(0)] private int _fireScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
 
         public int ToxinConversionPercent => _toxinConversionPercent;
         public int BasePoisonPower => _basePoisonPower;
-        public int PoisonScalingPercent => _poisonScalingPercent;
+        public int PoisonScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseFirePower => _baseFirePower;
-        public int FireScalingPercent => _fireScalingPercent;
+        public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

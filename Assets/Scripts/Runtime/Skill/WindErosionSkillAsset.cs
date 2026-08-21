@@ -9,11 +9,11 @@ namespace Pachimon.Skills
     public sealed class WindErosionSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseErosionValue = 20;
-        [SerializeField, Min(0)] private int _windValueRatio = 100;
+        [SerializeField, HideInInspector] private int _windValueRatio = 100;
         [SerializeField] private WindErosionStatusAsset _statusDefinition;
 
         public int BaseErosionValue => _baseErosionValue;
-        public int WindValueRatio => _windValueRatio;
+        public int WindValueRatio => AttributeDamageRules.ScalingRatio;
         public WindErosionStatusAsset StatusDefinition => _statusDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)

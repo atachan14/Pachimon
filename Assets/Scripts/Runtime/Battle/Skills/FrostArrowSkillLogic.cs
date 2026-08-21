@@ -17,17 +17,19 @@ namespace Pachimon.Battle
                 .GetAllLiving()
                 .OrderBy(unit => unit.CurrentHp).ThenBy(unit => unit.SlotIndex)
                 .FirstOrDefault() ?? throw new SkillTargetUnavailableException();
-            int Scale(int value) => SignedStatMath.FloorNonNegative(
+            int ScaleDamage(int value) => SignedStatMath.FloorNonNegative(
+                context.ScaleFromAttribute(value, PachimonAttribute.Ice));
+            int ScaleChill(int value) => SignedStatMath.FloorNonNegative(
                 context.ScaleFromAttribute(value, PachimonAttribute.Ice,
                     _skill.IceRatio));
             var hit = context.BeginAttackHit(target);
             var result = BattleAttributeDamageService.Apply(context.State,
                 context.User, target, new DamageContext(DamageOriginKind.Skill,
-                    _skill.SkillId, Scale(_skill.BaseDamage),
+                    _skill.SkillId, ScaleDamage(_skill.BaseDamage),
                     context.User.GetBattleStats(), target.GetBattleStats(),
                     PachimonAttribute.Ice, true,
                     applyAttackerAttributeMultiplier: false), hit);
-            var chill = Scale(_skill.BaseChill);
+            var chill = ScaleChill(_skill.BaseChill);
             if (chill > 0)
                 hit.ApplyStatus(BattleStatusFactory.CreateSlow(context.User,
                     chill, _skill.ChillStatus));

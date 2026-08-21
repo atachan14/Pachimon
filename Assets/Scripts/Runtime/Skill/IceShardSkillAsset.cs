@@ -11,23 +11,23 @@ namespace Pachimon.Skills
     public sealed class IceShardSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _frontBaseDamage = 100;
-        [SerializeField, Min(0)] private int _frontDamageIceRatio = 100;
+        [SerializeField, HideInInspector] private int _frontDamageIceRatio = 100;
         [SerializeField, Min(0)] private int _frontBaseChill = 75;
-        [SerializeField, Min(0)] private int _frontChillIceRatio = 100;
+        [SerializeField, HideInInspector] private int _frontChillIceRatio = 100;
         [SerializeField, Min(0)] private int _otherBaseDamage = 50;
-        [SerializeField, Min(0)] private int _otherDamageIceRatio = 100;
+        [SerializeField, HideInInspector] private int _otherDamageIceRatio = 100;
         [SerializeField, Min(0)] private int _otherBaseChill = 50;
-        [SerializeField, Min(0)] private int _otherChillIceRatio = 100;
+        [SerializeField, HideInInspector] private int _otherChillIceRatio = 100;
         [SerializeField] private SlowStatusAsset _chillStatus;
 
         public int FrontBaseDamage => _frontBaseDamage;
-        public int FrontDamageIceRatio => _frontDamageIceRatio;
+        public int FrontDamageIceRatio => AttributeDamageRules.ScalingRatio;
         public int FrontBaseChill => _frontBaseChill;
-        public int FrontChillIceRatio => _frontChillIceRatio;
+        public int FrontChillIceRatio => AttributeDamageRules.ScalingRatio;
         public int OtherBaseDamage => _otherBaseDamage;
-        public int OtherDamageIceRatio => _otherDamageIceRatio;
+        public int OtherDamageIceRatio => AttributeDamageRules.ScalingRatio;
         public int OtherBaseChill => _otherBaseChill;
-        public int OtherChillIceRatio => _otherChillIceRatio;
+        public int OtherChillIceRatio => AttributeDamageRules.ScalingRatio;
         public SlowStatusAsset ChillStatus => _chillStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

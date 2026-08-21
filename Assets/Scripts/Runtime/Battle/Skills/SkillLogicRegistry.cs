@@ -36,6 +36,56 @@ namespace Pachimon.Battle
                 {
                     _logicBySkillId[skill.SkillId] = new StruggleSkillLogic();
                 }
+                else if (skill is EmberSkillAsset ember)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BasicAttributeDamageSkillLogic(
+                            ember,
+                            PachimonAttribute.Fire);
+                }
+                else if (skill is WaterGunSkillAsset waterGun)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BasicAttributeDamageSkillLogic(
+                            waterGun,
+                            PachimonAttribute.Aqua);
+                }
+                else if (skill is LeafSlicerSkillAsset leafSlicer)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BasicAttributeDamageSkillLogic(
+                            leafSlicer,
+                            PachimonAttribute.Leaf);
+                }
+                else if (skill is ElectricShockSkillAsset electricShock)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ElectricShockSkillLogic(electricShock);
+                }
+                else if (skill is PoisonNeedleSkillAsset poisonNeedle)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new PoisonNeedleSkillLogic(poisonNeedle);
+                }
+                else if (skill is ColdHandSkillAsset coldHand)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new ColdHandSkillLogic(coldHand);
+                }
+                else if (skill is WindGunSkillAsset windGun)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BasicAttributeDamageSkillLogic(
+                            windGun,
+                            PachimonAttribute.Wind);
+                }
+                else if (skill is DragonStraightSkillAsset dragonStraight)
+                {
+                    _logicBySkillId[skill.SkillId] =
+                        new BasicAttributeDamageSkillLogic(
+                            dragonStraight,
+                            PachimonAttribute.Dragon);
+                }
                 else if (skill is TriAttackSkillAsset triAttack)
                 {
                     _logicBySkillId[skill.SkillId] = new TriAttackSkillLogic(triAttack);

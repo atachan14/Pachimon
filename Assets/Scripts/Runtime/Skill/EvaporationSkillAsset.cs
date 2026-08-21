@@ -11,9 +11,9 @@ namespace Pachimon.Skills
     public sealed class EvaporationSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseFireDamage = 70;
-        [SerializeField, Min(0)] private int _fireDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _fireDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseAquaDamage = 70;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseFirePenetration = 20;
         [SerializeField, Min(0)] private int _firePenetrationRatio = 100;
         [SerializeField, Min(0)] private int _baseAquaPenetration = 20;
@@ -25,9 +25,9 @@ namespace Pachimon.Skills
         [SerializeField] private WeaknessStatusAsset _weaknessStatus;
 
         public int BaseFireDamage => _baseFireDamage;
-        public int FireDamageRatio => _fireDamageRatio;
+        public int FireDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseAquaDamage => _baseAquaDamage;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseFirePenetration => _baseFirePenetration;
         public int FirePenetrationRatio => _firePenetrationRatio;
         public int BaseAquaPenetration => _baseAquaPenetration;

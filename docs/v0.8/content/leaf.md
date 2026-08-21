@@ -32,7 +32,7 @@
 - 追加連鎖数2。
 - 連鎖先へLeafダメージとSlowを与える。
 - 使用時、自身へアドチェインを0.5付与する。
-- 仮値: Damage 70 / Slow 25 / 各Leaf Ratio 100%。
+- 仮値: Damage 70 / Slow 25 / Slow用Leaf Ratio 100%。DamageはLeafを100%参照する。
 
 #### Passive: 絡まる蔦
 

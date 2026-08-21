@@ -427,9 +427,9 @@ ColdIceRatioMultiplier
 Damage
 = floor(
     BaseFireDamage 70
-    × AmplificationMultiplier(Fire × FireDamageRatio 100%)
+    × AmplificationMultiplier(Fire)
   + BaseAquaDamage 70
-    × AmplificationMultiplier(Aqua × AquaDamageRatio 100%)
+    × AmplificationMultiplier(Aqua)
   )
 
 貫通率

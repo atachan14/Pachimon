@@ -24,7 +24,7 @@
 Damage
 = max(1, floor(
     効果計算用MN消費量
-    × AmplificationMultiplier(Aqua × AquaDamageRatio 100%)
+    × AmplificationMultiplier(Aqua)
   ))
 ```
 
@@ -34,7 +34,7 @@ Damage
 - 水の波動本体だけで対象を戦闘不能にできる場合は、戦闘不能に必要な最小MNのみ消費する
 - 必要MNの判定には水の波動本体によるHP DamageとShield吸収を含め、Passive・状態・フィールドなどが後から発生させる追加Damageは含めない
 - 水の波動本体が回避される場合や、CurrentMNを全消費しても本体だけでは戦闘不能にできない場合は、CurrentMNをすべて消費する
-- `AquaDamageRatio`は`WaterPulseSkillAsset`から調整可能にする
+- DamageはAquaを100%参照し、威力は効果計算用MNで調整する
 
 #### Passive
 
@@ -269,14 +269,14 @@ Aqua派生加算
 ```text
 Damage
 = floor(BaseAquaDamage 100
-  × AmplificationMultiplier(Aqua × AquaDamageRatio 100%))
+  × AmplificationMultiplier(Aqua))
 
 貫通率
 = floor(BasePenetrationPercent 20
   × AmplificationMultiplier(Wind × WindPenetrationRatio 100%))
 ```
 
-- Damageと貫通率はSkill SOから調整可能にする
+- BaseDamageと貫通率はSkill SOから調整可能にする
 - 貫通率は対象のAquaとResistBonusによる防御値へ適用する
 
 #### Passive
@@ -307,7 +307,7 @@ Damage
 ```text
 Damage
 = floor(BaseAquaDamage 100
-  × AmplificationMultiplier(Aqua × AquaDamageRatio 100%))
+  × AmplificationMultiplier(Aqua))
 
 Slow Value
 = floor(BaseSlow 100
@@ -316,7 +316,7 @@ Slow Value
 
 - DamageとSlowは同じSkill Hitとして扱う
 - 回避や肩代わりが発生した場合、DamageとSlowの対象を分離しない
-- 各BaseとRatio、Slow DefinitionはSkill SOから調整可能にする
+- 各Base、PoisonSlowRatio、Slow DefinitionはSkill SOから調整可能にする
 
 #### Passive
 
@@ -346,13 +346,13 @@ Slow Value
 ```text
 Damage
 = floor(BaseAquaDamage 100 × (
-    AmplificationMultiplier(Aqua × AquaDamageRatio 100%)
+    AmplificationMultiplier(Aqua)
     + CurrentHP / CurrentHpDivisor 2000
   ))
 ```
 
 - 現在HPはSkill効果解決時の値を参照する
-- 各Base、Ratio、DivisorはSkill SOから調整可能にする
+- BaseDamageとCurrentHpDivisorはSkill SOから調整可能にする
 
 #### Passive
 

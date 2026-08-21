@@ -138,7 +138,6 @@ namespace Pachimon.Battle
         public object RuntimeData { get; }
         public BattleStatusAsset Definition { get; }
         public decimal DamageWork { get; private set; }
-        public decimal DecayWork { get; private set; }
         public IReadOnlyList<ToxinApplicationRecord> ToxinApplications =>
             _toxinApplications;
         public bool IsTimed => RemainingTicks.HasValue;
@@ -294,7 +293,7 @@ namespace Pachimon.Battle
 
         internal ToxinTickResult AccumulateToxinTick(
             decimal unroundedDamage,
-            decimal unroundedDecay)
+            int decayPerTick)
         {
             if (StatusId != BattleStatusId.Toxin)
             {
@@ -307,19 +306,15 @@ namespace Pachimon.Battle
                 throw new ArgumentOutOfRangeException(nameof(unroundedDamage));
             }
 
-            if (unroundedDecay < 0m)
+            if (decayPerTick < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(unroundedDecay));
+                throw new ArgumentOutOfRangeException(nameof(decayPerTick));
             }
 
             DamageWork += unroundedDamage;
-            DecayWork += unroundedDecay;
             var damage = SignedStatMath.FloorNonNegative(DamageWork);
-            var decay = Math.Min(
-                Value,
-                SignedStatMath.FloorNonNegative(DecayWork));
+            var decay = Math.Min(Value, decayPerTick);
             DamageWork -= damage;
-            DecayWork -= decay;
             Value -= decay;
             return new ToxinTickResult(damage, decay);
         }
@@ -328,7 +323,6 @@ namespace Pachimon.Battle
         {
             if (original == null) throw new ArgumentNullException(nameof(original));
             DamageWork = original.DamageWork;
-            DecayWork = original.DecayWork;
             _toxinApplications.Clear();
             _toxinApplications.AddRange(original._toxinApplications);
         }

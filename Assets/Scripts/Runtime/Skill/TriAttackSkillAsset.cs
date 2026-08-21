@@ -6,10 +6,10 @@ namespace Pachimon.Skills
     public sealed class TriAttackSkillAsset : MachineExclusiveSkillAsset
     {
         [SerializeField, Min(0)] private int _baseDamage = 100;
-        [SerializeField, Min(0)] private int _attributeRatio = 100;
+        [SerializeField, HideInInspector] private int _attributeRatio = 100;
 
         public int BaseDamage => _baseDamage;
-        public int AttributeRatio => _attributeRatio;
+        public int AttributeRatio => AttributeDamageRules.ScalingRatio;
 
 #if UNITY_EDITOR
         public void ConfigureForEditor(

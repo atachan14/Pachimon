@@ -1,5 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Passives;
+using Pachimon.Run;
+using Pachimon.Skills;
 using UnityEngine;
 
 namespace Pachimon.Data
@@ -9,20 +12,27 @@ namespace Pachimon.Data
     {
         public const int RequiredSpeciesCount = 151;
 
-        [SerializeField] private List<PachimonSpeciesDefinition> _species = new();
+        [SerializeField] private List<PachimonSpeciesAsset> _speciesAssets = new();
 
-        public IReadOnlyList<PachimonSpeciesDefinition> Species => _species;
+        public IReadOnlyList<PachimonSpeciesAsset> Species => _speciesAssets;
 
-        public PachimonSpeciesDefinition Get(int speciesId)
+        public PachimonSpeciesAsset Get(int speciesId)
         {
-            return _species.FirstOrDefault(definition => definition != null
+            return _speciesAssets.FirstOrDefault(definition => definition != null
                 && definition.SpeciesId == speciesId);
         }
 
         public IReadOnlyList<string> ValidateContent()
         {
             var errors = new List<string>();
-            var validSpecies = _species.Where(definition => definition != null).ToArray();
+            var validSpecies = _speciesAssets
+                .Where(definition => definition != null)
+                .ToArray();
+
+            if (validSpecies.Length != _speciesAssets.Count)
+            {
+                errors.Add("PachimonCatalog contains a null Species reference.");
+            }
 
             if (validSpecies.Length != RequiredSpeciesCount)
             {
@@ -48,37 +58,9 @@ namespace Pachimon.Data
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(definition.DisplayName))
-                {
-                    errors.Add($"Pachimon species ID {speciesId} has no display name.");
-                }
-                else if (definition.DisplayName.Length
-                         > PachimonSpeciesDefinition.MaxDisplayNameLength)
-                {
-                    errors.Add(
-                        $"Pachimon species ID {speciesId} display name exceeds "
-                        + $"{PachimonSpeciesDefinition.MaxDisplayNameLength} characters.");
-                }
-
-                if (definition.FrontSprite == null || definition.BackSprite == null)
-                {
-                    errors.Add($"Pachimon species ID {speciesId} is missing a graphic.");
-                }
-
-                if (definition.FixedSkillId <= 0)
-                {
-                    errors.Add($"Pachimon species ID {speciesId} has no fixed Skill ID.");
-                }
-
-                if (definition.PassiveId <= 0)
-                {
-                    errors.Add($"Pachimon species ID {speciesId} has no Passive ID.");
-                }
-
-                if (definition.AllocationType == AllocationType.Unassigned)
-                {
-                    errors.Add($"Pachimon species ID {speciesId} has no Allocation Type.");
-                }
+                definition.CollectValidationErrors(
+                    errors,
+                    new PachimonStatGenerationSettings().ResourceDisplayMultiplier);
             }
 
             return errors;
@@ -87,15 +69,15 @@ namespace Pachimon.Data
 #if UNITY_EDITOR
         private void OnValidate()
         {
-            foreach (var definition in _species)
+            foreach (var definition in _speciesAssets)
             {
                 definition?.EnforceDisplayNameLengthForEditor();
             }
         }
 
-        public void SetSpeciesForEditor(IEnumerable<PachimonSpeciesDefinition> species)
+        public void SetSpeciesForEditor(IEnumerable<PachimonSpeciesAsset> species)
         {
-            _species = new List<PachimonSpeciesDefinition>(species);
+            _speciesAssets = new List<PachimonSpeciesAsset>(species);
         }
 
         public bool SetSpeciesPresentationForEditor(
@@ -112,7 +94,7 @@ namespace Pachimon.Data
         public bool SetAllSpeciesGraphicsForEditor(Sprite frontSprite, Sprite backSprite)
         {
             var changed = false;
-            foreach (var definition in _species)
+            foreach (var definition in _speciesAssets)
             {
                 if (definition != null)
                 {
@@ -139,7 +121,7 @@ namespace Pachimon.Data
             Sprite backSprite)
         {
             var changed = false;
-            foreach (var definition in _species)
+            foreach (var definition in _speciesAssets)
             {
                 if (definition != null && definition.AllocationType == allocationType)
                 {
@@ -164,7 +146,7 @@ namespace Pachimon.Data
         {
             var changed = false;
             var nextNumberByType = new Dictionary<AllocationType, int>();
-            foreach (var definition in _species
+            foreach (var definition in _speciesAssets
                          .Where(definition => definition != null)
                          .OrderBy(definition => definition.SpeciesId))
             {
@@ -226,14 +208,18 @@ namespace Pachimon.Data
                 && char.IsDigit(displayName[3]);
         }
 
-        public bool PopulateMissingLogicIdsForEditor()
+        public bool PopulateMissingLogicReferencesForEditor(
+            SkillCatalog skillCatalog,
+            PassiveCatalog passiveCatalog)
         {
             var changed = false;
-            foreach (var definition in _species)
+            foreach (var definition in _speciesAssets)
             {
                 if (definition != null)
                 {
-                    changed |= definition.PopulateMissingLogicIdsForEditor();
+                    changed |= definition.PopulateMissingLogicReferencesForEditor(
+                        skillCatalog?.Get(definition.SpeciesId),
+                        passiveCatalog?.Get(definition.SpeciesId));
                 }
             }
 
@@ -243,7 +229,7 @@ namespace Pachimon.Data
         public bool PopulateMissingAllocationTypesForEditor()
         {
             var changed = false;
-            foreach (var definition in _species)
+            foreach (var definition in _speciesAssets)
             {
                 if (definition != null)
                 {

@@ -17,13 +17,13 @@ MonoBehaviour:
   _allocationType: 6
   _isMapAssignable: 1
   _baseStartupTicks: 100
-  _baseRecoveryTicks: 100
+  _baseRecoveryTicks: 120
   _baseCooldownTicks: 300
   _baseManaCost: 60
-  _description: "敵の先頭へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与え、自身へ値{value:shield}、{value:duration}tickのShieldを付与する。"
-  _baseDamage: 70
+  _description: "\u6575\u306E\u5148\u982D\u3078{icon:Ice}{color:Ice}{value:damage}{/color}\u306E\u6C37\u30C0\u30E1\u30FC\u30B8\u3068\u5024{value:chill}\u306E\u51B7\u6C17\u3092\u4E0E\u3048\u3001\u81EA\u8EAB\u3078\u5024{value:shield}\u3001{value:duration}tick\u306EShield\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _baseDamage: 100
   _baseChill: 35
-  _baseShield: 70
+  _baseShield: 75
   _iceRatio: 100
   _shieldDurationTicks: 100
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

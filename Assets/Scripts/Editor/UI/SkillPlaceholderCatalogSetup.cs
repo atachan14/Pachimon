@@ -675,6 +675,7 @@ namespace Pachimon.Editor.UI
 
                 if (skill is PlaceholderSkillAsset placeholder)
                 {
+                    placeholder.ConfigureBaseDamageForEditor(200);
                     placeholder.ConfigureStatusForEditor(
                         allocationType == AllocationType.Poison ? 100 : 0,
                         100,

@@ -14,7 +14,9 @@ namespace Pachimon.Battle
             if (!ReferenceEquals(context?.Skill, _skill)) throw new ArgumentException("Solar Beam Logic received another Skill.", nameof(context));
             var target = context.Targets.GetFrontEnemy();
             if (target == null) return new SkillResolution(context.User, _skill, Array.Empty<SkillEffectResult>(), wasTargetUnavailable: true);
-            var damage = context.ScaleFromAttribute(_skill.BaseLeafDamage, PachimonAttribute.Leaf, _skill.LeafDamageRatio);
+            var damage = context.ScaleFromAttribute(
+                _skill.BaseLeafDamage,
+                PachimonAttribute.Leaf);
             var result = BattleAttributeDamageService.Apply(context.State, context.User, target,
                 new DamageContext(DamageOriginKind.Skill, _skill.SkillId, damage,
                     context.User.GetBattleStats(), target.GetBattleStats(), PachimonAttribute.Leaf,

@@ -29,11 +29,9 @@ namespace Pachimon.UI
                     break;
                 case ToxinStatusAsset toxin:
                     context.Set("damagePerTickRatio", toxin.DamagePerTickRatio)
-                        .Set("decayPerTickRatio", toxin.DecayPerTickRatio)
                         .Set("damagePerTick", FormatDecimal(
                             status.Value * toxin.DamagePerTickRatio / 100m))
-                        .Set("decayPerTick", FormatDecimal(
-                            status.Value * toxin.DecayPerTickRatio / 100m));
+                        .Set("decayPerTick", toxin.DecayPerTick);
                     break;
                 case ChargeStatusAsset charge:
                     AddChargeValues(status, charge, context);

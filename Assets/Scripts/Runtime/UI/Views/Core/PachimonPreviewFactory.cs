@@ -90,7 +90,7 @@ namespace Pachimon.UI
 
         private static PachimonPreviewContent Create(
             int speciesId,
-            PachimonSpeciesDefinition definition,
+            PachimonSpeciesAsset definition,
             int currentHp,
             int currentShield,
             int currentMn,

@@ -11,11 +11,11 @@ namespace Pachimon.Skills
     public sealed class RainDanceSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseValue = 1000;
-        [SerializeField, Min(0)] private int _aquaValueRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaValueRatio = 100;
         [SerializeField] private RainWeatherAsset _rainDefinition;
 
         public int BaseValue => _baseValue;
-        public int AquaValueRatio => _aquaValueRatio;
+        public int AquaValueRatio => AttributeDamageRules.ScalingRatio;
         public RainWeatherAsset RainDefinition => _rainDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)

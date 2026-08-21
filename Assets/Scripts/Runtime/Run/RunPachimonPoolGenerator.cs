@@ -95,7 +95,7 @@ namespace Pachimon.Run
                         definition.AllocationType,
                         definition.FixedSkillId,
                         definition.PassiveId,
-                        _statsGenerator.Generate(random)));
+                        _statsGenerator.Generate(random, definition)));
                 }
             }
 
@@ -109,7 +109,7 @@ namespace Pachimon.Run
         }
 
         private void ValidateEnabledSpecies(
-            IReadOnlyCollection<PachimonSpeciesDefinition> enabledSpecies)
+            IReadOnlyCollection<PachimonSpeciesAsset> enabledSpecies)
         {
             if (enabledSpecies.Count == 0)
             {

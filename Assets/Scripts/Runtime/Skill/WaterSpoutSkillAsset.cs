@@ -10,11 +10,11 @@ namespace Pachimon.Skills
     public sealed class WaterSpoutSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseAquaDamage = 100;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
         [SerializeField, Min(1)] private int _currentHpDivisor = 2000;
 
         public int BaseAquaDamage => _baseAquaDamage;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public int CurrentHpDivisor => _currentHpDivisor;
 
         public override void CollectValidationErrors(ICollection<string> errors)

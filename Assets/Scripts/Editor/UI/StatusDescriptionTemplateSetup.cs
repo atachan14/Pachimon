@@ -18,7 +18,7 @@ namespace Pachimon.Editor.UI
             Set("ChillStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは氷で軽減される。");
             Set("ParalysisStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは電気で軽減される。");
             Set("SlowStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。");
-            Set("ToxinStatus.asset", "毎tick、軽減前{color:Poison}{value:damagePerTick}{/color}の毒ダメージを与え、Valueを{value:decayPerTick}減少させる。現在Valueの{value:damagePerTickRatio}%と{value:decayPerTickRatio}%をそれぞれ蓄積して計算する。");
+            Set("ToxinStatus.asset", "毎tick、軽減前{color:Poison}{value:damagePerTick}{/color}の毒ダメージを与え、Valueを{value:decayPerTick}減少させる。ダメージは現在Valueの{value:damagePerTickRatio}%を蓄積して計算する。");
             Set("FreezeStatus.asset", "効果中はActionGaugeの進行を停止する。炎ダメージ{value:fireDamagePerDecay}につきValueが1減少する。現在Valueは{value:value}。");
             Set("KnockoutStatus.asset", "Stunとして扱い、ダメージを受けるたび、そのダメージの{value:damageDurationRatio}%だけ残り時間が延長される。");
             Set("FlyingStatus.asset", "対象指定不可になり、風の{value:windSpeedRatio}%をSpeedへ加算する。");

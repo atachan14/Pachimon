@@ -9,11 +9,11 @@ namespace Pachimon.Skills
     public sealed class FlyingAttackSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseWindDamage = 120;
-        [SerializeField, Min(0)] private int _windDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _windDamageRatio = 100;
         [SerializeField] private FlyingStatusAsset _flyingStatus;
 
         public int BaseWindDamage => _baseWindDamage;
-        public int WindDamageRatio => _windDamageRatio;
+        public int WindDamageRatio => AttributeDamageRules.ScalingRatio;
         public FlyingStatusAsset FlyingStatus => _flyingStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

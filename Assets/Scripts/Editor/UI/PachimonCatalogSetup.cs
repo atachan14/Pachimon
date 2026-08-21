@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Pachimon.Data;
+using Pachimon.Passives;
+using Pachimon.Skills;
 using Pachimon.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -14,7 +16,12 @@ namespace Pachimon.Editor.UI
         private const string MenuRoot = "Tools/Pachimon/Data/";
         private const string DataFolder = "Assets/GameData/Pachimon";
         private const string PlaceholderFolder = DataFolder + "/Placeholder";
+        private const string SpeciesFolder = DataFolder + "/Species";
         private const string CatalogPath = DataFolder + "/PachimonCatalog.asset";
+        private const string SkillCatalogPath =
+            "Assets/GameData/Skill/SkillCatalog.asset";
+        private const string PassiveCatalogPath =
+            "Assets/GameData/Passive/PassiveCatalog.asset";
         private const string PachigidaneFrontPath =
             "Assets/Art/Pachimon/Species001_Pachigidane/pachigidane_front.png";
         private const string PachigidaneBackPath =
@@ -64,7 +71,7 @@ namespace Pachimon.Editor.UI
             var back = GetOrCreatePlaceholderSprite("pachimon_back.png", true);
             var catalog = GetOrCreateCatalog(front, back);
             ApplyAvailableTypeGraphics(catalog);
-            MigrateMissingLogicIds(catalog);
+            MigrateMissingLogicReferences(catalog);
             MigrateMissingAllocationTypes(catalog);
             MigrateGeneratedDisplayNames(catalog);
             AssignCatalogToSceneInstaller(catalog);
@@ -96,11 +103,11 @@ namespace Pachimon.Editor.UI
             Selection.activeObject = catalog;
         }
 
-        [MenuItem(MenuRoot + "Migrate Missing Pachimon Logic IDs")]
-        private static void MigrateMissingLogicIdsFromMenu()
+        [MenuItem(MenuRoot + "Migrate Missing Pachimon Ability References")]
+        private static void MigrateMissingLogicReferencesFromMenu()
         {
             var catalog = AssetDatabase.LoadAssetAtPath<PachimonCatalog>(CatalogPath);
-            MigrateMissingLogicIds(catalog);
+            MigrateMissingLogicReferences(catalog);
             AssetDatabase.SaveAssets();
             ValidateCatalog(catalog);
         }
@@ -142,7 +149,7 @@ namespace Pachimon.Editor.UI
             if (catalog != null)
             {
                 ApplyAvailableTypeGraphics(catalog);
-                MigrateMissingLogicIds(catalog);
+                MigrateMissingLogicReferences(catalog);
                 MigrateMissingAllocationTypes(catalog);
                 MigrateGeneratedDisplayNames(catalog);
                 AssetDatabase.SaveAssets();
@@ -159,23 +166,66 @@ namespace Pachimon.Editor.UI
                 return existing;
             }
 
-            var species = new List<PachimonSpeciesDefinition>(PachimonCatalog.RequiredSpeciesCount);
-            for (var speciesId = 1; speciesId <= PachimonCatalog.RequiredSpeciesCount; speciesId++)
+            var catalog = ScriptableObject.CreateInstance<PachimonCatalog>();
+            AssetDatabase.CreateAsset(catalog, CatalogPath);
+            CreateDefaultSpeciesAssets(catalog, front, back);
+            return catalog;
+        }
+
+        private static void CreateDefaultSpeciesAssets(
+            PachimonCatalog catalog,
+            Sprite front,
+            Sprite back)
+        {
+            var skillCatalog = AssetDatabase.LoadAssetAtPath<SkillCatalog>(
+                SkillCatalogPath);
+            var passiveCatalog = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(
+                PassiveCatalogPath);
+            if (skillCatalog == null || passiveCatalog == null)
             {
-                species.Add(new PachimonSpeciesDefinition(
-                    speciesId,
-                    $"パチモン{speciesId:D3}",
-                    front,
-                    back,
-                    (AllocationType)(((speciesId - 1) % 8) + 1),
-                    speciesId,
-                    speciesId));
+                Debug.LogError(
+                    "SkillCatalog and PassiveCatalog are required to create Pachimon Species.",
+                    catalog);
+                return;
             }
 
-            var catalog = ScriptableObject.CreateInstance<PachimonCatalog>();
-            catalog.SetSpeciesForEditor(species);
-            AssetDatabase.CreateAsset(catalog, CatalogPath);
-            return catalog;
+            EnsureAssetFolder(SpeciesFolder);
+            var assets = new List<PachimonSpeciesAsset>();
+            var nextNumberByType = new Dictionary<AllocationType, int>();
+            for (var speciesId = 1;
+                 speciesId <= PachimonCatalog.RequiredSpeciesCount;
+                 speciesId++)
+            {
+                var allocationType = (AllocationType)(((speciesId - 1) % 8) + 1);
+                nextNumberByType.TryGetValue(allocationType, out var currentNumber);
+                var typeNumber = currentNumber + 1;
+                nextNumberByType[allocationType] = typeNumber;
+                var passive = passiveCatalog.Get(speciesId);
+                var assetPath = $"{SpeciesFolder}/Pachimon_{speciesId:D3}.asset";
+                var asset = AssetDatabase.LoadAssetAtPath<PachimonSpeciesAsset>(
+                    assetPath);
+                if (asset == null)
+                {
+                    asset = ScriptableObject.CreateInstance<PachimonSpeciesAsset>();
+                    AssetDatabase.CreateAsset(asset, assetPath);
+                }
+
+                asset.ConfigureForEditor(
+                    speciesId,
+                    AttributePlaceholderName.Format(allocationType, typeNumber),
+                    front,
+                    back,
+                    allocationType,
+                    skillCatalog.Get(speciesId),
+                    passive,
+                    passive != null);
+                EditorUtility.SetDirty(asset);
+                assets.Add(asset);
+            }
+
+            catalog.SetSpeciesForEditor(assets);
+            MarkCatalogAndSpeciesDirty(catalog);
+            AssetDatabase.SaveAssets();
         }
 
         private static Sprite GetOrCreatePlaceholderSprite(string fileName, bool isBack)
@@ -314,7 +364,7 @@ namespace Pachimon.Editor.UI
                 return;
             }
 
-            EditorUtility.SetDirty(catalog);
+            MarkCatalogAndSpeciesDirty(catalog);
             Debug.Log(
                 "Available species graphics and type placeholders were assigned.",
                 catalog);
@@ -410,16 +460,23 @@ namespace Pachimon.Editor.UI
             Debug.LogError("PachimonCatalog validation failed:\n" + string.Join("\n", errors), catalog);
         }
 
-        private static void MigrateMissingLogicIds(PachimonCatalog catalog)
+        private static void MigrateMissingLogicReferences(PachimonCatalog catalog)
         {
-            if (catalog == null || !catalog.PopulateMissingLogicIdsForEditor())
+            var skillCatalog = AssetDatabase.LoadAssetAtPath<SkillCatalog>(
+                SkillCatalogPath);
+            var passiveCatalog = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(
+                PassiveCatalogPath);
+            if (catalog == null
+                || !catalog.PopulateMissingLogicReferencesForEditor(
+                    skillCatalog,
+                    passiveCatalog))
             {
                 return;
             }
 
-            EditorUtility.SetDirty(catalog);
+            MarkCatalogAndSpeciesDirty(catalog);
             Debug.Log(
-                "Missing fixed Skill / Passive IDs were initialized from Species IDs.",
+                "Missing fixed Skill / Passive references were initialized from Species IDs.",
                 catalog);
         }
 
@@ -430,7 +487,7 @@ namespace Pachimon.Editor.UI
                 return;
             }
 
-            EditorUtility.SetDirty(catalog);
+            MarkCatalogAndSpeciesDirty(catalog);
             Debug.Log(
                 "Missing Allocation Types were distributed evenly from Species IDs.",
                 catalog);
@@ -443,7 +500,7 @@ namespace Pachimon.Editor.UI
                 return;
             }
 
-            EditorUtility.SetDirty(catalog);
+            MarkCatalogAndSpeciesDirty(catalog);
             Debug.Log(
                 "Pachimon display names were reset to their defaults.",
                 catalog);
@@ -456,7 +513,7 @@ namespace Pachimon.Editor.UI
                 return;
             }
 
-            EditorUtility.SetDirty(catalog);
+            MarkCatalogAndSpeciesDirty(catalog);
             Debug.Log(
                 "Generated Pachimon display names were migrated without changing custom names.",
                 catalog);
@@ -480,6 +537,23 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(installer);
             EditorSceneManager.MarkSceneDirty(installer.gameObject.scene);
             Debug.Log("PachimonCatalog assigned to GameSceneInstaller.", installer);
+        }
+
+        private static void MarkCatalogAndSpeciesDirty(PachimonCatalog catalog)
+        {
+            if (catalog == null)
+            {
+                return;
+            }
+
+            EditorUtility.SetDirty(catalog);
+            foreach (var species in catalog.Species)
+            {
+                if (species != null)
+                {
+                    EditorUtility.SetDirty(species);
+                }
+            }
         }
 
         private static void EnsureAssetFolder(string path)

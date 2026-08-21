@@ -15,21 +15,23 @@ namespace Pachimon.Battle
         {
             var target = context.Targets.GetFrontEnemy()
                 ?? throw new SkillTargetUnavailableException();
-            int Scale(int value) => SignedStatMath.FloorNonNegative(
+            int ScaleDamage(int value) => SignedStatMath.FloorNonNegative(
+                context.ScaleFromAttribute(value, PachimonAttribute.Ice));
+            int ScaleEffect(int value) => SignedStatMath.FloorNonNegative(
                 context.ScaleFromAttribute(value, PachimonAttribute.Ice,
                     _skill.IceRatio));
             var hit = context.BeginAttackHit(target);
             var result = BattleAttributeDamageService.Apply(
                 context.State, context.User, target,
                 new DamageContext(DamageOriginKind.Skill, _skill.SkillId,
-                    Scale(_skill.BaseDamage), context.User.GetBattleStats(),
+                    ScaleDamage(_skill.BaseDamage), context.User.GetBattleStats(),
                     target.GetBattleStats(), PachimonAttribute.Ice, true,
                     applyAttackerAttributeMultiplier: false), hit);
-            var chill = Scale(_skill.BaseChill);
+            var chill = ScaleEffect(_skill.BaseChill);
             if (chill > 0)
                 hit.ApplyStatus(BattleStatusFactory.CreateSlow(
                     context.User, chill, _skill.ChillStatus));
-            var shield = Scale(_skill.BaseShield);
+            var shield = ScaleEffect(_skill.BaseShield);
             if (shield > 0)
                 context.State.SupportEffects.ApplyShield(context.User,
                     context.User, shield, _skill.ShieldDurationTicks);

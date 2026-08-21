@@ -2,7 +2,7 @@
 
 ## 共通仮実装方針
 
-- Damageは原則`BaseDamage × AmplificationMultiplier(Dragon × DragonDamageRatio / 100)`を使用する
+- Damageは原則`BaseDamage × AmplificationMultiplier(Dragon)`を使用する
 - 未記載の発生・硬直・CD・MNと各Valueは、Skill / Passive SOから調整可能な仮値で実装する
 - 仮値は動作確認用であり、コンテンツ実装後にまとめて調整する
 
@@ -30,7 +30,7 @@
 - 発生中に追加されたValueは次のSkillへ持ち越す
 - 対象不在で終わったSkillでも消費する
 - 発生中に戦闘不能となりSkill自体が中断された場合は消費しない
-- 仮値: Damage Base `100` / Dragon Ratio `100%` / ワン・ツーValue `30`
+- 仮値: Damage Base `100` / ワン・ツーValue `30`
 - ワン・ツーの発生・硬直倍率は`ReductionMultiplier(Value)`とする
 
 #### Passive
@@ -121,7 +121,7 @@
 先頭の敵のシールドを全て破壊して、竜ダメージを与える。
 
 - Damageより先に対象の全Shieldを破壊する
-- 仮値: Base Dragon Damage `100` / Dragon Damage Ratio `100%`
+- 仮値: Base Dragon Damage `100`
 - 仮値: 硬直 `120` / CD `350` / MN `100`
 
 #### Passive
@@ -155,7 +155,7 @@
 - Shieldに全Damageを吸収された場合も消費済みとする
 - 再付与時は既存Valueへ加算する
 - 仮式: Value `= 30 + floor(Dragon × 10%)`
-- 仮値: Base Dragon Damage `100` / Dragon Damage Ratio `100%`
+- 仮値: Base Dragon Damage `100`
 - 仮値: 硬直 `100` / CD `300` / MN `80`
 - 回避によりDamageが0になった場合は付与しない
 
@@ -184,7 +184,7 @@
 ##### [状態：ノックアウト]
 Stunとしても扱う。Stunと同等だが、ダメージを受けるたびにダメージ*10%効果時間が伸びる。
 
-- 仮値: Base Dragon Damage `100` / Dragon Damage Ratio `100%`
+- 仮値: Base Dragon Damage `100`
 - 仮値: ノックアウト `200tick`
 - 仮値: 硬直 `120` / CD `400` / MN `120`
 - Damageによる延長率は`KnockoutStatusAsset`から調整可能にする

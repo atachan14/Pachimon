@@ -12,14 +12,14 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseNormalToxinValue = 50;
         [SerializeField, Min(0)] private int _bonusBaseDamage = 150;
         [SerializeField, Min(0)] private int _baseToxinValue = 150;
-        [SerializeField, Min(0)] private int _poisonRatio = 100;
+        [SerializeField, HideInInspector] private int _poisonRatio = 100;
         [SerializeField] private ToxinStatusAsset _toxinStatus;
 
         public int BaseDamage => _baseDamage;
         public int BaseNormalToxinValue => _baseNormalToxinValue;
         public int BonusBaseDamage => _bonusBaseDamage;
         public int BaseToxinValue => _baseToxinValue;
-        public int PoisonRatio => _poisonRatio;
+        public int PoisonRatio => AttributeDamageRules.ScalingRatio;
         public ToxinStatusAsset ToxinStatus => _toxinStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

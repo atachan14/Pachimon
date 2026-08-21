@@ -9,10 +9,10 @@ namespace Pachimon.Battle
     public sealed class ToxinStatusAsset : BattleStatusAsset
     {
         [SerializeField, Min(0)] private int _damagePerTickRatio = 1;
-        [SerializeField, Min(0)] private int _decayPerTickRatio = 1;
+        [SerializeField, Min(0)] private int _decayPerTick = 1;
 
         public int DamagePerTickRatio => _damagePerTickRatio;
-        public int DecayPerTickRatio => _decayPerTickRatio;
+        public int DecayPerTick => _decayPerTick;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -28,7 +28,7 @@ namespace Pachimon.Battle
             string displayName,
             string description,
             int damagePerTickRatio,
-            int decayPerTickRatio,
+            int decayPerTick,
             Sprite icon = null)
         {
             ConfigureDefinitionForEditor(
@@ -37,7 +37,7 @@ namespace Pachimon.Battle
                 description,
                 icon);
             _damagePerTickRatio = damagePerTickRatio;
-            _decayPerTickRatio = decayPerTickRatio;
+            _decayPerTick = decayPerTick;
         }
 #endif
     }

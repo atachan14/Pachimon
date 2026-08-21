@@ -43,7 +43,7 @@ namespace Pachimon.Editor.UI
                 $"{FieldFolder}/PoisonMistFieldEffect.asset");
             mistDefinition.ConfigureForEditor(
                 "毒の霧",
-                "Value以下の軽減前ダメージとなる敵Skill攻撃を回避する。");
+                "効果時間をかけてValueが最小Valueまで減衰する。現在Value以下の軽減前Damageとなる敵Skill攻撃を回避する。");
             var growthDefinition = GetOrCreate<PoisonMagicianGrowthStatusAsset>(
                 $"{StatusFolder}/PoisonMagicianGrowthStatus.asset");
             growthDefinition.ConfigureForEditor(
@@ -55,7 +55,7 @@ namespace Pachimon.Editor.UI
             mist.ConfigureForEditor(
                 53, "毒の霧", 100, 300, 0,
                 "自陣に、弱い敵Skill攻撃を回避する毒の霧を生成する。",
-                100, 100, 75, 25, mistDefinition);
+                100, 100, 75, 100, 20, 100, mistDefinition);
             var firstTouch = ReplaceWith<FirstTouchSkillAsset>(
                 $"{SkillFolder}/Skill_061.asset");
             firstTouch.ConfigureForEditor(

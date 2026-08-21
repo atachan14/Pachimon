@@ -20,8 +20,8 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 30
-  _description: "現在HPが最も低い敵へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与える。撃破時、MNを{value:manaRefund}、CDを{value:cooldownRefund}tick還元する。"
-  _baseDamage: 100
+  _description: "\u73FE\u5728HP\u304C\u6700\u3082\u4F4E\u3044\u6575\u3078{icon:Ice}{color:Ice}{value:damage}{/color}\u306E\u6C37\u30C0\u30E1\u30FC\u30B8\u3068\u5024{value:chill}\u306E\u51B7\u6C17\u3092\u4E0E\u3048\u308B\u3002\u6483\u7834\u6642\u3001MN\u3092{value:manaRefund}\u3001CD\u3092{value:cooldownRefund}tick\u9084\u5143\u3059\u308B\u3002"
+  _baseDamage: 170
   _baseChill: 30
   _iceRatio: 100
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}

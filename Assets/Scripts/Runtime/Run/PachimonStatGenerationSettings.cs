@@ -6,7 +6,7 @@ namespace Pachimon.Run
     {
         public PachimonStatGenerationSettings(
             int attributeAllocationBudget = 800,
-            int commonAllocationBudget = 600,
+            int commonAllocationBudget = 200,
             int resourceMinimumValueUnits = 100,
             int resourceDisplayMultiplier = 5,
             int initialMaxAllocation = 100,

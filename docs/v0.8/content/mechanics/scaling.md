@@ -65,11 +65,20 @@ ScaleFromBase(BaseValue, Stat, Ratio)
 - `BaseValue`は`Stat = 0`で得られる効果量
 - `Ratio`はStatの影響度とし、基本値は`100`
 - `Ratio = 50`でStatの影響を半分、`200`で倍にする
-- SOでは基準値と`XxxRatio`を別々の調整項目として保持する
-- Damageの基準値はDamage属性を含む`BaseFireDamage`などの名前を使う
-- DamageのRatioは`FireDamageRatio`など、`入力元 + 出力先 + Ratio`の順にする
-- 汎用Valueは`BaseValue / FireValueRatio`のように表す
+- Skillの標準的なDamage・状態Value・回復・Shield・効果時間はRatioをSOに保持せず、対応属性を`100%`参照する
+- 標準効果量の調整は`BaseDamage`、`BaseValue`、`BaseDurationTicks`などのBase値で行う
+- 複数属性の合算、割合そのものを生成する効果、意図的に属性影響度を変える固有式だけは個別Ratioを保持できる
+- 個別Ratioを持つ場合は、入力元と用途が分かる名前（例：`WindPenetrationRatio`）にする
 - Valueから別の値を導出する場合は`ValueHpRatio`など、同じく入力元から出力先の順にする
+
+### 個別Ratioを残す例外
+
+- 複数の属性・環境値を参照し、割合生成も兼ねる効果：`日光浴`、`蒸発`
+- 貫通率や軽減率など割合そのものを生成する効果：`バックファイア`、`ウォーターカッター`、`ポイズンシールド`
+- 100%以外の属性影響度が固有仕様になっている効果：`ドラゴンクランカー`、`フローズンブレイク`、`セカンドウィンド`
+- Base値との単純な積ではないTiming式：`氷の刃`、`ソーラービーム`
+
+これらは式を個別に再検討するまでRatioをSOへ残す。
 
 ### 例
 
@@ -102,7 +111,8 @@ Value = Electric × SnapshotScalingRatio / 100
 
 - Weather・Status・PassiveなどがAttributeの影響度を変える場合、Stat本体ではなくRatioへMultiplierを適用する
 - `BattleState.ResolveAttributeRatio(Attribute, BaseRatio)`を共通入口とする
-- Damageと固有効果は同じ補正済みRatioを使用する
+- Skillの標準効果はBaseRatioを常に`100`として補正する
+- 例外的な固有効果だけはSOに設定した個別RatioをBaseRatioとして補正する
 - 防御計算は攻撃・効果用Ratioを参照しない
 
 ```text

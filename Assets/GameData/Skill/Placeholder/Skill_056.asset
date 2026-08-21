@@ -21,7 +21,7 @@ MonoBehaviour:
   _baseCooldownTicks: 400
   _baseManaCost: 40
   _description: "\u6575\u306E\u5148\u982D\u3078{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E\u7ADC\u30C0\u30E1\u30FC\u30B8\u3068\u3001{value:knockoutDuration}tick\u306E\u30CE\u30C3\u30AF\u30A2\u30A6\u30C8\u3092\u4E0E\u3048\u308B\u3002"
-  _baseDragonDamage: 100
+  _baseDragonDamage: 120
   _dragonDamageRatio: 100
-  _knockoutDurationTicks: 100
+  _knockoutDurationTicks: 30
   _knockoutStatus: {fileID: 11400000, guid: fb9b1ea8ba9553f46afe447ac437c6d4, type: 2}

@@ -9,9 +9,9 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Water Pulse Skill")]
     public sealed class WaterPulseSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
 
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public override bool ConsumesAllCurrentMana => true;
 
         public override void CollectValidationErrors(ICollection<string> errors)

@@ -12,1212 +12,155 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a4acf86e01a34491859f89a415339771, type: 3}
   m_Name: PachimonCatalog
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Data.PachimonCatalog
-  _species:
-  - _speciesId: 1
-    _displayName: "\u30D1\u30C1\u30AB\u30B2"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 1
-    _passiveId: 1
-    _isRunEnabled: 1
-  - _speciesId: 2
-    _displayName: "\u30D1\u30C1\u30AC\u30E1"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 2
-    _passiveId: 2
-    _isRunEnabled: 1
-  - _speciesId: 3
-    _displayName: "\u30D1\u30C1\u30AE\u30C0\u30CD"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 3
-    _passiveId: 3
-    _isRunEnabled: 1
-  - _speciesId: 4
-    _displayName: "\u30D1\u30C1\u30C1\u30E5\u30A6"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 4
-    _passiveId: 4
-    _isRunEnabled: 1
-  - _speciesId: 5
-    _displayName: "\u30D1\u30C1\u30E0\u30B7"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 5
-    _passiveId: 5
-    _isRunEnabled: 1
-  - _speciesId: 6
-    _displayName: "\u30D1\u30C1\u30B4\u30AA\u30EA"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 6
-    _passiveId: 6
-    _isRunEnabled: 1
-  - _speciesId: 7
-    _displayName: "\u30D1\u30C1\u30AB\u30BC"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 7
-    _passiveId: 7
-    _isRunEnabled: 1
-  - _speciesId: 8
-    _displayName: "\u30D1\u30C1\u30EA\u30E5\u30A6"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 8
-    _passiveId: 8
-    _isRunEnabled: 1
-  - _speciesId: 9
-    _displayName: "\u30B9\u30B9\u30E4\u30E2\u30EA"
-    _frontSprite: {fileID: 21300000, guid: 734f0d9862a64a03afc9d9acfcc15f63, type: 3}
-    _backSprite: {fileID: 21300000, guid: 26cadec48edb4036b08258b014c9b3fd, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 9
-    _passiveId: 9
-    _isRunEnabled: 1
-  - _speciesId: 10
-    _displayName: "\u30D1\u30C1\u30CA\u30DF"
-    _frontSprite: {fileID: 21300000, guid: f22382e1bfcd4c409969d37ea5ca03af, type: 3}
-    _backSprite: {fileID: 21300000, guid: 3e58e1064551405e88bca1e42205cb29, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 10
-    _passiveId: 10
-    _isRunEnabled: 1
-  - _speciesId: 11
-    _displayName: "\u30D2\u30CA\u30DC\u30C3\u30B3"
-    _frontSprite: {fileID: 21300000, guid: 9d7795c3526b4f9a9b01e578790d75a7, type: 3}
-    _backSprite: {fileID: 21300000, guid: d071066f6db14dbcbe27d06de4260dae, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 11
-    _passiveId: 11
-    _isRunEnabled: 1
-  - _speciesId: 12
-    _displayName: "\u30C7\u30F3\u30AD\u30A6\u30AA"
-    _frontSprite: {fileID: 21300000, guid: f1efeb46b473467b9035a8c08325b1ea, type: 3}
-    _backSprite: {fileID: 21300000, guid: 6d50af1b7d1b4efdb0716e4409ce3112, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 12
-    _passiveId: 12
-    _isRunEnabled: 1
-  - _speciesId: 13
-    _displayName: "\u30B7\u30F3\u30B1\u30A4\u30C9"
-    _frontSprite: {fileID: 21300000, guid: 4331ccf67fb44cca98b5ca0e96fa0725, type: 3}
-    _backSprite: {fileID: 21300000, guid: f05ae0815520411faaf285b402c8f2ef, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 13
-    _passiveId: 13
-    _isRunEnabled: 1
-  - _speciesId: 14
-    _displayName: "\u30AB\u30AC\u30DF\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 6edfc38f93244091b5a1152c565a9b17, type: 3}
-    _backSprite: {fileID: 21300000, guid: ffd2164dd31844c8a59a862111c708ac, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 14
-    _passiveId: 14
-    _isRunEnabled: 1
-  - _speciesId: 15
-    _displayName: "\u30C8\u30D3\u30C1\u30BF"
-    _frontSprite: {fileID: 21300000, guid: 6cdc704c5ad84918a52bd644832c683d, type: 3}
-    _backSprite: {fileID: 21300000, guid: dcd8d479e66d46da8f018c067504b2fd, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 15
-    _passiveId: 15
-    _isRunEnabled: 1
-  - _speciesId: 16
-    _displayName: "\u30B4\u30F3\u30B0\u30EB"
-    _frontSprite: {fileID: 21300000, guid: 4b3d751e74753110867a23b77d1ee578, type: 3}
-    _backSprite: {fileID: 21300000, guid: 50e3c3a690ade01ecfcf8808a51a3876, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 16
-    _passiveId: 16
-    _isRunEnabled: 1
-  - _speciesId: 17
-    _displayName: "\u30C4\u30E9\u30CD\u30B3"
-    _frontSprite: {fileID: 21300000, guid: 48de96169ff748a7b58e7da093774e61, type: 3}
-    _backSprite: {fileID: 21300000, guid: 66e517193aac4bc8ab45f8d058035089, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 17
-    _passiveId: 17
-    _isRunEnabled: 1
-  - _speciesId: 18
-    _displayName: "\u30A2\u30E1\u30AC\u30A8\u30EB"
-    _frontSprite: {fileID: 21300000, guid: 6aa2236ca86940f7a1cb468f8a9f4cd1, type: 3}
-    _backSprite: {fileID: 21300000, guid: c664b969def24a9abb6188968e4120ac, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 18
-    _passiveId: 18
-    _isRunEnabled: 1
-  - _speciesId: 19
-    _displayName: "\u30C4\u30BF\u30D8\u30D3"
-    _frontSprite: {fileID: 21300000, guid: 6426cd55b3a94821b9f77f844d5b1153, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36f6fe00944c4e63ad9c971d7efb0599, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 19
-    _passiveId: 19
-    _isRunEnabled: 1
-  - _speciesId: 20
-    _displayName: "\u30DC\u30EB\u30AB\u30D6\u30EB"
-    _frontSprite: {fileID: 21300000, guid: 3cdaa02dfeb14cce88f6b1fdfdb8d177, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5bdf579481cf4c829d300dcb2a4ef724, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 20
-    _passiveId: 20
-    _isRunEnabled: 1
-  - _speciesId: 21
-    _displayName: "\u30B9\u30E2\u30C3\u30B0\u30F3"
-    _frontSprite: {fileID: 21300000, guid: e913ca57954c401198612b58e8859b7e, type: 3}
-    _backSprite: {fileID: 21300000, guid: 940ee15b881f4d429d841c3c1ca2c717, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 21
-    _passiveId: 21
-    _isRunEnabled: 1
-  - _speciesId: 22
-    _displayName: "\u30C4\u30E9\u30E9\u30F3"
-    _frontSprite: {fileID: 21300000, guid: af48d424e88f431780e09c43d806e2e8, type: 3}
-    _backSprite: {fileID: 21300000, guid: b854b4aded144d02901a888d6ae238f8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 22
-    _passiveId: 22
-    _isRunEnabled: 1
-  - _speciesId: 23
-    _displayName: "\u30D5\u30A6\u30AB\u30ED\u30F3"
-    _frontSprite: {fileID: 21300000, guid: de6151fbf51f474c820bf8ae12ee883c, type: 3}
-    _backSprite: {fileID: 21300000, guid: 03b83ed875c04dd294b2fa730919c439, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 23
-    _passiveId: 23
-    _isRunEnabled: 1
-  - _speciesId: 24
-    _displayName: "\u30D2\u30E9\u30EA\u30E5\u30A6"
-    _frontSprite: {fileID: 21300000, guid: 3e323213a4ac5c319e7b316bc94cee4f, type: 3}
-    _backSprite: {fileID: 21300000, guid: c0bc55e5d000e95c5f5dc7fa06bca224, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 24
-    _passiveId: 24
-    _isRunEnabled: 1
-  - _speciesId: 25
-    _displayName: "\u30AB\u30DE\u30C9\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 07809300bb8748c38c7fcdb04c4f7c7c, type: 3}
-    _backSprite: {fileID: 21300000, guid: 0de39676bca14455a1f21b290037eb27, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 25
-    _passiveId: 25
-    _isRunEnabled: 1
-  - _speciesId: 26
-    _displayName: "\u30D1\u30C1\u30D5\u30CD"
-    _frontSprite: {fileID: 21300000, guid: 8f54ad0482df41489f85ea6d57a1cde0, type: 3}
-    _backSprite: {fileID: 21300000, guid: 771ecc2ae80449b19960880a598f4100, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 26
-    _passiveId: 26
-    _isRunEnabled: 1
-  - _speciesId: 27
-    _displayName: "\u30BD\u30E9\u30D0\u30CA"
-    _frontSprite: {fileID: 21300000, guid: e9e82dec48c74496b56039cea9d5a431, type: 3}
-    _backSprite: {fileID: 21300000, guid: 0d0db7565f614b47a37c047b40d3682e, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 27
-    _passiveId: 27
-    _isRunEnabled: 1
-  - _speciesId: 28
-    _displayName: "\u30E9\u30A4\u30CF\u30E4\u30C6"
-    _frontSprite: {fileID: 21300000, guid: 95a00df5ab1f424b904b806d0115c8e4, type: 3}
-    _backSprite: {fileID: 21300000, guid: 6cd1cfcb8c9c4162ad1687578ac52c1b, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 28
-    _passiveId: 28
-    _isRunEnabled: 1
-  - _speciesId: 29
-    _displayName: "\u30C9\u30AF\u30CF\u30B3\u30D3"
-    _frontSprite: {fileID: 21300000, guid: 891cf24b36954c60a84ff6370c068b50, type: 3}
-    _backSprite: {fileID: 21300000, guid: a38b9818673c46659a41faa1fc1b012a, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 29
-    _passiveId: 29
-    _isRunEnabled: 1
-  - _speciesId: 30
-    _displayName: "\u30B5\u30E0\u30BE\u30A6"
-    _frontSprite: {fileID: 21300000, guid: 046878dbf6604eafb28de94da5484023, type: 3}
-    _backSprite: {fileID: 21300000, guid: 67f1eac927724abb80bb5f051a41b392, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 30
-    _passiveId: 30
-    _isRunEnabled: 1
-  - _speciesId: 31
-    _displayName: "\u30CA\u30AE\u30B7\u30AB"
-    _frontSprite: {fileID: 21300000, guid: 58709cbfc1c14e5c8663e3f2c71d7794, type: 3}
-    _backSprite: {fileID: 21300000, guid: 51fc165208ba47889b8a2aae5d72cbb6, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 31
-    _passiveId: 31
-    _isRunEnabled: 1
-  - _speciesId: 32
-    _displayName: "\u30DE\u30A4\u30C9\u30E9"
-    _frontSprite: {fileID: 21300000, guid: b2f12584b74c961f6af3d1bad34f9451, type: 3}
-    _backSprite: {fileID: 21300000, guid: 099c4555e5f8fe466ed3cdd981d77cc7, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 32
-    _passiveId: 32
-    _isRunEnabled: 1
-  - _speciesId: 33
-    _displayName: "\u30E4\u30B8\u30EA\u30B9"
-    _frontSprite: {fileID: 21300000, guid: 92b65941bf524bb1b481d2d674b127db, type: 3}
-    _backSprite: {fileID: 21300000, guid: 181c1e57b085456aa338d2d7ef369d32, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 33
-    _passiveId: 33
-    _isRunEnabled: 1
-  - _speciesId: 34
-    _displayName: "\u30D1\u30C1\u30D9\u30FC\u30EB"
-    _frontSprite: {fileID: 21300000, guid: 7598bc31e2f94f7f89c35c7d2fe63bb9, type: 3}
-    _backSprite: {fileID: 21300000, guid: 89d8992d29f74ff8bbeb8158ffc895d2, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 34
-    _passiveId: 34
-    _isRunEnabled: 1
-  - _speciesId: 35
-    _displayName: "\u30DE\u30AD\u30C4\u30EB"
-    _frontSprite: {fileID: 21300000, guid: 638925a26dbd4cd48dd6abb65ae01de2, type: 3}
-    _backSprite: {fileID: 21300000, guid: 019c756ca71842cba98384f797f7439b, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 35
-    _passiveId: 35
-    _isRunEnabled: 1
-  - _speciesId: 36
-    _displayName: "\u30BF\u30E1\u30C7\u30F3"
-    _frontSprite: {fileID: 21300000, guid: ada66b8d64054111a39eccb41e778e8d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 888132920d7e485ab9f3fb809dfecb10, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 36
-    _passiveId: 36
-    _isRunEnabled: 1
-  - _speciesId: 37
-    _displayName: "\u30D0\u30AF\u30C9\u30AF\u30AC"
-    _frontSprite: {fileID: 21300000, guid: 334e2486bfbc4471b78b680c3b3daeaa, type: 3}
-    _backSprite: {fileID: 21300000, guid: 9d237e933cba43d9bf0ea96cc2376ad9, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 37
-    _passiveId: 37
-    _isRunEnabled: 1
-  - _speciesId: 38
-    _displayName: "\u30C4\u30E9\u30AB\u30DE"
-    _frontSprite: {fileID: 21300000, guid: 9f80e468fafa4e7d8ed1b3eb945a6c8b, type: 3}
-    _backSprite: {fileID: 21300000, guid: 9c649864e2bc4a53ac283dce33720f00, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 38
-    _passiveId: 38
-    _isRunEnabled: 1
-  - _speciesId: 39
-    _displayName: "\u30CA\u30AE\u30DE\u30EB"
-    _frontSprite: {fileID: 21300000, guid: e75a4fc71c054545a4ee9184995efe1c, type: 3}
-    _backSprite: {fileID: 21300000, guid: ad2f810f69dc4719bfbb0a72652bd80a, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 39
-    _passiveId: 39
-    _isRunEnabled: 1
-  - _speciesId: 40
-    _displayName: "\u30D0\u30EA\u30D0\u30AD"
-    _frontSprite: {fileID: 21300000, guid: 0db5257048ca502ddce3ea47496045b8, type: 3}
-    _backSprite: {fileID: 21300000, guid: 9f7a65881a7396afa57e6e0b33304ff4, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 40
-    _passiveId: 40
-    _isRunEnabled: 1
-  - _speciesId: 41
-    _displayName: "\u30D0\u30AF\u30E4\u30AE"
-    _frontSprite: {fileID: 21300000, guid: b8488faec09b4418acef9077baca2f0b, type: 3}
-    _backSprite: {fileID: 21300000, guid: 80261f7d4bb04e6dbe90ba002bfcc8d4, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 41
-    _passiveId: 41
-    _isRunEnabled: 1
-  - _speciesId: 42
-    _displayName: "\u30DF\u30BA\u30CE\u30B3"
-    _frontSprite: {fileID: 21300000, guid: 9c4caf854d7047fcae07cb12efef15f4, type: 3}
-    _backSprite: {fileID: 21300000, guid: 9653ea5cf3b64ac0a3b887f5c74838ef, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 42
-    _passiveId: 42
-    _isRunEnabled: 1
-  - _speciesId: 43
-    _displayName: "\u30B7\u30D3\u30EC\u30C0\u30B1"
-    _frontSprite: {fileID: 21300000, guid: b17e97cb74364a2c838275d58135606d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 6557f522fea04b35b04bb11497d2842c, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 43
-    _passiveId: 43
-    _isRunEnabled: 1
-  - _speciesId: 44
-    _displayName: "\u30EC\u30FC\u30EB\u30AC\u30F3"
-    _frontSprite: {fileID: 21300000, guid: d97919854fa644fda9ff9743ab86044f, type: 3}
-    _backSprite: {fileID: 21300000, guid: f1f0306025694cc986c535dc0ddc21a7, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 44
-    _passiveId: 44
-    _isRunEnabled: 1
-  - _speciesId: 45
-    _displayName: "\u30C9\u30AF\u30CA\u30A4\u30C8"
-    _frontSprite: {fileID: 21300000, guid: 77ee3fce8eee467cb66c7fac16c3cc67, type: 3}
-    _backSprite: {fileID: 21300000, guid: 92054b7bb25645789baf5c821620db36, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 45
-    _passiveId: 45
-    _isRunEnabled: 1
-  - _speciesId: 46
-    _displayName: "\u30D5\u30ED\u30DE\u30B8\u30E7"
-    _frontSprite: {fileID: 21300000, guid: 2f72b7c3325c447b974d050f3001175a, type: 3}
-    _backSprite: {fileID: 21300000, guid: cf1f9b8bbaa04a78acf36a9c353c5fb3, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 46
-    _passiveId: 46
-    _isRunEnabled: 1
-  - _speciesId: 47
-    _displayName: "\u30A2\u30E9\u30B7\u30FC\u30D7"
-    _frontSprite: {fileID: 21300000, guid: 07ecdad3ecb14186a4afefee5a5ff3c4, type: 3}
-    _backSprite: {fileID: 21300000, guid: 34bc60e9e02c491db739a87bcf9e11e2, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 47
-    _passiveId: 47
-    _isRunEnabled: 1
-  - _speciesId: 48
-    _displayName: "\u30AB\u30AE\u30C5\u30E1"
-    _frontSprite: {fileID: 21300000, guid: 6a4572eca5576b679353d2991ee0299b, type: 3}
-    _backSprite: {fileID: 21300000, guid: 8ab20cb5c3f83d2b21bb146fd30b9812, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 48
-    _passiveId: 48
-    _isRunEnabled: 1
-  - _speciesId: 49
-    _displayName: "\u30D2\u30C7\u30EA\u30B3"
-    _frontSprite: {fileID: 21300000, guid: 654e342865dd4eca99cb06ea11483685, type: 3}
-    _backSprite: {fileID: 21300000, guid: 631f4bdbf8274171907c64785672f4f2, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 49
-    _passiveId: 49
-    _isRunEnabled: 1
-  - _speciesId: 50
-    _displayName: "\u30ED\u30AB\u30C9\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 3c2bbefb62ae4f05b3a9fb5a1ecd2e04, type: 3}
-    _backSprite: {fileID: 21300000, guid: b0f78abebba34f838881c2b34b05facf, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 50
-    _passiveId: 50
-    _isRunEnabled: 1
-  - _speciesId: 51
-    _displayName: "\u30D3\u30FC\u30C8\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 63f1749c3f0a487a875910ac217cd22d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 915678cc96d741abbebc861928d4731a, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 51
-    _passiveId: 51
-    _isRunEnabled: 1
-  - _speciesId: 52
-    _displayName: "\u30AF\u30E2\u30E9\u30A4"
-    _frontSprite: {fileID: 21300000, guid: 9100593728764318b3faa00be2f305e8, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5d62ad56ae484f5799fe8e48a78ed079, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 52
-    _passiveId: 52
-    _isRunEnabled: 1
-  - _speciesId: 53
-    _displayName: "\u30AD\u30EA\u30DE\u30B8\u30E7"
-    _frontSprite: {fileID: 21300000, guid: 370f1814a42c4a08a8688abcf8b3bcbb, type: 3}
-    _backSprite: {fileID: 21300000, guid: 961a3257ac8f4b77865607d267a4525d, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 53
-    _passiveId: 53
-    _isRunEnabled: 1
-  - _speciesId: 54
-    _displayName: "\u30D2\u30E7\u30A6\u30AC\u30E1"
-    _frontSprite: {fileID: 21300000, guid: 2ade9a50f852475ca9813fee54ebbefc, type: 3}
-    _backSprite: {fileID: 21300000, guid: 663e1804ba894e27b08d2a5e0d7b41cf, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 54
-    _passiveId: 54
-    _isRunEnabled: 1
-  - _speciesId: 55
-    _displayName: "\u30AB\u30DE\u30C4\u30D0\u30E1"
-    _frontSprite: {fileID: 21300000, guid: 4fea4833d64c4cc2ba2e7c11e6dea578, type: 3}
-    _backSprite: {fileID: 21300000, guid: 57414b89c353497d88f05453168abd78, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 55
-    _passiveId: 55
-    _isRunEnabled: 1
-  - _speciesId: 56
-    _displayName: "\u30CE\u30C3\u30AF\u30ED\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 6511062a426a703920f9f1812e62317a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 2e05308949735fda08c74f3233ea78ed, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 56
-    _passiveId: 56
-    _isRunEnabled: 1
-  - _speciesId: 57
-    _displayName: "\u30E6\u30B2\u30A4\u30CC"
-    _frontSprite: {fileID: 21300000, guid: 9593df890ac442b0af57e913b6b9ffba, type: 3}
-    _backSprite: {fileID: 21300000, guid: 8bdfc6c5eae84cef80c1f452d16812d4, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 57
-    _passiveId: 57
-    _isRunEnabled: 1
-  - _speciesId: 58
-    _displayName: "\u30AF\u30B8\u30E9\u30F3"
-    _frontSprite: {fileID: 21300000, guid: cb2e32aeee354d4bbc4c160a2a0cabbd, type: 3}
-    _backSprite: {fileID: 21300000, guid: 3f7a83e58caf4d47936f93e698bca176, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 58
-    _passiveId: 58
-    _isRunEnabled: 1
-  - _speciesId: 59
-    _displayName: "\u30AB\u30A8\u30F3\u30D0\u30CA"
-    _frontSprite: {fileID: 21300000, guid: dd1534bf7e184309bc790cab82b0083e, type: 3}
-    _backSprite: {fileID: 21300000, guid: 72411c7218e841e9bfde43cc644315b5, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 59
-    _passiveId: 59
-    _isRunEnabled: 1
-  - _speciesId: 60
-    _displayName: "\u30B7\u30D3\u30EC\u30AC\u30E1"
-    _frontSprite: {fileID: 21300000, guid: 5b40aceaac8749c19ea9ac30c177fe42, type: 3}
-    _backSprite: {fileID: 21300000, guid: d87a86abce5947848f3f14b4688558bd, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 60
-    _passiveId: 60
-    _isRunEnabled: 1
-  - _speciesId: 61
-    _displayName: "\u30B5\u30AD\u30C9\u30AF"
-    _frontSprite: {fileID: 21300000, guid: 373940adfa0444dfa6652ef245730c5a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003891e4658f47b88153d6376a2aa0da, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 61
-    _passiveId: 61
-    _isRunEnabled: 1
-  - _speciesId: 62
-    _displayName: "\u30E6\u30AD\u30D5\u30AF\u30ED"
-    _frontSprite: {fileID: 21300000, guid: c57a5286d30a44b999dbfdaa60841579, type: 3}
-    _backSprite: {fileID: 21300000, guid: 8338d7cbc6fa452fa41489f6a9a6a72c, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 62
-    _passiveId: 62
-    _isRunEnabled: 1
-  - _speciesId: 63
-    _displayName: "\u30AB\u30B6\u30AF\u30B8\u30E3"
-    _frontSprite: {fileID: 21300000, guid: f265ccb32a5f4ead8fef765aa64ef427, type: 3}
-    _backSprite: {fileID: 21300000, guid: bd5fe5075d004bc0ada37251fc2b339e, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 63
-    _passiveId: 63
-    _isRunEnabled: 1
-  - _speciesId: 64
-    _displayName: "\u30BF\u30C6\u30B4\u30F3"
-    _frontSprite: {fileID: 21300000, guid: 3b6f17b83eb924e6713e0d3070d26e84, type: 3}
-    _backSprite: {fileID: 21300000, guid: a6eae00bf09b2b26d989ea87c01ed16d, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 64
-    _passiveId: 64
-    _isRunEnabled: 1
-  - _speciesId: 65
-    _displayName: "\u708E009"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 65
-    _passiveId: 65
-    _isRunEnabled: 0
-  - _speciesId: 66
-    _displayName: "\u6C34009"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 66
-    _passiveId: 66
-    _isRunEnabled: 0
-  - _speciesId: 67
-    _displayName: "\u8349009"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 67
-    _passiveId: 67
-    _isRunEnabled: 0
-  - _speciesId: 68
-    _displayName: "\u96FB009"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 68
-    _passiveId: 68
-    _isRunEnabled: 0
-  - _speciesId: 69
-    _displayName: "\u6BD2009"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 69
-    _passiveId: 69
-    _isRunEnabled: 0
-  - _speciesId: 70
-    _displayName: "\u6C37009"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 70
-    _passiveId: 70
-    _isRunEnabled: 0
-  - _speciesId: 71
-    _displayName: "\u98A8009"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 71
-    _passiveId: 71
-    _isRunEnabled: 0
-  - _speciesId: 72
-    _displayName: "\u7ADC009"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 72
-    _passiveId: 72
-    _isRunEnabled: 0
-  - _speciesId: 73
-    _displayName: "\u708E010"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 73
-    _passiveId: 73
-    _isRunEnabled: 0
-  - _speciesId: 74
-    _displayName: "\u6C34010"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 74
-    _passiveId: 74
-    _isRunEnabled: 0
-  - _speciesId: 75
-    _displayName: "\u8349010"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 75
-    _passiveId: 75
-    _isRunEnabled: 0
-  - _speciesId: 76
-    _displayName: "\u96FB010"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 76
-    _passiveId: 76
-    _isRunEnabled: 0
-  - _speciesId: 77
-    _displayName: "\u6BD2010"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 77
-    _passiveId: 77
-    _isRunEnabled: 0
-  - _speciesId: 78
-    _displayName: "\u6C37010"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 78
-    _passiveId: 78
-    _isRunEnabled: 0
-  - _speciesId: 79
-    _displayName: "\u98A8010"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 79
-    _passiveId: 79
-    _isRunEnabled: 0
-  - _speciesId: 80
-    _displayName: "\u7ADC010"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 80
-    _passiveId: 80
-    _isRunEnabled: 0
-  - _speciesId: 81
-    _displayName: "\u708E011"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 81
-    _passiveId: 81
-    _isRunEnabled: 0
-  - _speciesId: 82
-    _displayName: "\u6C34011"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 82
-    _passiveId: 82
-    _isRunEnabled: 0
-  - _speciesId: 83
-    _displayName: "\u8349011"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 83
-    _passiveId: 83
-    _isRunEnabled: 0
-  - _speciesId: 84
-    _displayName: "\u96FB011"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 84
-    _passiveId: 84
-    _isRunEnabled: 0
-  - _speciesId: 85
-    _displayName: "\u6BD2011"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 85
-    _passiveId: 85
-    _isRunEnabled: 0
-  - _speciesId: 86
-    _displayName: "\u6C37011"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 86
-    _passiveId: 86
-    _isRunEnabled: 0
-  - _speciesId: 87
-    _displayName: "\u98A8011"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 87
-    _passiveId: 87
-    _isRunEnabled: 0
-  - _speciesId: 88
-    _displayName: "\u7ADC011"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 88
-    _passiveId: 88
-    _isRunEnabled: 0
-  - _speciesId: 89
-    _displayName: "\u708E012"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 89
-    _passiveId: 89
-    _isRunEnabled: 0
-  - _speciesId: 90
-    _displayName: "\u6C34012"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 90
-    _passiveId: 90
-    _isRunEnabled: 0
-  - _speciesId: 91
-    _displayName: "\u8349012"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 91
-    _passiveId: 91
-    _isRunEnabled: 0
-  - _speciesId: 92
-    _displayName: "\u96FB012"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 92
-    _passiveId: 92
-    _isRunEnabled: 0
-  - _speciesId: 93
-    _displayName: "\u6BD2012"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 93
-    _passiveId: 93
-    _isRunEnabled: 0
-  - _speciesId: 94
-    _displayName: "\u6C37012"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 94
-    _passiveId: 94
-    _isRunEnabled: 0
-  - _speciesId: 95
-    _displayName: "\u98A8012"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 95
-    _passiveId: 95
-    _isRunEnabled: 0
-  - _speciesId: 96
-    _displayName: "\u7ADC012"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 96
-    _passiveId: 96
-    _isRunEnabled: 0
-  - _speciesId: 97
-    _displayName: "\u708E013"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 97
-    _passiveId: 97
-    _isRunEnabled: 0
-  - _speciesId: 98
-    _displayName: "\u6C34013"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 98
-    _passiveId: 98
-    _isRunEnabled: 0
-  - _speciesId: 99
-    _displayName: "\u8349013"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 99
-    _passiveId: 99
-    _isRunEnabled: 0
-  - _speciesId: 100
-    _displayName: "\u96FB013"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 100
-    _passiveId: 100
-    _isRunEnabled: 0
-  - _speciesId: 101
-    _displayName: "\u6BD2013"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 101
-    _passiveId: 101
-    _isRunEnabled: 0
-  - _speciesId: 102
-    _displayName: "\u6C37013"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 102
-    _passiveId: 102
-    _isRunEnabled: 0
-  - _speciesId: 103
-    _displayName: "\u98A8013"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 103
-    _passiveId: 103
-    _isRunEnabled: 0
-  - _speciesId: 104
-    _displayName: "\u7ADC013"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 104
-    _passiveId: 104
-    _isRunEnabled: 0
-  - _speciesId: 105
-    _displayName: "\u708E014"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 105
-    _passiveId: 105
-    _isRunEnabled: 0
-  - _speciesId: 106
-    _displayName: "\u6C34014"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 106
-    _passiveId: 106
-    _isRunEnabled: 0
-  - _speciesId: 107
-    _displayName: "\u8349014"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 107
-    _passiveId: 107
-    _isRunEnabled: 0
-  - _speciesId: 108
-    _displayName: "\u96FB014"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 108
-    _passiveId: 108
-    _isRunEnabled: 0
-  - _speciesId: 109
-    _displayName: "\u6BD2014"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 109
-    _passiveId: 109
-    _isRunEnabled: 0
-  - _speciesId: 110
-    _displayName: "\u6C37014"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 110
-    _passiveId: 110
-    _isRunEnabled: 0
-  - _speciesId: 111
-    _displayName: "\u98A8014"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 111
-    _passiveId: 111
-    _isRunEnabled: 0
-  - _speciesId: 112
-    _displayName: "\u7ADC014"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 112
-    _passiveId: 112
-    _isRunEnabled: 0
-  - _speciesId: 113
-    _displayName: "\u708E015"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 113
-    _passiveId: 113
-    _isRunEnabled: 0
-  - _speciesId: 114
-    _displayName: "\u6C34015"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 114
-    _passiveId: 114
-    _isRunEnabled: 0
-  - _speciesId: 115
-    _displayName: "\u8349015"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 115
-    _passiveId: 115
-    _isRunEnabled: 0
-  - _speciesId: 116
-    _displayName: "\u96FB015"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 116
-    _passiveId: 116
-    _isRunEnabled: 0
-  - _speciesId: 117
-    _displayName: "\u6BD2015"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 117
-    _passiveId: 117
-    _isRunEnabled: 0
-  - _speciesId: 118
-    _displayName: "\u6C37015"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 118
-    _passiveId: 118
-    _isRunEnabled: 0
-  - _speciesId: 119
-    _displayName: "\u98A8015"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 119
-    _passiveId: 119
-    _isRunEnabled: 0
-  - _speciesId: 120
-    _displayName: "\u7ADC015"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 120
-    _passiveId: 120
-    _isRunEnabled: 0
-  - _speciesId: 121
-    _displayName: "\u708E016"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 121
-    _passiveId: 121
-    _isRunEnabled: 0
-  - _speciesId: 122
-    _displayName: "\u6C34016"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 122
-    _passiveId: 122
-    _isRunEnabled: 0
-  - _speciesId: 123
-    _displayName: "\u8349016"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 123
-    _passiveId: 123
-    _isRunEnabled: 0
-  - _speciesId: 124
-    _displayName: "\u96FB016"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 124
-    _passiveId: 124
-    _isRunEnabled: 0
-  - _speciesId: 125
-    _displayName: "\u6BD2016"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 125
-    _passiveId: 125
-    _isRunEnabled: 0
-  - _speciesId: 126
-    _displayName: "\u6C37016"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 126
-    _passiveId: 126
-    _isRunEnabled: 0
-  - _speciesId: 127
-    _displayName: "\u98A8016"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 127
-    _passiveId: 127
-    _isRunEnabled: 0
-  - _speciesId: 128
-    _displayName: "\u7ADC016"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 128
-    _passiveId: 128
-    _isRunEnabled: 0
-  - _speciesId: 129
-    _displayName: "\u708E017"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 129
-    _passiveId: 129
-    _isRunEnabled: 0
-  - _speciesId: 130
-    _displayName: "\u6C34017"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 130
-    _passiveId: 130
-    _isRunEnabled: 0
-  - _speciesId: 131
-    _displayName: "\u8349017"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 131
-    _passiveId: 131
-    _isRunEnabled: 0
-  - _speciesId: 132
-    _displayName: "\u96FB017"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 132
-    _passiveId: 132
-    _isRunEnabled: 0
-  - _speciesId: 133
-    _displayName: "\u6BD2017"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 133
-    _passiveId: 133
-    _isRunEnabled: 0
-  - _speciesId: 134
-    _displayName: "\u6C37017"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 134
-    _passiveId: 134
-    _isRunEnabled: 0
-  - _speciesId: 135
-    _displayName: "\u98A8017"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 135
-    _passiveId: 135
-    _isRunEnabled: 0
-  - _speciesId: 136
-    _displayName: "\u7ADC017"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 136
-    _passiveId: 136
-    _isRunEnabled: 0
-  - _speciesId: 137
-    _displayName: "\u708E018"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 137
-    _passiveId: 137
-    _isRunEnabled: 0
-  - _speciesId: 138
-    _displayName: "\u6C34018"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 138
-    _passiveId: 138
-    _isRunEnabled: 0
-  - _speciesId: 139
-    _displayName: "\u8349018"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 139
-    _passiveId: 139
-    _isRunEnabled: 0
-  - _speciesId: 140
-    _displayName: "\u96FB018"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 140
-    _passiveId: 140
-    _isRunEnabled: 0
-  - _speciesId: 141
-    _displayName: "\u6BD2018"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 141
-    _passiveId: 141
-    _isRunEnabled: 0
-  - _speciesId: 142
-    _displayName: "\u6C37018"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 142
-    _passiveId: 142
-    _isRunEnabled: 0
-  - _speciesId: 143
-    _displayName: "\u98A8018"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 143
-    _passiveId: 143
-    _isRunEnabled: 0
-  - _speciesId: 144
-    _displayName: "\u7ADC018"
-    _frontSprite: {fileID: 21300000, guid: c14c9fa233dae5d438a33464a6750b36, type: 3}
-    _backSprite: {fileID: 21300000, guid: bcc91de8b3f00c34e8c2353f59be5f15, type: 3}
-    _allocationType: 8
-    _fixedSkillId: 144
-    _passiveId: 144
-    _isRunEnabled: 0
-  - _speciesId: 145
-    _displayName: "\u708E019"
-    _frontSprite: {fileID: 21300000, guid: de474cc495504a94e81f258db95eef96, type: 3}
-    _backSprite: {fileID: 21300000, guid: 36634a7b2a6c5b24faad8291b8ba6d0a, type: 3}
-    _allocationType: 1
-    _fixedSkillId: 145
-    _passiveId: 145
-    _isRunEnabled: 0
-  - _speciesId: 146
-    _displayName: "\u6C34019"
-    _frontSprite: {fileID: 21300000, guid: f723b5b07a00e1146916d47cadbc20cc, type: 3}
-    _backSprite: {fileID: 21300000, guid: a29001663ad7e474a98f4dcb1bbaa99d, type: 3}
-    _allocationType: 2
-    _fixedSkillId: 146
-    _passiveId: 146
-    _isRunEnabled: 0
-  - _speciesId: 147
-    _displayName: "\u8349019"
-    _frontSprite: {fileID: 21300000, guid: 4c4e9eab57e8eef41ade8e0df26f16f3, type: 3}
-    _backSprite: {fileID: 21300000, guid: ed1203e1deb1f9b4abc7dfa91c33d96d, type: 3}
-    _allocationType: 3
-    _fixedSkillId: 147
-    _passiveId: 147
-    _isRunEnabled: 0
-  - _speciesId: 148
-    _displayName: "\u96FB019"
-    _frontSprite: {fileID: 21300000, guid: 66ebef1065246d840bf5335ea67ca7ac, type: 3}
-    _backSprite: {fileID: 21300000, guid: 08e0ce66d9cf89942a902c798ac39b9c, type: 3}
-    _allocationType: 4
-    _fixedSkillId: 148
-    _passiveId: 148
-    _isRunEnabled: 0
-  - _speciesId: 149
-    _displayName: "\u6BD2019"
-    _frontSprite: {fileID: 21300000, guid: cd15b7f3249b9594ebad30efbbb6999d, type: 3}
-    _backSprite: {fileID: 21300000, guid: 003c3aebdeb43a94d842b8b986e6e0a5, type: 3}
-    _allocationType: 5
-    _fixedSkillId: 149
-    _passiveId: 149
-    _isRunEnabled: 0
-  - _speciesId: 150
-    _displayName: "\u6C37019"
-    _frontSprite: {fileID: 21300000, guid: 473a35baeff7c664487aec5aec9bff55, type: 3}
-    _backSprite: {fileID: 21300000, guid: 5b3539968e1ec3742869888f81e2a8a8, type: 3}
-    _allocationType: 6
-    _fixedSkillId: 150
-    _passiveId: 150
-    _isRunEnabled: 0
-  - _speciesId: 151
-    _displayName: "\u98A8019"
-    _frontSprite: {fileID: 21300000, guid: 662b27b898b10d04099a171c6c46713a, type: 3}
-    _backSprite: {fileID: 21300000, guid: 69afc881e494646428a690aa7e150035, type: 3}
-    _allocationType: 7
-    _fixedSkillId: 151
-    _passiveId: 151
-    _isRunEnabled: 0
+  _speciesAssets:
+  - {fileID: 11400000, guid: a6a8ec1080534060a0da5a57693e0f31, type: 2}
+  - {fileID: 11400000, guid: ea3d4b1593874b2eabaeec199b90bcc0, type: 2}
+  - {fileID: 11400000, guid: 5aa0487e8f31403a9217a20a62198a33, type: 2}
+  - {fileID: 11400000, guid: c3f727119eef4eb4ba4d5cfb035a16e5, type: 2}
+  - {fileID: 11400000, guid: 32076be58c6d4f39a9920aa16e899b2f, type: 2}
+  - {fileID: 11400000, guid: 224ff07276b64d929d0c5f5eeb64b5b9, type: 2}
+  - {fileID: 11400000, guid: 1f6957bf488c4887814ffac8e9d7f5fa, type: 2}
+  - {fileID: 11400000, guid: 9cc6c9aa801f47d395ffbb23e38ccf11, type: 2}
+  - {fileID: 11400000, guid: 07ac471ba1294cb994d0c48716ce446e, type: 2}
+  - {fileID: 11400000, guid: 0edeb803edc54e629c9dc0d340823416, type: 2}
+  - {fileID: 11400000, guid: c73b63c944e940668a17bf20536e56d6, type: 2}
+  - {fileID: 11400000, guid: be0b6b7222154f24a73be938c00112d1, type: 2}
+  - {fileID: 11400000, guid: 6d1dd565414c4c53a35d7d7aca7ae217, type: 2}
+  - {fileID: 11400000, guid: a40a7fe3b1f84528aba4551427047a08, type: 2}
+  - {fileID: 11400000, guid: 263c058850be445194d5dbf982ae0895, type: 2}
+  - {fileID: 11400000, guid: c13a7a7cff054b68abcf8cddea6ff63e, type: 2}
+  - {fileID: 11400000, guid: f0d2d875c9874b5fb4585ebe69ff6ac8, type: 2}
+  - {fileID: 11400000, guid: 7adb78d904c445429e4753f21f9062b8, type: 2}
+  - {fileID: 11400000, guid: ec9dbbd00fed4cd38eb6bf30104da126, type: 2}
+  - {fileID: 11400000, guid: e2d2f40d8fb24ce3b3dca0f00c8d8874, type: 2}
+  - {fileID: 11400000, guid: a9491438f1ba4cba869ea9d0458db236, type: 2}
+  - {fileID: 11400000, guid: 9640e79d6a75472e969ca8686134f0c0, type: 2}
+  - {fileID: 11400000, guid: e51f44b78d1546278ee190cb0ffe3efc, type: 2}
+  - {fileID: 11400000, guid: b597831776f14637b76af3aed5cc50d0, type: 2}
+  - {fileID: 11400000, guid: 8784907588aa4524a2faa9bf68fd473f, type: 2}
+  - {fileID: 11400000, guid: f60b5eaf92e14ef583505755e09e50b6, type: 2}
+  - {fileID: 11400000, guid: 3000343d520d403ca1645f76f32ce7fb, type: 2}
+  - {fileID: 11400000, guid: ff8d43d1f5dd4ef684f222acada131ad, type: 2}
+  - {fileID: 11400000, guid: 17764552d2ba45a6999a41909597fa50, type: 2}
+  - {fileID: 11400000, guid: 7e134c7ec5e345d1b89f86998e1ecc14, type: 2}
+  - {fileID: 11400000, guid: 817d07c56cc04b38830d90a3ac8f329c, type: 2}
+  - {fileID: 11400000, guid: c80aaa7b2725432da3417e6eb51e85d3, type: 2}
+  - {fileID: 11400000, guid: af12d059688d4b8db4c017dd67bb8754, type: 2}
+  - {fileID: 11400000, guid: 4a803ec8c2c5469d94d45ce7a2ce5a42, type: 2}
+  - {fileID: 11400000, guid: 8d34d467c3f243dda37576cdb806550a, type: 2}
+  - {fileID: 11400000, guid: 8cfc18666d384dcab155dd55b4e8d022, type: 2}
+  - {fileID: 11400000, guid: 896e38424c2f4be9a50f72fb01ae954a, type: 2}
+  - {fileID: 11400000, guid: 4f120b4061cd47aeaec85ca37ab35c19, type: 2}
+  - {fileID: 11400000, guid: 8bdc50abab8d4916925d3ff0bf3a5adf, type: 2}
+  - {fileID: 11400000, guid: 53455dedb48e49af87ca2a38055a3da8, type: 2}
+  - {fileID: 11400000, guid: 9845813df65e49a4a00cd122911e3cd2, type: 2}
+  - {fileID: 11400000, guid: 6a059b7f332b49bc97db30c385a723e1, type: 2}
+  - {fileID: 11400000, guid: 949e9feba00b4e3b9b9c602ca114df96, type: 2}
+  - {fileID: 11400000, guid: a30c9821f8204add8e5407ddafc96848, type: 2}
+  - {fileID: 11400000, guid: ae4813cf984b45caa8683c9b55616277, type: 2}
+  - {fileID: 11400000, guid: d151f1cda6a347d6a75e71bfe73a620e, type: 2}
+  - {fileID: 11400000, guid: 40cae687600744309b58c6fa296ee5ec, type: 2}
+  - {fileID: 11400000, guid: 9391fbd90b6c49b7a0eb652b5e554dd5, type: 2}
+  - {fileID: 11400000, guid: b98c1dde08d1446c93e0b45cb3235d15, type: 2}
+  - {fileID: 11400000, guid: fe29db83234b49cf83086d9c8bde29cd, type: 2}
+  - {fileID: 11400000, guid: 33141f7a143641e3955b5dc54f7a18bc, type: 2}
+  - {fileID: 11400000, guid: a8641ebbe1874d38b6e9e4678443fc7c, type: 2}
+  - {fileID: 11400000, guid: 33720954893e4f22a29b3075d13ba847, type: 2}
+  - {fileID: 11400000, guid: 8e0aeed167a54686845db58fc0ccd0da, type: 2}
+  - {fileID: 11400000, guid: 0c0d9480dbd34229ad89aa9f7b20ce85, type: 2}
+  - {fileID: 11400000, guid: fdacb229c097466aad5e1217a252925b, type: 2}
+  - {fileID: 11400000, guid: 27ac2e923eaf4363aba4ef423f0ed2db, type: 2}
+  - {fileID: 11400000, guid: 997573ae4de2462dbe69aa820aea99dd, type: 2}
+  - {fileID: 11400000, guid: 0c763889a5934592a6937c5c5b128e4a, type: 2}
+  - {fileID: 11400000, guid: a8d02ffdc5ed4c00bc4819de4c47a588, type: 2}
+  - {fileID: 11400000, guid: e3c390a41b444ada9aace054871a9782, type: 2}
+  - {fileID: 11400000, guid: d4307189e0564897918bb667b395e30e, type: 2}
+  - {fileID: 11400000, guid: 6d6dcbdd2e7349119285ba8e93e81890, type: 2}
+  - {fileID: 11400000, guid: 55f84ddc1e734cf18bc302ed81b2edb6, type: 2}
+  - {fileID: 11400000, guid: e3bb4f17f1f34b0199160b93822b6036, type: 2}
+  - {fileID: 11400000, guid: 016ced1dfe81497895941f344c7d1e2b, type: 2}
+  - {fileID: 11400000, guid: 97f7157021ac4d7981cb6d5769d7eef9, type: 2}
+  - {fileID: 11400000, guid: cfed96097e3148ff91f5f0cab44d842c, type: 2}
+  - {fileID: 11400000, guid: d62947265f5440ffa29ad29a3a705605, type: 2}
+  - {fileID: 11400000, guid: f5f10fcad7e04c1eb98a2a189f2f3f22, type: 2}
+  - {fileID: 11400000, guid: 9d9fa70bf1a5434884c62bead1357485, type: 2}
+  - {fileID: 11400000, guid: 1645ab00e1874abca8ae5d9a808144b6, type: 2}
+  - {fileID: 11400000, guid: 38e87cd70d4f4a4eb0ae0a623c4443d2, type: 2}
+  - {fileID: 11400000, guid: e79d3cede1f34e75859456cc35f85a7b, type: 2}
+  - {fileID: 11400000, guid: f2acd0ec5ef54207af16571ad7422968, type: 2}
+  - {fileID: 11400000, guid: d6a14769e4244e2b9f3248d1d0c9f8ea, type: 2}
+  - {fileID: 11400000, guid: 8eb06d700936419ebcc8824acbb142c1, type: 2}
+  - {fileID: 11400000, guid: ce94f1e169bb499f94b14967f5499cb4, type: 2}
+  - {fileID: 11400000, guid: 2d2bf82b1eda4caba4d85978af14290d, type: 2}
+  - {fileID: 11400000, guid: 3e1d6a2ac7fc412a92fa70298556c546, type: 2}
+  - {fileID: 11400000, guid: 846b45dc40424384994878337d70253e, type: 2}
+  - {fileID: 11400000, guid: 40f870256c3d4826a8f698a5163dc767, type: 2}
+  - {fileID: 11400000, guid: e2ecb773a8c74d8cb0812c47a2150937, type: 2}
+  - {fileID: 11400000, guid: a1d809d619714e68a14694bdbe4a2632, type: 2}
+  - {fileID: 11400000, guid: beca28bf665f477fbe55425f6b591a76, type: 2}
+  - {fileID: 11400000, guid: 7a7a5dd29702479baebd42629124e963, type: 2}
+  - {fileID: 11400000, guid: 635e147115e846a2970aad35faef723a, type: 2}
+  - {fileID: 11400000, guid: 06180457fcf34736be85fd8c09da15cd, type: 2}
+  - {fileID: 11400000, guid: 556b4851f901453e840555f79ed75114, type: 2}
+  - {fileID: 11400000, guid: 5391e849d7644fb6aceb148d2587d621, type: 2}
+  - {fileID: 11400000, guid: f5dd59337ba14cae95c3302e751ba149, type: 2}
+  - {fileID: 11400000, guid: ec8f5e0dbc4b4d70a65902720210a6e1, type: 2}
+  - {fileID: 11400000, guid: b9fc8127774048c0adf8870bd4e94980, type: 2}
+  - {fileID: 11400000, guid: 7fc52262c125424e9a1a2e7494373918, type: 2}
+  - {fileID: 11400000, guid: 5bd9875d77984f208020bef7d0fd799b, type: 2}
+  - {fileID: 11400000, guid: d933f10d86e94b8a9976b3e9543af6de, type: 2}
+  - {fileID: 11400000, guid: ee44e1f15c41436cad0c995496fa0cff, type: 2}
+  - {fileID: 11400000, guid: 44a3a3ccfcd54883a803682d7a79fc4e, type: 2}
+  - {fileID: 11400000, guid: 23c51b9645ad4a438cf8e63a541301cc, type: 2}
+  - {fileID: 11400000, guid: bbf2f4bf73b045b8bce947e7c9d18ded, type: 2}
+  - {fileID: 11400000, guid: e92e92c39bd84535a5c67d5e94c1390b, type: 2}
+  - {fileID: 11400000, guid: 55b899ebf28f467f98f68b2a1f5b2d71, type: 2}
+  - {fileID: 11400000, guid: 214b4e500a494092a6de483800393025, type: 2}
+  - {fileID: 11400000, guid: 39613758503d4b0e9a0c983488933826, type: 2}
+  - {fileID: 11400000, guid: c099bbfa3f4a4983a6fafda12c54c4d2, type: 2}
+  - {fileID: 11400000, guid: ac457cbfb95d4f5b88b6867a29283585, type: 2}
+  - {fileID: 11400000, guid: a9a319cb4f1543c099196de947e8743e, type: 2}
+  - {fileID: 11400000, guid: 8d5d9edbb34f42e4922fe7c858557a82, type: 2}
+  - {fileID: 11400000, guid: fe8720de39744ad5b0c685b4da2b8969, type: 2}
+  - {fileID: 11400000, guid: 20376589c6f248289e641febe546f579, type: 2}
+  - {fileID: 11400000, guid: c9359897578c4c1384728752519eee5e, type: 2}
+  - {fileID: 11400000, guid: aacdd73b745a4e7085da5843b0bc3590, type: 2}
+  - {fileID: 11400000, guid: 83164f1f8f674c95a8e719f9c9a2a77e, type: 2}
+  - {fileID: 11400000, guid: 1585d6792dd74b0f8f48112826af906c, type: 2}
+  - {fileID: 11400000, guid: c9c18199b8384f42bb2c79ef5569bfeb, type: 2}
+  - {fileID: 11400000, guid: 60baae351dae42cc8ee1291ac926214a, type: 2}
+  - {fileID: 11400000, guid: 2fb5ad204abe43b1980fa88393a07c26, type: 2}
+  - {fileID: 11400000, guid: cb98259212b8498184657c493cd3c9b5, type: 2}
+  - {fileID: 11400000, guid: c639b61848b54cc1a58a41b6922b14f9, type: 2}
+  - {fileID: 11400000, guid: 6bbcf112cccc4607afe0024315249d39, type: 2}
+  - {fileID: 11400000, guid: 89e743419daf4dd8afdb924c48519a31, type: 2}
+  - {fileID: 11400000, guid: 29da21b13be04ec292face16a7484120, type: 2}
+  - {fileID: 11400000, guid: 6ca039a374d648aeaf37c2c7c764a1c9, type: 2}
+  - {fileID: 11400000, guid: 28c624e54c00426ab58d268772eb862a, type: 2}
+  - {fileID: 11400000, guid: 5aba05e888844e41880e228ad09d720d, type: 2}
+  - {fileID: 11400000, guid: c96476b9e7f44d208c5e37ec6845b235, type: 2}
+  - {fileID: 11400000, guid: 75cacb4ef4e1492e8a22e394a96e7034, type: 2}
+  - {fileID: 11400000, guid: ba614c83ce934408bdfb4960aa2d815f, type: 2}
+  - {fileID: 11400000, guid: d5bf601cb4d24ff4acc5385343a06cfb, type: 2}
+  - {fileID: 11400000, guid: f6413218950e4601a4fa0116c386ef7f, type: 2}
+  - {fileID: 11400000, guid: fa0c0e3fb3e14c01969f379db5bfb9d1, type: 2}
+  - {fileID: 11400000, guid: b856b9c07dce4f039793b24427ffa55d, type: 2}
+  - {fileID: 11400000, guid: 25fea452294540fd804cb0fc4a93fca1, type: 2}
+  - {fileID: 11400000, guid: 98b41ab893b0414e9391e19e7298fb37, type: 2}
+  - {fileID: 11400000, guid: 33923721a5114e56a8670e17a0fe31d5, type: 2}
+  - {fileID: 11400000, guid: 0e2f336ba9054c5cb4ddbb4f6680791c, type: 2}
+  - {fileID: 11400000, guid: 07252269a24d40bbb3319a733938ac0e, type: 2}
+  - {fileID: 11400000, guid: 5e4741a8f468498d90be6979bedf1309, type: 2}
+  - {fileID: 11400000, guid: 91319c157c214c95a6becca5af43d3b9, type: 2}
+  - {fileID: 11400000, guid: 339e0b6c38fc4520b3167edfba98e572, type: 2}
+  - {fileID: 11400000, guid: cf0eeac557334d31a6f106cc98f199fd, type: 2}
+  - {fileID: 11400000, guid: 4cdaa7af95d841dabc8ef6ab7e6df9e1, type: 2}
+  - {fileID: 11400000, guid: cf4d97daae4248d0bda801f1cd365efb, type: 2}
+  - {fileID: 11400000, guid: 67963a60fcb842e3b2f29f261e3b52d2, type: 2}
+  - {fileID: 11400000, guid: bf6609e0d51140e389323ae160a90fd6, type: 2}
+  - {fileID: 11400000, guid: 151fd162688440a1b3a847b74d03c9c9, type: 2}
+  - {fileID: 11400000, guid: 86473174e3aa4d1788830fe046f38ac2, type: 2}
+  - {fileID: 11400000, guid: 4acb155b0b8a4b9eb482262ba5c196af, type: 2}
+  - {fileID: 11400000, guid: 53588b58adfa480588a189194f428c09, type: 2}
+  - {fileID: 11400000, guid: c9c4e0cfe06e43459aa1c3f27aeacc0c, type: 2}
+  - {fileID: 11400000, guid: 234efd55a3224c2a882069944a62b72d, type: 2}

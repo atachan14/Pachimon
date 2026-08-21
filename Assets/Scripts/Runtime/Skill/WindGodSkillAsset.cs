@@ -7,12 +7,12 @@ namespace Pachimon.Skills
     public sealed class WindGodSkillAsset : MachineExclusiveSkillAsset
     {
         [SerializeField, Min(0)] private int _baseDamage = 500;
-        [SerializeField, Min(0)] private int _windRatio = 100;
+        [SerializeField, HideInInspector] private int _windRatio = 100;
         [SerializeField, Min(1)] private int _durationTicks = 300;
         [SerializeField] private WindGodStatusAsset _status;
 
         public int BaseDamage => _baseDamage;
-        public int WindRatio => _windRatio;
+        public int WindRatio => AttributeDamageRules.ScalingRatio;
         public int DurationTicks => _durationTicks;
         public WindGodStatusAsset Status => _status;
 

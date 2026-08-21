@@ -16,6 +16,6 @@ MonoBehaviour:
   _displayName: "\u547C\u5FDC\u3059\u308B\u690D\u7269"
   _description: "\u5473\u65B9\u306E\u4ED6\u306E\u690D\u7269\u304C\u653B\u6483\u3059\u308B\u305F\u3073\u3001\u5148\u982D\u306E\u6575\u3092\u653B\u6483\u3059\u308B\u3002"
   _icon: {fileID: 0}
-  _categories: 1
+  _categories: -1
   _baseValue: 40
   _leafRatio: 100

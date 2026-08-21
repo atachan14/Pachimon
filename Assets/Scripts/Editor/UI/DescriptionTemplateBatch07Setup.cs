@@ -66,7 +66,7 @@ namespace Pachimon.Editor.UI
             50 => "敵の先頭へ{icon:Aqua}{color:Aqua}{value:damage}{/color}の水ダメージと、値{color:Poison}{value:slow}{/color}のSlowを与える。",
             51 => "自陣に値{color:Leaf}{value:value}{/color}の{term:BeatVine|ビートヴァイン}を生成する。{value:interval}tickごとに敵を攻撃する。",
             52 => "値{color:Electric}{value:value}{/color}の天気{term:Thunder|雷}を発生させる。",
-            53 => "自陣に値{color:Poison}{value:value}{/color}、{value:duration}tickの{term:PoisonMist|毒の霧}を生成する。弱い敵Skill攻撃を回避する。",
+            53 => "自陣に初期値{color:Poison}{value:value}{/color}、最小値{color:Wind}{value:minimumValue}{/color}、{value:duration}tickの{term:PoisonMist|毒の霧}を生成する。現在Value以下の軽減前Damageとなる敵Skill攻撃を回避する。",
             54 => "敵の先頭へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与え、自身へ値{value:shield}、{value:duration}tickのShieldを付与する。",
             55 => "{value:hitCount}体へ連鎖し、各対象へ{icon:Wind}{color:Wind}{value:damage}{/color}の風ダメージと値{value:erosion}の風化を与える。使用後、アドチェインを{value:addChain}得る。",
             56 => "敵の先頭へ{icon:Dragon}{color:Dragon}{value:damage}{/color}の竜ダメージと、{value:knockoutDuration}tickのノックアウトを与える。",

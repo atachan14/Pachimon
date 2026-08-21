@@ -10,10 +10,10 @@ namespace Pachimon.Skills
     public sealed class IceShieldSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseShieldValue = 300;
-        [SerializeField, Min(0)] private int _iceShieldRatio = 100;
+        [SerializeField, HideInInspector] private int _iceShieldRatio = 100;
 
         public int BaseShieldValue => _baseShieldValue;
-        public int IceShieldRatio => _iceShieldRatio;
+        public int IceShieldRatio => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

@@ -10,12 +10,12 @@ namespace Pachimon.Skills
     public sealed class WaterCutterSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseAquaDamage = 100;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
         [SerializeField, Min(0)] private int _basePenetrationPercent = 20;
         [SerializeField, Min(0)] private int _windPenetrationRatio = 100;
 
         public int BaseAquaDamage => _baseAquaDamage;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BasePenetrationPercent => _basePenetrationPercent;
         public int WindPenetrationRatio => _windPenetrationRatio;
 

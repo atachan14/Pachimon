@@ -140,12 +140,17 @@ namespace Pachimon.Battle
             BattleSide targetSide,
             BattleUnitState source,
             int value,
-            int durationTicks)
+            int durationTicks,
+            int minimumValue)
             : this(definition, targetSide, source, value)
         {
             if (durationTicks <= 0)
                 throw new ArgumentOutOfRangeException(nameof(durationTicks));
+            if (minimumValue < 0 || minimumValue > value)
+                throw new ArgumentOutOfRangeException(nameof(minimumValue));
             RemainingTicks = durationTicks;
+            SecondaryValue = minimumValue;
+            RecalculatePoisonMistDecay();
         }
 
         public BattleFieldEffectId EffectId { get; }
@@ -168,6 +173,7 @@ namespace Pachimon.Battle
         public IReadOnlyList<BattleStatusInstance> Statuses => _statuses;
         public decimal ApplicationWork { get; private set; }
         public decimal DecayWork { get; private set; }
+        private decimal PoisonMistDecayPerTick { get; set; }
         public bool IsExpired => Value <= 0
             || (EffectId == BattleFieldEffectId.FrozenGround
                 && !_frozenGroundSources.Any(source => source.IsAlive))
@@ -409,9 +415,55 @@ namespace Pachimon.Battle
             if (EffectId != BattleFieldEffectId.PoisonMist)
                 throw new InvalidOperationException(
                     "Only Poison Mist can advance its duration.");
-            RemainingTicks = Math.Max(
-                0,
-                RemainingTicks.GetValueOrDefault() - 1);
+            var remaining = RemainingTicks.GetValueOrDefault();
+            if (remaining <= 0) return;
+
+            if (remaining == 1)
+            {
+                _value = SecondaryValue;
+                DecayWork = 0m;
+            }
+            else
+            {
+                DecayWork += PoisonMistDecayPerTick;
+                var decay = SignedStatMath.FloorNonNegative(DecayWork);
+                DecayWork -= decay;
+                _value = Math.Max(SecondaryValue, _value - decay);
+            }
+            RemainingTicks = remaining - 1;
+        }
+
+        internal void AddPoisonMistGeneration(
+            BattleUnitState source,
+            int value,
+            int durationTicks,
+            int minimumValue)
+        {
+            if (EffectId != BattleFieldEffectId.PoisonMist)
+                throw new InvalidOperationException(
+                    "Only Poison Mist can merge another generation.");
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            if (durationTicks <= 0)
+                throw new ArgumentOutOfRangeException(nameof(durationTicks));
+            if (minimumValue < 0 || minimumValue > value)
+                throw new ArgumentOutOfRangeException(nameof(minimumValue));
+
+            Source = source;
+            _value = checked(_value + value);
+            SecondaryValue = checked(SecondaryValue + minimumValue);
+            RemainingTicks = checked(
+                RemainingTicks.GetValueOrDefault() + durationTicks);
+            DecayWork = 0m;
+            RecalculatePoisonMistDecay();
+        }
+
+        private void RecalculatePoisonMistDecay()
+        {
+            var duration = RemainingTicks.GetValueOrDefault();
+            PoisonMistDecayPerTick = duration > 0
+                ? Math.Max(0, Value - SecondaryValue) / (decimal)duration
+                : 0m;
         }
 
         internal int AdvanceWaterVeilOneTick()
@@ -483,14 +535,16 @@ namespace Pachimon.Battle
             BattleSide targetSide,
             BattleUnitState source,
             int value,
-            int durationTicks)
+            int durationTicks,
+            int minimumValue)
         {
             return new BattleFieldEffectInstance(
                 definition,
                 targetSide,
                 source,
                 value,
-                durationTicks);
+                durationTicks,
+                minimumValue);
         }
 
         internal BattleFieldEffectInstance CreateSimulationClone(
@@ -557,7 +611,10 @@ namespace Pachimon.Battle
                     TargetSide,
                     sourceClone,
                     Value,
-                    RemainingTicks.GetValueOrDefault());
+                    RemainingTicks.GetValueOrDefault(),
+                    SecondaryValue);
+                clone.DecayWork = DecayWork;
+                clone.PoisonMistDecayPerTick = PoisonMistDecayPerTick;
                 CopyStatusesTo(clone, unitMap);
                 return clone;
             }
@@ -913,7 +970,8 @@ namespace Pachimon.Battle
             BattleUnitState source,
             PoisonMistFieldEffectAsset definition,
             int value,
-            int durationTicks)
+            int durationTicks,
+            int minimumValue)
         {
             ValidateSource(source);
             if (definition == null)
@@ -921,13 +979,27 @@ namespace Pachimon.Battle
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
             if (durationTicks <= 0)
                 throw new ArgumentOutOfRangeException(nameof(durationTicks));
+            if (minimumValue < 0 || minimumValue > value)
+                throw new ArgumentOutOfRangeException(nameof(minimumValue));
+
+            var existing = Effects.FirstOrDefault(effect =>
+                effect.EffectId == BattleFieldEffectId.PoisonMist
+                && effect.TargetSide == source.Side);
+            if (existing != null)
+            {
+                existing.AddPoisonMistGeneration(
+                    source, value, durationTicks, minimumValue);
+                LogFieldEffectCreated(source, existing, source.Side);
+                return existing;
+            }
 
             var mist = BattleFieldEffectInstance.CreatePoisonMist(
                 definition,
                 source.Side,
                 source,
                 value,
-                durationTicks);
+                durationTicks,
+                minimumValue);
             _effects.Add(mist);
             LogFieldEffectCreated(source, mist, source.Side);
             return mist;
@@ -1512,11 +1584,9 @@ namespace Pachimon.Battle
                             PachimonAttribute.Poison))
                     * SignedStatMath.ReductionMultiplier(
                         barrier.GetEffectiveResistBonus());
-                var decay = toxin.Value
-                    * toxinDefinition.DecayPerTickRatio / 100m;
                 var tick = toxin.AccumulateToxinTick(
                     unroundedDamage,
-                    decay);
+                    toxinDefinition.DecayPerTick);
                 if (tick.Damage > 0)
                 {
                     var overflow = barrier.ApplyFireBarrierDamage(tick.Damage);

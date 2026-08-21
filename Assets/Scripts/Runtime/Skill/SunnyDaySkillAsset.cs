@@ -12,12 +12,12 @@ namespace Pachimon.Skills
     public sealed class SunnyDaySkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseValue = 100;
-        [SerializeField, Min(0)] private int _fireValueRatio = 100;
+        [SerializeField, HideInInspector] private int _fireValueRatio = 100;
         [FormerlySerializedAs("_weather")]
         [SerializeField] private SunnyWeatherAsset _temperatureDefinition;
 
         public int BaseValue => _baseValue;
-        public int FireValueRatio => _fireValueRatio;
+        public int FireValueRatio => AttributeDamageRules.ScalingRatio;
         public SunnyWeatherAsset TemperatureDefinition => _temperatureDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)

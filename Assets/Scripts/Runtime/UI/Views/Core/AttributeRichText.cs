@@ -505,7 +505,51 @@ namespace Pachimon.UI
                         + $"{secondWind.DurationTicks}tickの間、最終Windを0にする。";
                 }
             }
-
+            if (skill is InitialAttributeDamageSkillAsset initial
+                && owner?.IsRevealed == true
+                && AttributeRichText.TryGetDisplayStat(
+                    skill.AllocationType,
+                    out var initialDisplayStat)
+                && owner.TryGetStat(initialDisplayStat, out var initialAttribute))
+            {
+                var context = new DescriptionTemplateContext()
+                    .Set("damage", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            initial.BaseDamage,
+                            initialAttribute,
+                            initial.DamageRatio), 1))
+                    .Set("baseDamage", initial.BaseDamage)
+                    .Set("attribute", initialAttribute)
+                    .Set("ratio", initial.DamageRatio);
+                if (initial is ElectricShockSkillAsset electricInitial)
+                {
+                    var ice = owner.TryGetStat(PachimonDisplayStat.Ice, out var value)
+                        ? value
+                        : 0;
+                    context.Set("statusValue", checked(
+                        SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
+                            electricInitial.ElectricParalysisBaseValue,
+                            initialAttribute,
+                            electricInitial.ElectricParalysisRatio))
+                        + SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
+                            electricInitial.IceParalysisBaseValue,
+                            ice,
+                            electricInitial.IceParalysisRatio))));
+                }
+                else if (initial is PoisonNeedleSkillAsset poison)
+                {
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(poison.ToxinBaseValue,
+                            initialAttribute, poison.ToxinRatio)));
+                }
+                else if (initial is ColdHandSkillAsset cold)
+                {
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(cold.ChillBaseValue,
+                            initialAttribute, cold.ChillRatio)));
+                }
+                return DescriptionTemplateFormatter.Format(skill.Description, context);
+            }
 
             if (skill is PlaceholderSkillAsset placeholder
                 && owner?.IsRevealed == true
@@ -516,10 +560,10 @@ namespace Pachimon.UI
             {
                 var context = new DescriptionTemplateContext()
                     .Set("damage", SignedStatMath.FloorNonNegative(
-                        BasicAttributeDamageSkillLogic.BaseDamage
+                        placeholder.BaseDamage
                         * SignedStatMath.AmplificationMultiplier(attributeValue),
                         1))
-                    .Set("baseDamage", BasicAttributeDamageSkillLogic.BaseDamage)
+                    .Set("baseDamage", placeholder.BaseDamage)
                     .Set("attribute", attributeValue)
                     .Set("ratio", 100);
                 if (placeholder.StatusBaseValue > 0)

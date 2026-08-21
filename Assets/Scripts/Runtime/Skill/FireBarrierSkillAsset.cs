@@ -11,11 +11,11 @@ namespace Pachimon.Skills
     public sealed class FireBarrierSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseValue = 100;
-        [SerializeField, Min(0)] private int _fireValueRatio = 100;
+        [SerializeField, HideInInspector] private int _fireValueRatio = 100;
         [SerializeField] private FireBarrierFieldEffectAsset _fieldEffect;
 
         public int BaseValue => _baseValue;
-        public int FireValueRatio => _fireValueRatio;
+        public int FireValueRatio => AttributeDamageRules.ScalingRatio;
         public FireBarrierFieldEffectAsset FieldEffect => _fieldEffect;
 
         public override void CollectValidationErrors(ICollection<string> errors)

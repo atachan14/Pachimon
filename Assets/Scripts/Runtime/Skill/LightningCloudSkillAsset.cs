@@ -9,11 +9,11 @@ namespace Pachimon.Skills
     public sealed class LightningCloudSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseValue = 300;
-        [SerializeField, Min(0)] private int _electricValueRatio = 100;
+        [SerializeField, HideInInspector] private int _electricValueRatio = 100;
         [SerializeField] private ThunderWeatherAsset _thunderDefinition;
 
         public int BaseValue => _baseValue;
-        public int ElectricValueRatio => _electricValueRatio;
+        public int ElectricValueRatio => AttributeDamageRules.ScalingRatio;
         public ThunderWeatherAsset ThunderDefinition => _thunderDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)

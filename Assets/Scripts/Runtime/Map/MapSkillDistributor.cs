@@ -99,7 +99,13 @@ namespace Pachimon.Map
                 foreach (var instanceId in GetAssignedInstanceIds(node))
                 {
                     var instance = GetRequiredInstance(pachimonPool, instanceId, node.NodeId);
-                    AssignLeastUsedSkills(instance, candidates, count, usageCounts, random, node.NodeId);
+                    AssignLeastUsedSkills(
+                        instance,
+                        candidates,
+                        count,
+                        usageCounts,
+                        random,
+                        node.NodeId);
                 }
             }
         }
@@ -145,6 +151,39 @@ namespace Pachimon.Map
                 foreach (var instanceId in GetAssignedInstanceIds(node))
                 {
                     var instance = GetRequiredInstance(pachimonPool, instanceId, node.NodeId);
+                    if (node.NodeType is not (NodeType.Gym or NodeType.Elite)
+                        && count >= 2)
+                    {
+                        AssignLeastUsedSkills(
+                            instance,
+                            candidates
+                                .Where(skill => skill.AllocationType
+                                    == instance.AllocationType)
+                                .ToArray(),
+                            1,
+                            usageCounts,
+                            random,
+                            node.NodeId);
+                        AssignLeastUsedSkills(
+                            instance,
+                            candidates
+                                .Where(skill => skill.AllocationType
+                                    != instance.AllocationType)
+                                .ToArray(),
+                            1,
+                            usageCounts,
+                            random,
+                            node.NodeId);
+                        AssignLeastUsedSkills(
+                            instance,
+                            candidates,
+                            count - 2,
+                            usageCounts,
+                            random,
+                            node.NodeId);
+                        continue;
+                    }
+
                     AssignLeastUsedSkills(instance, candidates, count, usageCounts, random, node.NodeId);
                 }
             }
@@ -236,6 +275,19 @@ namespace Pachimon.Map
 
                     if (matchingCount == 0)
                     {
+                        var ownTypeSkillCount = instance.SkillIds.Count(skillId =>
+                            _skillCatalog.Get(skillId)?.AllocationType
+                            == instance.AllocationType);
+                        var otherTypeSkillCount = instance.SkillIds.Count(skillId =>
+                            _skillCatalog.Get(skillId)?.AllocationType
+                            != instance.AllocationType);
+                        if (GetRandomSkillCount(node.RowIndex) >= 2
+                            && (ownTypeSkillCount < 2 || otherTypeSkillCount < 1))
+                        {
+                            throw new MapGenerationException(
+                                $"{instance.InstanceId} at node {node.NodeId} requires "
+                                + "one matching and one non-matching additional Skill.");
+                        }
                         continue;
                     }
 

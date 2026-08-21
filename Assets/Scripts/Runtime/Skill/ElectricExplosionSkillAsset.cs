@@ -12,15 +12,15 @@ namespace Pachimon.Skills
     {
         [FormerlySerializedAs("_electricDamagePercent")]
         [SerializeField, Min(0)] private int _basePower = 50;
-        [SerializeField, Min(0)] private int _electricScalingPercent = 100;
-        [SerializeField, Min(0)] private int _fireScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _electricScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
         [SerializeField, Min(0)] private int _penetrationPercentAtFire100 = 20;
 
         public int BasePower => _basePower;
 
-        public int ElectricScalingPercent => _electricScalingPercent;
+        public int ElectricScalingPercent => AttributeDamageRules.ScalingRatio;
 
-        public int FireScalingPercent => _fireScalingPercent;
+        public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
 
         public int PenetrationPercentAtFire100 => _penetrationPercentAtFire100;
 

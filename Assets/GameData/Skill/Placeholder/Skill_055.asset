@@ -17,11 +17,11 @@ MonoBehaviour:
   _allocationType: 7
   _isMapAssignable: 1
   _baseStartupTicks: 100
-  _baseRecoveryTicks: 100
+  _baseRecoveryTicks: 120
   _baseCooldownTicks: 300
   _baseManaCost: 50
-  _description: "{value:hitCount}体へ連鎖し、各対象へ{icon:Wind}{color:Wind}{value:damage}{/color}の風ダメージと値{value:erosion}の風化を与える。使用後、アドチェインを{value:addChain}得る。"
-  _baseWindDamage: 100
+  _description: "{value:hitCount}\u4F53\u3078\u9023\u9396\u3057\u3001\u5404\u5BFE\u8C61\u3078{icon:Wind}{color:Wind}{value:damage}{/color}\u306E\u98A8\u30C0\u30E1\u30FC\u30B8\u3068\u5024{value:erosion}\u306E\u98A8\u5316\u3092\u4E0E\u3048\u308B\u3002\u4F7F\u7528\u5F8C\u3001\u30A2\u30C9\u30C1\u30A7\u30A4\u30F3\u3092{value:addChain}\u5F97\u308B\u3002"
+  _baseWindDamage: 80
   _windDamageRatio: 100
   _baseErosion: 20
   _erosionWindRatio: 100

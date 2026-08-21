@@ -11,15 +11,15 @@ namespace Pachimon.Skills
     public sealed class MuddyWaterSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseAquaDamage = 100;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseSlow = 100;
-        [SerializeField, Min(0)] private int _poisonSlowRatio = 100;
+        [SerializeField, HideInInspector] private int _poisonSlowRatio = 100;
         [SerializeField] private SlowStatusAsset _slowStatus;
 
         public int BaseAquaDamage => _baseAquaDamage;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseSlow => _baseSlow;
-        public int PoisonSlowRatio => _poisonSlowRatio;
+        public int PoisonSlowRatio => AttributeDamageRules.ScalingRatio;
         public SlowStatusAsset SlowStatus => _slowStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

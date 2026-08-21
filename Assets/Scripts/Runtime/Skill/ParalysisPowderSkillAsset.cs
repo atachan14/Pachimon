@@ -9,14 +9,12 @@ namespace Pachimon.Skills
     public sealed class ParalysisPowderSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseLeafParalysis = 50;
-        [SerializeField, Min(0)] private int _leafRatio = 100;
         [SerializeField, Min(0)] private int _basePoisonParalysis = 50;
-        [SerializeField, Min(0)] private int _poisonRatio = 100;
         [SerializeField] private SlowStatusAsset _paralysisStatus;
         public int BaseLeafParalysis => _baseLeafParalysis;
-        public int LeafRatio => _leafRatio;
+        public int LeafRatio => AttributeDamageRules.ScalingRatio;
         public int BasePoisonParalysis => _basePoisonParalysis;
-        public int PoisonRatio => _poisonRatio;
+        public int PoisonRatio => AttributeDamageRules.ScalingRatio;
         public SlowStatusAsset ParalysisStatus => _paralysisStatus;
         public override void CollectValidationErrors(ICollection<string> errors)
         {

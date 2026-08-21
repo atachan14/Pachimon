@@ -38,17 +38,10 @@ namespace Pachimon.Editor.UI
             for (var id = 1; id <= 8; id++)
             {
                 var type = (AllocationType)id;
-                if (skillCatalog.Get(id) is PlaceholderSkillAsset skill)
+                if (skillCatalog.Get(id) is InitialAttributeDamageSkillAsset skill)
                 {
-                    skill.ConfigureForEditor(
-                        skill.SkillId,
-                        skill.DisplayName,
-                        skill.AllocationType,
-                        skill.IsMapAssignable,
-                        skill.BaseRecoveryTicks,
-                        skill.BaseCooldownTicks,
-                        CreateSkillTemplate(type),
-                        skill.BaseManaCost);
+                    skill.SetDescriptionTemplateForEditor(
+                        CreateSkillTemplate(type));
                     EditorUtility.SetDirty(skill);
                 }
 
@@ -86,7 +79,9 @@ namespace Pachimon.Editor.UI
 
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(1)?.Description?.Contains("{value:damage}") != true
+            if (skills?.Get(1) is not InitialAttributeDamageSkillAsset
+                || skills.Get(1).Description?.Contains("{value:damage}") != true
+                || skills.Get(1).Description?.Contains("{value:damageFormula}") == true
                 || passives?.Get(1) is not OutgoingAttributeDamagePassiveAsset)
             {
                 Setup();

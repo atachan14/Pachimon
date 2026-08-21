@@ -1,12 +1,14 @@
 using System;
 using Pachimon.Reward;
 using Pachimon.Run;
+using Pachimon.Skills;
 
 namespace Pachimon.Battle
 {
     public sealed class BasicAttributeDamageSkillLogic : ISkillLogic
     {
-        public const int BaseDamage = 150;
+        public const int DefaultBaseDamage = 200;
+        private readonly InitialAttributeDamageSkillAsset _skill;
         private readonly PachimonAttribute _attribute;
 
         public BasicAttributeDamageSkillLogic(PachimonAttribute attribute)
@@ -14,11 +16,34 @@ namespace Pachimon.Battle
             _attribute = attribute;
         }
 
+        public BasicAttributeDamageSkillLogic(
+            InitialAttributeDamageSkillAsset skill,
+            PachimonAttribute attribute)
+        {
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
+            _attribute = attribute;
+        }
+
         public SkillResolution Resolve(SkillExecutionContext context)
         {
             if (context == null) throw new ArgumentNullException(nameof(context));
+            if (_skill != null && !ReferenceEquals(context.Skill, _skill))
+            {
+                throw new ArgumentException(
+                    "Initial Attribute Skill Logic received another Skill Asset.",
+                    nameof(context));
+            }
             var target = GetFrontTarget(context);
             var hit = context.BeginAttackHit(target);
+            var baseDamage = _skill?.BaseDamage
+                ?? (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
+                    ?.BaseDamage
+                ?? DefaultBaseDamage;
+            var damageRatio = _skill?.DamageRatio ?? 100;
+            var damage = context.ScaleFromAttribute(
+                baseDamage,
+                _attribute,
+                damageRatio);
             var result = BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
@@ -26,11 +51,12 @@ namespace Pachimon.Battle
                 new DamageContext(
                     DamageOriginKind.Skill,
                     context.Skill.SkillId,
-                    BaseDamage,
+                    damage,
                     context.User.GetBattleStats(),
                     target.GetBattleStats(),
                     _attribute,
-                    isAttack: true),
+                    isAttack: true,
+                    applyAttackerAttributeMultiplier: false),
                 hit);
             return new SkillResolution(
                 context.User,
@@ -60,6 +86,19 @@ namespace Pachimon.Battle
         private const int DefaultStatusScalingPercent = 100;
         private readonly BasicAttributeDamageSkillLogic _damageLogic =
             new(PachimonAttribute.Poison);
+        private readonly PoisonNeedleSkillAsset _skill;
+
+        public PoisonNeedleSkillLogic()
+        {
+        }
+
+        public PoisonNeedleSkillLogic(PoisonNeedleSkillAsset skill)
+        {
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                skill,
+                PachimonAttribute.Poison);
+        }
 
         public SkillResolution Resolve(SkillExecutionContext context)
         {
@@ -73,11 +112,13 @@ namespace Pachimon.Battle
             }
 
             var placeholder = context.Skill as Pachimon.Skills.PlaceholderSkillAsset;
-            var baseValue = placeholder?.StatusBaseValue > 0
-                ? placeholder.StatusBaseValue
-                : DefaultStatusBaseValue;
-            var scalingPercent = placeholder?.StatusScalingPercent ??
-                DefaultStatusScalingPercent;
+            var baseValue = _skill?.ToxinBaseValue
+                ?? (placeholder?.StatusBaseValue > 0
+                    ? placeholder.StatusBaseValue
+                    : DefaultStatusBaseValue);
+            var scalingPercent = _skill?.ToxinRatio
+                ?? placeholder?.StatusScalingPercent
+                ?? DefaultStatusScalingPercent;
             var toxinValue = SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
                     baseValue,
@@ -91,7 +132,8 @@ namespace Pachimon.Battle
                     BattleStatusFactory.CreateToxin(
                         context.User,
                         toxinValue,
-                        placeholder?.ToxinStatus
+                        _skill?.ToxinStatus
+                            ?? placeholder?.ToxinStatus
                             ?? throw new InvalidOperationException(
                                 "Poison Needle requires a Toxin Definition.")));
             }
@@ -102,8 +144,22 @@ namespace Pachimon.Battle
 
     public sealed class ElectricShockSkillLogic : ISkillLogic
     {
-        private readonly BasicAttributeDamageSkillLogic _damageLogic =
-            new(PachimonAttribute.Electric);
+        private readonly BasicAttributeDamageSkillLogic _damageLogic;
+        private readonly ElectricShockSkillAsset _skill;
+
+        public ElectricShockSkillLogic()
+        {
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                PachimonAttribute.Electric);
+        }
+
+        public ElectricShockSkillLogic(ElectricShockSkillAsset skill)
+        {
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                skill,
+                PachimonAttribute.Electric);
+        }
 
         public SkillResolution Resolve(SkillExecutionContext context)
         {
@@ -116,8 +172,10 @@ namespace Pachimon.Battle
                     context.User,
                     ElectricShockMath.CalculateSlowValue(
                         context.State,
-                        context.User),
-                    (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
+                        context.User,
+                        _skill),
+                    _skill?.ParalysisStatus
+                    ?? (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
                         ?.ParalysisStatus
                     ?? throw new InvalidOperationException(
                         "Electric Shock requires a Paralysis Definition.")));
@@ -137,32 +195,51 @@ namespace Pachimon.Battle
 
         public static int CalculateSlowValue(
             BattleState state,
-            BattleUnitState user)
+            BattleUnitState user,
+            ElectricShockSkillAsset skill = null)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
             var electric = SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    ElectricBaseValue,
+                    skill?.ElectricParalysisBaseValue ?? ElectricBaseValue,
                     user.GetBattleStatValue(PachimonStatType.Electric),
                     state?.ResolveAttributeRatio(
                         PachimonAttribute.Electric,
-                        100m) ?? 100m));
+                        skill?.ElectricParalysisRatio ?? 100m)
+                    ?? skill?.ElectricParalysisRatio
+                    ?? 100m));
             var ice = SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    IceBaseValue,
+                    skill?.IceParalysisBaseValue ?? IceBaseValue,
                     user.GetBattleStatValue(PachimonStatType.Ice),
                     state?.ResolveAttributeRatio(
                         PachimonAttribute.Ice,
-                        100m) ?? 100m));
+                        skill?.IceParalysisRatio ?? 100m)
+                    ?? skill?.IceParalysisRatio
+                    ?? 100m));
             return checked(electric + ice);
         }
     }
 
     public sealed class ColdHandSkillLogic : ISkillLogic
     {
-        private readonly BasicAttributeDamageSkillLogic _damageLogic =
-            new(PachimonAttribute.Ice);
+        private readonly BasicAttributeDamageSkillLogic _damageLogic;
+        private readonly ColdHandSkillAsset _skill;
+
+        public ColdHandSkillLogic()
+        {
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                PachimonAttribute.Ice);
+        }
+
+        public ColdHandSkillLogic(ColdHandSkillAsset skill)
+        {
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                skill,
+                PachimonAttribute.Ice);
+        }
 
         public SkillResolution Resolve(SkillExecutionContext context)
         {
@@ -175,8 +252,10 @@ namespace Pachimon.Battle
                     context.User,
                     ColdHandMath.CalculateChillValue(
                         context.State,
-                        context.User),
-                    (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
+                        context.User,
+                        _skill),
+                    _skill?.ChillStatus
+                    ?? (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
                         ?.ChillStatus
                     ?? throw new InvalidOperationException(
                         "Cold Hand requires a Chill Definition.")));
@@ -195,17 +274,20 @@ namespace Pachimon.Battle
 
         public static int CalculateChillValue(
             BattleState state,
-            BattleUnitState user)
+            BattleUnitState user,
+            ColdHandSkillAsset skill = null)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
             return SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    IceBaseValue,
+                    skill?.ChillBaseValue ?? IceBaseValue,
                     user.GetBattleStatValue(PachimonStatType.Ice),
                     state?.ResolveAttributeRatio(
                         PachimonAttribute.Ice,
-                        100m) ?? 100m));
+                        skill?.ChillRatio ?? 100m)
+                    ?? skill?.ChillRatio
+                    ?? 100m));
         }
     }
 }

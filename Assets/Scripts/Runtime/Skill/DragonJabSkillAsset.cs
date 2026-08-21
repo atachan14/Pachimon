@@ -9,12 +9,12 @@ namespace Pachimon.Skills
     public sealed class DragonJabSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseDragonDamage = 100;
-        [SerializeField, Min(0)] private int _dragonDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _dragonDamageRatio = 100;
         [SerializeField, Min(0)] private int _oneTwoValue = 30;
         [SerializeField] private OneTwoStatusAsset _oneTwoStatus;
 
         public int BaseDragonDamage => _baseDragonDamage;
-        public int DragonDamageRatio => _dragonDamageRatio;
+        public int DragonDamageRatio => AttributeDamageRules.ScalingRatio;
         public int OneTwoValue => _oneTwoValue;
         public OneTwoStatusAsset OneTwoStatus => _oneTwoStatus;
 

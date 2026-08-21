@@ -29,10 +29,16 @@
 
 - ログ履歴
 
-- Statusの詳細
-- skillのバランス調整
-- 
+- 装備品にパッシブ
+    - サブステータスとして以下を実装
+        - スキルヴァンプ
+        - 回復/シールド量
+        - 状態異常耐性
+        - 固定値貫通/割合貫通
 
+- バックファイアのテキスト
+
+- 4属性案
 
 ## Next
 
@@ -135,6 +141,14 @@
 - Responsive採寸を`ResponsiveUiGeometry`へ分離し、Expanded / Compactの寸法テストを追加済み
 - DialogueのPage→Segment変換を`DialoguePlaybackPlan`へ分離し、Block送りのテストを追加済み
 - Map / Item / Settings / 詳細Overlayを含む実Scene確認は引き続き必要
+
+### B-014: CompactでStat説明Popupをタップ表示する
+
+発見: `v0.8`
+
+- ExpandedではPachimonTabのStat hoverで説明Popupを表示する
+- hoverのないCompactでは、StatクリックでPopupを開閉する
+- Popup外のタップ、Pane切替、対象切替時に閉じる
 
 ## 推奨着手順
 

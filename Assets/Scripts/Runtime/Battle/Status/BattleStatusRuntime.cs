@@ -730,15 +730,13 @@ namespace Pachimon.Battle
                     "Toxin requires a Toxin Status Definition.");
             var damageAmount = toxin.Value
                 * definition.DamagePerTickRatio / 100m;
-            var decayAmount = toxin.Value
-                * definition.DecayPerTickRatio / 100m;
             var unroundedDamage = BattleStatusDamageService.CalculateUnrounded(
                 damageAmount,
                 target,
                 PachimonAttribute.Poison);
             var tick = toxin.AccumulateToxinTick(
                 unroundedDamage,
-                decayAmount);
+                definition.DecayPerTick);
             if (tick.Decay > 0)
             {
                 target.NotifyStatusValueChanged();

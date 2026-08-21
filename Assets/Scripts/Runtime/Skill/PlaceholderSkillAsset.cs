@@ -8,12 +8,14 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "PlaceholderSkill", menuName = "Pachimon/Skills/Placeholder Skill")]
     public sealed class PlaceholderSkillAsset : SkillAsset
     {
+        [SerializeField, Min(0)] private int _baseDamage = 200;
         [SerializeField, Min(0)] private int _statusBaseValue = 100;
         [SerializeField, Min(0)] private int _statusScalingPercent = 100;
         [SerializeField] private ToxinStatusAsset _toxinStatus;
         [SerializeField] private SlowStatusAsset _paralysisStatus;
         [SerializeField] private SlowStatusAsset _chillStatus;
 
+        public int BaseDamage => _baseDamage;
         public int StatusBaseValue => _statusBaseValue;
         public int StatusScalingPercent => _statusScalingPercent;
         public ToxinStatusAsset ToxinStatus => _toxinStatus;
@@ -41,6 +43,11 @@ namespace Pachimon.Skills
         }
 
 #if UNITY_EDITOR
+        public void ConfigureBaseDamageForEditor(int baseDamage)
+        {
+            _baseDamage = baseDamage;
+        }
+
         public void ConfigureStatusForEditor(
             int statusBaseValue,
             int statusScalingPercent,

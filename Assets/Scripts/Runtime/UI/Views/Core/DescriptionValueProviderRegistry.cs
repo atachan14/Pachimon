@@ -21,13 +21,57 @@ namespace Pachimon.UI
                 return false;
             }
 
+            if (skill is InitialAttributeDamageSkillAsset initial
+                && TryGetAttribute(owner, skill.AllocationType, out var initialAttribute))
+            {
+                context.Set("damage", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            initial.BaseDamage,
+                            initialAttribute,
+                            initial.DamageRatio), 1))
+                    .Set("baseDamage", initial.BaseDamage)
+                    .Set("attribute", initialAttribute)
+                    .Set("ratio", AttributeDamageRules.ScalingRatio);
+                if (initial is ElectricShockSkillAsset electric)
+                {
+                    context.Set("statusValue", checked(
+                        SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
+                            electric.ElectricParalysisBaseValue,
+                            initialAttribute,
+                            electric.ElectricParalysisRatio))
+                        + SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
+                            electric.IceParalysisBaseValue,
+                            TryGetAttribute(owner, AllocationType.Ice, out var ice)
+                                ? ice
+                                : 0,
+                            electric.IceParalysisRatio))));
+                }
+                else if (initial is PoisonNeedleSkillAsset poison)
+                {
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            poison.ToxinBaseValue,
+                            initialAttribute,
+                            poison.ToxinRatio)));
+                }
+                else if (initial is ColdHandSkillAsset cold)
+                {
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            cold.ChillBaseValue,
+                            initialAttribute,
+                            cold.ChillRatio)));
+                }
+                return true;
+            }
+
             if (skill is PlaceholderSkillAsset placeholder
                 && TryGetAttribute(owner, skill.AllocationType, out var basicAttribute))
             {
                 context.Set("damage", SignedStatMath.FloorNonNegative(
-                        BasicAttributeDamageSkillLogic.BaseDamage
+                        placeholder.BaseDamage
                         * SignedStatMath.AmplificationMultiplier(basicAttribute), 1))
-                    .Set("baseDamage", BasicAttributeDamageSkillLogic.BaseDamage)
+                    .Set("baseDamage", placeholder.BaseDamage)
                     .Set("attribute", basicAttribute)
                     .Set("ratio", 100);
                 if (placeholder.StatusBaseValue > 0)
@@ -174,7 +218,7 @@ namespace Pachimon.UI
                         SignedStatMath.ScaleFromBase(
                             chainVines.BaseLeafDamage,
                             vinesLeaf,
-                            chainVines.LeafDamageRatio)))
+                        AttributeDamageRules.ScalingRatio)))
                     .Set("slow", SignedStatMath.FloorNonNegative(
                         SignedStatMath.ScaleFromBase(
                             chainVines.BaseSlow,
@@ -301,7 +345,7 @@ namespace Pachimon.UI
                 context.Set("damage", Scale(
                         solarBeam.BaseLeafDamage,
                         solarLeaf,
-                        solarBeam.LeafDamageRatio))
+                        AttributeDamageRules.ScalingRatio))
                     .Set("baseStartup", solarBeam.BaseStartupTicks)
                     .Set("temperatureRatio",
                         solarBeam.TemperatureStartupRatio);
@@ -623,21 +667,17 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Aqua, out var mistAqua)
                 && TryGetStat(owner, PachimonDisplayStat.Wind, out var mistWind))
             {
-                context.Set("value", Scale(
-                        poisonMist.BaseMistValue,
-                        mistPoison,
-                        poisonMist.PoisonValueRatio))
-                    .Set("duration", System.Math.Max(1,
-                        SignedStatMath.FloorNonNegative(
-                            mistAqua * poisonMist.AquaDurationRatio / 100m
-                            + mistWind * poisonMist.WindDurationRatio / 100m)));
+                context.Set("value", poisonMist.CalculateMistValue(mistPoison))
+                    .Set("duration", poisonMist.CalculateDurationTicks(mistAqua))
+                    .Set("minimumValue",
+                        poisonMist.CalculateMinimumValue(mistPoison, mistWind));
                 return true;
             }
 
             if (skill is IcePebbleSkillAsset icePebble
                 && TryGetStat(owner, PachimonDisplayStat.Ice, out var pebbleIce))
             {
-                context.Set("damage", Scale(icePebble.BaseDamage, pebbleIce, icePebble.IceRatio))
+                context.Set("damage", Scale(icePebble.BaseDamage, pebbleIce))
                     .Set("chill", Scale(icePebble.BaseChill, pebbleIce, icePebble.IceRatio))
                     .Set("shield", Scale(icePebble.BaseShield, pebbleIce, icePebble.IceRatio))
                     .Set("duration", icePebble.ShieldDurationTicks);
@@ -739,9 +779,9 @@ namespace Pachimon.UI
             if (skill is FirstTouchSkillAsset firstTouch
                 && TryGetStat(owner, PachimonDisplayStat.Poison, out var touchPoison))
             {
-                context.Set("damage", Scale(firstTouch.BaseDamage, touchPoison, firstTouch.PoisonRatio))
+                context.Set("damage", Scale(firstTouch.BaseDamage, touchPoison))
                     .Set("normalToxin", Scale(firstTouch.BaseNormalToxinValue, touchPoison, firstTouch.PoisonRatio))
-                    .Set("bonusDamage", Scale(firstTouch.BonusBaseDamage, touchPoison, firstTouch.PoisonRatio))
+                    .Set("bonusDamage", Scale(firstTouch.BonusBaseDamage, touchPoison))
                     .Set("toxin", Scale(firstTouch.BaseToxinValue, touchPoison, firstTouch.PoisonRatio));
                 return true;
             }
@@ -749,7 +789,7 @@ namespace Pachimon.UI
             if (skill is FrostArrowSkillAsset frostArrow
                 && TryGetStat(owner, PachimonDisplayStat.Ice, out var frostIce))
             {
-                context.Set("damage", Scale(frostArrow.BaseDamage, frostIce, frostArrow.IceRatio))
+                context.Set("damage", Scale(frostArrow.BaseDamage, frostIce))
                     .Set("chill", Scale(frostArrow.BaseChill, frostIce, frostArrow.IceRatio))
                     .Set("manaRefund", frostArrow.BaseManaCost)
                     .Set("cooldownRefund", frostArrow.BaseCooldownTicks);
@@ -781,7 +821,10 @@ namespace Pachimon.UI
             return false;
         }
 
-        private static int Scale(int baseValue, int stat, int ratio) =>
+        private static int Scale(
+            int baseValue,
+            int stat,
+            int ratio = AttributeDamageRules.ScalingRatio) =>
             SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(baseValue, stat, ratio));
 

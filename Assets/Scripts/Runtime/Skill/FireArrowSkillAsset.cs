@@ -10,10 +10,10 @@ namespace Pachimon.Skills
     public sealed class FireArrowSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _basePower = 100;
-        [SerializeField, Min(0)] private int _fireScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
 
         public int BasePower => _basePower;
-        public int FireScalingPercent => _fireScalingPercent;
+        public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

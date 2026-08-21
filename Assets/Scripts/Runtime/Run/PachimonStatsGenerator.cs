@@ -1,4 +1,5 @@
 using System;
+using Pachimon.Data;
 
 namespace Pachimon.Run
 {
@@ -33,7 +34,9 @@ namespace Pachimon.Run
             _settings = settings ?? new PachimonStatGenerationSettings();
         }
 
-        public PachimonStats Generate(Random random)
+        public PachimonStats Generate(
+            Random random,
+            PachimonSpeciesAsset species = null)
         {
             if (random == null) throw new ArgumentNullException(nameof(random));
 
@@ -41,15 +44,33 @@ namespace Pachimon.Run
             var valueUnits = new int[statCount];
             valueUnits[(int)PachimonStatType.MaxHp] = _settings.ResourceMinimumValueUnits;
             valueUnits[(int)PachimonStatType.MaxMn] = _settings.ResourceMinimumValueUnits;
+            var attributeInitialValue = ApplySpeciesInitialStats(
+                valueUnits,
+                AttributeStatIndices,
+                species);
+            var commonInitialValue = ApplySpeciesInitialStats(
+                valueUnits,
+                CommonStatIndices,
+                species);
+            ValidateInitialBudget(
+                species,
+                "Attribute",
+                attributeInitialValue,
+                _settings.AttributeAllocationBudget);
+            ValidateInitialBudget(
+                species,
+                "Common",
+                commonInitialValue,
+                _settings.CommonAllocationBudget);
             AllocateBudget(
                 valueUnits,
                 AttributeStatIndices,
-                _settings.AttributeAllocationBudget,
+                _settings.AttributeAllocationBudget - attributeInitialValue,
                 random);
             AllocateBudget(
                 valueUnits,
                 CommonStatIndices,
-                _settings.CommonAllocationBudget,
+                _settings.CommonAllocationBudget - commonInitialValue,
                 random);
 
             var stats = new PachimonStats(
@@ -62,6 +83,48 @@ namespace Pachimon.Run
             }
 
             return stats;
+        }
+
+        private int ApplySpeciesInitialStats(
+            int[] valueUnits,
+            int[] statIndices,
+            PachimonSpeciesAsset species)
+        {
+            if (species?.InitialStats == null)
+            {
+                return 0;
+            }
+
+            var total = 0;
+            foreach (var statIndex in statIndices)
+            {
+                var statType = (PachimonStatType)statIndex;
+                var initialValue = species.InitialStats.GetValueUnits(
+                    statType,
+                    _settings.ResourceDisplayMultiplier);
+                valueUnits[statIndex] = checked(
+                    valueUnits[statIndex] + initialValue);
+                total = checked(total + initialValue);
+            }
+
+            return total;
+        }
+
+        private static void ValidateInitialBudget(
+            PachimonSpeciesAsset species,
+            string groupName,
+            int initialValue,
+            int budget)
+        {
+            if (initialValue <= budget)
+            {
+                return;
+            }
+
+            throw new InvalidOperationException(
+                $"Pachimon Species {species?.SpeciesId} ({species?.DisplayName}) "
+                + $"uses {initialValue} {groupName} initial Stat units, "
+                + $"but its Budget is {budget}.");
         }
 
         private void AllocateBudget(

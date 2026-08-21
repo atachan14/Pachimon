@@ -9,13 +9,13 @@ namespace Pachimon.Skills
     public sealed class DragonHookSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseDragonDamage = 100;
-        [SerializeField, Min(0)] private int _dragonDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _dragonDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseCrankerValue = 30;
         [SerializeField, Min(0)] private int _crankerDragonRatio = 10;
         [SerializeField] private DragonCrankerStatusAsset _crankerStatus;
 
         public int BaseDragonDamage => _baseDragonDamage;
-        public int DragonDamageRatio => _dragonDamageRatio;
+        public int DragonDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseCrankerValue => _baseCrankerValue;
         public int CrankerDragonRatio => _crankerDragonRatio;
         public DragonCrankerStatusAsset CrankerStatus => _crankerStatus;

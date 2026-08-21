@@ -70,6 +70,90 @@ namespace Pachimon.Editor.Tests
                 Is.EqualTo(expected).Within(0.000001));
         }
 
+        [Test]
+        public void InitialAttributeDamage_IgnoresLegacySerializedRatio()
+        {
+            var skill = ScriptableObject.CreateInstance<EmberSkillAsset>();
+            try
+            {
+                skill.ConfigureForEditor(
+                    1,
+                    "ひのこ",
+                    100,
+                    300,
+                    20,
+                    string.Empty,
+                    200,
+                    ratio: 25);
+
+                Assert.That(
+                    skill.DamageRatio,
+                    Is.EqualTo(AttributeDamageRules.ScalingRatio));
+                Assert.That(
+                    SignedStatMath.ScaleFromBase(
+                        skill.BaseDamage,
+                        stat: 100,
+                        skill.DamageRatio),
+                    Is.EqualTo(400m));
+            }
+            finally
+            {
+                Object.DestroyImmediate(skill);
+            }
+        }
+
+        [Test]
+        public void FirstTouch_UsesFixedDamageRatioAndConfigurableToxinRatio()
+        {
+            var skill = ScriptableObject.CreateInstance<FirstTouchSkillAsset>();
+            try
+            {
+                skill.ConfigureForEditor(
+                    57,
+                    "ファーストタッチ",
+                    100,
+                    300,
+                    20,
+                    "{value:damage}|{value:normalToxin}|"
+                        + "{value:bonusDamage}|{value:toxin}",
+                    baseDamage: 100,
+                    baseNormalToxinValue: 50,
+                    bonusBaseDamage: 150,
+                    baseToxinValue: 150,
+                    poisonRatio: 50,
+                    toxinStatus: null);
+                var owner = new PachimonPreviewContent(
+                    null,
+                    "test",
+                    1000,
+                    1000,
+                    0,
+                    1000,
+                    1000,
+                    new[]
+                    {
+                        new PachimonStatPreview(PachimonDisplayStat.Poison, 100),
+                    },
+                    null,
+                    null,
+                    null);
+
+                Assert.That(
+                    SkillDescriptionValueProviderRegistry.TryCreateContext(
+                        skill,
+                        owner,
+                        out var context),
+                    Is.True);
+                Assert.That(
+                    DescriptionTemplateFormatter.Format(skill.Description, context),
+                    Is.EqualTo("200|75|300|225"));
+            }
+            finally
+            {
+                Object.DestroyImmediate(skill);
+            }
+        }
+
         [TestCase(50, 100, 100.0)]
         [TestCase(50, 0, 50.0)]
         [TestCase(50, -100, 25.0)]
@@ -389,7 +473,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void Toxin_DealsAndDecaysOnePercentPerTick()
+        public void Toxin_DealsOnePercentAndDecaysOneValuePerTick()
         {
             var target = CreateBattleUnitWithStats(
                 "player_1",
@@ -404,15 +488,14 @@ namespace Pachimon.Editor.Tests
             var source = state.Enemy.GetUnitAt(0);
             state.Statuses.ApplyStatus(
                 target,
-                BattleStatusFactory.CreateToxin(source, 100, ToxinStatus));
+                BattleStatusFactory.CreateToxin(source, 200, ToxinStatus));
 
             state.Timeline.AdvanceToTick(state.CurrentTick + 1);
 
             var toxin = target.GetStatus(BattleStatusId.Toxin);
-            Assert.That(target.CurrentHp, Is.EqualTo(1999));
-            Assert.That(toxin.Value, Is.EqualTo(99));
+            Assert.That(target.CurrentHp, Is.EqualTo(1998));
+            Assert.That(toxin.Value, Is.EqualTo(199));
             Assert.That(toxin.DamageWork, Is.Zero);
-            Assert.That(toxin.DecayWork, Is.Zero);
             Assert.That(state.ToxinPresentation.Drain().Single().HpBefore,
                 Is.EqualTo(2000));
         }
@@ -441,9 +524,8 @@ namespace Pachimon.Editor.Tests
                 BattleStatusFactory.CreateToxin(secondSource, 25, ToxinStatus));
 
             var toxin = target.GetStatus(BattleStatusId.Toxin);
-            Assert.That(toxin.Value, Is.EqualTo(75));
+            Assert.That(toxin.Value, Is.EqualTo(74));
             Assert.That(toxin.DamageWork, Is.EqualTo(0.5m));
-            Assert.That(toxin.DecayWork, Is.EqualTo(0.5m));
             Assert.That(toxin.ToxinApplications.Count, Is.EqualTo(2));
             Assert.That(
                 toxin.ToxinApplications[1].SourceInstanceId,
@@ -452,9 +534,8 @@ namespace Pachimon.Editor.Tests
             state.Timeline.AdvanceToTick(state.CurrentTick + 1);
 
             Assert.That(target.CurrentHp, Is.EqualTo(1999));
-            Assert.That(toxin.Value, Is.EqualTo(74));
-            Assert.That(toxin.DamageWork, Is.EqualTo(0.25m));
-            Assert.That(toxin.DecayWork, Is.EqualTo(0.25m));
+            Assert.That(toxin.Value, Is.EqualTo(73));
+            Assert.That(toxin.DamageWork, Is.EqualTo(0.24m));
         }
 
         [Test]
@@ -2889,7 +2970,7 @@ namespace Pachimon.Editor.Tests
             Assert.That(
                 preview.Effects.Single(effect =>
                     ReferenceEquals(effect.Target, target)).HpDelta,
-                Is.EqualTo(-165));
+                Is.EqualTo(-220));
             Assert.That(second.FinalDamage, Is.EqualTo(110));
             Assert.That(
                 source.GetStatus(BattleStatusId.StoredCharge).StackCount,
@@ -2969,7 +3050,7 @@ namespace Pachimon.Editor.Tests
             Assert.That(
                 preview.Effects.Single(effect =>
                     ReferenceEquals(effect.Target, target)).HpDelta,
-                Is.EqualTo(-200));
+                Is.EqualTo(-250));
             Assert.That(
                 preview.Effects.Single(effect =>
                     ReferenceEquals(
@@ -6789,6 +6870,33 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
+        public void PoisonMist_UsesPoisonAquaAndWindForSeparateValues()
+        {
+            var field = ScriptableObject.CreateInstance<PoisonMistFieldEffectAsset>();
+            var skill = ScriptableObject.CreateInstance<PoisonMistSkillAsset>();
+            try
+            {
+                field.ConfigureForEditor("Poison Mist", string.Empty);
+                skill.ConfigureForEditor(
+                    53, "Poison Mist", 100, 300, 40, string.Empty,
+                    100, 25, 75, 50, 20, 200, field);
+
+                Assert.That(skill.PoisonValueRatio, Is.EqualTo(100));
+                Assert.That(skill.AquaDurationRatio, Is.EqualTo(100));
+                Assert.That(skill.WindMinimumValueRatio, Is.EqualTo(100));
+                Assert.That(skill.CalculateMistValue(100), Is.EqualTo(200));
+                Assert.That(skill.CalculateMistValue(200), Is.EqualTo(300));
+                Assert.That(skill.CalculateDurationTicks(100), Is.EqualTo(150));
+                Assert.That(skill.CalculateMinimumValue(100, 100), Is.EqualTo(40));
+            }
+            finally
+            {
+                Object.DestroyImmediate(skill);
+                Object.DestroyImmediate(field);
+            }
+        }
+
+        [Test]
         public void PoisonMist_EvadesQualifyingAttributeAndTrueSkillAttacks()
         {
             var mist = ScriptableObject.CreateInstance<PoisonMistFieldEffectAsset>();
@@ -6803,7 +6911,7 @@ namespace Pachimon.Editor.Tests
                     123,
                     CreateTestSide(BattleSide.Player, defender),
                     CreateTestSide(BattleSide.Enemy, attacker));
-                state.Fields.CreatePoisonMist(defender, mist, 100, 300);
+                state.Fields.CreatePoisonMist(defender, mist, 100, 300, 20);
 
                 var attributeResult = BattleAttributeDamageService.Apply(
                     state,
@@ -6836,6 +6944,36 @@ namespace Pachimon.Editor.Tests
                 Assert.That(trueResult.WasEvaded, Is.True);
                 Assert.That(largeResult.WasEvaded, Is.False);
                 Assert.That(defender.CurrentHp, Is.EqualTo(1899));
+            }
+            finally
+            {
+                Object.DestroyImmediate(mist);
+            }
+        }
+
+        [Test]
+        public void PoisonMist_MergesValueDurationAndMinimumValue()
+        {
+            var mist = ScriptableObject.CreateInstance<PoisonMistFieldEffectAsset>();
+            try
+            {
+                mist.ConfigureForEditor("Poison Mist", string.Empty);
+                var defender = CreateBattleUnitWithStats(
+                    "mist_defender", BattleSide.Player, 0, 2000, 1);
+                var state = new BattleState(
+                    123,
+                    CreateTestSide(BattleSide.Player, defender),
+                    CreateTestSide(BattleSide.Enemy,
+                        CreateBattleUnitWithStats(
+                            "mist_attacker", BattleSide.Enemy, 0, 2000, 1)));
+
+                state.Fields.CreatePoisonMist(defender, mist, 100, 150, 20);
+                state.Fields.CreatePoisonMist(defender, mist, 200, 300, 40);
+
+                Assert.That(state.Fields.Effects.Count, Is.EqualTo(1));
+                Assert.That(state.Fields.Effects[0].Value, Is.EqualTo(300));
+                Assert.That(state.Fields.Effects[0].SecondaryValue, Is.EqualTo(60));
+                Assert.That(state.Fields.Effects[0].RemainingTicks, Is.EqualTo(450));
             }
             finally
             {
@@ -7477,7 +7615,7 @@ namespace Pachimon.Editor.Tests
                     "毒素",
                     "毎tickダメージを与える。",
                     damagePerTickRatio: 1,
-                    decayPerTickRatio: 1);
+                    decayPerTick: 1);
                 weaknessDefinition.ConfigureForEditor(
                     "弱点",
                     "次のDamageを増幅する。");
@@ -7972,7 +8110,7 @@ namespace Pachimon.Editor.Tests
                     "毒素",
                     "毎tickダメージを与えながら減衰する。",
                     damagePerTickRatio: 1,
-                    decayPerTickRatio: 1);
+                    decayPerTick: 1);
                 return _toxinStatus;
             }
         }

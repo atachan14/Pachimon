@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 17adb76183764ebc8f1f5d242e89af78, type: 3}
   m_Name: Skill_005
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PoisonNeedleSkillAsset
   _skillId: 5
   _displayName: "\u3069\u304F\u3070\u308A"
   _allocationType: 5
@@ -21,8 +21,8 @@ MonoBehaviour:
   _baseCooldownTicks: 300
   _baseManaCost: 20
   _description: "\u6575\u306E\u5148\u982D\u306B{icon:Poison}{color:Poison}{value:damage}{/color}\u306E{term:PoisonDamage|\u6BD2\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
-  _statusBaseValue: 100
-  _statusScalingPercent: 100
+  _baseDamage: 150
+  _damageRatio: 100
+  _toxinBaseValue: 150
+  _toxinRatio: 100
   _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}
-  _paralysisStatus: {fileID: 0}
-  _chillStatus: {fileID: 0}

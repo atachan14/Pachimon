@@ -8,12 +8,12 @@ namespace Pachimon.Skills
     public sealed class SexyPoseSkillAsset : MachineExclusiveSkillAsset
     {
         [SerializeField, Min(1)] private int _charmStacks = 15;
-        [SerializeField, Min(0)] private int _stunRatio = 100;
+        [SerializeField, HideInInspector] private int _stunRatio = 100;
         [SerializeField] private CharmStatusAsset _charmStatus;
         [SerializeField] private StunStatusAsset _stunStatus;
 
         public int CharmStacks => _charmStacks;
-        public int StunRatio => _stunRatio;
+        public int StunRatio => AttributeDamageRules.ScalingRatio;
         public CharmStatusAsset CharmStatus => _charmStatus;
         public StunStatusAsset StunStatus => _stunStatus;
 

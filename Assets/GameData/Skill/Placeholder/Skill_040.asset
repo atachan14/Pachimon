@@ -21,5 +21,5 @@ MonoBehaviour:
   _baseCooldownTicks: 300
   _baseManaCost: 30
   _description: "\u5148\u982D\u306E\u6575\u306EShield\u3092\u3059\u3079\u3066\u7834\u58CA\u3057\u3001{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E{term:DragonDamage|\u7ADC\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002"
-  _baseDragonDamage: 150
+  _baseDragonDamage: 170
   _dragonDamageRatio: 100

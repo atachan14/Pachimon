@@ -10,12 +10,12 @@ namespace Pachimon.Skills
     public sealed class ChainBurnSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _basePower = 80;
-        [SerializeField, Min(0)] private int _fireScalingPercent = 100;
+        [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
         [SerializeField, Min(0)] private int _baseChainCount = 1;
         [SerializeField, Min(1)] private int _addChainGainUnits = 50;
 
         public int BasePower => _basePower;
-        public int FireScalingPercent => _fireScalingPercent;
+        public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseChainCount => _baseChainCount;
         public int AddChainGainUnits => _addChainGainUnits;
 

@@ -304,6 +304,9 @@ namespace Pachimon.UI
             var runtimeValues = effect.EffectId == BattleFieldEffectId.FireBarrier
                 ? $"Value  {effect.Value}    HP  {effect.CurrentHp}/{effect.MaxHp}"
                     + $"    残り  {effect.RemainingTicks}tick"
+                : effect.EffectId == BattleFieldEffectId.PoisonMist
+                    ? $"Value  {effect.Value}    最小Value  {effect.SecondaryValue}"
+                        + $"    残り  {effect.RemainingTicks}tick"
                 : $"Value  {effect.Value}";
             if (effect.Statuses.Count > 0)
             {

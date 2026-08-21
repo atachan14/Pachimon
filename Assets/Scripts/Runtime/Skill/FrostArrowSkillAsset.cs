@@ -10,11 +10,11 @@ namespace Pachimon.Skills
     {
         [SerializeField, Min(0)] private int _baseDamage = 100;
         [SerializeField, Min(0)] private int _baseChill = 30;
-        [SerializeField, Min(0)] private int _iceRatio = 100;
+        [SerializeField, HideInInspector] private int _iceRatio = 100;
         [SerializeField] private SlowStatusAsset _chillStatus;
         public int BaseDamage => _baseDamage;
         public int BaseChill => _baseChill;
-        public int IceRatio => _iceRatio;
+        public int IceRatio => AttributeDamageRules.ScalingRatio;
         public SlowStatusAsset ChillStatus => _chillStatus;
         public override void CollectValidationErrors(ICollection<string> errors)
         {

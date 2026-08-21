@@ -11,11 +11,11 @@ namespace Pachimon.Skills
     public sealed class WaterVeilSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseFieldValue = 300;
-        [SerializeField, Min(0)] private int _aquaValueRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaValueRatio = 100;
         [SerializeField] private WaterVeilFieldEffectAsset _fieldEffect;
 
         public int BaseFieldValue => _baseFieldValue;
-        public int AquaValueRatio => _aquaValueRatio;
+        public int AquaValueRatio => AttributeDamageRules.ScalingRatio;
         public WaterVeilFieldEffectAsset FieldEffect => _fieldEffect;
 
         public override void CollectValidationErrors(ICollection<string> errors)

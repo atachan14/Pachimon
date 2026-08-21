@@ -9,11 +9,11 @@ namespace Pachimon.Skills
     public sealed class DragonFootworkSkillAsset : SkillAsset
     {
         [SerializeField, Min(1)] private int _baseDurationTicks = 80;
-        [SerializeField, Min(0)] private int _durationDragonRatio = 100;
+        [SerializeField, HideInInspector] private int _durationDragonRatio = 100;
         [SerializeField] private FootworkStatusAsset _footworkStatus;
 
         public int BaseDurationTicks => _baseDurationTicks;
-        public int DurationDragonRatio => _durationDragonRatio;
+        public int DurationDragonRatio => AttributeDamageRules.ScalingRatio;
         public FootworkStatusAsset FootworkStatus => _footworkStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)

@@ -9,9 +9,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9b836c134bbc4014971d57bc69a834a5, type: 3}
+  m_Script: {fileID: 11500000, guid: 91aef52ac45943fa91430c9a647d92e3, type: 3}
   m_Name: Skill_004
-  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.PlaceholderSkillAsset
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.ElectricShockSkillAsset
   _skillId: 4
   _displayName: "\u30D3\u30EA\u30D3\u30EA\u30B7\u30E7\u30C3\u30AF"
   _allocationType: 4
@@ -21,8 +21,10 @@ MonoBehaviour:
   _baseCooldownTicks: 300
   _baseManaCost: 20
   _description: "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:damage}{/color}\u306E{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
-  _statusBaseValue: 100
-  _statusScalingPercent: 100
-  _toxinStatus: {fileID: 0}
+  _baseDamage: 150
+  _damageRatio: 100
+  _electricParalysisBaseValue: 50
+  _electricParalysisRatio: 100
+  _iceParalysisBaseValue: 25
+  _iceParalysisRatio: 100
   _paralysisStatus: {fileID: 11400000, guid: e83333335ac350ac91f5513dee8023e3, type: 2}
-  _chillStatus: {fileID: 0}

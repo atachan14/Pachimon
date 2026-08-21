@@ -9,12 +9,12 @@ namespace Pachimon.Skills
     public sealed class DragonUpperSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _baseDragonDamage = 100;
-        [SerializeField, Min(0)] private int _dragonDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _dragonDamageRatio = 100;
         [SerializeField, Min(1)] private int _knockoutDurationTicks = 200;
         [SerializeField] private KnockoutStatusAsset _knockoutStatus;
 
         public int BaseDragonDamage => _baseDragonDamage;
-        public int DragonDamageRatio => _dragonDamageRatio;
+        public int DragonDamageRatio => AttributeDamageRules.ScalingRatio;
         public int KnockoutDurationTicks => _knockoutDurationTicks;
         public KnockoutStatusAsset KnockoutStatus => _knockoutStatus;
 

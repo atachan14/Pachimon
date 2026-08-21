@@ -11,14 +11,14 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseHealing = 100;
         [SerializeField, Min(0)] private int _baseWindBonus = 50;
         [SerializeField, Min(0)] private int _baseSpeedBonus = 50;
-        [SerializeField, Min(0)] private int _windRatio = 100;
+        [SerializeField, HideInInspector] private int _windRatio = 100;
         [SerializeField, Min(1)] private int _durationTicks = 200;
         [SerializeField] private HealingWindStatusAsset _statusDefinition;
 
         public int BaseHealing => _baseHealing;
         public int BaseWindBonus => _baseWindBonus;
         public int BaseSpeedBonus => _baseSpeedBonus;
-        public int WindRatio => _windRatio;
+        public int WindRatio => AttributeDamageRules.ScalingRatio;
         public int DurationTicks => _durationTicks;
         public HealingWindStatusAsset StatusDefinition => _statusDefinition;
 

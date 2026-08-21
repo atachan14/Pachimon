@@ -8,11 +8,11 @@ namespace Pachimon.Skills
     {
         [SerializeField, Range(1, 100)] private int _maxMnCostPercent = 4;
         [SerializeField, Min(0)] private int _damagePerMana = 3;
-        [SerializeField, Min(0)] private int _aquaDamageRatio = 100;
+        [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
 
         public int MaxMnCostPercent => _maxMnCostPercent;
         public int DamagePerMana => _damagePerMana;
-        public int AquaDamageRatio => _aquaDamageRatio;
+        public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
 
 #if UNITY_EDITOR
         public void ConfigureForEditor(

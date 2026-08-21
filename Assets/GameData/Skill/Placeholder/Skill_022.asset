@@ -20,8 +20,8 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 60
-  _description: "敵の先頭に{icon:Ice}{color:Ice}{value:frontDamage}{/color}の{term:IceDamage|氷ダメージ}と値{value:frontChill}の{term:Chill|冷気}を与える。他の敵には{icon:Ice}{color:Ice}{value:otherDamage}{/color}と値{value:otherChill}の冷気を与える。"
-  _frontBaseDamage: 100
+  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Ice}{color:Ice}{value:frontDamage}{/color}\u306E{term:IceDamage|\u6C37\u30C0\u30E1\u30FC\u30B8}\u3068\u5024{value:frontChill}\u306E{term:Chill|\u51B7\u6C17}\u3092\u4E0E\u3048\u308B\u3002\u4ED6\u306E\u6575\u306B\u306F{icon:Ice}{color:Ice}{value:otherDamage}{/color}\u3068\u5024{value:otherChill}\u306E\u51B7\u6C17\u3092\u4E0E\u3048\u308B\u3002"
+  _frontBaseDamage: 150
   _frontDamageIceRatio: 100
   _frontBaseChill: 75
   _frontChillIceRatio: 100
