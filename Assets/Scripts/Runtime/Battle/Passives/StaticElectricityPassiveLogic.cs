@@ -33,26 +33,30 @@ namespace Pachimon.Battle
                 BattleStatusFactory.CreateSlow(
                     Owner,
                     CalculateParalysisValue(attackEvent.State),
-                    _definition.ParalysisStatus));
+                    _definition.ParalysisStatus,
+                    CalculateParalysisDuration(attackEvent.State)));
         }
 
         private int CalculateParalysisValue(BattleState state)
         {
-            var electric = SignedStatMath.FloorNonNegative(
+            return SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    _definition.ElectricBaseValue,
+                    _definition.BaseValue,
                     Owner.GetBattleStatValue(PachimonStatType.Electric),
                     state.ResolveAttributeRatio(
                         PachimonAttribute.Electric,
                         100m)));
-            var ice = SignedStatMath.FloorNonNegative(
+        }
+
+        private int CalculateParalysisDuration(BattleState state)
+        {
+            return Math.Max(1, SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    _definition.IceBaseValue,
+                    _definition.BaseDurationTicks,
                     Owner.GetBattleStatValue(PachimonStatType.Ice),
                     state.ResolveAttributeRatio(
                         PachimonAttribute.Ice,
-                        100m)));
-            return checked(electric + ice);
+                        100m))));
         }
 
     }

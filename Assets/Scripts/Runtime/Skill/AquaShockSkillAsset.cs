@@ -11,14 +11,16 @@ namespace Pachimon.Skills
     public sealed class AquaShockSkillAsset : SkillAsset
     {
         [FormerlySerializedAs("_electricDamagePercent")]
-        [SerializeField, Min(0)] private int _electricBasePower = 10;
+        [FormerlySerializedAs("_electricBasePower")]
+        [SerializeField, Min(0)] private int _electricBaseDamage = 10;
         [FormerlySerializedAs("_aquaDamagePercent")]
-        [SerializeField, Min(0)] private int _aquaBasePower = 10;
+        [FormerlySerializedAs("_aquaBasePower")]
+        [SerializeField, Min(0)] private int _aquaBaseDamage = 10;
         [FormerlySerializedAs("_leakValuePercent")]
         [SerializeField, Min(0)] private int _leakBaseValue = 10;
 
-        public int ElectricBasePower => _electricBasePower;
-        public int AquaBasePower => _aquaBasePower;
+        public int ElectricBaseDamage => _electricBaseDamage;
+        public int AquaBaseDamage => _aquaBaseDamage;
         public int LeakBaseValue => _leakBaseValue;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -38,8 +40,8 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int electricBasePower,
-            int aquaBasePower,
+            int electricBaseDamage,
+            int aquaBaseDamage,
             int leakBaseValue)
         {
             base.ConfigureForEditor(
@@ -51,8 +53,8 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _electricBasePower = electricBasePower;
-            _aquaBasePower = aquaBasePower;
+            _electricBaseDamage = electricBaseDamage;
+            _aquaBaseDamage = aquaBaseDamage;
             _leakBaseValue = leakBaseValue;
         }
 #endif

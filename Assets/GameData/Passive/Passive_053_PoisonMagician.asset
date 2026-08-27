@@ -14,6 +14,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.PoisonMagicianPassiveAsset
   _passiveId: 53
   _displayName: "\u6BD2\u306E\u9B54\u8853\u5E2B"
-  _description: "自身のSkillで毒以外の属性ダメージを与えるたび、Battle中の{icon:Poison}毒が{value:poisonGain}増加する。"
+  _description: "\u81EA\u8EAB\u306ESkill\u3067\u6BD2\u4EE5\u5916\u306E\u5C5E\u6027\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u305F\u3073\u3001Battle\u4E2D\u306E{icon:Poison}\u6BD2\u304C{value:poisonGain}\u5897\u52A0\u3059\u308B\u3002"
   _poisonGainPerHit: 20
   _growthStatus: {fileID: 11400000, guid: 7ceca8ee4d4dec44482d8e34999f861b, type: 2}

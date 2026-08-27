@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DerivedAdditivePassiveAsset
   _passiveId: 26
   _displayName: "\u6D77\u306E\u529B"
-  _description: "MaxMNの{value:percent}%を{icon:Aqua}水へ加算する。現在の加算値は{value:contribution}。"
+  _description: "MaxMN\u306E{value:percent}%\u3092{icon:Aqua}\u6C34\u3078\u52A0\u7B97\u3059\u308B\u3002\u73FE\u5728\u306E\u52A0\u7B97\u5024\u306F{value:contribution}\u3002"
   _targetStat: 3
   _referenceStat: 1
   _percent: 2

@@ -23,27 +23,28 @@ namespace Pachimon.Battle
                     "Sunny Day Logic received another Skill Asset.",
                     nameof(context));
             }
-            if (_skill.TemperatureDefinition == null)
+            if (_skill.PrecipitationDefinition == null)
             {
                 throw new InvalidOperationException(
-                    "Temperature Definition is not assigned.");
+                    "Precipitation Definition is not assigned.");
             }
 
             var value = SignedStatMath.FloorNonNegative(
-                _skill.BaseValue
-                + context.GetAttributeValue(PachimonAttribute.Fire)
-                * context.GetAttributeRatio(
-                    PachimonAttribute.Fire,
-                    _skill.FireValueRatio) / 100m,
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseValue,
+                    context.GetAttributeValue(PachimonAttribute.Fire),
+                    context.GetAttributeRatio(
+                        PachimonAttribute.Fire,
+                        _skill.FireValueRatio)),
                 minimum: 1);
             if (value > 0)
             {
-                var temperature = context.State.Weather.AddTemperature(
+                var precipitation = context.State.Weather.AddPrecipitation(
                     context.User,
-                    _skill.TemperatureDefinition,
-                    value);
+                    _skill.PrecipitationDefinition,
+                    -value);
                 context.State.AddLog(
-                    $"気温が{value}上昇した！ 現在の気温: {temperature:+#;-#;0}");
+                    $"晴天が{value}強くなった！ 現在の降水: {precipitation:+#;-#;0}");
             }
 
             return new SkillResolution(

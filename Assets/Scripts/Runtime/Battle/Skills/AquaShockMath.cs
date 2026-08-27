@@ -12,7 +12,7 @@ namespace Pachimon.Battle
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.ElectricBasePower,
+                skill.ElectricBaseDamage,
                 electric);
         }
 
@@ -23,7 +23,7 @@ namespace Pachimon.Battle
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.AquaBasePower,
+                skill.AquaBaseDamage,
                 aqua,
                 aquaScalingPercent);
         }

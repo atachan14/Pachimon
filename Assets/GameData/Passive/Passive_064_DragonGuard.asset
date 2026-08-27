@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DragonGuardPassiveAsset
   _passiveId: 64
   _displayName: "\u9F8D\u306E\u5B88\u308A"
-  _description: "{icon:Dragon}竜の{value:dragonRatio}%をResistBonusへ加算する。現在の加算値は{value:resistBonus}。"
+  _description: "{icon:Dragon}\u7ADC\u306E{value:dragonRatio}%\u3092ResistBonus\u3078\u52A0\u7B97\u3059\u308B\u3002\u73FE\u5728\u306E\u52A0\u7B97\u5024\u306F{value:resistBonus}\u3002"
   _resistFromDragonRatio: 20

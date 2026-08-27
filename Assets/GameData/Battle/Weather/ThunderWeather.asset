@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.ThunderWeatherAsset
   _weatherId: 3
   _displayName: "\u96F7"
-  _description: "Electric Ratio\u3068Speed\u3092\u5897\u52A0\u3055\u305B\u3001150tick\u3054\u3068\u306B\u5168\u4F53\u3092\u653B\u6483\u3059\u308B\u3002"
+  _description: "{icon:Electric}Ratioを{color:Electric}{value:increasePercent}%{/color}増加する。全パチモンの{icon:Electric}の{value:speedRatio}%をSpeedへ加算する。{value:attackInterval}tickごとに全パチモンへ、発動時Valueに応じた{icon:Electric}Damageを与える（現在値なら軽減前{value:currentDamage}）。毎tick、雷Valueが基本1減少する。"
   _icon: {fileID: 0}
   _electricRatioScalingPercent: 10
   _speedFromElectricRatio: 10

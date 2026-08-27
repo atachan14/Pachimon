@@ -29,9 +29,13 @@ MonoBehaviour:
     _ice: 0
     _leaf: 0
     _wind: 0
-    _electric: 100
+    _electric: 50
     _dragon: 0
-    _speed: 0
-    _haste: 0
-    _damageBonus: 0
-    _resistBonus: 0
+    _fireSubStat: 0
+    _aquaSubStat: 0
+    _leafSubStat: 0
+    _electricSubStat: 0
+    _iceSubStat: 0
+    _windSubStat: 0
+    _poisonSubStat: 0
+    _dragonSubStat: 0

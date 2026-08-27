@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Items;
 using Pachimon.Run;
 
 namespace Pachimon.Reward
@@ -11,11 +12,12 @@ namespace Pachimon.Reward
         Secondary = 1,
         Passive = 2,
         Skill = 3,
+        Item = 4,
     }
 
     public sealed class BattleRewardSession
     {
-        public const int MaximumSkillCount = 9;
+        public const int RewardItemRecoveryAmount = 400;
 
         private readonly RunState _runState;
         private readonly RunPachimonPool _pachimonPool;
@@ -55,11 +57,26 @@ namespace Pachimon.Reward
 
         public bool UsesBadge => _nodeReward.BadgeAttribute.HasValue;
 
-        public bool IsComplete => _claimedSlots.Count == 4;
+        public bool IsComplete => _claimedSlots.Count == 5;
 
         public bool IsClaimed(BattleRewardSlot slot)
         {
             return _claimedSlots.Contains(slot);
+        }
+
+        public bool AbandonRemaining()
+        {
+            if (IsComplete)
+            {
+                return false;
+            }
+
+            foreach (BattleRewardSlot slot in Enum.GetValues(
+                         typeof(BattleRewardSlot)))
+            {
+                _claimedSlots.Add(slot);
+            }
+            return true;
         }
 
         public bool ClaimGold()
@@ -100,7 +117,7 @@ namespace Pachimon.Reward
             var target = _pachimonPool.Get(targetInstanceId);
             return skillId > 0
                 && IsPlayerPartyMember(target)
-                && target.SkillIds.Count < MaximumSkillCount;
+                && target.CanAddSkillId(skillId);
         }
 
         public bool GrantSkill(int skillId, string targetInstanceId)
@@ -147,9 +164,36 @@ namespace Pachimon.Reward
             return true;
         }
 
+        public bool CanClaimItem(int itemId)
+        {
+            return !IsClaimed(BattleRewardSlot.Item)
+                && IsRewardItem(itemId)
+                && !_runState.ItemInventory.IsFull;
+        }
+
+        public bool ClaimItem(int itemId)
+        {
+            if (!CanClaimItem(itemId)
+                || !_runState.ItemInventory.TryAdd(
+                    new GeneratedItemData(itemId, RewardItemRecoveryAmount),
+                    out _,
+                    out _))
+            {
+                return false;
+            }
+
+            _claimedSlots.Add(BattleRewardSlot.Item);
+            return true;
+        }
+
         private bool IsPlayerPartyMember(PachimonInstance target)
         {
             return target != null && _playerParty.Contains(target);
+        }
+
+        private static bool IsRewardItem(int itemId)
+        {
+            return itemId == ItemIds.Potion || itemId == ItemIds.MnPotion;
         }
 
         private PachimonInstance GetRequiredPachimon(string instanceId)

@@ -35,14 +35,7 @@ namespace Pachimon.Battle
                 SignedStatMath.ScaleFromBase(baseValue, poison, toxinRatio));
             var effects = new List<SkillEffectResult>();
 
-            var normalHit = context.BeginAttackHit(target);
-            var normalResult = ApplyDamage(
-                context,
-                target,
-                ScaleDamage(_skill.BaseDamage),
-                effects,
-                normalHit);
-            if (wasFullHp && target.IsAlive)
+            if (wasFullHp)
             {
                 var hit = context.BeginAttackHit(target);
                 var result = ApplyDamage(
@@ -60,12 +53,19 @@ namespace Pachimon.Battle
                         _skill.ToxinStatus));
                 }
             }
-            else if (!wasFullHp && target.IsAlive && !normalResult.WasEvaded)
+            else
             {
+                var hit = context.BeginAttackHit(target);
+                var result = ApplyDamage(
+                    context,
+                    target,
+                    ScaleDamage(_skill.BaseDamage),
+                    effects,
+                    hit);
                 var toxinValue = ScaleToxin(_skill.BaseNormalToxinValue);
-                if (toxinValue > 0)
+                if (!result.WasEvaded && toxinValue > 0)
                 {
-                    normalHit.ApplyStatus(BattleStatusFactory.CreateToxin(
+                    hit.ApplyStatus(BattleStatusFactory.CreateToxin(
                         context.User,
                         toxinValue,
                         _skill.ToxinStatus));

@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: Skill_049
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.SunnyDaySkillAsset
   _skillId: 49
-  _displayName: "\u6E29\u6696\u5316"
+  _displayName: "\u306B\u307B\u3093\u3070\u308C"
   _allocationType: 1
   _isMapAssignable: 1
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 300
+  _baseCooldownTicks: 600
   _baseManaCost: 60
-  _description: "Battle\u4E2D\u306E\u6C17\u6E29\u3092{color:Fire}{value:temperature}{/color}\u4E0A\u6607\u3055\u305B\u308B\u3002\u6C17\u6E29\u306FBattle\u7D42\u4E86\u307E\u3067\u6E1B\u8870\u3057\u306A\u3044\u3002"
-  _baseValue: 20
+  _description: "{icon:Fire}\u306B\u5FDC\u3058\u3066\u6674\u5929\u3092{color:Fire}{value:temperature}{/color}\u767A\u751F\u3055\u305B\u308B\u3002\u6674\u5929\u306F10tick\u6BCE\u306B\u6C17\u6E29\u3092\u4E0A\u3052\u3001\u6E7F\u6F64\u3092\u4E0B\u3052\u308B\u3002"
+  _baseValue: 50
   _fireValueRatio: 100
   _temperatureDefinition: {fileID: 11400000, guid: 6a490000000000000000000000000001, type: 2}
+  _precipitationDefinition: {fileID: 11400000, guid: 64c8822d2d084587b332417a7b4ea895, type: 2}

@@ -103,7 +103,7 @@ namespace Pachimon.Battle
             return value;
         }
 
-        public decimal ModifyPenetrationPercent(
+        public DamagePenetration ModifyPenetration(
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
@@ -114,7 +114,7 @@ namespace Pachimon.Battle
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (context == null) throw new ArgumentNullException(nameof(context));
 
-            var penetration = context.PenetrationPercent;
+            var penetration = context.Penetration;
             if (!context.ApplyOutgoingModifiers)
                 return penetration;
 
@@ -122,7 +122,7 @@ namespace Pachimon.Battle
                          .Where(logic => ReferenceEquals(logic.Owner, source))
                          .OfType<IOutgoingPenetrationModifierProvider>())
             {
-                penetration = provider.ModifyPenetrationPercent(
+                penetration = provider.ModifyPenetration(
                     state,
                     source,
                     target,

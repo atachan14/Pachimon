@@ -11,7 +11,7 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseLeafDamage = 70;
         [SerializeField, Min(0)] private int _baseSlow = 25;
         [SerializeField, Min(0)] private int _baseChainCount = 2;
-        [SerializeField, Min(1)] private int _addChainGainUnits = 50;
+        [SerializeField, Min(1)] private int _addChainGainUnits = 100;
         [SerializeField] private SlowStatusAsset _slowStatus;
 
         public int BaseLeafDamage => _baseLeafDamage;

@@ -32,18 +32,16 @@ PoisonScalingPercent = 100%
 #### Fixed Skill
 
 - 名前:神経毒
-- 効果:最後尾の敵にbase * amp毒 + base * amp電気 の[Stun]とbase * amp毒 の 毒素 を与える。
+- 効果:最後尾の敵にbase * amp電気 の[Stun]とbase * amp毒 の 毒素 を与える。
 
 ```text
 StunTicks
-= 50 × AmplificationMultiplier(Poison × 100%)
-+ 50 × AmplificationMultiplier(Electric × 100%)
+= 50 × AmplificationMultiplier(Electric × 100%)
 
 毒素Value
 = 100 × AmplificationMultiplier(Poison × 100%)
 ```
 
-- `BasePoisonStunTicks / PoisonStunScalingPercent`をSOで調整可能にする
 - `BaseElectricStunTicks / ElectricStunScalingPercent`をSOで調整可能にする
 - `BaseToxinValue / ToxinScalingPercent`をSOで調整可能にする
 - 計算結果は最後に切り捨てる
@@ -138,14 +136,12 @@ TickAmount
 = CurrentValue × 1%
 
 ApplicationWork += TickAmount
-DecayWork += TickAmount
 ```
 
 - 毎tick、敵陣の生存Pachimon全員へ`floor(ApplicationWork)`の毒素を付与する
 - 付与分を`ApplicationWork`から減算する
-- 毎tick、`floor(DecayWork)`をスモッグValueから減算する
-- 減衰分を`DecayWork`から減算し、Valueが0になると消滅する
-- 同じ敵陣へ再生成した場合は既存Valueへ加算し、両Workを維持する
+- 毎tick、スモッグValueを固定で1減少させ、Valueが0になると消滅する
+- 同じ敵陣へ再生成した場合は既存Valueへ加算し、`ApplicationWork`を維持する
 - 再生成後の付与者表示には最新の生成者を使用する
 - スモッグから付与された毒素は次のtickからDamage・Value減衰を開始する
 - tickごとの毒素付与Logは表示しない
@@ -180,18 +176,25 @@ DecayWork += TickAmount
 
 - 名前:毒渡し
 - 効果:
-[一番多く毒が付与されている敵]の毒を50%取り除き。
-[一番少なく毒が付与されている敵]に取り除いた毒の200%を与える（元の100%）。
+[一番多く毒が付与されている敵]の毒を50%取り除く。
+[一番少なく毒が付与されている敵]に次の毒素を与える。
+
+```text
+付与Value
+= floor((除去Value + 150 × AmplificationMultiplier(Poison)) × 200%)
+```
+
+- 敵全員の毒素が0の場合は除去・倍化を行わず、先頭へ`150 × AmplificationMultiplier(Poison)`の毒素を与える
 
 補足：
-1. 敵が1人だった場合は、同じ対象に続けて操作を行うことになるので、結果的に毒が元の150%になる。
+1. 敵が1人だった場合は、同じ対象から除去後、同じ対象へ上記の付与Valueを与える。
 2. [一番少なく毒が付与されている敵]を選択するタイミングは、毒を取り除く前。（最初に[一番多く毒が付与されている敵]と[一番少なく毒が付与されている敵]を確定する。）
 3. 最大対象はValue降順、同値なら前方優先で決定する。
 4. 最小対象は最大対象以外からValue昇順、同値なら前方優先で決定する。
 5. 生存している敵が1体の場合のみ、最大対象と最小対象は同じ対象になる。
 6. 毒素を持たない敵はValue 0として扱う。
 7. 除去量と付与量はそれぞれ切り捨てる。
-8. `RemovalPercent = 50 / ApplicationPercent = 200`をSOで調整可能にする。
+8. `RemovalPercent = 50 / BaseToxinValue = 150 / PoisonScalingPercent = 100 / ApplicationPercent = 200`をSOで調整可能にする。
 
 #### Passive
 
@@ -219,22 +222,23 @@ Speed加算値
 
 - 名前:毒爆破
 - 効果:
-[最も多く毒が付与されている敵]の毒素を全て消費し、消費した毒素と自身の毒と炎依存のダメージを敵全体に与える。
+敵全員の毒素を全て消費し、毒素を持っていた各対象を起点に本体Poison Damageと全体Fire Damageを発生させる。
 
 ```text
-BaseDamage
-= ConsumedToxin × 100%
-+ 50 × AmplificationMultiplier(Poison × 100%)
-+ 50 × AmplificationMultiplier(Fire × 100%)
+本体軽減前Poison Damage
+= ConsumedToxin × 100% × AmplificationMultiplier(Poison × 100%)
+
+AOE軽減前Fire Damage
+= 本体軽減前Poison Damage × 5% × AmplificationMultiplier(Fire × 100%)
 ```
 
-- 最大対象は毒素Value降順、同値なら前方優先で決定する
-- 毒素を持つ敵がいない場合も、消費量0としてSkillは発動する
-- 対象の毒素はDamage解決前に全消費する
-- 全Enemyへ同じ軽減前DamageのPoison属性攻撃を行う
-- `DamageBonus / 対象Poison / 対象ResistBonus / 攻撃時Passive`を適用する
-- 攻撃側Poisonは式へ反映済みのため、属性倍率を二重適用しない
-- `ToxinConversionPercent / BasePoisonPower / PoisonScalingPercent / BaseFirePower / FireScalingPercent`はSOで調整可能にする
+- 全対象の毒素をDamage解決前に全消費する
+- 毒素0の対象は本体DamageもAOEの発生源にもならない
+- 各発生源自身は、本体Poison Damage 1回と全発生源由来のAOE Fire Damageを受ける
+- 敵3体が毒素を持つ場合、各対象は本体Poison Damageを1回、AOE Fire Damageを3回受ける
+- 各Damageへ`DamageBonus / 対象属性 / 対象ResistBonus / 攻撃時Passive`を適用する
+- 攻撃側Poison / Fireは式へ反映済みのため、属性倍率を二重適用しない
+- `ToxinConversionPercent / PoisonScalingPercent / AoeFirePercent / FireScalingPercent`はSOで調整可能にする
 
 #### Passive
 
@@ -347,11 +351,11 @@ PoisonScalingPercent = 100%
 #### Fixed Skill: ファーストタッチ
 先頭の敵に75 * 毒参照の毒ダメージを与える。
 対象のHPが100%未満だった場合、50 * 毒参照の毒素を与える。
-対象のHPが100%だった場合、追加で300 * 毒参照のダメージと150 * 毒参照の毒素を与える。
+対象のHPが100%だった場合、通常ダメージの代わりに300 * 毒参照の強化ダメージと150 * 毒参照の毒素を与える。
 
 - HP100%判定とPoisonはSkill解決開始時の値を使用する
-- 基本Hitで戦闘不能になった場合は追加Hitを行わない
-- 追加ダメージは独立した2Hit目とし、2Hit目が回避された場合は毒素も付与しない
+- HP100%時の強化ダメージは通常ダメージを置換し、1Hitだけ行う
+- 強化Hitが回避された場合は毒素も付与しない
 
 #### Passive: ラストタッチ
 自身のSkillでダメージを与えたとき、対象のHPが毒 * 4%以下なら戦闘不能にする（残りHP分の確定ダメージを追加で与える）。

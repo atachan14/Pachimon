@@ -397,8 +397,9 @@ GymLeaderとEliteも通常Trainerと同じ`TrainerStyle`型を使用する。た
 
 #### Enemy Partyの最終順序
 
-- Battle / Gym / Eliteの3体は、全枠の割り当て後にMaxHPが高い順へ並べる
-- MaxHPが同値の場合は、割り当て時の順序を維持する
+- Start候補とBattle / Gym / EliteのPachimonは、全枠の割り当て後に`Effective MaxHP / RB軽減倍率`で求める実効耐久が高い順へ並べる
+- 実効耐久が同値の場合はEffective MaxHPが高い順、それも同値なら割り当て時の順序を維持する
+- 実効値には非Battle中に有効なPassiveと、敵側では報酬TrainerStatus・Row補正・Badge補正を含める
 - RightPaneの事前情報とBattle Formationは、この確定済み順序を共通で使用する
 
 配置後、`skill-spec.md`に従ってGymへ一致Skillを2つ、Eliteへ一致Skillを3つ、全個体へrow別ランダムSkillを2-4つ振り分ける。候補は現在の採用回数が最少のSkill群から選び、Skillごとの採用回数をできるだけ均等にする。

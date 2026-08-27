@@ -24,9 +24,9 @@ namespace Pachimon.Items
                 return ItemUseFailureReason.InvalidTarget;
             }
 
-            if (!context.RunTarget.CanAddSkill
+            if (!context.RunTarget.CanAddSkillId(skillMachine.SkillId)
                 || (context.Kind == ItemUseContextKind.Battle
-                    && !context.BattleTarget.CanAddSkill))
+                    && !context.BattleTarget.CanAddSkillId(skillMachine.SkillId)))
             {
                 return ItemUseFailureReason.SkillSlotsFull;
             }

@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b457f194f0def014295c3b5cfb307b80, type: 3}
+  m_Name: Item_004_SkillForget
+  m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Items.SkillForgetItemAsset
+  _itemId: 4
+  _displayName: "\u6280\u5FD8\u308C\u30DE\u30B7\u30F3"
+  _icon: {fileID: 0}
+  _description: "\u9078\u629E\u3057\u305F\u30D1\u30C1\u30E2\u30F3\u304B\u3089\u3001\u9078\u629E\u3057\u305F\u6280\u30921\u3064\u5FD8\u308C\u3055\u305B\u308B\u3002"
+  _category: 2
+  _basePrice: 500

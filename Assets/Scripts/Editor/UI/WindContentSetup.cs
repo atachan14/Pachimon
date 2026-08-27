@@ -48,12 +48,12 @@ namespace Pachimon.Editor.UI
                 $"{SkillFolder}/Skill_055.asset");
             dance.ConfigureForEditor(55, "\u304D\u308A\u304D\u308A\u821E\u3044", 100, 300, 100,
                 "\u9023\u9396\u3057\u306A\u304C\u3089\u98A8\u30C0\u30E1\u30FC\u30B8\u3068\u98A8\u5316\u3092\u4E0E\u3048\u3001\u30A2\u30C9\u30C1\u30A7\u30A4\u30F3\u3092\u5F97\u308B\u3002",
-                100, 100, 20, 100, 2, 50, erosion);
+                100, 100, 20, 100, 2, 100, erosion);
             var kachofugetsu = ReplaceWith<KachofugetsuSkillAsset>(
                 $"{SkillFolder}/Skill_063.asset");
             kachofugetsu.ConfigureForEditor(63, "\u82B1\u9CE5\u98A8\u6708", 100, 300, 150,
-                "\u5148\u982D\u306E\u6575\u306BFire\u30FBAqua\u30FBWind\u306E3\u5C5E\u6027\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
-                50, 100, 50, 100, 50, 100);
+                "\u5148\u982D\u306E\u6575\u306BFire\u30FBAqua\u30FBLeaf\u30FBWind\u306E4\u5C5E\u6027\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002",
+                76, 100, 76, 100, 76, 100, 76, 100);
 
             var rider = GetOrCreate<WindRiderPassiveAsset>(
                 $"{PassiveFolder}/Passive_055_WindRider.asset");
@@ -109,7 +109,7 @@ namespace Pachimon.Editor.UI
             item.ConfigureForEditor(itemId,
                 $"\u6280\u30DE\u30B7\u30FC\u30F3[{skill.DisplayName}]", null,
                 $"\u5BFE\u8C61\u306E\u5473\u65B9\u30D1\u30C1\u30E2\u30F3\u304C[{skill.DisplayName}]\u3092\u7FD2\u5F97\u3059\u308B\u3002",
-                ItemCategory.SkillMachine, 5000);
+                ItemCategory.SkillMachine, 1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

@@ -310,7 +310,7 @@ namespace Pachimon.Editor.Balance
             {
                 if (effect.EffectId == BattleFieldEffectId.FireBarrier)
                 {
-                    shield = checked(shield + effect.CurrentHp);
+                    shield = checked(shield + effect.Value);
                 }
                 else if (effect.EffectId == BattleFieldEffectId.WaterVeil
                     && effect.Definition is WaterVeilFieldEffectAsset veil

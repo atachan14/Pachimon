@@ -5,8 +5,10 @@ namespace Pachimon.Run
 {
     public sealed class PachimonStatsGenerator
     {
-        private static readonly int[] AttributeStatIndices =
+        private static readonly int[] GeneratedStatIndices =
         {
+            (int)PachimonStatType.MaxHp,
+            (int)PachimonStatType.MaxMn,
             (int)PachimonStatType.Fire,
             (int)PachimonStatType.Aqua,
             (int)PachimonStatType.Leaf,
@@ -15,16 +17,6 @@ namespace Pachimon.Run
             (int)PachimonStatType.Ice,
             (int)PachimonStatType.Wind,
             (int)PachimonStatType.Dragon,
-        };
-
-        private static readonly int[] CommonStatIndices =
-        {
-            (int)PachimonStatType.MaxHp,
-            (int)PachimonStatType.MaxMn,
-            (int)PachimonStatType.Speed,
-            (int)PachimonStatType.Haste,
-            (int)PachimonStatType.DamageBonus,
-            (int)PachimonStatType.ResistBonus,
         };
 
         private readonly PachimonStatGenerationSettings _settings;
@@ -42,41 +34,25 @@ namespace Pachimon.Run
 
             var statCount = (int)PachimonStatType.Count;
             var valueUnits = new int[statCount];
-            valueUnits[(int)PachimonStatType.MaxHp] = _settings.ResourceMinimumValueUnits;
-            valueUnits[(int)PachimonStatType.MaxMn] = _settings.ResourceMinimumValueUnits;
-            var attributeInitialValue = ApplySpeciesInitialStats(
+            var initialValue = ApplySpeciesInitialStats(
                 valueUnits,
-                AttributeStatIndices,
-                species);
-            var commonInitialValue = ApplySpeciesInitialStats(
-                valueUnits,
-                CommonStatIndices,
+                GeneratedStatIndices,
                 species);
             ValidateInitialBudget(
                 species,
-                "Attribute",
-                attributeInitialValue,
-                _settings.AttributeAllocationBudget);
-            ValidateInitialBudget(
-                species,
-                "Common",
-                commonInitialValue,
-                _settings.CommonAllocationBudget);
+                initialValue,
+                _settings.AllocationBudget);
             AllocateBudget(
                 valueUnits,
-                AttributeStatIndices,
-                _settings.AttributeAllocationBudget - attributeInitialValue,
-                random);
-            AllocateBudget(
-                valueUnits,
-                CommonStatIndices,
-                _settings.CommonAllocationBudget - commonInitialValue,
+                GeneratedStatIndices,
+                _settings.AllocationBudget - initialValue,
                 random);
 
             var stats = new PachimonStats(
                 valueUnits,
                 _settings.ResourceDisplayMultiplier,
-                specialStatDivisor: 1);
+                specialStatDivisor: 1,
+                resourceBaseValue: _settings.ResourceBaseValue);
             if (stats.GetTotalValueUnits() != _settings.TotalValueUnits)
             {
                 throw new InvalidOperationException("Pachimon stat generation did not spend its full value budget.");
@@ -112,7 +88,6 @@ namespace Pachimon.Run
 
         private static void ValidateInitialBudget(
             PachimonSpeciesAsset species,
-            string groupName,
             int initialValue,
             int budget)
         {
@@ -123,7 +98,7 @@ namespace Pachimon.Run
 
             throw new InvalidOperationException(
                 $"Pachimon Species {species?.SpeciesId} ({species?.DisplayName}) "
-                + $"uses {initialValue} {groupName} initial Stat units, "
+                + $"uses {initialValue} initial Stat units, "
                 + $"but its Budget is {budget}.");
         }
 

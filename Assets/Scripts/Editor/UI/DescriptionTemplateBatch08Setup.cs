@@ -39,7 +39,7 @@ namespace Pachimon.Editor.UI
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(57)?.Description?.Contains("{value:weakness}") != true
+            if (skills?.Get(57)?.Description?.Contains("{value:baseFireDamage}") != true
                 || passives?.Get(57)?.Description?.Contains("{value:speedBonus}") != true)
             {
                 Setup();
@@ -60,20 +60,23 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(asset);
         }
 
-        private static string CreateSkillTemplate(int id) => id == 61
-            ? "敵の先頭へ{icon:Poison}{color:Poison}{value:damage}{/color}の毒ダメージを与える。対象が最大HP未満なら値{value:normalToxin}の毒素を与える。最大HPなら追加で{value:bonusDamage}ダメージと値{value:toxin}の毒素を与える。"
-            : id switch
+        private static string CreateSkillTemplate(int id)
         {
-            57 => "敵の先頭へ{icon:Fire}{color:Fire}{value:damage}{/color}の炎ダメージを与える。この攻撃は{value:penetration}%貫通し、値{value:weakness}の弱点を付与する。",
-            58 => "敵の先頭へ{icon:Aqua}{color:Aqua}{value:damage}{/color}の水ダメージを与える。ダメージは現在HP {value:currentHp}に応じて増加する。",
-            59 => "自陣に草Value {color:Leaf}{value:leafValue}{/color}、炎Value {color:Fire}{value:fireValue}{/color}の{term:FireVine|ファイアヴァイン}を生成する。",
-            60 => "自身へ値{color:Electric}{value:shield}{/color}、{value:duration}tickのShieldと値{value:selfParalysis}の麻痺を付与する。Shield中に攻撃した相手へ値{value:counterParalysis}の麻痺を返す。",
-            61 => "敵の先頭へ{icon:Poison}{color:Poison}{value:damage}{/color}の毒ダメージを与える。対象が最大HPなら代わりに{value:bonusDamage}ダメージと値{value:toxin}の毒素を与える。",
-            62 => "現在HPが最も低い敵へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与える。撃破時、MNを{value:manaRefund}、CDを{value:cooldownRefund}tick還元する。",
-            63 => "敵の先頭へ{icon:Fire}{color:Fire}{value:fireDamage}{/color}の炎、{icon:Aqua}{color:Aqua}{value:aquaDamage}{/color}の水、{icon:Wind}{color:Wind}{value:windDamage}{/color}の風ダメージを与える。",
-            64 => "自身へ値{color:Dragon}{value:shield}{/color}、{value:duration}tickのShieldを付与する。効果中は味方が受ける攻撃と状態付与を肩代わりする。",
+            if (PenetrationDescriptionTemplates.TryGetSkill(id, out var template))
+                return template;
+            return id switch
+        {
+            57 => "敵の先頭へ{color:Fire}{value:damage}{/color}（{value:baseFireDamage} ×（100 + {icon:Fire}{value:fire} × {value:fireDamageRatio}%）% + {value:baseAquaDamage} ×（100 + {icon:Aqua}{value:aqua} × {value:aquaDamageRatio}%）%）の{icon:Fire}{color:Fire}ダメージ{/color}を与える。この攻撃は{value:penetration}%貫通し、値{value:weakness}の弱点を付与する。",
+            58 => "敵の先頭へ{color:Aqua}{value:damage}{/color}（{value:baseDamage} ×（（100 + {icon:Aqua}{value:aqua} × {value:damageRatio}%）% + Current HP {value:currentHp} ÷ {value:hpDivisor}））の{icon:Aqua}{color:Aqua}ダメージ{/color}を与える。",
+            59 => "自陣に草Value {color:Leaf}{value:leafValue}{/color}（{value:baseLeafValue} ×（100 + {icon:Leaf}{value:leaf} × {value:leafRatio}%）%）、炎Value {color:Fire}{value:fireValue}{/color}（{value:baseFireValue} ×（100 + {icon:Fire}{value:fire} × {value:fireRatio}%）%）の{term:FireVine|ファイアヴァイン}を生成する。",
+            60 => "自身へ値{color:Electric}{value:shield}{/color}（{value:baseShield} ×（100 + {icon:Electric}{value:electric} × {value:shieldRatio}%）%）、{value:duration}tickのShieldと値{value:selfParalysis}（{value:baseSelfParalysis} ×（100 + {icon:Electric}{value:electric} × {value:selfRatio}%）%）の麻痺を付与する。Shield中に攻撃した相手へ{value:counterParalysisDuration}tick（{value:baseCounterDuration} ×（100 + {icon:Ice}{value:ice} × {value:counterDurationRatio}%）%）、値{value:counterParalysis}（{value:baseCounterParalysis} ×（100 + {icon:Electric}{value:electric} × {value:counterRatio}%）%）の麻痺を返す。",
+            61 => "敵の先頭へ{color:Poison}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の{icon:Poison}{color:Poison}ダメージ{/color}を与える。対象が最大HP未満なら値{value:normalToxin}（{value:baseNormalToxin} ×（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の毒素を与える。最大HPなら追加で{value:bonusDamage}（{value:baseBonusDamage} ×（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）ダメージと値{value:toxin}（{value:baseToxin} ×（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の毒素を与える。",
+            62 => "現在HPが最も低い敵へ{color:Ice}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Ice}{value:ice} × {value:ratio}%）%）の{icon:Ice}{color:Ice}ダメージ{/color}と値{value:chill}（{value:baseChill} ×（100 + {icon:Ice}{value:ice} × {value:ratio}%）%）の冷気を与える。撃破時、MNを{value:manaRefund}、CDを{value:cooldownRefund}tick還元する。",
+            63 => "敵の先頭へ{color:Fire}{value:fireDamage}{/color}（{value:baseFireDamage} ×（100 + {icon:Fire}{value:fire} × {value:fireRatio}%）%）の{icon:Fire}{color:Fire}ダメージ{/color}、{color:Aqua}{value:aquaDamage}{/color}（{value:baseAquaDamage} ×（100 + {icon:Aqua}{value:aqua} × {value:aquaRatio}%）%）の{icon:Aqua}{color:Aqua}ダメージ{/color}、{color:Leaf}{value:leafDamage}{/color}（{value:baseLeafDamage} ×（100 + {icon:Leaf}{value:leaf} × {value:leafRatio}%）%）の{icon:Leaf}{color:Leaf}ダメージ{/color}、{color:Wind}{value:windDamage}{/color}（{value:baseWindDamage} ×（100 + {icon:Wind}{value:wind} × {value:windRatio}%）%）の{icon:Wind}{color:Wind}ダメージ{/color}を与える。",
+            64 => "自身へ値{color:Dragon}{value:shield}{/color}（{value:baseShield} ×（100 + {icon:Dragon}{value:dragon} × {value:shieldRatio}%）%）、{value:duration}tickのShieldを付与する。効果中は味方が受ける攻撃と状態付与を肩代わりする。",
             _ => string.Empty,
-        };
+            };
+        }
 
         private static string CreatePassiveTemplate(int id) => id switch
         {

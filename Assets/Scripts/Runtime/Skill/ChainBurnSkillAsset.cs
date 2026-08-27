@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pachimon.Data;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Pachimon.Skills
 {
@@ -9,12 +10,13 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Chain Burn Skill")]
     public sealed class ChainBurnSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _basePower = 80;
+        [FormerlySerializedAs("_basePower")]
+        [SerializeField, Min(0)] private int _baseDamage = 80;
         [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
         [SerializeField, Min(0)] private int _baseChainCount = 1;
-        [SerializeField, Min(1)] private int _addChainGainUnits = 50;
+        [SerializeField, Min(1)] private int _addChainGainUnits = 100;
 
-        public int BasePower => _basePower;
+        public int BaseDamage => _baseDamage;
         public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseChainCount => _baseChainCount;
         public int AddChainGainUnits => _addChainGainUnits;
@@ -41,7 +43,7 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePower,
+            int baseDamage,
             int fireScalingPercent,
             int baseChainCount,
             int addChainGainUnits)
@@ -55,7 +57,7 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _basePower = basePower;
+            _baseDamage = baseDamage;
             _fireScalingPercent = fireScalingPercent;
             _baseChainCount = baseChainCount;
             _addChainGainUnits = addChainGainUnits;

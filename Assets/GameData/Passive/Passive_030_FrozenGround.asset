@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.FrozenGroundPassiveAsset
   _passiveId: 30
   _displayName: "\u6C37\u306E\u5927\u5730"
-  _description: "自身が生存中、{term:Chill|冷気}を{term:Freeze|凍結}へ変化させる全体フィールドを生成する。複数存在する場合は統合する。"
+  _description: "\u81EA\u8EAB\u304C\u751F\u5B58\u4E2D\u3001{term:Chill|\u51B7\u6C17}\u306EValue\u6E1B\u8870\u3092\u9045\u304F\u3059\u308B\u5168\u4F53\u30D5\u30A3\u30FC\u30EB\u30C9\u3092\u751F\u6210\u3059\u308B\u3002\u8907\u6570\u5B58\u5728\u3059\u308B\u5834\u5408\u306FValue\u3092\u5408\u7B97\u3059\u308B\u3002"
   _fieldEffect: {fileID: 11400000, guid: a9490000000000000000000000000001, type: 2}

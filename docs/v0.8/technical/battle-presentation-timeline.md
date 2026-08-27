@@ -75,7 +75,7 @@ Blockが表示可能行数を超えた場合、最初の表示枠以降はクリ
 
 ## 燃焼の再生順
 
-初回使用時のMNはSkill決定時に消費する。HP/MN Gaugeは各Blockの先頭Lineが表示された時点で、そのBlock内の最終値までまとめてアニメーションする。
+初回使用時のMNはSkill発動時に消費する。HP/MN Gaugeは各Blockの先頭Lineが表示された時点で、そのBlock内の最終値までまとめてアニメーションする。
 
 ```text
 Passive発動Step

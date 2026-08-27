@@ -19,4 +19,4 @@ MonoBehaviour:
   _category: 3
   _basePrice: 500
   _targetStat: 0
-  _baseEffectValue: 50
+  _baseEffectValue: 120

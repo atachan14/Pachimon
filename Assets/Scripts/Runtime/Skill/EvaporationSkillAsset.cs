@@ -14,10 +14,8 @@ namespace Pachimon.Skills
         [SerializeField, HideInInspector] private int _fireDamageRatio = 100;
         [SerializeField, Min(0)] private int _baseAquaDamage = 70;
         [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
-        [SerializeField, Min(0)] private int _baseFirePenetration = 20;
-        [SerializeField, Min(0)] private int _firePenetrationRatio = 100;
-        [SerializeField, Min(0)] private int _baseAquaPenetration = 20;
-        [SerializeField, Min(0)] private int _aquaPenetrationRatio = 100;
+        [SerializeField, Min(0)] private int _firePenetrationRatio = 25;
+        [SerializeField, Min(0)] private int _aquaPenetrationRatio = 25;
         [SerializeField, Min(0)] private int _baseFireWeakness = 10;
         [SerializeField, Min(0)] private int _fireWeaknessRatio = 100;
         [SerializeField, Min(0)] private int _baseAquaWeakness = 10;
@@ -28,9 +26,7 @@ namespace Pachimon.Skills
         public int FireDamageRatio => AttributeDamageRules.ScalingRatio;
         public int BaseAquaDamage => _baseAquaDamage;
         public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
-        public int BaseFirePenetration => _baseFirePenetration;
         public int FirePenetrationRatio => _firePenetrationRatio;
-        public int BaseAquaPenetration => _baseAquaPenetration;
         public int AquaPenetrationRatio => _aquaPenetrationRatio;
         public int BaseFireWeakness => _baseFireWeakness;
         public int FireWeaknessRatio => _fireWeaknessRatio;
@@ -59,9 +55,7 @@ namespace Pachimon.Skills
             int fireDamageRatio,
             int baseAquaDamage,
             int aquaDamageRatio,
-            int baseFirePenetration,
             int firePenetrationRatio,
-            int baseAquaPenetration,
             int aquaPenetrationRatio,
             int baseFireWeakness,
             int fireWeaknessRatio,
@@ -82,9 +76,7 @@ namespace Pachimon.Skills
             _fireDamageRatio = fireDamageRatio;
             _baseAquaDamage = baseAquaDamage;
             _aquaDamageRatio = aquaDamageRatio;
-            _baseFirePenetration = baseFirePenetration;
             _firePenetrationRatio = firePenetrationRatio;
-            _baseAquaPenetration = baseAquaPenetration;
             _aquaPenetrationRatio = aquaPenetrationRatio;
             _baseFireWeakness = baseFireWeakness;
             _fireWeaknessRatio = fireWeaknessRatio;

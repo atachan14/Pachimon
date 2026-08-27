@@ -20,7 +20,8 @@ MonoBehaviour:
   _baseRecoveryTicks: 160
   _baseCooldownTicks: 300
   _baseManaCost: 100
-  _description: "\u5473\u65B9\u5074\u306B\u5024{color:Aqua}{value:fieldValue}{/color}\u306E{term:WaterVeil|\u6C34\u306E\u30D9\u30FC\u30EB}\u3092\u751F\u6210\u3059\u308B\u3002\u6BCEtick\u5473\u65B9\u5168\u54E1\u3092{value:healingPerTick}\u56DE\u5FA9\u3057\u3001Value\u304C{value:decayPerTick}\u6E1B\u5C11\u3059\u308B\u3002\u53D7\u3051\u308B\u6C34\u30FB\u708E\u30C0\u30E1\u30FC\u30B8\u3092{value:reductionPercent}%\u8EFD\u6E1B\u3059\u308B\u3002"
-  _baseFieldValue: 150
+  _description: "\u5473\u65B9\u5074\u306B\u5024{color:Aqua}{value:fieldValue}{/color}\uFF08{value:baseValue}
+    \xD7\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:valueRatio}%\uFF09%\uFF09\u306E{term:WaterVeil|\u6C34\u306E\u30D9\u30FC\u30EB}\u3092\u751F\u6210\u3059\u308B\u3002\u6BCEtick\u5473\u65B9\u5168\u54E1\u3092{value:healingPerTick}\u56DE\u5FA9\u3057\u3001Value\u304C{value:decayPerTick}\u6E1B\u5C11\u3059\u308B\u3002\u53D7\u3051\u308B\u6C34\u30FB\u708E\u30C0\u30E1\u30FC\u30B8\u3092{value:reductionPercent}%\u8EFD\u6E1B\u3059\u308B\u3002"
+  _baseFieldValue: 50
   _aquaValueRatio: 100
   _fieldEffect: {fileID: 11400000, guid: d0340000000000000000000000000001, type: 2}

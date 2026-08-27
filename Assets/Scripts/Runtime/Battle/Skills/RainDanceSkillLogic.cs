@@ -30,18 +30,19 @@ namespace Pachimon.Battle
             }
 
             var value = SignedStatMath.FloorNonNegative(
-                _skill.BaseValue
-                + context.GetAttributeValue(PachimonAttribute.Aqua)
-                * context.GetAttributeRatio(
-                    PachimonAttribute.Aqua,
-                    _skill.AquaValueRatio) / 100m,
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseValue,
+                    context.GetAttributeValue(PachimonAttribute.Aqua),
+                    context.GetAttributeRatio(
+                        PachimonAttribute.Aqua,
+                        _skill.AquaValueRatio)),
                 minimum: 1);
-            var rain = context.State.Weather.CreateOrAdd(
+            var rain = context.State.Weather.AddPrecipitation(
                 context.User,
                 _skill.RainDefinition,
                 value);
             context.State.AddLog(
-                $"雨が{value}強くなった！ 現在の雨: {rain.Value}");
+                $"雨が{value}強くなった！ 現在の雨: {rain}");
 
             return new SkillResolution(
                 context.User,

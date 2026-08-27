@@ -13,20 +13,20 @@ namespace Pachimon.Battle
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.BasePower,
+                skill.BaseDamage,
                 fire,
                 fireScalingPercent ?? skill.FireScalingPercent);
         }
 
-        public static decimal CalculatePenetrationPercent(
+        public static decimal CalculateAttributeFixedPenetration(
             BackfireSkillAsset skill,
             decimal poison)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.BasePenetrationPercent,
+                skill.BaseAttributeFixedPenetration,
                 poison,
-                skill.PoisonScalingPercent);
+                skill.PoisonPenetrationRatio);
         }
     }
 }

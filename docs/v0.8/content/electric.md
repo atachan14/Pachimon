@@ -82,7 +82,7 @@ Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば�
 - Status: `Verified`
 - Species ID: `20`
 - モチーフ: 火炉と溶岩の熱を電気へ変える黒い炉獣
-- 狙い: Fireを利用してElectricダメージと貫通率を高める
+- 狙い: Electricでダメージを、Fireで貫通率を高める
 
 #### Fixed Skill
 
@@ -94,28 +94,28 @@ Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば�
 - 対象: 先頭の敵
 - 効果:
   - 次の暫定式によるElectricダメージを与える
-  - `Fire × 0.2%`の貫通率を持つ
+  - Fireに応じたElectric割合貫通を持つ
 
 ```text
 暫定ダメージ
-= 50
+= BaseDamage
   × AmplificationMultiplier(Electric)
-  × AmplificationMultiplier(Fire)
 
-貫通率（%） = Fire × 0.2
+貫通Value = Fire × FireRatio × FirePenetrationRatio
+Electric割合貫通率 = 貫通Value / (100 + 貫通Value)
 ```
 
 ##### 貫通
 
-対象の属性値とResistBonusによるダメージ軽減を、貫通率分だけ減少させて計算する。
-貫通率に上限は設けない。
+対象のElectricによるダメージ軽減だけを、割合貫通率分だけ減少させて計算する。
+割合貫通率は100%へ漸近し、100%以上にはならない。
 
 例:
 
 ```text
 30%の貫通を持つElectricダメージ
 ↓
-対象のElectricとResistBonusを、それぞれ30%減少させて軽減計算
+対象のElectricを30%減少させて軽減計算
 ```
 
 - 必要な新規仕組み:
@@ -141,37 +141,43 @@ Pachimonを発生源とする自傷ダメージも、Electric攻撃であれば�
 
 - 名前: 電光石火
 - Implementation: `Implemented`
-- 硬直: `60`
-- CD: `100`
-- MN: `60`
+- 発生: `20`
+- 硬直: `80`
+- CD: `300`
+- MN: `30`
 - 対象: 先頭の敵
 - 効果:
-  - `25 × AmplificationMultiplier(Electric)`のElectricダメージを与える
-  - `10 × AmplificationMultiplier(Fire)`のFireダメージを与える
-  - 硬直とCDをWindに応じて軽減する
+  - `76 × AmplificationMultiplier(Electric)`のElectricダメージを与える
+  - 発生と硬直をFireに応じて軽減する
+  - CDはHSTのみで計算し、Fireでは短縮しない
 
 ```text
+EffectiveStartup
+= ceil(
+    BaseStartup
+    * TimingMultiplier(Speed)
+    * ReductionMultiplier(Fire * FireTimingPercent / 100)
+  )
+
 EffectiveRecovery
 = ceil(
     BaseRecovery
     * TimingMultiplier(Speed)
-    * TimingMultiplier(Wind)
+    * ReductionMultiplier(Fire * FireTimingPercent / 100)
   )
 
 EffectiveCooldown
 = ceil(
     BaseCooldown
     * TimingMultiplier(Haste)
-    * TimingMultiplier(Wind)
   )
 ```
 
 - 必要な新規仕組み:
-  - Skill固有の硬直補正（実装済み）
-  - Skill固有のCD補正（実装済み）
+  - Skill固有の発生・硬直補正（実装済み）
 - 補足仕様:
-  - 硬直とCDには同じ軽減処理を使う
-  - 正の硬直とCDは最低1tickとする
+  - Fireの参照率はSOの`FireTimingPercent`で調整する
+  - 正の発生・硬直・CDは最低1tickとする
 
 #### Passive
 
@@ -228,17 +234,19 @@ EffectiveCooldown
 
 - 名前: 静電気
 - Implementation: `Implemented`
-- 効果: 攻撃を受けるたび、攻撃者へ次のValueの[麻痺](./statuses/slow.md#麻痺)を付与する
+- 効果: 攻撃を受けるたび、攻撃者へ次の[麻痺](./statuses/slow.md#麻痺)を付与する
 
 ```text
+麻痺Duration
+= floor(25 × AmplificationMultiplier(Ice))
+
 麻痺Value
-= floor(20 × AmplificationMultiplier(Electric))
-  + floor(10 × AmplificationMultiplier(Ice))
+= floor(25 × AmplificationMultiplier(Electric))
 ```
 
 - 必要な新規仕組み:
   - 属性・確定ダメージ共通の`AttackReceivedEvent`（実装済み）
-  - tickごとにValueが減衰する加算型状態
+  - Value固定・効果時間制の独立スタック型状態
 - 補足仕様:
   - 自傷ダメージと継続ダメージでは発動しない
   - 攻撃者が存在するダメージでのみ発動する
@@ -255,9 +263,11 @@ EffectiveCooldown
 - 既存のElectricダメージに加えて、対象へ[麻痺](./statuses/slow.md#麻痺)を付与する
 
 ```text
+麻痺Duration
+= floor(50 × AmplificationMultiplier(Ice))
+
 麻痺Value
-= floor(50 × AmplificationMultiplier(Electric))
-  + floor(25 × AmplificationMultiplier(Ice))
+= floor(80 × AmplificationMultiplier(Electric))
 ```
 
 - 再付与と時間進行は[Slow共通仕様](./statuses/slow.md#共通仕様)に従う
@@ -358,8 +368,10 @@ EffectiveCooldown
 
 - 自身へ次の効果を付与する。
   - 効果時間200tickの`150 × AmplificationMultiplier(Electric × 100%)`のShield。
-  - `50 × AmplificationMultiplier(Electric × 100%)`の麻痺。
-- このShieldが持続中に攻撃を受けるたび、攻撃者へ`25 × AmplificationMultiplier(Electric × 100%)`の麻痺を付与する。
+  - 効果時間200tick、`50 × AmplificationMultiplier(Electric × 100%)`の麻痺。
+- このShieldが持続中に攻撃を受けるたび、攻撃者へ次の麻痺を付与する。
+  - Duration: `25 × AmplificationMultiplier(Ice × 100%)`
+  - Value: `25 × AmplificationMultiplier(Electric × 100%)`
 - 仮値: 硬直100 / CD300 / MN50。
 - 再使用時はShieldと反撃効果をそれぞれ独立して追加する。
 - 複数のエレキシールドが有効なら、それぞれが1回ずつ反撃する。

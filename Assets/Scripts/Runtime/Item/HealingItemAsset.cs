@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Pachimon.Items
 {
@@ -15,31 +16,43 @@ namespace Pachimon.Items
     public sealed class HealingItemAsset : ItemAsset
     {
         [SerializeField] private RecoveryResourceType _resourceType;
-        [SerializeField, Min(1)] private int _recoveryPercent = 50;
+        [FormerlySerializedAs("_recoveryPercent")]
+        [SerializeField, Min(1)] private int _recoveryAmount = 500;
         [SerializeField] private bool _canRevive;
+        [SerializeField] private bool _defeatedOnly;
 
         public RecoveryResourceType ResourceType => _resourceType;
-        public int RecoveryPercent => _recoveryPercent;
+        public int RecoveryAmount => _recoveryAmount;
         public bool CanRevive => _canRevive;
+        public bool DefeatedOnly => _defeatedOnly;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
             base.CollectValidationErrors(errors);
-            if (_recoveryPercent <= 0)
+            if (_recoveryAmount <= 0)
             {
-                errors.Add($"{name}: Recovery Percent must be positive.");
+                errors.Add($"{name}: Recovery Amount must be positive.");
+            }
+
+            if (_defeatedOnly
+                && (_resourceType != RecoveryResourceType.Hp || !_canRevive))
+            {
+                errors.Add(
+                    $"{name}: Defeated-only recovery must restore HP and allow revival.");
             }
         }
 
 #if UNITY_EDITOR
         public void ConfigureHealingForEditor(
             RecoveryResourceType resourceType,
-            int recoveryPercent,
-            bool canRevive)
+            int recoveryAmount,
+            bool canRevive,
+            bool defeatedOnly = false)
         {
             _resourceType = resourceType;
-            _recoveryPercent = recoveryPercent;
+            _recoveryAmount = recoveryAmount;
             _canRevive = canRevive;
+            _defeatedOnly = defeatedOnly;
         }
 #endif
     }

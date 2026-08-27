@@ -27,14 +27,15 @@ namespace Pachimon.Battle
                 _skill.BaseAquaDamage,
                 PachimonAttribute.Aqua,
                 _skill.AquaDamageRatio);
-            var penetration = ScalePair(
-                context,
-                _skill.BaseFirePenetration,
-                PachimonAttribute.Fire,
-                _skill.FirePenetrationRatio,
-                _skill.BaseAquaPenetration,
-                PachimonAttribute.Aqua,
-                _skill.AquaPenetrationRatio);
+            var penetrationValue =
+                context.User.GetBattleStatValue(PachimonStatType.Fire)
+                * context.GetAttributeRatio(
+                    PachimonAttribute.Fire,
+                    _skill.FirePenetrationRatio) / 100m
+                + context.User.GetBattleStatValue(PachimonStatType.Aqua)
+                * context.GetAttributeRatio(
+                    PachimonAttribute.Aqua,
+                    _skill.AquaPenetrationRatio) / 100m;
             var result = BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
@@ -48,7 +49,10 @@ namespace Pachimon.Battle
                     PachimonAttribute.Fire,
                     isAttack: true,
                     applyAttackerAttributeMultiplier: false,
-                    penetrationPercent: penetration),
+                    penetration: new DamagePenetration(
+                        attributePercentage:
+                            PenetrationMath.CalculateDiminishingPercentage(
+                                penetrationValue))),
                 hit);
 
             if (!hit.WasEvaded && result.ActualTarget.IsAlive)

@@ -20,6 +20,7 @@ namespace Pachimon.Battle
                 }
 
                 AddSlowModifier(status, modifiers);
+                AddPollenModifier(status, modifiers);
                 AddChargeModifiers(status, modifiers);
                 AddToxinGrowthModifier(status, modifiers);
                 AddFireGrowthModifier(status, modifiers);
@@ -270,7 +271,7 @@ namespace Pachimon.Battle
             modifiers.Add(new FixedStatModifier(
                 PachimonStatType.DamageBonus,
                 StatModifierOperation.DirectAdditive,
-                -checked(status.Value * status.StackCount),
+                -status.GetSpeedReduction(),
                 CreateSource(status)));
         }
 
@@ -363,6 +364,18 @@ namespace Pachimon.Battle
                 PachimonStatType.Speed,
                 StatModifierOperation.DirectAdditive,
                 -checked(status.Value * status.StackCount),
+                CreateSource(status)));
+        }
+
+        private static void AddPollenModifier(
+            BattleStatusInstance status,
+            ICollection<IStatModifier> modifiers)
+        {
+            if (status.StatusId != BattleStatusId.Pollen) return;
+            modifiers.Add(new FixedStatModifier(
+                PachimonStatType.Haste,
+                StatModifierOperation.DirectAdditive,
+                -status.Value,
                 CreateSource(status)));
         }
 

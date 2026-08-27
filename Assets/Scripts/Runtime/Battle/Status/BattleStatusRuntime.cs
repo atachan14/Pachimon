@@ -106,7 +106,8 @@ namespace Pachimon.Battle
                     BattleStatusFactory.CreateSlow(
                         attackEvent.Target,
                         status.Value,
-                        definition.ParalysisStatus));
+                        definition.ParalysisStatus,
+                        runtime.CounterParalysisDurationTicks));
                 _state.AddLog(
                     $"{attackEvent.Source.DisplayName}に麻痺を{status.Value}付与した！");
 
@@ -178,19 +179,12 @@ namespace Pachimon.Battle
         {
             ValidateTarget(target);
             if (status == null) throw new ArgumentNullException(nameof(status));
+            var requestedValue = status.Value;
             if (reduceIncomingValue)
             {
                 status = ApplyIncomingValueReduction(target, status);
             }
-            if (status.Value == 0
-                && (status.Categories
-                    & (BattleStatusCategory.Slow
-                        | BattleStatusCategory.Leak
-                        | BattleStatusCategory.Toxin)) != 0)
-            {
-                return;
-            }
-            if (status.StatusId == BattleStatusId.Freeze && status.Value == 0)
+            if (status.Value == 0 && RequiresPositiveValue(status))
             {
                 return;
             }
@@ -221,15 +215,22 @@ namespace Pachimon.Battle
             }
             else if ((status.Categories & BattleStatusCategory.Slow) != 0)
             {
-                var existing = target.GetStatus(status.StatusId);
-                if (existing != null)
+                // Paralysis keeps a fixed Value for its own duration, so each
+                // application must expire independently.
+                var keepsIndependentDuration =
+                    status.StatusId == BattleStatusId.Paralysis
+                    && status.IsTimed;
+                var existing = keepsIndependentDuration
+                    ? null
+                    : target.GetStatus(status.StatusId);
+                if (existing == null)
                 {
-                    existing.AddValue(status.Value);
-                    target.NotifyStatusValueChanged();
+                    target.AddStatusInstance(status);
                 }
                 else
                 {
-                    target.AddStatusInstance(status);
+                    existing.AddValue(status.Value);
+                    target.NotifyStatusValueChanged();
                 }
             }
             else if ((status.Categories & BattleStatusCategory.Leak) != 0)
@@ -258,9 +259,10 @@ namespace Pachimon.Battle
                     target.AddStatusInstance(status);
                 }
             }
-            else if (status.StatusId == BattleStatusId.WindErosion)
+            else if (status.StatusId is BattleStatusId.WindErosion
+                     or BattleStatusId.Pollen)
             {
-                var existing = target.GetStatus(BattleStatusId.WindErosion);
+                var existing = target.GetStatus(status.StatusId);
                 if (existing != null)
                 {
                     existing.AddValue(status.Value);
@@ -330,6 +332,7 @@ namespace Pachimon.Battle
                     status.Source,
                     target,
                     status.StatusId,
+                    requestedValue,
                     status.Value);
                 _state.Events.Publish(appliedEvent);
                 _state.Fields.HandleStatusValueApplied(appliedEvent);
@@ -338,10 +341,25 @@ namespace Pachimon.Battle
             {
                 LogAndPublishSkillStatusApplication(target, status);
             }
-            if (status.StatusId == BattleStatusId.Chill)
+        }
+
+        private static bool RequiresPositiveValue(BattleStatusInstance status)
+        {
+            const BattleStatusCategory additiveCategories =
+                BattleStatusCategory.Slow
+                | BattleStatusCategory.Leak
+                | BattleStatusCategory.Toxin
+                | BattleStatusCategory.Burn;
+            if ((status.Categories & additiveCategories) != 0)
             {
-                _state.Fields.TryTransformChillToFreeze(target);
+                return true;
             }
+
+            return status.StatusId is BattleStatusId.WindErosion
+                or BattleStatusId.Pollen
+                or BattleStatusId.DragonCranker
+                or BattleStatusId.OneTwo
+                or BattleStatusId.Freeze;
         }
 
         public bool TryEvadeAttack(
@@ -528,7 +546,7 @@ namespace Pachimon.Battle
             }
         }
 
-        private static BattleStatusInstance ApplyIncomingValueReduction(
+        private BattleStatusInstance ApplyIncomingValueReduction(
             BattleUnitState target,
             BattleStatusInstance status)
         {
@@ -540,15 +558,48 @@ namespace Pachimon.Battle
                     BattleStatusId.Burn => PachimonStatType.Fire,
                     BattleStatusId.Toxin => PachimonStatType.Poison,
                     BattleStatusId.Freeze => PachimonStatType.Ice,
+                    BattleStatusId.WindErosion => PachimonStatType.Wind,
                     _ => (PachimonStatType?)null,
                 };
-            if (!defenseStat.HasValue || status.Value <= 0)
+            if (status.Value <= 0)
             {
                 return status;
             }
 
-            var multiplier = SignedStatMath.ReductionMultiplier(
-                target.GetBattleStatValue(defenseStat.Value));
+            var source = status.Source;
+            if (source == null && status.StatusId == BattleStatusId.Toxin)
+            {
+                var sourceId = status.ToxinApplications
+                    .FirstOrDefault()?.SourceInstanceId;
+                source = GetAllUnits().FirstOrDefault(unit =>
+                    unit.InstanceId == sourceId);
+            }
+            var isHostile = source != null && source.Side != target.Side;
+            var multiplier = 1m;
+            if (isHostile)
+            {
+                var sourceAttributeValue = defenseStat.HasValue
+                    ? source.GetBattleStatValue(defenseStat.Value)
+                    : 0m;
+                multiplier *= SignedStatMath.CombineAmplificationStats(
+                                  sourceAttributeValue,
+                                  source.GetBattleStatValue(
+                                      PachimonStatType.StatusMastery))
+                              / SignedStatMath.AmplificationMultiplier(
+                                  sourceAttributeValue);
+
+                var targetAttributeValue = defenseStat.HasValue
+                    ? target.GetBattleStatValue(defenseStat.Value)
+                    : 0m;
+                multiplier *= SignedStatMath.CombineReductionStats(
+                    targetAttributeValue,
+                    target.GetBattleStatValue(
+                        PachimonStatType.StatusResistance));
+            }
+            if (multiplier == 1m)
+            {
+                return status;
+            }
             if (status.StatusId == BattleStatusId.Toxin)
             {
                 return CreateReducedToxin(status, multiplier);
@@ -707,7 +758,7 @@ namespace Pachimon.Battle
                 AdvanceToxinOneTick(unit);
                 AdvanceFrozenBreak(unit, ticks);
                 unit.AdvanceShields(ticks);
-                unit.AdvanceStatuses(ticks);
+                unit.AdvanceStatuses(ticks, _state.Fields.GetStatusValueDecayPerTick);
                 RefreshActionClockPause(unit);
             }
         }

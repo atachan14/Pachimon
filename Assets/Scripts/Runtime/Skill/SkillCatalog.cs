@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Data;
+using Pachimon.Battle;
 using UnityEngine;
 
 namespace Pachimon.Skills
@@ -9,8 +10,21 @@ namespace Pachimon.Skills
     public sealed class SkillCatalog : ScriptableObject
     {
         [SerializeField] private List<SkillAsset> _skills = new();
+        [Header("Battle Environment")]
+        [SerializeField] private SunnyWeatherAsset _temperatureEnvironment;
+        [SerializeField] private RainWeatherAsset _precipitationEnvironment;
+        [SerializeField] private WindWeatherAsset _windEnvironment;
+        [SerializeField] private PairedAttributeEnvironmentAsset _moistureEnvironment;
+        [SerializeField] private PairedAttributeEnvironmentAsset _plasmaEnvironment;
 
         public IReadOnlyList<SkillAsset> Skills => _skills;
+        public BattleEnvironmentDefinitions EnvironmentDefinitions =>
+            new(
+                _temperatureEnvironment,
+                _precipitationEnvironment,
+                _windEnvironment,
+                _moistureEnvironment,
+                _plasmaEnvironment);
 
         public SkillAsset Get(int skillId)
         {
@@ -33,6 +47,14 @@ namespace Pachimon.Skills
         public IReadOnlyList<string> ValidateContent()
         {
             var errors = new List<string>();
+            if (_temperatureEnvironment == null
+                || _precipitationEnvironment == null
+                || _windEnvironment == null
+                || _moistureEnvironment == null
+                || _plasmaEnvironment == null)
+            {
+                errors.Add("SkillCatalog requires all Battle Environment Definitions.");
+            }
             var validSkills = _skills.Where(skill => skill != null).ToArray();
 
             if (validSkills.Length != _skills.Count)
@@ -85,6 +107,20 @@ namespace Pachimon.Skills
         public void SetSkillsForEditor(IEnumerable<SkillAsset> skills)
         {
             _skills = new List<SkillAsset>(skills);
+        }
+
+        public void SetEnvironmentDefinitionsForEditor(
+            SunnyWeatherAsset temperature,
+            RainWeatherAsset precipitation,
+            WindWeatherAsset wind,
+            PairedAttributeEnvironmentAsset moisture,
+            PairedAttributeEnvironmentAsset plasma)
+        {
+            _temperatureEnvironment = temperature;
+            _precipitationEnvironment = precipitation;
+            _windEnvironment = wind;
+            _moistureEnvironment = moisture;
+            _plasmaEnvironment = plasma;
         }
 #endif
     }

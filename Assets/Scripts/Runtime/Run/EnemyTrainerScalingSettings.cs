@@ -5,13 +5,14 @@ namespace Pachimon.Run
     public sealed class EnemyTrainerScalingSettings
     {
         public EnemyTrainerScalingSettings(
-            int statPerRow = 4,
-            int resourceMultiplier = 5,
-            int gymFavoredAttributeBonus = 100,
-            int gymWeakAttributePenalty = -100,
-            int eliteAllStatBonus = 100,
-            int eliteFavoredAttributeBonus = 300,
-            int eliteWeakAttributePenalty = -300)
+            int baseStatAdjustment = -45,
+            int statPerRow = 15,
+            int resourceMultiplier = PachimonStatValueUnits.ResourceDisplayMultiplier,
+            int gymFavoredAttributeBonus = 50,
+            int gymWeakAttributePenalty = -50,
+            int eliteAllStatBonus = 50,
+            int eliteFavoredAttributeBonus = 150,
+            int eliteWeakAttributePenalty = -150)
         {
             if (statPerRow < 0) throw new ArgumentOutOfRangeException(nameof(statPerRow));
             if (resourceMultiplier < 1) throw new ArgumentOutOfRangeException(nameof(resourceMultiplier));
@@ -21,6 +22,7 @@ namespace Pachimon.Run
             if (eliteFavoredAttributeBonus < 0) throw new ArgumentOutOfRangeException(nameof(eliteFavoredAttributeBonus));
             if (eliteWeakAttributePenalty > 0) throw new ArgumentOutOfRangeException(nameof(eliteWeakAttributePenalty));
 
+            BaseStatAdjustment = baseStatAdjustment;
             StatPerRow = statPerRow;
             ResourceMultiplier = resourceMultiplier;
             GymFavoredAttributeBonus = gymFavoredAttributeBonus;
@@ -30,6 +32,7 @@ namespace Pachimon.Run
             EliteWeakAttributePenalty = eliteWeakAttributePenalty;
         }
 
+        public int BaseStatAdjustment { get; }
         public int StatPerRow { get; }
         public int ResourceMultiplier { get; }
         public int GymFavoredAttributeBonus { get; }

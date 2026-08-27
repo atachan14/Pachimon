@@ -11,26 +11,42 @@ namespace Pachimon.Battle
             if (context == null) throw new ArgumentNullException(nameof(context));
 
             var statType = PachimonStatTypeUtility.FromAttribute(context.Attribute);
+            var attackerAttribute = context.AttackerAttributeValue
+                ?? context.AttackerStats.GetValue(statType);
+            var damageBonus = context.ApplyDamageBonusMultiplier
+                ? context.AttackerStats.DamageBonus
+                : 0m;
             var attackerAttributeMultiplier = context.ApplyAttackerAttributeMultiplier
-                ? SignedStatMath.AmplificationMultiplier(
-                    context.AttackerStats.GetValue(statType))
+                ? SignedStatMath.CombineAmplificationStats(
+                    attackerAttribute,
+                    damageBonus)
                 : 1m;
-            var damageBonusMultiplier = context.ApplyDamageBonusMultiplier
-                ? SignedStatMath.AmplificationMultiplier(
-                    context.AttackerStats.DamageBonus)
+            var damageBonusMultiplier = !context.ApplyAttackerAttributeMultiplier
+                                        && context.ApplyDamageBonusMultiplier
+                ? SignedStatMath.CombineAmplificationStats(
+                      attackerAttribute,
+                      damageBonus)
+                  / SignedStatMath.AmplificationMultiplier(attackerAttribute)
                 : 1m;
             var preDefenseDamage = context.BaseDamage
                 * attackerAttributeMultiplier
                 * damageBonusMultiplier;
-            var penetrationMultiplier = 1m - context.PenetrationPercent / 100m;
-            var effectiveDefenderAttribute =
-                context.DefenderStats.GetValue(statType) * penetrationMultiplier;
-            var effectiveResistBonus =
-                context.DefenderStats.ResistBonus * penetrationMultiplier;
+            var resistBonusFixedPenetration = Math.Max(
+                0m,
+                context.Penetration.ResistBonusFixed);
+            var effectiveDefenderAttribute = PenetrationMath.ApplyToDefense(
+                context.DefenderStats.GetValue(statType),
+                context.Penetration.AttributePercentage,
+                context.Penetration.AttributeFixed);
+            var effectiveResistBonus = PenetrationMath.ApplyToDefense(
+                context.DefenderStats.ResistBonus,
+                context.Penetration.ResistBonusPercentage,
+                resistBonusFixedPenetration);
             var defenderAttributeMultiplier =
-                SignedStatMath.ReductionMultiplier(effectiveDefenderAttribute);
-            var resistBonusMultiplier =
-                SignedStatMath.ReductionMultiplier(effectiveResistBonus);
+                SignedStatMath.CombineReductionStats(
+                    effectiveDefenderAttribute,
+                    effectiveResistBonus);
+            var resistBonusMultiplier = 1m;
             var unroundedDamage = preDefenseDamage
                 * defenderAttributeMultiplier
                 * resistBonusMultiplier;

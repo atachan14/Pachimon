@@ -24,7 +24,8 @@
 
 | Status | キー |
 | --- | --- |
-| Slow / 麻痺 / 冷気 / 風化 | `{value:decayPerTick}` |
+| Slow / 冷気 / 風化 | `{value:decayPerTick}`。冷気は`{value:speedReduction}`も使用 |
+| 麻痺 | `{value:remainingTicks}`（共通キー） |
 | 毒素 | `{value:damagePerTick}`、`{value:decayPerTick}`、`{value:damagePerTickRatio}` |
 | 充電中 | `{value:resistBonus}`、`{value:electricMultiplier}` |
 | 充電完了 | `{value:speedBonus}`、`{value:electricMultiplier}`、`{value:durationRatio}` |

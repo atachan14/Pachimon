@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Reward;
 using Pachimon.Skills;
 
 namespace Pachimon.Battle
@@ -202,7 +203,8 @@ namespace Pachimon.Battle
             int hpAfter,
             int appliedDamage,
             bool isTrueDamage,
-            int shieldAbsorbedDamage = 0)
+            int shieldAbsorbedDamage = 0,
+            PachimonAttribute? attribute = null)
         {
             if (!IsRecording || target == null)
             {
@@ -236,14 +238,30 @@ namespace Pachimon.Battle
                     pair.Value.After.Mn)).ToArray();
             _pendingResources.Clear();
 
-            var damageKind = isTrueDamage ? "確定ダメージ" : "ダメージ";
             var text = shieldAbsorbedDamage > 0
                 ? appliedDamage > 0
-                    ? $"{target.DisplayName}に{appliedDamage}の{damageKind}！"
-                      + $"（Shieldが{shieldAbsorbedDamage}吸収）"
-                    : $"{target.DisplayName}のShieldが"
-                      + $"{shieldAbsorbedDamage}ダメージを吸収した！"
-                : $"{target.DisplayName}に{appliedDamage}の{damageKind}！";
+                    ? BattleDamageLogFormatter.FormatDamage(
+                          target.DisplayName,
+                          appliedDamage,
+                          attribute,
+                          isTrueDamage)
+                      + "（"
+                      + BattleDamageLogFormatter.FormatShieldAbsorption(
+                          string.Empty,
+                          shieldAbsorbedDamage,
+                          attribute,
+                          isTrueDamage)
+                      + "）"
+                    : BattleDamageLogFormatter.FormatShieldAbsorption(
+                        target.DisplayName,
+                        shieldAbsorbedDamage,
+                        attribute,
+                        isTrueDamage)
+                : BattleDamageLogFormatter.FormatDamage(
+                    target.DisplayName,
+                    appliedDamage,
+                    attribute,
+                    isTrueDamage);
             _steps.Add(new BattlePresentationStep(
                 BattlePresentationStepKind.DamageApplied,
                 text,

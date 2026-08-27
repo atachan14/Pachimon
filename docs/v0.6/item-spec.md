@@ -55,7 +55,7 @@ Battle中の効果は進行中の`BattleUnitState`へ反映し、Player側のHP�
 
 ## Skill習得Item
 
-- 同じSkillを複数回習得できる
+- 同じSkillは複数回習得できない
 - Skill上限は合計9Slot
 - 同一Skillも取得ごとに別Slotとして保持する
 - 同一Skillの各SlotはBattle中に独立したCooldownを持つ
@@ -91,7 +91,7 @@ Battle中の効果は進行中の`BattleUnitState`へ反映し、Player側のHP�
 ## 技マシーン
 
 - 対象の味方Pachimonが、技マシーンに設定されたSkillを1Slot習得する
-- 同じSkillの重複習得を許可する
+- 同じSkillの重複習得を禁止する
 - Skill Slot上限は9
 - Battle外ではRun個体へ、Battle中はRun個体とBattle個体の両方へ反映する
 - Item IDは`10000 + Skill ID`とする

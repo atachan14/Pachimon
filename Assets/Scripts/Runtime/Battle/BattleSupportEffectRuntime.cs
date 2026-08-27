@@ -39,7 +39,9 @@ namespace Pachimon.Battle
                 _state,
                 source,
                 target,
-                new ShieldApplicationPlan(value, durationTicks));
+                new ShieldApplicationPlan(
+                    ApplySustainPower(source, value),
+                    durationTicks));
             value = Pachimon.Run.SignedStatMath.FloorNonNegative(plan.Value);
             durationTicks = plan.DurationTicks.HasValue
                 ? Math.Max(1, Pachimon.Run.SignedStatMath.CeilPositive(
@@ -83,7 +85,7 @@ namespace Pachimon.Battle
                 _state,
                 source,
                 target,
-                requestedValue);
+                ApplySustainPower(source, requestedValue));
             var restoredValue = target.RestoreHp(
                 Pachimon.Run.SignedStatMath.FloorNonNegative(modifiedValue));
             if (restoredValue > 0)
@@ -97,6 +99,21 @@ namespace Pachimon.Battle
             }
 
             return restoredValue;
+        }
+
+        public static decimal ApplySustainPower(
+            BattleUnitState source,
+            decimal value)
+        {
+            if (value < 0m) throw new ArgumentOutOfRangeException(nameof(value));
+            if (source == null) return value;
+            var attribute = source.SubStatBindings.GetAttribute(
+                Pachimon.Run.PachimonStatType.SustainPower);
+            return Pachimon.Run.SignedStatMath.ReplacePreAppliedAmplification(
+                value,
+                source.GetBattleStatValue(attribute),
+                source.GetBattleStatValue(
+                    Pachimon.Run.PachimonStatType.SustainPower));
         }
 
         private void ValidateUnit(BattleUnitState unit, string parameterName)

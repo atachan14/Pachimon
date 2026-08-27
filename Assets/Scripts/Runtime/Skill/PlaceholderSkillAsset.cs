@@ -8,7 +8,7 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "PlaceholderSkill", menuName = "Pachimon/Skills/Placeholder Skill")]
     public sealed class PlaceholderSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _baseDamage = 200;
+        [SerializeField, Min(0)] private int _baseDamage = 100;
         [SerializeField, Min(0)] private int _statusBaseValue = 100;
         [SerializeField, Min(0)] private int _statusScalingPercent = 100;
         [SerializeField] private ToxinStatusAsset _toxinStatus;

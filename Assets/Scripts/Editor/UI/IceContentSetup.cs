@@ -39,7 +39,7 @@ namespace Pachimon.Editor.UI
             var pebble = ReplaceWith<IcePebbleSkillAsset>($"{SkillFolder}/Skill_054.asset");
             pebble.ConfigureForEditor(54, "\u6C37\u306E\u792B", 100, 300, 100,
                 "\u5148\u982D\u306E\u6575\u306B\u6C37\u30C0\u30E1\u30FC\u30B8\u3068\u51B7\u6C17\u3092\u4E0E\u3048\u3001\u81EA\u8EAB\u306B\u6642\u9593\u5236Shield\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-                70, 35, 70, 100, 100, chill);
+                70, 35, 25, 100, 100, chill);
             var arrow = ReplaceWith<FrostArrowSkillAsset>($"{SkillFolder}/Skill_062.asset");
             arrow.ConfigureForEditor(62, "\u30D5\u30ED\u30B9\u30C8\u30A2\u30ED\u30FC", 100, 300, 150,
                 "\u73FE\u5728HP\u304C\u6700\u3082\u4F4E\u3044\u6575\u306B\u6C37\u30C0\u30E1\u30FC\u30B8\u3068\u51B7\u6C17\u3002\u6483\u7834\u6642\u306FMN\u3068CD\u3092\u9084\u5143\u3059\u308B\u3002",
@@ -98,7 +98,7 @@ namespace Pachimon.Editor.UI
             item.ConfigureForEditor(itemId,
                 $"\u6280\u30DE\u30B7\u30FC\u30F3[{skill.DisplayName}]", null,
                 $"\u5BFE\u8C61\u306E\u5473\u65B9\u30D1\u30C1\u30E2\u30F3\u304C[{skill.DisplayName}]\u3092\u7FD2\u5F97\u3059\u308B\u3002",
-                ItemCategory.SkillMachine, 5000);
+                ItemCategory.SkillMachine, 1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

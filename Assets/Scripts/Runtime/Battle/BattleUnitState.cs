@@ -16,8 +16,11 @@ namespace Pachimon.Battle
         private readonly List<BattleShieldInstance> _shields = new();
         private readonly List<IStatModifier> _permanentItemModifiers = new();
         private readonly PachimonStats _battleBaseStats;
+        private readonly IStatModifier[] _staticModifiers;
+        private readonly PachimonSubStatBindings _subStatBindings;
         private EffectivePachimonStats _battleStats;
         private Func<IEnumerable<IStatModifier>> _battleModifierProvider;
+        private Func<BattleStatusInstance, decimal> _statusDecayProvider;
         private bool _battleStatsDirty = true;
         private long _nextShieldApplicationOrder;
 
@@ -32,6 +35,70 @@ namespace Pachimon.Battle
             int currentMn,
             IEnumerable<PachimonSkillSlot> skillSlots,
             IEnumerable<int> passiveIds)
+            : this(
+                instanceId,
+                speciesId,
+                displayName,
+                side,
+                slotIndex,
+                CreateBattleBaseStats(startingStats),
+                Array.Empty<IStatModifier>(),
+                startingStats,
+                currentHp,
+                currentMn,
+                skillSlots,
+                passiveIds,
+                PachimonSubStatBindings.CreateDefault())
+        {
+        }
+
+        public BattleUnitState(
+            string instanceId,
+            int speciesId,
+            string displayName,
+            BattleSide side,
+            int slotIndex,
+            PachimonStats baseStats,
+            IEnumerable<IStatModifier> staticModifiers,
+            int currentHp,
+            int currentMn,
+            IEnumerable<PachimonSkillSlot> skillSlots,
+            IEnumerable<int> passiveIds,
+            PachimonSubStatBindings subStatBindings = null)
+            : this(
+                instanceId,
+                speciesId,
+                displayName,
+                side,
+                slotIndex,
+                baseStats,
+                staticModifiers,
+                CalculateStartingStats(
+                    baseStats,
+                    staticModifiers,
+                    subStatBindings ?? PachimonSubStatBindings.CreateDefault()),
+                currentHp,
+                currentMn,
+                skillSlots,
+                passiveIds,
+                subStatBindings ?? PachimonSubStatBindings.CreateDefault())
+        {
+        }
+
+        private BattleUnitState(
+            string instanceId,
+            int speciesId,
+            string displayName,
+            BattleSide side,
+            int slotIndex,
+            PachimonStats baseStats,
+            IEnumerable<IStatModifier> staticModifiers,
+            EffectivePachimonStats startingStats,
+            int currentHp,
+            int currentMn,
+            IEnumerable<PachimonSkillSlot> skillSlots,
+            IEnumerable<int> passiveIds,
+            PachimonSubStatBindings subStatBindings)
         {
             if (string.IsNullOrWhiteSpace(instanceId))
             {
@@ -57,17 +124,30 @@ namespace Pachimon.Battle
             SlotIndex = slotIndex;
             StartingStats = startingStats
                 ?? throw new ArgumentNullException(nameof(startingStats));
-            _battleBaseStats = CreateBattleBaseStats(startingStats);
-            CurrentHp = Math.Max(0, Math.Min(currentHp, StartingStats.MaxHp));
-            CurrentMn = Math.Max(0, Math.Min(currentMn, StartingStats.MaxMn));
-            _skillSlots = skillSlots?.ToList()
-                ?? throw new ArgumentNullException(nameof(skillSlots));
-            if (_skillSlots.Count == 0
-                || _skillSlots.Any(slot => slot == null)
-                || _skillSlots.Select(slot => slot.SlotId).Distinct().Count() != _skillSlots.Count)
+            _battleBaseStats = baseStats
+                ?? throw new ArgumentNullException(nameof(baseStats));
+            _staticModifiers = staticModifiers?.ToArray()
+                ?? throw new ArgumentNullException(nameof(staticModifiers));
+            if (_staticModifiers.Any(modifier => modifier == null))
             {
                 throw new ArgumentException(
-                    "A Battle Unit requires valid, uniquely identified Skill Slots.",
+                    "Static modifiers cannot contain null.",
+                    nameof(staticModifiers));
+            }
+            _subStatBindings = subStatBindings
+                ?? throw new ArgumentNullException(nameof(subStatBindings));
+            CurrentHp = Math.Max(0, Math.Min(currentHp, StartingStats.MaxHp));
+            CurrentMn = Math.Max(0, Math.Min(currentMn, StartingStats.MaxMn));
+            _skillSlots = skillSlots?.Select(slot => slot?.CreateCopy()).ToList()
+                ?? throw new ArgumentNullException(nameof(skillSlots));
+            if (_skillSlots.Count == 0
+                || _skillSlots.Count > PachimonInstance.MaxSkillSlots
+                || _skillSlots.Any(slot => slot == null)
+                || _skillSlots.Select(slot => slot.SlotId).Distinct().Count() != _skillSlots.Count
+                || _skillSlots.Select(slot => slot.SkillId).Distinct().Count() != _skillSlots.Count)
+            {
+                throw new ArgumentException(
+                    "A Battle Unit requires valid, unique Skills within the Slot limit.",
                     nameof(skillSlots));
             }
 
@@ -97,6 +177,7 @@ namespace Pachimon.Battle
         public IReadOnlyList<PachimonSkillSlot> SkillSlots => _skillSlots;
         public IReadOnlyList<int> SkillIds => _skillIds;
         public IReadOnlyList<int> PassiveIds => _passiveIds;
+        public PachimonSubStatBindings SubStatBindings => _subStatBindings;
         public IReadOnlyList<BattleStatusInstance> Statuses => _statuses;
         public IReadOnlyList<BattleShieldInstance> Shields => _shields;
         public int TotalShield => _shields.Sum(shield => shield.Value);
@@ -106,6 +187,11 @@ namespace Pachimon.Battle
         public bool IsDefeated => !IsAlive;
         public bool CanAddSkill =>
             _skillSlots.Count < PachimonInstance.MaxSkillSlots;
+
+        public bool CanAddSkillId(int skillId)
+        {
+            return skillId > 0 && (_skillIds.Contains(skillId) || CanAddSkill);
+        }
 
         public PachimonSkillSlot GetSkillSlot(int slotId)
         {
@@ -150,14 +236,22 @@ namespace Pachimon.Battle
 
         public bool AddSkill(int skillId)
         {
-            if (skillId <= 0 || !CanAddSkill)
+            if (!CanAddSkillId(skillId))
             {
                 return false;
             }
 
-            var nextSlotId = _skillSlots.Max(slot => slot.SlotId) + 1;
-            _skillSlots.Add(new PachimonSkillSlot(nextSlotId, skillId));
-            _skillIds.Add(skillId);
+            var existing = _skillSlots.FirstOrDefault(slot => slot.SkillId == skillId);
+            if (existing != null)
+            {
+                existing.Upgrade();
+            }
+            else
+            {
+                var nextSlotId = _skillSlots.Max(slot => slot.SlotId) + 1;
+                _skillSlots.Add(new PachimonSkillSlot(nextSlotId, skillId));
+                _skillIds.Add(skillId);
+            }
             return true;
         }
 
@@ -214,15 +308,23 @@ namespace Pachimon.Battle
             }
 
             var remainingWork = Timing.RemainingWork;
-            var slowValues = _statuses
+            var slows = _statuses
                 .Where(status =>
                     (status.Categories & BattleStatusCategory.Slow) != 0)
-                .Select(status => checked(status.Value * status.StackCount))
+                .Select(status => new
+                {
+                    Status = status,
+                    DecayPerTick = _statusDecayProvider?.Invoke(status)
+                        ?? (status.Definition is SlowStatusAsset slow
+                            ? slow.DecayPerTick
+                            : 1m),
+                    status.RemainingTicks,
+                })
                 .ToArray();
-            var currentSlow = slowValues.Sum();
+            var currentSlow = slows.Sum(slow => slow.Status.GetSpeedReduction());
             var baseSpeed = checked(
                 GetBattleStatValue(PachimonStatType.Speed) + currentSlow);
-            if (slowValues.Length == 0)
+            if (slows.Length == 0)
             {
                 return BattleTickMath.GetTicksToComplete(
                     remainingWork,
@@ -232,8 +334,16 @@ namespace Pachimon.Battle
             var elapsedTicks = 0;
             while (remainingWork > 0m)
             {
-                var slow = slowValues.Sum(value =>
-                    Math.Max(0, value - elapsedTicks));
+                var slow = slows.Sum(current =>
+                    current.RemainingTicks.HasValue
+                        && elapsedTicks >= current.RemainingTicks.Value
+                            ? 0
+                            : current.Status.GetSpeedReduction(Math.Max(
+                                0,
+                                current.Status.Value
+                                - SignedStatMath.FloorNonNegative(
+                                    current.Status.DecayWork
+                                    + current.DecayPerTick * elapsedTicks))));
                 var speed = checked(baseSpeed - slow);
                 remainingWork -= BattleTickMath.GetProgressPerTick(speed);
                 elapsedTicks++;
@@ -255,11 +365,14 @@ namespace Pachimon.Battle
                 DisplayName,
                 Side,
                 SlotIndex,
+                _battleBaseStats,
+                _staticModifiers,
                 StartingStats,
                 CurrentHp,
                 CurrentMn,
                 _skillSlots,
-                _passiveIds);
+                _passiveIds,
+                _subStatBindings);
             foreach (var cooldown in _cooldowns)
             {
                 clone._cooldowns[cooldown.Key] =
@@ -522,10 +635,12 @@ namespace Pachimon.Battle
             {
                 _battleStats = EffectivePachimonStats.Calculate(
                     _battleBaseStats,
-                    BattleStatusStatModifierFactory.Create(_statuses)
+                    _staticModifiers
+                        .Concat(BattleStatusStatModifierFactory.Create(_statuses))
                         .Concat(_permanentItemModifiers)
                         .Concat(_battleModifierProvider?.Invoke()
-                            ?? Enumerable.Empty<IStatModifier>()));
+                            ?? Enumerable.Empty<IStatModifier>()),
+                    _subStatBindings);
                 _battleStatsDirty = false;
             }
 
@@ -537,6 +652,12 @@ namespace Pachimon.Battle
         {
             _battleModifierProvider = provider;
             InvalidateBattleStats();
+        }
+
+        internal void SetStatusDecayProvider(
+            Func<BattleStatusInstance, decimal> provider)
+        {
+            _statusDecayProvider = provider;
         }
 
         internal void NotifyBattleContextChanged()
@@ -597,7 +718,9 @@ namespace Pachimon.Battle
             return removed;
         }
 
-        internal IReadOnlyList<BattleStatusInstance> AdvanceStatuses(int ticks)
+        internal IReadOnlyList<BattleStatusInstance> AdvanceStatuses(
+            int ticks,
+            Func<BattleStatusInstance, decimal> decayProvider = null)
         {
             if (ticks < 0) throw new ArgumentOutOfRangeException(nameof(ticks));
             var expired = new List<BattleStatusInstance>();
@@ -609,11 +732,15 @@ namespace Pachimon.Battle
                 changedAny |= status.IsTimed;
                 if ((status.Categories & BattleStatusCategory.Slow) != 0)
                 {
-                    var decayPerTick = status.Definition is SlowStatusAsset slow
-                        ? slow.DecayPerTick
-                        : 1;
-                    status.DecayValue(checked(ticks * decayPerTick));
-                    changedAny = true;
+                    var decayPerTick = decayProvider?.Invoke(status)
+                        ?? (status.Definition is SlowStatusAsset slow
+                            ? slow.DecayPerTick
+                            : 1m);
+                    if (decayPerTick > 0)
+                    {
+                        status.AccumulateValueDecay(ticks * decayPerTick);
+                        changedAny = true;
+                    }
                 }
                 if (status.StatusId == BattleStatusId.WindErosion)
                 {
@@ -621,6 +748,14 @@ namespace Pachimon.Battle
                         is WindErosionStatusAsset erosion
                             ? erosion.DecayPerTick
                             : 1;
+                    status.DecayValue(checked(ticks * decayPerTick));
+                    changedAny = true;
+                }
+                if (status.StatusId == BattleStatusId.Pollen)
+                {
+                    var decayPerTick = status.Definition is PollenStatusAsset pollen
+                        ? pollen.DecayPerTick
+                        : 1;
                     status.DecayValue(checked(ticks * decayPerTick));
                     changedAny = true;
                 }
@@ -654,6 +789,20 @@ namespace Pachimon.Battle
                 values,
                 resourceDisplayMultiplier: 1,
                 specialStatDivisor: 1);
+        }
+
+        private static EffectivePachimonStats CalculateStartingStats(
+            PachimonStats baseStats,
+            IEnumerable<IStatModifier> staticModifiers,
+            PachimonSubStatBindings subStatBindings)
+        {
+            if (baseStats == null) throw new ArgumentNullException(nameof(baseStats));
+            if (staticModifiers == null)
+                throw new ArgumentNullException(nameof(staticModifiers));
+            return EffectivePachimonStats.Calculate(
+                baseStats,
+                staticModifiers,
+                subStatBindings);
         }
 
         private void InvalidateBattleStats()

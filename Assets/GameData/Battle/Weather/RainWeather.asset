@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.RainWeatherAsset
   _weatherId: 2
   _displayName: "\u96E8"
-  _description: "\u6C17\u6E29\u304C0\u4EE5\u4E0A\u306A\u3089\u96E8\u3001\u8CA0\u306A\u3089\u96EA\u3068\u3057\u3066\u6271\u3046\u3002"
+  _description: "{icon:Aqua}Ratioを{color:Aqua}{value:increasePercent}%{/color}増加し、{icon:Fire}Ratioを{color:Fire}{value:decreasePercent}%{/color}減少する。全パチモンへ1tickごとに漏電Valueを{value:leakPerTick}蓄積し、{value:environmentInterval}tickごとに湿潤を{value:moistureChange}増加する。毎tick、雨Valueが基本1減少する。"
   _icon: {fileID: 0}
   _aquaRatioScalingPercent: 10
   _fireRatioScalingPercent: 20
@@ -23,3 +23,12 @@ MonoBehaviour:
   _snowChillTemperatureRatio: 100
   _chillStatus: {fileID: 11400000, guid: f94444446bd461bd02a6624eff9134f4, type: 2}
   _snowDisplayName: "\u96EA"
+  _sunnyDisplayName: "\u6674\u5929"
+  _snowDescription: "{icon:Ice}Ratioを{color:Ice}{value:increasePercent}%{/color}増加し、{icon:Fire}Ratioを{color:Fire}{value:decreasePercent}%{/color}減少する。炎以外のDamage（状態・生成物を除く）を受けると冷気Valueを{value:chillValue}付与し、{value:environmentInterval}tickごとに湿潤を{value:moistureChange}増加する。毎tick、雪Valueが基本1減少する。"
+  _sunnyDescription: "{icon:Fire}Ratioを{color:Fire}{value:increasePercent}%{/color}増加し、{icon:Aqua}Ratioを{color:Aqua}{value:decreasePercent}%{/color}減少する。{value:environmentInterval}tickごとに気温を{value:environmentChange}増加し、湿潤を同じ値だけ減少する。毎tick、晴天Valueが基本1減少する。"
+  _snowIceRatioScalingPercent: 10
+  _snowFireRatioScalingPercent: 20
+  _sunnyFireRatioScalingPercent: 10
+  _sunnyAquaRatioScalingPercent: 20
+  _environmentIntervalTicks: 10
+  _environmentChangePercent: 1

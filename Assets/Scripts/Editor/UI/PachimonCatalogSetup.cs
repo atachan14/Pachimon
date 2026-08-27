@@ -331,14 +331,34 @@ namespace Pachimon.Editor.UI
                 [AllocationType.Wind] = (pachikazeFront, pachikazeBack),
                 [AllocationType.Dragon] = (pachidragonFront, pachidragonBack),
             };
+            var initialSpeciesGraphics = new Dictionary<int, (Sprite Front, Sprite Back)>
+            {
+                [1] = (pachikageFront, pachikageBack),
+                [2] = (pachigameFront, pachigameBack),
+                [3] = (pachigidaneFront, pachigidaneBack),
+                [4] = (pachichuFront, pachichuBack),
+                [5] = (pachimushiFront, pachimushiBack),
+                [6] = (pachigooriFront, pachigooriBack),
+                [7] = (pachikazeFront, pachikazeBack),
+                [8] = (pachidragonFront, pachidragonBack),
+            };
 
             var changed = false;
             foreach (var definition in catalog.Species.Where(item => item != null))
             {
-                if (!TryLoadSpeciesGraphics(
+                Sprite front;
+                Sprite back;
+                if (initialSpeciesGraphics.TryGetValue(
                         definition.SpeciesId,
-                        out var front,
-                        out var back))
+                        out var initialGraphics))
+                {
+                    front = initialGraphics.Front;
+                    back = initialGraphics.Back;
+                }
+                else if (!TryLoadSpeciesGraphics(
+                             definition.SpeciesId,
+                             out front,
+                             out back))
                 {
                     if (!fallbackGraphics.TryGetValue(
                             definition.AllocationType,

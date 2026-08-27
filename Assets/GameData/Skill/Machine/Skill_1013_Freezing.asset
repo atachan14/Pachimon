@@ -20,6 +20,7 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 60
-  _description: "\u5148\u982D\u306E\u6575\u306E\u51B7\u6C17\u3092\u89E3\u9664\u3057\u3001\u540C\u5024\u306E\u51CD\u7D50\u3068True
+  _description: "\u5148\u982D\u306E\u6575\u306E\u51B7\u6C17\u3092\u89E3\u9664\u3057\u3001\u540C\u5024\u306E\u51CD\u7D50\u3068\u51B7\u6C17\u306E50%\u306ETrue
     Damage\u3092\u4E0E\u3048\u308B\u3002"
+  _damagePercent: 50
   _freezeStatus: {fileID: 11400000, guid: a8490000000000000000000000000001, type: 2}

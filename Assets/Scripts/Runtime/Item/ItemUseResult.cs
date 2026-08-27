@@ -9,6 +9,7 @@ namespace Pachimon.Items
         InvalidTarget = 4,
         NoEffect = 5,
         SkillSlotsFull = 6,
+        SkillAlreadyKnown = 7,
     }
 
     public readonly struct ItemUseResult

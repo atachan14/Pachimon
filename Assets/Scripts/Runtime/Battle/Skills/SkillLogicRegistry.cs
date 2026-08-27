@@ -53,9 +53,7 @@ namespace Pachimon.Battle
                 else if (skill is LeafSlicerSkillAsset leafSlicer)
                 {
                     _logicBySkillId[skill.SkillId] =
-                        new BasicAttributeDamageSkillLogic(
-                            leafSlicer,
-                            PachimonAttribute.Leaf);
+                        new LeafSlicerSkillLogic(leafSlicer);
                 }
                 else if (skill is ElectricShockSkillAsset electricShock)
                 {

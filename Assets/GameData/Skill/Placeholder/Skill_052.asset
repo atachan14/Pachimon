@@ -18,9 +18,11 @@ MonoBehaviour:
   _isMapAssignable: 1
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
-  _baseCooldownTicks: 300
-  _baseManaCost: 40
-  _description: "値{color:Electric}{value:value}{/color}の天気{term:Thunder|雷}を発生させる。"
-  _baseValue: 300
+  _baseCooldownTicks: 600
+  _baseManaCost: 60
+  _description: "\u5024{color:Electric}{value:value}{/color}\uFF08{value:baseValue}
+    \xD7 (100 + {icon:Electric}{value:electric} \xD7 {value:valueRatio}%)% \xD7 (100
+    + GEN {value:generationPower})%\uFF09\u306E\u5929\u6C17{term:Thunder|\u96F7}\u3092\u767A\u751F\u3055\u305B\u308B\u3002"
+  _baseValue: 50
   _electricValueRatio: 100
   _thunderDefinition: {fileID: 11400000, guid: 0cc86b3b666f7e7458bda209ba912ac4, type: 2}

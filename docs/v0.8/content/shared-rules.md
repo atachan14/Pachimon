@@ -13,7 +13,7 @@
 ## 表記
 
 - Stat名はコードと同じ`Fire / Aqua / Leaf / Electric / Poison / Ice / Wind / Dragon`を使う
-- 共通Statは`Speed / DamageBonus / ResistBonus`と記載する
+- SubStatは`DamageBonus / ResistBonus / StatusMastery / StatusResistance / GenerationPower / SustainPower / Speed / Haste`と記載する
 - Skillの基本項目は`硬直 / CD / MN`と記載する
 - 発生が0より大きいSkillだけ`発生`を記載する
 - Statを増幅倍率として使う場合は、負数対応した`AmplificationMultiplier(Stat)`で記載する
@@ -69,34 +69,37 @@ EffectValue
 
 ## 初期Stat生成
 
-初期Statは、属性Statと共通Statを別々のBudgetから生成する。
+初期Statは、8属性と`MaxHP / MaxMN`の10Statを同じBudgetから生成する。
 各Speciesは`PachimonSpeciesAsset`に固有の初期Statを持ち、その価値を
-先にBudgetから消費してから残りをRunごとにランダム振り分けする。
+先に共通Budgetから消費してから、残りをRunごとに重みなしでランダム振り分けする。
 
-- 固有初期Statは全14StatをInspectorへ明示する
-- `MaxHP / MaxMN`は表示値で設定し、内部では`5`で割った価値単位へ変換する
-- `MaxHP / MaxMN`の固有値は`5`刻みとする
-- 固有初期StatがグループのBudgetを超えるSpeciesは生成エラーとする
-- 全Species共通の`MaxHP / MaxMN`最低値`500`は固有値とは別に加算する
+- 共通Budgetは`500 Unit`とし、全個体で必ず全量を使用する
+- 8属性は`1 Unit = +1`とする
+- `MaxHP / MaxMN`は`1 Unit = +8`とする
+- `MaxHP / MaxMN`はBudget外の基礎値`500`を持つ
+- `MaxHP / MaxMN`のSpecies固有値は表示値で設定し、`8`刻みとする
+- Species固有初期Statが共通Budgetを超える場合は生成エラーとする
+- 暫定値として、全SpeciesはAllocation Typeと一致する属性を固有初期値`50`として持つ
+- 固有値がない場合、10Statへ平均`50 Unit`ずつ振り分けられるため、属性平均は約`50`、`MaxHP / MaxMN`平均は約`900`となる
+- 個別Statには大きな揺らぎを許容し、属性は`0`も許容する
+- SubStatは初期生成の対象外とし、基本値を`0`とする
 
-### 属性Stat
+同じUnit換算を通常Battle報酬、刻印、Row補正にも使用する。
+暫定値は、刻印が属性`+15`／Resource`+120`、Battle報酬1枠目が属性`+30`／Resource`+240`とする。
+敵TrainerのRow補正は`-45 + Row × 15 Unit`とし、Resourceへは同じ値を8倍して適用する。
 
-- 対象は`Fire / Aqua / Leaf / Electric / Poison / Ice / Wind / Dragon`
-- 暫定値として、全SpeciesはAllocation Typeと一致する属性を固有初期値`100`として持つ
-- 属性Budget `800`からSpecies固有初期Statを引き、残りを8属性へランダムに全量振り分ける
-- 固有初期Statを含む属性合計は常に`800`となる
+### SubStat
 
-### 共通Stat
+- 8属性と8 SubStatの対応は個体ごとに一対一で生成する。
+- Speciesは必要な属性/SubStatペアだけを固定でき、残りはRun生成時に重複なしでランダム決定する。
+- 属性値から対応SubStatへの基礎反映率は全種類共通で`100%`とする。
+- 装備によるSubStat補正は、その個体の対応率へ適用する。
+- 詳細は[Stat Calculation](./mechanics/stat-calculation.md#個体ごとの属性substat対応)を参照する。
 
-- 対象は`MaxHP / MaxMN / Speed / Haste / DamageBonus / ResistBonus`
-- 共通Budget `200`からSpecies固有初期Statの価値を引き、残りを6Statへランダムに全量振り分ける
-- `MaxHP / MaxMN`は振分前に最低値`500`を持つ
-- `MaxHP / MaxMN`は共通Budgetの振分値`1`につき`5`増加する
-- その他の共通Statは振分値`1`につき`1`増加する
-- 固有初期Statがすべて`0`の場合、各共通Statの振分値の平均は約`33`となる
-- 同条件では`MaxHP / MaxMN`の平均は約`667`、その他4Statの平均は約`33`となる
-
-各グループのBudget合計は個体間で一致させる。個別Statは大きく揺らぎ、`MaxHP / MaxMN`以外は`0`を許容する。
+- 対象は`DamageBonus / ResistBonus / StatusMastery / StatusResistance / GenerationPower / SustainPower / Speed / Haste`
+- 初期生成、通常のTrainerStatus報酬、Row補正ではSubStatへ直接加算しない
+- 8属性から派生加算し、対応関係と計算順序は[Stat Calculation](./mechanics/stat-calculation.md)に従う
+- 靴や勾玉などの装備は対応率を増加させ、Slowや火傷などのBattle効果だけがSubStatを直接変更できる
 
 ## Skill振り分け
 

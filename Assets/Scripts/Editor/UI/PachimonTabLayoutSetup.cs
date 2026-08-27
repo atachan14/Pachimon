@@ -17,17 +17,13 @@ namespace Pachimon.Editor.UI
         private static readonly StatVisual[] StatVisuals =
         {
             new(PachimonDisplayStat.Fire, "F"),
+            new(PachimonDisplayStat.Dragon, "D"),
+            new(PachimonDisplayStat.Ice, "I"),
             new(PachimonDisplayStat.Poison, "P"),
             new(PachimonDisplayStat.Aqua, "A"),
-            new(PachimonDisplayStat.Ice, "I"),
-            new(PachimonDisplayStat.Leaf, "L"),
             new(PachimonDisplayStat.Wind, "W"),
             new(PachimonDisplayStat.Electric, "E"),
-            new(PachimonDisplayStat.Dragon, "D"),
-            new(PachimonDisplayStat.Speed, "SPD"),
-            new(PachimonDisplayStat.Haste, "HST"),
-            new(PachimonDisplayStat.DamageBonus, "DB"),
-            new(PachimonDisplayStat.ResistBonus, "RB"),
+            new(PachimonDisplayStat.Leaf, "L"),
         };
 
         [MenuItem(MenuPath)]
@@ -143,22 +139,14 @@ namespace Pachimon.Editor.UI
                 2,
                 120f,
                 38f);
-            var generalStatsGrid = CreateGrid(
-                statsSection.transform,
-                "GeneralStatsGrid",
-                2,
-                120f,
-                38f);
             var statSlots = new List<PachimonStatSlotView>(StatVisuals.Length);
             for (var index = 0; index < StatVisuals.Length; index++)
             {
-                var parent = index < 8
-                    ? attributeStatsGrid.transform
-                    : generalStatsGrid.transform;
-                statSlots.Add(CreateStatSlot(parent, StatVisuals[index]));
+                statSlots.Add(CreateStatSlot(
+                    attributeStatsGrid.transform,
+                    StatVisuals[index]));
             }
             attributeStatsGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
-            generalStatsGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
 
             var statusSection = CreateSection(
                 content.transform,
@@ -202,8 +190,46 @@ namespace Pachimon.Editor.UI
                 "なし",
                 GameUiPalette.PassiveChip);
             passiveTemplate.gameObject.SetActive(false);
+
+            var equipmentSection = CreateSection(
+                content.transform,
+                "EquipmentSection",
+                "装備",
+                GameUiPalette.SkillSection);
+            var equipmentGrid = CreateGrid(
+                equipmentSection.transform,
+                "EquipmentGrid",
+                3,
+                80f,
+                58f);
+            var equipmentTemplate = CreateChip(
+                equipmentGrid.transform,
+                "EquipmentTemplate",
+                "なし",
+                GameUiPalette.ButtonNeutral);
+            equipmentTemplate.gameObject.SetActive(false);
+
+            var engravingSection = CreateSection(
+                content.transform,
+                "EngravingSection",
+                "刻印",
+                GameUiPalette.PassiveSection);
+            var engravingGrid = CreateGrid(
+                engravingSection.transform,
+                "EngravingGrid",
+                3,
+                80f,
+                58f);
+            var engravingTemplate = CreateChip(
+                engravingGrid.transform,
+                "EngravingTemplate",
+                "なし",
+                GameUiPalette.ItemChip);
+            engravingTemplate.gameObject.SetActive(false);
             statusGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
             passiveGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
+            equipmentGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
+            engravingGrid.GetComponent<ResponsiveGridLayout>().RefreshLayout();
 
             Undo.RecordObject(tab, "Configure Pachimon Tab");
             tab.Configure(
@@ -216,7 +242,11 @@ namespace Pachimon.Editor.UI
                 statusTemplate,
                 skillSlots,
                 passiveGrid.transform,
-                passiveTemplate);
+                passiveTemplate,
+                equipmentGrid.transform,
+                equipmentTemplate,
+                engravingGrid.transform,
+                engravingTemplate);
             EditorUtility.SetDirty(tab);
         }
 
@@ -251,8 +281,8 @@ namespace Pachimon.Editor.UI
                 ? GameUiPalette.Transparent
                 : iconColor;
             var iconLayout = icon.GetComponent<LayoutElement>();
-            iconLayout.minWidth = 48f;
-            iconLayout.preferredWidth = 48f;
+            iconLayout.minWidth = 84f;
+            iconLayout.preferredWidth = 84f;
             iconLayout.flexibleWidth = 0f;
             var iconText = CreateText(icon.transform, "Label", 11f, FontStyles.Bold);
             iconText.richText = true;
@@ -266,7 +296,37 @@ namespace Pachimon.Editor.UI
                 ? Color.white
                 : GetContrastingTextColor(iconColor);
             iconText.alignment = TextAlignmentOptions.Center;
-            Stretch((RectTransform)iconText.transform);
+            var iconTextRect = (RectTransform)iconText.transform;
+            iconTextRect.anchorMin = Vector2.zero;
+            iconTextRect.anchorMax = new Vector2(0.5f, 1f);
+            iconTextRect.offsetMin = Vector2.zero;
+            iconTextRect.offsetMax = Vector2.zero;
+
+            var subStatBadge = CreateObject(
+                icon.transform,
+                "SubStatBadge",
+                typeof(CanvasRenderer),
+                typeof(Image));
+            var badgeRect = (RectTransform)subStatBadge.transform;
+            badgeRect.anchorMin = badgeRect.anchorMax = new Vector2(1f, 0.5f);
+            badgeRect.pivot = new Vector2(1f, 0.5f);
+            badgeRect.anchoredPosition = Vector2.zero;
+            badgeRect.sizeDelta = new Vector2(40f, 40f);
+            var subStatIcon = subStatBadge.GetComponent<Image>();
+            subStatIcon.color = Color.white;
+            subStatIcon.preserveAspect = true;
+            subStatIcon.raycastTarget = false;
+            var subStatText = CreateText(
+                subStatBadge.transform,
+                "Label",
+                8f,
+                FontStyles.Bold);
+            subStatText.text = "DB";
+            subStatText.color = AttributeCardPalette.GetReadableTextColor(
+                new[] { RewardElementPalette.TimingColor });
+            subStatText.alignment = TextAlignmentOptions.Center;
+            Stretch((RectTransform)subStatText.transform);
+            subStatText.gameObject.SetActive(false);
 
             var value = CreateText(root.transform, "Value", 17f, FontStyles.Bold);
             value.text = "0";
@@ -275,7 +335,12 @@ namespace Pachimon.Editor.UI
             valueLayout.flexibleWidth = 1f;
 
             var view = root.GetComponent<PachimonStatSlotView>();
-            view.Configure(visual.Stat, value);
+            view.Configure(
+                visual.Stat,
+                value,
+                subStatBadge,
+                subStatText,
+                subStatIcon);
             return view;
         }
 
@@ -430,11 +495,15 @@ namespace Pachimon.Editor.UI
                     RewardElementPalette.GetAttributeColor(PachimonAttribute.Wind),
                 PachimonDisplayStat.Dragon =>
                     RewardElementPalette.GetAttributeColor(PachimonAttribute.Dragon),
-                PachimonDisplayStat.Speed or PachimonDisplayStat.Haste =>
-                    RewardElementPalette.TimingColor,
                 PachimonDisplayStat.DamageBonus
-                    or PachimonDisplayStat.ResistBonus =>
-                    RewardElementPalette.CombatBonusColor,
+                    or PachimonDisplayStat.GenerationPower
+                    or PachimonDisplayStat.Haste
+                    or PachimonDisplayStat.Speed
+                    or PachimonDisplayStat.ResistBonus
+                    or PachimonDisplayStat.SustainPower
+                    or PachimonDisplayStat.StatusMastery
+                    or PachimonDisplayStat.StatusResistance =>
+                    RewardElementPalette.TimingColor,
                 _ => GameUiPalette.StatCard,
             };
         }

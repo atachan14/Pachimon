@@ -17,5 +17,5 @@ MonoBehaviour:
   _icon: {fileID: 21300000, guid: f3e5179db4e29f342b053a108498a0db, type: 3}
   _description: 対象が「日光浴」を習得する。
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: f416dc8bef2eeb7489e84f310eb5dbb2, type: 2}

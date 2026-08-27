@@ -8,19 +8,14 @@ namespace Pachimon.Battle
     {
         public static int CalculateStunTicks(
             NeurotoxinSkillAsset skill,
-            int poison,
             int electric)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
-            var poisonTicks = SignedStatMath.ScaleFromBase(
-                skill.BasePoisonStunTicks,
-                poison,
-                skill.PoisonStunScalingPercent);
             var electricTicks = SignedStatMath.ScaleFromBase(
                 skill.BaseElectricStunTicks,
                 electric,
                 skill.ElectricStunScalingPercent);
-            return SignedStatMath.FloorNonNegative(poisonTicks + electricTicks);
+            return SignedStatMath.FloorNonNegative(electricTicks);
         }
 
         public static int CalculateToxinValue(
@@ -64,7 +59,6 @@ namespace Pachimon.Battle
                 PachimonStatType.Electric);
             var stunTicks = NeurotoxinMath.CalculateStunTicks(
                 _skill,
-                poison,
                 electric);
             var toxinValue = NeurotoxinMath.CalculateToxinValue(_skill, poison);
 

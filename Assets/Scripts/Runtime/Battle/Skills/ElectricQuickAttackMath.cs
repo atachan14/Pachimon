@@ -12,20 +12,8 @@ namespace Pachimon.Battle
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.ElectricBasePower,
+                skill.ElectricBaseDamage,
                 electric);
-        }
-
-        public static decimal CalculateFireBaseDamage(
-            ElectricQuickAttackSkillAsset skill,
-            decimal fire,
-            decimal fireScalingPercent = 100m)
-        {
-            if (skill == null) throw new ArgumentNullException(nameof(skill));
-            return SignedStatMath.ScaleFromBase(
-                skill.FireBasePower,
-                fire,
-                fireScalingPercent);
         }
     }
 }

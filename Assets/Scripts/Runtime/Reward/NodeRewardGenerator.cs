@@ -12,9 +12,9 @@ namespace Pachimon.Reward
         public const int TotalGymGold = 24000;
         public const int MinimumGold = 500;
         public const int MaximumGold = 1500;
-        public const int AttributeCopiesPerSlot = 5;
-        public const int NonAttributeCopiesPerSlot = 5;
-        public const int BonusGoldCopiesPerSlot = 4;
+        public const int AttributeCopiesPerSlot = 7;
+        public const int NonAttributeCopiesPerSlot = 4;
+        public const int BonusGoldCopiesPerSlot = 5;
 
         private readonly Random _random;
 
@@ -211,9 +211,6 @@ namespace Pachimon.Reward
         {
             RewardElementKind.MaxHp,
             RewardElementKind.MaxMn,
-            RewardElementKind.Speed,
-            RewardElementKind.DamageBonus,
-            RewardElementKind.ResistBonus,
         };
 
         private void Shuffle<T>(IList<T> values)

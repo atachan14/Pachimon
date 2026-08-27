@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.SunnyManPassiveAsset
   _passiveId: 49
   _displayName: "\u6674\u308C\u7537"
-  _description: "自身が生存中、気温が正ならSpeedが{value:increasePercent}%増加する。"
+  _description: "\u81EA\u8EAB\u304C\u751F\u5B58\u4E2D\u3001\u6C17\u6E29\u304C\u6B63\u306A\u3089Speed\u304C{value:increasePercent}%\u5897\u52A0\u3059\u308B\u3002"
   _speedPercent: 130

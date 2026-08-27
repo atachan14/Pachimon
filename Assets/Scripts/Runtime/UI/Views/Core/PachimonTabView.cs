@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using TMPro;
 using Pachimon.Battle;
+using Pachimon.Items;
+using Pachimon.Reward;
 using Pachimon.Run;
 using Pachimon.Skills;
 using UnityEngine;
@@ -15,18 +17,24 @@ namespace Pachimon.UI
         Fire, Aqua, Leaf, Electric,
         Poison, Ice, Wind, Dragon,
         Speed, Haste, DamageBonus, ResistBonus,
+        GenerationPower, StatusMastery, SustainPower, StatusResistance,
     }
 
     public readonly struct PachimonStatPreview
     {
-        public PachimonStatPreview(PachimonDisplayStat stat, int value)
+        public PachimonStatPreview(
+            PachimonDisplayStat stat,
+            int value,
+            PachimonDisplayStat? boundSubStat = null)
         {
             Stat = stat;
             Value = value;
+            BoundSubStat = boundSubStat;
         }
 
         public PachimonDisplayStat Stat { get; }
         public int Value { get; }
+        public PachimonDisplayStat? BoundSubStat { get; }
     }
 
     public enum PachimonAbilityKind
@@ -41,18 +49,21 @@ namespace Pachimon.UI
             PachimonAbilityKind kind,
             int id,
             string displayName,
-            SkillAsset skill = null)
+            SkillAsset skill = null,
+            int upgradeLevel = 0)
         {
             Kind = kind;
             Id = id;
             DisplayName = displayName ?? string.Empty;
             Skill = skill;
+            UpgradeLevel = upgradeLevel;
         }
 
         public PachimonAbilityKind Kind { get; }
         public int Id { get; }
         public string DisplayName { get; }
         public SkillAsset Skill { get; }
+        public int UpgradeLevel { get; }
     }
 
     public readonly struct PachimonStatusPreview
@@ -66,9 +77,41 @@ namespace Pachimon.UI
         public string DisplayName => Instance?.DisplayName ?? string.Empty;
     }
 
+    public readonly struct PachimonEquipmentPreview
+    {
+        public PachimonEquipmentPreview(
+            EquipmentSlot slot,
+            string displayName,
+            GeneratedItemData generatedData)
+        {
+            Slot = slot;
+            DisplayName = displayName ?? string.Empty;
+            GeneratedData = generatedData;
+        }
+
+        public EquipmentSlot Slot { get; }
+        public string DisplayName { get; }
+        public GeneratedItemData GeneratedData { get; }
+    }
+
+    public readonly struct PachimonEngravingPreview
+    {
+        public PachimonEngravingPreview(
+            string displayName,
+            GeneratedItemData generatedData)
+        {
+            DisplayName = displayName ?? string.Empty;
+            GeneratedData = generatedData;
+        }
+
+        public string DisplayName { get; }
+        public GeneratedItemData GeneratedData { get; }
+    }
+
     public sealed class PachimonPreviewContent
     {
         private readonly Dictionary<PachimonDisplayStat, int> _stats;
+        private readonly Dictionary<PachimonDisplayStat, PachimonDisplayStat> _subStatBindings;
 
         public PachimonPreviewContent(
             Sprite frontSprite,
@@ -82,7 +125,9 @@ namespace Pachimon.UI
             IEnumerable<PachimonStatusPreview> statusEffects,
             IEnumerable<PachimonAbilityPreview> skills,
             IEnumerable<PachimonAbilityPreview> passives,
-            StatCalculationResult statCalculation = null)
+            StatCalculationResult statCalculation = null,
+            IEnumerable<PachimonEquipmentPreview> equipment = null,
+            IEnumerable<PachimonEngravingPreview> engravings = null)
         {
             IsRevealed = true;
             FrontSprite = frontSprite;
@@ -93,19 +138,30 @@ namespace Pachimon.UI
             CurrentMn = currentMn;
             MaxMn = maxMn;
             _stats = stats?.ToDictionary(item => item.Stat, item => item.Value) ?? new();
+            _subStatBindings = stats?
+                .Where(item => item.BoundSubStat.HasValue)
+                .ToDictionary(item => item.Stat, item => item.BoundSubStat.Value)
+                ?? new Dictionary<PachimonDisplayStat, PachimonDisplayStat>();
             StatusEffects = statusEffects?.ToArray()
                 ?? Array.Empty<PachimonStatusPreview>();
             Skills = skills?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
             Passives = passives?.ToArray() ?? Array.Empty<PachimonAbilityPreview>();
+            Equipment = equipment?.ToArray()
+                ?? Array.Empty<PachimonEquipmentPreview>();
+            Engravings = engravings?.ToArray()
+                ?? Array.Empty<PachimonEngravingPreview>();
             StatCalculation = statCalculation;
         }
 
         private PachimonPreviewContent()
         {
             _stats = new Dictionary<PachimonDisplayStat, int>();
+            _subStatBindings = new Dictionary<PachimonDisplayStat, PachimonDisplayStat>();
             StatusEffects = Array.Empty<PachimonStatusPreview>();
             Skills = Array.Empty<PachimonAbilityPreview>();
             Passives = Array.Empty<PachimonAbilityPreview>();
+            Equipment = Array.Empty<PachimonEquipmentPreview>();
+            Engravings = Array.Empty<PachimonEngravingPreview>();
         }
 
         public bool IsRevealed { get; }
@@ -119,6 +175,8 @@ namespace Pachimon.UI
         public IReadOnlyList<PachimonStatusPreview> StatusEffects { get; }
         public IReadOnlyList<PachimonAbilityPreview> Skills { get; }
         public IReadOnlyList<PachimonAbilityPreview> Passives { get; }
+        public IReadOnlyList<PachimonEquipmentPreview> Equipment { get; }
+        public IReadOnlyList<PachimonEngravingPreview> Engravings { get; }
         public StatCalculationResult StatCalculation { get; }
         public static PachimonPreviewContent Hidden { get; } = new();
 
@@ -126,11 +184,18 @@ namespace Pachimon.UI
         {
             return _stats.TryGetValue(stat, out value);
         }
+
+        public bool TryGetBoundSubStat(
+            PachimonDisplayStat attribute,
+            out PachimonDisplayStat subStat)
+        {
+            return _subStatBindings.TryGetValue(attribute, out subStat);
+        }
     }
 
     public sealed class PachimonTabView : MonoBehaviour
     {
-        public const int SkillSlotCount = 9;
+        public const int SkillSlotCount = PachimonInstance.MaxSkillSlots;
 
         private static readonly Color HealthyHpColor =
             new(0.25f, 0.67f, 0.34f, 1f);
@@ -144,6 +209,30 @@ namespace Pachimon.UI
             new(0.20f, 0.52f, 0.86f, 1f);
         private static readonly Color ShieldColor =
             new(0.58f, 0.61f, 0.64f, 1f);
+        private static readonly PachimonDisplayStat[] SubStatDisplayOrder =
+        {
+            PachimonDisplayStat.DamageBonus,
+            PachimonDisplayStat.ResistBonus,
+            PachimonDisplayStat.StatusMastery,
+            PachimonDisplayStat.StatusResistance,
+            PachimonDisplayStat.GenerationPower,
+            PachimonDisplayStat.SustainPower,
+            PachimonDisplayStat.Speed,
+            PachimonDisplayStat.Haste,
+        };
+        private static readonly IReadOnlyDictionary<PachimonDisplayStat, PachimonDisplayStat>
+            DefaultSubStatBindings =
+                new Dictionary<PachimonDisplayStat, PachimonDisplayStat>
+                {
+                    [PachimonDisplayStat.Fire] = PachimonDisplayStat.DamageBonus,
+                    [PachimonDisplayStat.Aqua] = PachimonDisplayStat.GenerationPower,
+                    [PachimonDisplayStat.Leaf] = PachimonDisplayStat.Haste,
+                    [PachimonDisplayStat.Electric] = PachimonDisplayStat.Speed,
+                    [PachimonDisplayStat.Poison] = PachimonDisplayStat.StatusMastery,
+                    [PachimonDisplayStat.Ice] = PachimonDisplayStat.ResistBonus,
+                    [PachimonDisplayStat.Wind] = PachimonDisplayStat.SustainPower,
+                    [PachimonDisplayStat.Dragon] = PachimonDisplayStat.StatusResistance,
+                };
 
         [SerializeField] private Image _frontGraphic;
         [SerializeField] private TMP_Text _nameText;
@@ -155,6 +244,10 @@ namespace Pachimon.UI
         [SerializeField] private TextChipView[] _skillSlots = Array.Empty<TextChipView>();
         [SerializeField] private Transform _passiveContainer;
         [SerializeField] private TextChipView _passiveTemplate;
+        [SerializeField] private Transform _equipmentContainer;
+        [SerializeField] private TextChipView _equipmentTemplate;
+        [SerializeField] private Transform _engravingContainer;
+        [SerializeField] private TextChipView _engravingTemplate;
         private RectTransform _runtimeHpBar;
         private Image _runtimeHpFill;
         private Image _runtimeHpShield;
@@ -182,7 +275,11 @@ namespace Pachimon.UI
             TextChipView statusTemplate,
             TextChipView[] skillSlots,
             Transform passiveContainer,
-            TextChipView passiveTemplate)
+            TextChipView passiveTemplate,
+            Transform equipmentContainer = null,
+            TextChipView equipmentTemplate = null,
+            Transform engravingContainer = null,
+            TextChipView engravingTemplate = null)
         {
             _frontGraphic = frontGraphic;
             _nameText = nameText;
@@ -194,6 +291,10 @@ namespace Pachimon.UI
             _skillSlots = skillSlots;
             _passiveContainer = passiveContainer;
             _passiveTemplate = passiveTemplate;
+            _equipmentContainer = equipmentContainer;
+            _equipmentTemplate = equipmentTemplate;
+            _engravingContainer = engravingContainer;
+            _engravingTemplate = engravingTemplate;
         }
 
         public void Bind(PachimonPreviewContent preview)
@@ -201,6 +302,8 @@ namespace Pachimon.UI
             preview ??= PachimonPreviewContent.Hidden;
             _boundPreview = preview;
             var revealed = preview.IsRevealed;
+            EnsureInventorySections();
+            EnsureAttributeGridLayout(preview);
 
             if (_frontGraphic != null)
             {
@@ -247,9 +350,29 @@ namespace Pachimon.UI
             foreach (var slot in _statSlots)
             {
                 if (slot == null) continue;
-                slot.Bind(revealed && preview.TryGetStat(slot.Stat, out var value)
-                    ? value.ToString()
-                    : "?");
+                if (!AttributeRichText.IsAttribute(slot.Stat))
+                {
+                    slot.gameObject.SetActive(false);
+                    continue;
+                }
+                slot.gameObject.SetActive(true);
+                var value = 0;
+                var hasValue = revealed && preview.TryGetStat(slot.Stat, out value);
+                PachimonDisplayStat? boundSubStat = null;
+                int? boundSubStatValue = null;
+                if (hasValue
+                    && preview.TryGetBoundSubStat(slot.Stat, out var resolvedSubStat))
+                {
+                    boundSubStat = resolvedSubStat;
+                    if (preview.TryGetStat(resolvedSubStat, out var resolvedSubStatValue))
+                    {
+                        boundSubStatValue = resolvedSubStatValue;
+                    }
+                }
+                slot.Bind(
+                    hasValue ? value.ToString() : "?",
+                    boundSubStat,
+                    boundSubStatValue);
             }
 
             if (revealed)
@@ -271,6 +394,13 @@ namespace Pachimon.UI
 
             for (var index = 0; index < _skillSlots.Length; index++)
             {
+                var slotObject = _skillSlots[index]?.gameObject;
+                if (slotObject != null)
+                {
+                    slotObject.SetActive(index < SkillSlotCount);
+                }
+                if (index >= SkillSlotCount) continue;
+
                 if (!revealed)
                 {
                     _skillSlots[index]?.Bind("?");
@@ -306,6 +436,344 @@ namespace Pachimon.UI
                     new[] { "?" },
                     "なし");
             }
+
+            RebuildEquipmentChips(revealed, preview.Equipment);
+            RebuildEngravingChips(revealed, preview.Engravings);
+        }
+
+        private void RebuildEquipmentChips(
+            bool revealed,
+            IReadOnlyList<PachimonEquipmentPreview> equipment)
+        {
+            if (_equipmentContainer == null || _equipmentTemplate == null)
+            {
+                return;
+            }
+
+            DeactivateChipPool(_equipmentContainer, _equipmentTemplate);
+            foreach (EquipmentSlot slot in Enum.GetValues(typeof(EquipmentSlot)))
+            {
+                var chip = GetOrCreatePooledChip(
+                    _equipmentContainer,
+                    _equipmentTemplate,
+                    (int)slot);
+                chip.gameObject.SetActive(true);
+                var equipped = equipment.FirstOrDefault(item => item.Slot == slot);
+                if (!revealed)
+                {
+                    chip.Bind($"{GetEquipmentSlotLabel(slot)}：?");
+                }
+                else if (string.IsNullOrWhiteSpace(equipped.DisplayName))
+                {
+                    chip.Bind($"{GetEquipmentSlotLabel(slot)}：なし");
+                }
+                else
+                {
+                    chip.Bind($"{GetEquipmentSlotLabel(slot)}：{equipped.DisplayName}\n"
+                        + FormatStatChanges(equipped.GeneratedData, true));
+                    ApplyGeneratedEffectColor(chip, equipped.GeneratedData);
+                }
+            }
+
+            _equipmentTemplate.gameObject.SetActive(false);
+            _equipmentContainer.GetComponent<ResponsiveGridLayout>()?.RefreshLayout();
+        }
+
+        private void RebuildEngravingChips(
+            bool revealed,
+            IReadOnlyList<PachimonEngravingPreview> engravings)
+        {
+            if (_engravingContainer == null || _engravingTemplate == null)
+            {
+                return;
+            }
+
+            DeactivateChipPool(_engravingContainer, _engravingTemplate);
+            if (!revealed || engravings.Count == 0)
+            {
+                var chip = GetOrCreatePooledChip(
+                    _engravingContainer,
+                    _engravingTemplate,
+                    0);
+                chip.gameObject.SetActive(true);
+                chip.Bind(revealed ? "なし" : "?");
+            }
+            else
+            {
+                for (var index = 0; index < engravings.Count; index++)
+                {
+                    var engraving = engravings[index];
+                    var chip = GetOrCreatePooledChip(
+                        _engravingContainer,
+                        _engravingTemplate,
+                        index);
+                    chip.gameObject.SetActive(true);
+                    chip.Bind($"{engraving.DisplayName}\n"
+                        + FormatStatChanges(engraving.GeneratedData, false));
+                    ApplyGeneratedEffectColor(chip, engraving.GeneratedData);
+                }
+            }
+
+            _engravingTemplate.gameObject.SetActive(false);
+            _engravingContainer.GetComponent<ResponsiveGridLayout>()?.RefreshLayout();
+        }
+
+        private static string FormatStatChanges(
+            GeneratedItemData generatedData,
+            bool subStatIsDerivationRatio)
+        {
+            if (generatedData?.StatChanges == null
+                || generatedData.StatChanges.Count == 0)
+            {
+                return string.Empty;
+            }
+
+            return string.Join("/", generatedData.StatChanges.Select(change =>
+                CityShopWindowView.FormatStatChange(
+                    change,
+                    subStatIsDerivationRatio)));
+        }
+
+        private static void ApplyGeneratedEffectColor(
+            TextChipView chip,
+            GeneratedItemData generatedData)
+        {
+            var main = generatedData?.StatChanges.FirstOrDefault(
+                change => change.Amount > 0);
+            if (main == null
+                || !PachimonStatTypeUtility.TryGetAttribute(
+                    main.StatType,
+                    out var attribute))
+            {
+                return;
+            }
+
+            chip.SetAttributeColors(new[]
+            {
+                RewardElementPalette.GetAttributeColor(attribute),
+            });
+        }
+
+        private static string GetEquipmentSlotLabel(EquipmentSlot slot)
+        {
+            return slot switch
+            {
+                EquipmentSlot.Head => "頭",
+                EquipmentSlot.Body => "胴",
+                EquipmentSlot.Feet => "足",
+                _ => throw new ArgumentOutOfRangeException(nameof(slot)),
+            };
+        }
+
+        private void EnsureInventorySections()
+        {
+            if (_equipmentContainer != null
+                && _equipmentTemplate != null
+                && _engravingContainer != null
+                && _engravingTemplate != null)
+            {
+                return;
+            }
+            if (_passiveContainer == null || _passiveTemplate == null)
+            {
+                return;
+            }
+
+            var passiveSection = _passiveContainer.parent;
+            var content = passiveSection?.parent;
+            if (content == null)
+            {
+                return;
+            }
+
+            EnsureRuntimeCollectionSection(
+                content,
+                "EquipmentSection",
+                "装備",
+                "EquipmentGrid",
+                "EquipmentTemplate",
+                GameUiPalette.SkillSection,
+                GameUiPalette.ButtonNeutral,
+                ref _equipmentContainer,
+                ref _equipmentTemplate);
+            EnsureRuntimeCollectionSection(
+                content,
+                "EngravingSection",
+                "刻印",
+                "EngravingGrid",
+                "EngravingTemplate",
+                GameUiPalette.PassiveSection,
+                GameUiPalette.ItemChip,
+                ref _engravingContainer,
+                ref _engravingTemplate);
+
+            var equipmentSection = _equipmentContainer?.parent;
+            var engravingSection = _engravingContainer?.parent;
+            if (equipmentSection != null)
+            {
+                equipmentSection.SetSiblingIndex(
+                    passiveSection.GetSiblingIndex() + 1);
+            }
+            if (engravingSection != null)
+            {
+                engravingSection.SetSiblingIndex(
+                    equipmentSection != null
+                        ? equipmentSection.GetSiblingIndex() + 1
+                        : passiveSection.GetSiblingIndex() + 1);
+            }
+        }
+
+        private void EnsureRuntimeCollectionSection(
+            Transform content,
+            string sectionName,
+            string title,
+            string gridName,
+            string templateName,
+            Color sectionColor,
+            Color chipColor,
+            ref Transform container,
+            ref TextChipView template)
+        {
+            var existingSection = content.Find(sectionName);
+            if (existingSection != null)
+            {
+                container ??= existingSection.Find(gridName);
+                template ??= container?.Find(templateName)
+                    ?.GetComponent<TextChipView>();
+                if (container != null && template != null)
+                {
+                    return;
+                }
+            }
+
+            var sectionObject = new GameObject(
+                sectionName,
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Outline),
+                typeof(VerticalLayoutGroup),
+                typeof(ContentSizeFitter));
+            sectionObject.layer = gameObject.layer;
+            sectionObject.transform.SetParent(content, false);
+            sectionObject.GetComponent<Image>().color = sectionColor;
+            var outline = sectionObject.GetComponent<Outline>();
+            outline.effectColor = GameUiPalette.Border;
+            outline.effectDistance = new Vector2(1f, -1f);
+            var vertical = sectionObject.GetComponent<VerticalLayoutGroup>();
+            vertical.padding = new RectOffset(10, 10, 9, 10);
+            vertical.spacing = 8f;
+            vertical.childControlWidth = true;
+            vertical.childControlHeight = true;
+            vertical.childForceExpandWidth = true;
+            vertical.childForceExpandHeight = false;
+            sectionObject.GetComponent<ContentSizeFitter>().verticalFit =
+                ContentSizeFitter.FitMode.PreferredSize;
+
+            var sourceLabel = _passiveTemplate.GetComponentInChildren<TMP_Text>(true);
+            var titleObject = sourceLabel != null
+                ? Instantiate(sourceLabel.gameObject, sectionObject.transform, false)
+                : new GameObject(
+                    "Title",
+                    typeof(RectTransform),
+                    typeof(CanvasRenderer),
+                    typeof(TextMeshProUGUI));
+            if (sourceLabel == null)
+            {
+                titleObject.layer = gameObject.layer;
+                titleObject.transform.SetParent(sectionObject.transform, false);
+            }
+            titleObject.name = "Title";
+            titleObject.SetActive(true);
+            var titleText = titleObject.GetComponent<TMP_Text>();
+            titleText.text = title;
+            titleText.fontSize = 18f;
+            titleText.fontStyle = FontStyles.Bold;
+            titleText.color = GameUiPalette.PrimaryText;
+            titleText.alignment = TextAlignmentOptions.MidlineLeft;
+            titleText.raycastTarget = false;
+            var titleLayout = titleObject.GetComponent<LayoutElement>()
+                ?? titleObject.AddComponent<LayoutElement>();
+            titleLayout.preferredHeight = 28f;
+
+            var gridObject = new GameObject(
+                gridName,
+                typeof(RectTransform),
+                typeof(GridLayoutGroup),
+                typeof(LayoutElement),
+                typeof(ResponsiveGridLayout));
+            gridObject.layer = gameObject.layer;
+            gridObject.transform.SetParent(sectionObject.transform, false);
+            var grid = gridObject.GetComponent<GridLayoutGroup>();
+            grid.spacing = new Vector2(7f, 7f);
+            grid.childAlignment = TextAnchor.UpperLeft;
+            gridObject.GetComponent<ResponsiveGridLayout>().Configure(3, 80f, 58f);
+
+            var templateObject = Instantiate(
+                _passiveTemplate.gameObject,
+                gridObject.transform,
+                false);
+            templateObject.name = templateName;
+            templateObject.GetComponent<Image>().color = chipColor;
+            template = templateObject.GetComponent<TextChipView>();
+            var label = templateObject.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                label.fontSize = 12f;
+                label.text = "なし";
+            }
+            templateObject.SetActive(false);
+            container = gridObject.transform;
+        }
+
+        private void EnsureAttributeGridLayout(PachimonPreviewContent preview)
+        {
+            ResponsiveGridLayout grid = null;
+            foreach (var slot in _statSlots)
+            {
+                if (slot == null || slot.transform.parent == null)
+                {
+                    continue;
+                }
+
+                grid = slot.transform.parent.GetComponent<ResponsiveGridLayout>();
+                if (grid != null)
+                {
+                    grid.Configure(2, 120f, 38f);
+                }
+                break;
+            }
+
+            if (grid == null)
+            {
+                return;
+            }
+
+            var orderedSlots = _statSlots
+                .Where(slot => slot != null && AttributeRichText.IsAttribute(slot.Stat))
+                .OrderBy(slot => GetSubStatDisplayIndex(preview, slot.Stat))
+                .ThenBy(slot => (int)slot.Stat)
+                .ToArray();
+            for (var orderIndex = 0; orderIndex < orderedSlots.Length; orderIndex++)
+            {
+                orderedSlots[orderIndex].transform.SetSiblingIndex(orderIndex);
+            }
+
+            grid.RefreshLayout();
+        }
+
+        private static int GetSubStatDisplayIndex(
+            PachimonPreviewContent preview,
+            PachimonDisplayStat attribute)
+        {
+            if (preview == null
+                || !preview.TryGetBoundSubStat(attribute, out var subStat))
+            {
+                DefaultSubStatBindings.TryGetValue(attribute, out subStat);
+            }
+
+            var index = Array.IndexOf(SubStatDisplayOrder, subStat);
+            return index >= 0 ? index : SubStatDisplayOrder.Length;
         }
 
         private void RequestAbilityDetails(PachimonAbilityPreview ability)

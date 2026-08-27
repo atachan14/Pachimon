@@ -85,12 +85,23 @@ namespace Pachimon.Battle
 
             if (source != null && damageContext.ApplyOutgoingModifiers)
             {
-                damageContext = damageContext.WithPenetrationPercent(
-                    state.Passives.ModifyPenetrationPercent(
+                damageContext = damageContext.WithPenetration(
+                    state.Passives.ModifyPenetration(
                         state,
                         source,
                         target,
                         damageContext));
+            }
+            if (source != null)
+            {
+                var statType = PachimonStatTypeUtility.FromAttribute(
+                    damageContext.Attribute);
+                damageContext = damageContext.WithAttackerAttributeValue(
+                    source.GetBattleStatValue(statType)
+                    * state.ResolveAttributeRatio(
+                        damageContext.Attribute,
+                        100m)
+                    / 100m);
             }
             var calculation = AttributeDamageCalculator.Calculate(damageContext);
             var wasEvaded = hit?.WasEvaded ?? false;
@@ -110,19 +121,6 @@ namespace Pachimon.Battle
                 target,
                 calculation,
                 hit);
-            if (damageContext.ApplyAttackerAttributeMultiplier)
-            {
-                var statType = PachimonStatTypeUtility.FromAttribute(
-                    damageContext.Attribute);
-                var normalMultiplier = calculation.AttackerAttributeMultiplier;
-                var effectiveRatio = state.ResolveAttributeRatio(
-                    damageContext.Attribute,
-                    100m);
-                var weatherMultiplier = SignedStatMath.AmplificationMultiplier(
-                    source.GetBattleStatValue(statType)
-                    * effectiveRatio / 100m);
-                beforeDamage.MultiplyDamage(weatherMultiplier / normalMultiplier);
-            }
             state.Events.Publish(beforeDamage);
             state.Statuses.ApplyIncomingDamageModifiers(beforeDamage);
             if (damageContext.IsAttack
@@ -142,6 +140,11 @@ namespace Pachimon.Battle
                     actualTarget: target,
                     hit: hit);
             }
+            state.Weather.HandleAttributeDamage(
+                source,
+                target,
+                damageContext.Attribute,
+                calculation.PreDefenseDamage * beforeDamage.OutgoingMultiplier);
             var interception = damageContext.IsAttack
                 ? state.Fields.InterceptAttributeAttack(
                     source,
@@ -195,7 +198,8 @@ namespace Pachimon.Battle
                 target.CurrentHp,
                 appliedDamage,
                 isTrueDamage: false,
-                shield.AbsorbedDamage);
+                shieldAbsorbedDamage: shield.AbsorbedDamage,
+                attribute: damageContext.Attribute);
             var appliedEvent = new AttributeDamageAppliedEvent(
                 state,
                 source,
@@ -497,7 +501,6 @@ namespace Pachimon.Battle
                     attribute,
                     isAttack: false,
                     applyAttackerAttributeMultiplier: false,
-                    penetrationPercent: 0m,
                     applyDamageBonusMultiplier: false,
                     applyOutgoingModifiers: false));
             state.Events.Publish(new StatusDamageAppliedEvent(

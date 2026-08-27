@@ -77,10 +77,8 @@ namespace Pachimon.Editor.UI
                 100,
                 70,
                 100,
-                20,
-                100,
-                20,
-                100,
+                25,
+                25,
                 10,
                 100,
                 10,
@@ -104,7 +102,7 @@ namespace Pachimon.Editor.UI
                 null,
                 "対象の味方パチモンが「蒸発」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             machine.ConfigureSkillForEditor(skill);
 
             ReplaceCatalogEntry(

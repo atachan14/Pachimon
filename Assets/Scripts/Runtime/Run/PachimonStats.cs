@@ -9,7 +9,8 @@ namespace Pachimon.Run
         public PachimonStats(
             int[] valueUnits,
             int resourceDisplayMultiplier,
-            int specialStatDivisor)
+            int specialStatDivisor,
+            int resourceBaseValue = 0)
         {
             if (valueUnits == null) throw new ArgumentNullException(nameof(valueUnits));
             if (valueUnits.Length != (int)PachimonStatType.Count)
@@ -27,12 +28,19 @@ namespace Pachimon.Run
                 throw new ArgumentOutOfRangeException(nameof(specialStatDivisor));
             }
 
+            if (resourceBaseValue < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(resourceBaseValue));
+            }
+
             _valueUnits = (int[])valueUnits.Clone();
             ResourceDisplayMultiplier = resourceDisplayMultiplier;
+            ResourceBaseValue = resourceBaseValue;
             SpecialStatDivisor = specialStatDivisor;
         }
 
         public int ResourceDisplayMultiplier { get; }
+        public int ResourceBaseValue { get; }
         public int SpecialStatDivisor { get; }
         public int MaxHp => GetDisplayedValue(PachimonStatType.MaxHp);
         public int MaxMn => GetDisplayedValue(PachimonStatType.MaxMn);
@@ -42,7 +50,9 @@ namespace Pachimon.Run
             var valueUnits = GetValueUnits(statType);
             if (PachimonStatTypeUtility.IsResource(statType))
             {
-                return checked(valueUnits * ResourceDisplayMultiplier);
+                return checked(
+                    ResourceBaseValue
+                    + valueUnits * ResourceDisplayMultiplier);
             }
 
             return PachimonStatTypeUtility.IsSpecialScaledStat(statType)

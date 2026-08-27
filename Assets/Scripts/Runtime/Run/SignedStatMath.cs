@@ -30,6 +30,24 @@ namespace Pachimon.Run
                 stat * scalingPercent / 100m);
         }
 
+        public static decimal CombineAmplificationStats(
+            decimal primaryStat,
+            decimal subStat)
+        {
+            return AmplificationMultiplier(primaryStat + subStat);
+        }
+
+        public static decimal ReplacePreAppliedAmplification(
+            decimal preScaledValue,
+            decimal primaryStat,
+            decimal subStat)
+        {
+            var originalMultiplier = AmplificationMultiplier(primaryStat);
+            return preScaledValue
+                * CombineAmplificationStats(primaryStat, subStat)
+                / originalMultiplier;
+        }
+
         public static decimal ReductionMultiplier(int stat)
         {
             return ReductionMultiplier((decimal)stat);
@@ -40,6 +58,13 @@ namespace Pachimon.Run
             return stat >= 0
                 ? 100m / (100m + stat)
                 : 1m + (-stat / 100m);
+        }
+
+        public static decimal CombineReductionStats(
+            decimal primaryStat,
+            decimal subStat)
+        {
+            return ReductionMultiplier(primaryStat + subStat);
         }
 
         public static int FloorStat(decimal value, bool clampToNonNegative)

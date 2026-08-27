@@ -22,6 +22,6 @@ MonoBehaviour:
   _baseManaCost: 0
   _description: "Battle\u4E2D\u306BSlot\u3054\u3068\u306B1\u5EA6\u3060\u3051\u4F7F\u7528\u3067\u304D\u308B\u3002\u5148\u982D\u306E\u6575\u3078True
     Damage\u3068Stun\u3092\u4E0E\u3048\u308B\u3002"
-  _trueDamage: 100
+  _trueDamage: 50
   _stunTicks: 100
   _stunStatus: {fileID: 11400000, guid: c611111138a14e8a89d33f1bcc6e01c1, type: 2}

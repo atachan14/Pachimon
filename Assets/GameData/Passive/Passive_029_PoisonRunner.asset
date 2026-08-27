@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Passive_029_PoisonRunner
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.DerivedAdditivePassiveAsset
   _passiveId: 29
-  _displayName: 毒走り
-  _description: "{icon:Poison}毒の{value:percent}%をSpeedへ加算する。現在の加算値は{value:contribution}。"
+  _displayName: "\u6BD2\u8D70\u308A"
+  _description: "{icon:Poison}\u6BD2\u306E{value:percent}%\u3092Speed\u3078\u52A0\u7B97\u3059\u308B\u3002\u73FE\u5728\u306E\u52A0\u7B97\u5024\u306F{value:contribution}\u3002"
   _targetStat: 10
   _referenceStat: 6
   _percent: 30
   _minimumContribution: 0
+  _floorContribution: 0

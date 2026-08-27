@@ -8,7 +8,7 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "LightningCloudSkill", menuName = "Pachimon/Skills/Lightning Cloud")]
     public sealed class LightningCloudSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _baseValue = 300;
+        [SerializeField, Min(0)] private int _baseValue = 50;
         [SerializeField, HideInInspector] private int _electricValueRatio = 100;
         [SerializeField] private ThunderWeatherAsset _thunderDefinition;
 

@@ -60,7 +60,19 @@ namespace Pachimon.Editor.UI
                 $"{SkillFolder}/Skill_061.asset");
             firstTouch.ConfigureForEditor(
                 61, "ファーストタッチ", 100, 300, 0,
-                "先頭へ毒ダメージ。HP最大の対象には追加ダメージと毒素を与える。",
+                "対象が最大HP未満なら、敵の先頭へ"
+                    + "{color:Poison}{value:damage}{/color}（{value:baseDamage} × "
+                    + "（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の"
+                    + "{icon:Poison}{color:Poison}ダメージ{/color}と値"
+                    + "{value:normalToxin}（{value:baseNormalToxin} × "
+                    + "（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の"
+                    + "毒素を与える。対象が最大HPなら、代わりに"
+                    + "{color:Poison}{value:bonusDamage}{/color}（{value:baseBonusDamage} × "
+                    + "（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の"
+                    + "{icon:Poison}{color:Poison}ダメージ{/color}と値"
+                    + "{value:toxin}（{value:baseToxin} × "
+                    + "（100 + {icon:Poison}{value:poison} × {value:ratio}%）%）の"
+                    + "毒素を与える。",
                 75, 50, 300, 150, 100, toxin);
 
             var magician = GetOrCreate<PoisonMagicianPassiveAsset>(
@@ -122,7 +134,7 @@ namespace Pachimon.Editor.UI
                 $"{ItemFolder}/Item_{itemId}_TM_{typeName}.asset");
             item.ConfigureForEditor(itemId, $"技マシーン[{skill.DisplayName}]", null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
-                ItemCategory.SkillMachine, 5000);
+                ItemCategory.SkillMachine, 1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

@@ -26,7 +26,15 @@ namespace Pachimon.Editor.UI
 
             for (var id = 41; id <= 48; id++)
             {
-                SetTemplate(skills.Get(id), CreateSkillTemplate(id));
+                var skillTemplate = CreateSkillTemplate(id);
+                if (id == 43)
+                {
+                    skillTemplate += "\u5024{value:pollen}"
+                        + "\uFF08{value:pollenBaseValue} \u00D7\uFF08100 + {icon:Poison}"
+                        + "{value:poison} \u00D7 {value:pollenRatio}%\uFF09%\uFF09\u306E"
+                        + "{term:Pollen|\u82B1\u7C89}\u3092\u4ED8\u4E0E\u3059\u308B\u3002";
+                }
+                SetTemplate(skills.Get(id), skillTemplate);
                 SetTemplate(passives.Get(id), CreatePassiveTemplate(id));
             }
 
@@ -39,7 +47,8 @@ namespace Pachimon.Editor.UI
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(41)?.Description?.Contains("{value:damage}") != true
+            if (skills?.Get(41)?.Description?.Contains("{value:selfDamage}") != true
+                || skills?.Get(43)?.Description?.Contains("{value:pollen}") != true
                 || passives?.Get(41)?.Description?.Contains("{value:fireIncrease}") != true)
             {
                 Setup();
@@ -60,18 +69,23 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(asset);
         }
 
-        private static string CreateSkillTemplate(int id) => id switch
+        private static string CreateSkillTemplate(int id)
         {
-            41 => "敵の先頭と自身へ、それぞれ{icon:Fire}{color:Fire}{value:damage}{/color}の炎ダメージを与える。両者が生存している間は、MNを追加消費せず再発動する。",
-            42 => "敵の先頭へ{icon:Aqua}{color:Aqua}{value:damage}{/color}の水ダメージを与える。この攻撃は{value:penetration}%貫通する。",
-            43 => "敵全体へ値{color:Electric}{value:paralysis}{/color}の{term:Paralysis|麻痺}を付与する。",
-            44 => "{value:startup}tickの発生後、敵の先頭へ{icon:Electric}{color:Electric}{value:damage}{/color}の電気ダメージを与える。超過ダメージは次の敵へ引き継ぐ。",
-            45 => "自身へ{color:Poison}{value:shield}{/color}の{term:Shield|Shield}を{value:duration}tick付与し、自身の{term:Toxin|毒素}を{value:toxinReductionPercent}%取り除く。",
-            46 => "HPが半分以上なら敵の先頭へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと{value:duration}tickの凍結を与える。半分未満なら同じ時間対象外となり、毎tick HPを{value:healingPerTick}回復する。",
-            47 => "値{color:Wind}{value:value}{/color}の天気{term:WindStorm|暴風}を発生させる。",
-            48 => "敵の先頭へ{icon:Dragon}{color:Dragon}{value:damage}{/color}の竜ダメージと、値{value:crankerValue}の{term:DragonCranker|ドラゴンクランカー}を与える。",
+            if (PenetrationDescriptionTemplates.TryGetSkill(id, out var template))
+                return template;
+            return id switch
+        {
+            41 => "自身に{color:Fire}{value:selfDamage}{/color}（{value:selfBaseDamage} × {icon:Fire}）の{icon:Fire}{color:Fire}ダメージ{/color}を与える。自身が生存した場合、敵の先頭に{color:Fire}{value:enemyDamage}{/color}（{value:enemyBaseDamage} × {icon:Fire}）の{icon:Fire}{color:Fire}ダメージ{/color}と{color:Fire}{value:burn}{/color}（{value:baseBurn} × {icon:Fire}）の火傷を与える。",
+            42 => "敵の先頭へ{color:Aqua}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Aqua}{value:aqua} × {value:damageRatio}%）%）の{icon:Aqua}{color:Aqua}ダメージ{/color}を与える。この攻撃は{value:penetration}（{value:basePenetration} ×（100 + {icon:Wind}{value:wind} × {value:penetrationRatio}%）%）%貫通する。",
+            43 => "敵全体へ{value:paralysisDuration}tick（{value:baseDuration} ×（100 + {icon:Leaf}{value:leaf} × {value:durationRatio}%）%）、値{color:Electric}{value:paralysis}{/color}（{value:electricValue}（{value:baseElectricValue} ×（100 + {icon:Electric}{value:electric} × {value:electricRatio}%）%）+ {value:poisonValue}（{value:basePoisonValue} ×（100 + {icon:Poison}{value:poison} × {value:poisonRatio}%）%））の{term:Paralysis|麻痺}を付与する。",
+            44 => "{value:startup}tickの発生後、敵の先頭へ{color:Electric}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Electric}{value:electric} × {value:damageRatio}%）%）の{icon:Electric}{color:Electric}ダメージ{/color}を与える。超過ダメージは次の敵へ引き継ぐ。",
+            45 => "自身へ{color:Poison}{value:shield}{/color}（{value:baseShield} ×（100 + {icon:Poison}{value:poison} × {value:shieldRatio}%）%）の{term:Shield|Shield}を{value:duration}tick付与し、自身の{term:Toxin|毒素}を{value:toxinReductionPercent}（{value:baseReduction} ×（100 + {icon:Poison}{value:poison} × {value:reductionRatio}%）%）%取り除く。",
+            46 => "HPが半分以上なら敵の先頭へ{color:Ice}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Ice}{value:ice} × {value:damageRatio}%）%）の{icon:Ice}{color:Ice}ダメージ{/color}と{value:duration}tick（{value:baseDuration} + {icon:Ice}{value:ice} × {value:durationRatio}%）の凍結を与える。半分未満なら同じ時間対象外となり、毎tick HPを{value:healingPerTick}（{value:baseHealing} ×（100 + {icon:Ice}{value:ice} × {value:healingRatio}%）%）回復する。",
+            47 => "値{color:Wind}{value:value}{/color}（{value:baseValue} + {icon:Wind}{value:wind} × {value:valueRatio}%）の天気{term:WindStorm|暴風}を発生させる。",
+            48 => "敵の先頭へ{color:Dragon}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Dragon}{value:dragon} × {value:damageRatio}%）%）の{icon:Dragon}{color:Dragon}ダメージ{/color}と、値{value:crankerValue}（{value:baseCranker} + {icon:Dragon}{value:dragon} × {value:crankerRatio}%）の{term:DragonCranker|ドラゴンクランカー}を与える。",
             _ => string.Empty,
-        };
+            };
+        }
 
         private static string CreatePassiveTemplate(int id) => id switch
         {

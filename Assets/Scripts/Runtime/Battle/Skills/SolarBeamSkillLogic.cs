@@ -17,11 +17,33 @@ namespace Pachimon.Battle
             var damage = context.ScaleFromAttribute(
                 _skill.BaseLeafDamage,
                 PachimonAttribute.Leaf);
+            var hit = context.BeginAttackHit(target);
             var result = BattleAttributeDamageService.Apply(context.State, context.User, target,
                 new DamageContext(DamageOriginKind.Skill, _skill.SkillId, damage,
                     context.User.GetBattleStats(), target.GetBattleStats(), PachimonAttribute.Leaf,
-                    isAttack: true, applyAttackerAttributeMultiplier: false));
-            return new SkillResolution(context.User, _skill, new[] { new SkillEffectResult(result.ActualTarget, result.AppliedDamage, false) });
+                    isAttack: true, applyAttackerAttributeMultiplier: false), hit);
+            if (_skill.PollenStatus == null)
+                throw new InvalidOperationException("Solar Beam requires a Pollen Definition.");
+            var pollenValue = SignedStatMath.FloorNonNegative(
+                context.ScaleFromAttribute(
+                    _skill.PollenBaseValue,
+                    PachimonAttribute.Wind,
+                    _skill.PollenWindRatio));
+            if (pollenValue > 0)
+            {
+                hit.ApplyStatus(BattleStatusFactory.CreatePollen(
+                    context.User,
+                    pollenValue,
+                    _skill.PollenStatus));
+            }
+            return new SkillResolution(context.User, _skill, new[]
+            {
+                new SkillEffectResult(
+                    result.ActualTarget,
+                    result.AppliedDamage,
+                    false,
+                    hit: hit),
+            });
         }
     }
 }

@@ -1,3 +1,5 @@
+using System;
+using System.Globalization;
 using System.Linq;
 using Pachimon.Battle;
 using Pachimon.Data;
@@ -9,6 +11,240 @@ using Pachimon.Skills;
 
 namespace Pachimon.UI
 {
+    public static class WeatherDetailDescriptionFormatter
+    {
+        public static string Format(BattleWeatherInstance weather)
+        {
+            if (weather == null) throw new ArgumentNullException(nameof(weather));
+            if (weather.Definition is RainWeatherAsset precipitation)
+            {
+                return FormatPrecipitation(weather, precipitation);
+            }
+            if (weather.Definition is WindWeatherAsset wind)
+            {
+                return FormatWind(weather.Value, wind);
+            }
+            if (weather.Definition is ThunderWeatherAsset thunder)
+            {
+                return FormatThunder(weather.Value, thunder);
+            }
+            return Format(weather.Value, weather.Definition);
+        }
+
+        public static string Format(int value, BattleWeatherAsset definition)
+        {
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+
+            if (definition is SunnyWeatherAsset temperature)
+            {
+                return FormatTemperature(value, temperature);
+            }
+
+            if (definition is PairedAttributeEnvironmentAsset paired)
+            {
+                return FormatPairedEnvironment(value, paired);
+            }
+
+            return DescriptionTemplateFormatter.Format(definition.Description);
+        }
+
+        private static string FormatPrecipitation(
+            BattleWeatherInstance weather,
+            RainWeatherAsset definition)
+        {
+            if (weather.Value < 0)
+            {
+                return FormatSunny(Math.Abs((decimal)weather.Value), definition);
+            }
+
+            var runtime = weather.Runtime;
+            var effectiveValue = Math.Abs(runtime.GetEffectiveRainValue());
+            var rainEffectMultiplier = weather.Value == 0
+                ? 1m
+                : effectiveValue / Math.Abs((decimal)weather.Value);
+            var environmentChange = effectiveValue
+                * definition.EnvironmentChangePercent / 100m;
+            var context = new DescriptionTemplateContext()
+                .Set("environmentInterval", definition.EnvironmentIntervalTicks)
+                .Set("moistureChange", FormatNumber(environmentChange));
+
+            if (weather.IsSnow)
+            {
+                var chillReference = Math.Abs((decimal)runtime.Temperature)
+                    * definition.SnowChillTemperatureRatio / 100m
+                    * rainEffectMultiplier;
+                var chillValue = SignedStatMath.FloorNonNegative(
+                    definition.SnowChillBaseValue
+                    * SignedStatMath.AmplificationMultiplier(chillReference));
+                SetPercentageValues(
+                    context,
+                    effectiveValue * definition.SnowIceRatioScalingPercent / 100m,
+                    effectiveValue * definition.SnowFireRatioScalingPercent / 100m);
+                context.Set("chillValue", chillValue);
+                return DescriptionTemplateFormatter.Format(
+                    definition.SnowDescription,
+                    context);
+            }
+
+            SetPercentageValues(
+                context,
+                effectiveValue * definition.AquaRatioScalingPercent / 100m,
+                effectiveValue * definition.FireRatioScalingPercent / 100m);
+            context.Set(
+                "leakPerTick",
+                FormatNumber(effectiveValue
+                    * definition.LeakValueRatioPerTick / 10000m));
+            return DescriptionTemplateFormatter.Format(
+                definition.Description,
+                context);
+        }
+
+        private static string FormatSunny(
+            decimal magnitude,
+            RainWeatherAsset definition)
+        {
+            var context = new DescriptionTemplateContext()
+                .Set("environmentInterval", definition.EnvironmentIntervalTicks)
+                .Set("environmentChange", FormatNumber(
+                    magnitude * definition.EnvironmentChangePercent / 100m));
+            SetPercentageValues(
+                context,
+                magnitude * definition.SunnyFireRatioScalingPercent / 100m,
+                magnitude * definition.SunnyAquaRatioScalingPercent / 100m);
+            return DescriptionTemplateFormatter.Format(
+                definition.SunnyDescription,
+                context);
+        }
+
+        private static string FormatWind(int value, WindWeatherAsset definition)
+        {
+            var magnitude = Math.Abs((decimal)value);
+            var context = new DescriptionTemplateContext()
+                .Set("speedRatio", definition.SpeedFromWindRatio)
+                .Set("rainIncreasePercent", FormatPercent(
+                    (SignedStatMath.AmplificationMultiplier(
+                         magnitude
+                         * definition.RainEffectRatioScalingPercent / 100m)
+                     - 1m) * 100m))
+                .Set("damageChangePercent", definition.DamageChangePercent);
+            SetPercentageValues(
+                context,
+                magnitude * definition.WindRatioScalingPercent / 100m,
+                0m);
+            return DescriptionTemplateFormatter.Format(
+                definition.Description,
+                context);
+        }
+
+        private static string FormatThunder(
+            int value,
+            ThunderWeatherAsset definition)
+        {
+            var magnitude = Math.Abs((decimal)value);
+            var context = new DescriptionTemplateContext()
+                .Set("speedRatio", definition.SpeedFromElectricRatio)
+                .Set("attackInterval", definition.AttackIntervalTicks)
+                .Set("currentDamage", Math.Abs(value) / definition.DamageDivisor);
+            SetPercentageValues(
+                context,
+                magnitude * definition.ElectricRatioScalingPercent / 100m,
+                0m);
+            return DescriptionTemplateFormatter.Format(
+                definition.Description,
+                context);
+        }
+
+        private static string FormatTemperature(
+            int value,
+            SunnyWeatherAsset definition)
+        {
+            var magnitude = Math.Abs((decimal)value);
+            var positive = value >= 0;
+            var amplificationInput = magnitude * (positive
+                ? definition.FireRatioScalingPercent
+                : definition.ColdIceRatioScalingPercent) / 100m;
+            var reductionInput = magnitude * (positive
+                ? definition.IceRatioScalingPercent
+                : definition.ColdFireRatioScalingPercent) / 100m;
+            var context = CreatePercentageContext(
+                amplificationInput,
+                reductionInput);
+            var template = positive
+                ? definition.Description
+                : definition.NegativeDescription;
+            return DescriptionTemplateFormatter.Format(template, context);
+        }
+
+        private static string FormatPairedEnvironment(
+            int value,
+            PairedAttributeEnvironmentAsset definition)
+        {
+            var magnitude = Math.Abs((decimal)value);
+            var positive = value >= 0;
+            var amplificationInput = magnitude * (positive
+                ? definition.PositiveAmplificationPercent
+                : definition.NegativeAmplificationPercent) / 100m;
+            var reductionInput = magnitude * (positive
+                ? definition.PositiveReductionPercent
+                : definition.NegativeReductionPercent) / 100m;
+            var amplifiedAttribute = positive
+                ? definition.PositiveAttribute
+                : definition.NegativeAttribute;
+            var reducedAttribute = positive
+                ? definition.NegativeAttribute
+                : definition.PositiveAttribute;
+            var context = CreatePercentageContext(
+                    amplificationInput,
+                    reductionInput)
+                .Set("increaseIcon", GetAttributeIcon(amplifiedAttribute))
+                .Set("decreaseIcon", GetAttributeIcon(reducedAttribute));
+            var template = positive
+                ? definition.Description
+                : definition.NegativeDescription;
+            return DescriptionTemplateFormatter.Format(template, context);
+        }
+
+        private static DescriptionTemplateContext CreatePercentageContext(
+            decimal amplificationInput,
+            decimal reductionInput)
+        {
+            return SetPercentageValues(
+                new DescriptionTemplateContext(),
+                amplificationInput,
+                reductionInput);
+        }
+
+        private static DescriptionTemplateContext SetPercentageValues(
+            DescriptionTemplateContext context,
+            decimal amplificationInput,
+            decimal reductionInput)
+        {
+            return context
+                .Set("increasePercent", FormatPercent(
+                    (SignedStatMath.AmplificationMultiplier(amplificationInput)
+                     - 1m) * 100m))
+                .Set("decreasePercent", FormatPercent(
+                    (1m - SignedStatMath.ReductionMultiplier(reductionInput))
+                    * 100m));
+        }
+
+        private static string GetAttributeIcon(PachimonAttribute attribute)
+        {
+            return AttributeRichText.GetIcon(
+                (AllocationType)((int)attribute + 1));
+        }
+
+        private static string FormatPercent(decimal value)
+        {
+            return value.ToString("0.##", CultureInfo.InvariantCulture);
+        }
+
+        private static string FormatNumber(decimal value)
+        {
+            return value.ToString("0.####", CultureInfo.InvariantCulture);
+        }
+    }
+
     public sealed class ContentDetailFactory
     {
         private SkillCatalog _skillCatalog;
@@ -70,14 +306,12 @@ namespace Pachimon.UI
                     GameUiPalette.SkillChip);
             }
 
-            var timing = skill.BaseStartupTicks > 0
-                ? $"発生  {skill.BaseStartupTicks}    硬直  {skill.BaseRecoveryTicks}"
-                : $"硬直  {skill.BaseRecoveryTicks}";
             return new ContentDetailOverlayContent(
                 ContentDetailKind.Skill,
-                skill.DisplayName,
-                $"{timing}    CD  {skill.BaseCooldownTicks}"
-                + $"    MN  {skill.BaseManaCost}",
+                ability.DisplayName,
+                SkillDisplayTextFormatter.FormatTiming(
+                    skill,
+                    ability.UpgradeLevel),
                 DescriptionTemplateFormatter.Format(
                     SkillDetailDescriptionFormatter.Format(skill, owner)),
                 GameUiPalette.SkillChip);
@@ -242,12 +476,27 @@ namespace Pachimon.UI
             var description = item.Description;
             if (item is HealingItemAsset healingItem)
             {
-                var recoveryPercent = generatedData?.PrimaryEffectValue
-                    ?? healingItem.RecoveryPercent;
-                var resource = healingItem.ResourceType == RecoveryResourceType.Hp
-                    ? "最大HP"
-                    : "最大MN";
-                description = $"{resource}の{recoveryPercent}%を回復する。";
+                var recoveryAmount = generatedData?.PrimaryEffectValue
+                    ?? healingItem.RecoveryAmount;
+                if (healingItem.DefeatedOnly)
+                {
+                    description =
+                        $"戦闘不能の味方パチモンを{recoveryAmount}のHPで復活させる。";
+                }
+                else
+                {
+                    var resource = healingItem.ResourceType == RecoveryResourceType.Hp
+                        ? "最大HP"
+                        : "最大MN";
+                    description = $"{resource}を{recoveryAmount}回復する。";
+                }
+            }
+            else if (item is SkillMachineItemAsset machine
+                     && machine.Skill != null)
+            {
+                description = SkillDisplayTextFormatter.FormatTiming(machine.Skill)
+                    + "\n\n"
+                    + SkillDisplayTextFormatter.FormatBaseDescription(machine.Skill);
             }
             else if (item is EngravingItemAsset
                      && generatedData?.StatChanges.Count == 2)
@@ -270,11 +519,15 @@ namespace Pachimon.UI
                     _ => equipment.Slot.ToString(),
                 };
                 var effects = generatedData.StatChanges.Select(change =>
-                    $"{EngravingStatName.Get(change.StatType)} "
-                    + $"{(change.Amount >= 0 ? "+" : string.Empty)}{change.Amount}");
+                {
+                    var amount = $"{(change.Amount >= 0 ? "+" : string.Empty)}{change.Amount}";
+                    return PachimonSubStatBindings.IsSubStat(change.StatType)
+                        ? $"{EngravingStatName.Get(change.StatType)}対応率 {amount}%"
+                        : $"{EngravingStatName.Get(change.StatType)} {amount}";
+                });
                 description = $"装備部位：{slot}\n"
                     + string.Join("\n", effects)
-                    + "\n\n※購入・装着処理は準備中。";
+                    + "\n\n購入時に選択したパチモンへ装着する。";
             }
 
             return new ContentDetailOverlayContent(
@@ -288,9 +541,11 @@ namespace Pachimon.UI
         public ContentDetailOverlayContent CreateFieldEffect(
             BattleFieldEffectInstance effect)
         {
-            var side = effect.TargetSide == BattleSide.Player
-                ? "自陣生成物"
-                : "敵陣生成物";
+            var side = effect.EffectId == BattleFieldEffectId.FrozenGround
+                ? "全体生成物"
+                : effect.TargetSide == BattleSide.Player
+                    ? "自陣生成物"
+                    : "敵陣生成物";
             var description = !string.IsNullOrWhiteSpace(effect.Description)
                 ? effect.Description
                 : effect.EffectId switch
@@ -302,11 +557,13 @@ namespace Pachimon.UI
                 _ => "説明未設定",
             };
             var runtimeValues = effect.EffectId == BattleFieldEffectId.FireBarrier
-                ? $"Value  {effect.Value}    HP  {effect.CurrentHp}/{effect.MaxHp}"
-                    + $"    残り  {effect.RemainingTicks}tick"
+                ? $"Value  {effect.Value}    毎tick -1"
                 : effect.EffectId == BattleFieldEffectId.PoisonMist
                     ? $"Value  {effect.Value}    最小Value  {effect.SecondaryValue}"
                         + $"    残り  {effect.RemainingTicks}tick"
+                : effect.Definition is FrozenGroundFieldEffectAsset frozenGround
+                    ? $"Value  {effect.Value}    冷気持続 x"
+                        + $"{1m / frozenGround.CalculateChillDecayMultiplier(effect.Value):0.##}"
                 : $"Value  {effect.Value}";
             if (effect.Statuses.Count > 0)
             {
@@ -327,14 +584,14 @@ namespace Pachimon.UI
         {
             var runtimeValues = weather.WeatherId == BattleWeatherId.Temperature
                 ? $"気温  {weather.Value:+#;-#;0}"
-                : $"Value  {weather.Value}";
+                : $"Value  {System.Math.Abs(weather.Value)}";
             return new ContentDetailOverlayContent(
                 ContentDetailKind.FieldEffect,
                 weather.DisplayName,
                 $"全体環境    {runtimeValues}    最終変更者  {weather.Source.DisplayName}",
                 string.IsNullOrWhiteSpace(weather.Description)
                     ? "説明未設定"
-                    : weather.Description,
+                    : WeatherDetailDescriptionFormatter.Format(weather),
                 BattleFieldInfoView.GetWeatherAccentColor(
                     weather.WeatherId,
                     weather.IsSnow ? -weather.Value : weather.Value));

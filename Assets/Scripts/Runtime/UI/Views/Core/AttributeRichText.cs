@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Pachimon.Run;
 using Pachimon.Data;
 using Pachimon.Reward;
@@ -130,7 +131,7 @@ namespace Pachimon.UI
                     BackfireMath.CalculateBaseDamage(
                         backfire,
                         backfireFire));
-                var penetration = BackfireMath.CalculatePenetrationPercent(
+                var penetration = BackfireMath.CalculateAttributeFixedPenetration(
                     backfire,
                     backfirePoison);
                 var fireIcon = AttributeRichText.GetIcon(AllocationType.Fire);
@@ -221,7 +222,7 @@ namespace Pachimon.UI
             {
                 var baseDamage = SignedStatMath.FloorNonNegative(
                     SignedStatMath.ScaleFromBase(
-                        chainBurn.BasePower,
+                        chainBurn.BaseDamage,
                         chainBurnFire,
                         chainBurn.FireScalingPercent));
                 var fireIcon = AttributeRichText.GetIcon(AllocationType.Fire);
@@ -279,12 +280,12 @@ namespace Pachimon.UI
                 var displayedDamage = SignedStatMath.FloorNonNegative(
                     ElectricExplosionMath.CalculateBaseDamage(
                         electricExplosion,
-                        electric,
-                        fire));
+                        electric));
                 var penetration =
-                    ElectricExplosionMath.CalculatePenetrationPercent(
-                        electricExplosion,
-                        fire);
+                    PenetrationMath.CalculateDiminishingPercentage(
+                        ElectricExplosionMath.CalculateAttributePenetrationValue(
+                            electricExplosion,
+                            fire));
                 var electricIcon =
                     AttributeRichText.GetIcon(AllocationType.Electric);
                 var fireIcon =
@@ -306,50 +307,45 @@ namespace Pachimon.UI
             {
                 var stunTicks = NeurotoxinMath.CalculateStunTicks(
                     neurotoxin,
-                    neurotoxinPoison,
                     neurotoxinElectric);
                 var toxinValue = NeurotoxinMath.CalculateToxinValue(
                     neurotoxin,
                     neurotoxinPoison);
-                var poisonIcon =
-                    AttributeRichText.GetIcon(AllocationType.Poison);
                 var electricIcon =
                     AttributeRichText.GetIcon(AllocationType.Electric);
                 return "敵の最後尾に"
                     + $"{stunTicks}tickのStun"
-                    + $"（{poisonIcon}{neurotoxinPoison} / "
-                    + $"{electricIcon}{neurotoxinElectric}参照）と、"
+                    + $"（{electricIcon}{neurotoxinElectric}参照）と、"
                     + $"Value {toxinValue}の毒素を付与する。";
             }
 
             if (skill is ToxinTransferSkillAsset toxinTransfer)
             {
+                var baseToxin = toxinTransfer.BaseToxinValue;
+                if (owner?.IsRevealed == true
+                    && owner.TryGetStat(
+                        PachimonDisplayStat.Poison,
+                        out var transferPoison))
+                {
+                    baseToxin = ToxinTransferMath.CalculateBaseValue(
+                        toxinTransfer,
+                        transferPoison);
+                }
                 return "最も毒素が多い敵から"
                     + $"{toxinTransfer.RemovalPercent}%を取り除き、"
                     + "その対象を除く毒素が最も少ない敵へ"
-                    + $"除去量の{toxinTransfer.ApplicationPercent}%を付与する。"
-                    + "敵が1体の場合は同じ対象へ付与する。";
+                    + $"（除去量＋基礎{baseToxin}）の"
+                    + $"{toxinTransfer.ApplicationPercent}%を付与する。"
+                    + "敵全員の毒素が0なら、先頭へ基礎値だけを付与する。";
             }
 
-            if (skill is ToxinExplosionSkillAsset toxinExplosion
-                && owner?.IsRevealed == true
-                && owner.TryGetStat(
-                    PachimonDisplayStat.Poison,
-                    out var explosionPoison)
-                && owner.TryGetStat(
-                    PachimonDisplayStat.Fire,
-                    out var explosionFire))
+            if (skill is ToxinExplosionSkillAsset toxinExplosion)
             {
-                var fixedDamage = SignedStatMath.FloorNonNegative(
-                    ToxinExplosionMath.CalculateBaseDamage(
-                        toxinExplosion,
-                        consumedToxin: 0,
-                        explosionPoison,
-                        explosionFire));
-                return "最も毒素が多い敵の毒素をすべて消費する。"
-                    + $"消費Valueの{toxinExplosion.ToxinConversionPercent}%"
-                    + $"と、現在Statによる{fixedDamage}を合計した"
-                    + "Poisonダメージを敵全体へ与える（軽減前）。";
+                return "敵全員の毒素をすべて消費する。各対象へ消費Valueの"
+                    + $"{toxinExplosion.ToxinConversionPercent}%を基礎とする"
+                    + "Poisonダメージを与え、そのダメージの"
+                    + $"{toxinExplosion.AoeFirePercent}%を基礎とする"
+                    + "Fireダメージを敵全体へ与える。";
             }
 
             if (skill is PoisonShieldSkillAsset poisonShield
@@ -379,9 +375,6 @@ namespace Pachimon.UI
                     PachimonDisplayStat.Fire,
                     out var quickFire)
                 && owner.TryGetStat(
-                    PachimonDisplayStat.Wind,
-                    out var quickWind)
-                && owner.TryGetStat(
                     PachimonDisplayStat.Speed,
                     out var quickSpeed)
                 && owner.TryGetStat(
@@ -392,28 +385,20 @@ namespace Pachimon.UI
                     ElectricQuickAttackMath.CalculateElectricBaseDamage(
                         quickAttack,
                         quickElectric));
-                var fireDamage = SignedStatMath.FloorNonNegative(
-                    ElectricQuickAttackMath.CalculateFireBaseDamage(
+                var fireTimingMultiplier =
+                    SkillTimingCalculator.CalculateFireTimingMultiplier(
                         quickAttack,
-                        quickFire));
-                var windMultiplier =
-                    SkillTimingCalculator.CalculateWindMultiplier(
-                        quickAttack,
-                        quickWind);
+                        quickFire);
                 var recovery = BattleTickMath.GetEffectiveRecovery(
                     quickAttack.BaseRecoveryTicks,
                     quickSpeed,
-                    windMultiplier);
+                    fireTimingMultiplier);
                 var cooldown = BattleTickMath.GetEffectiveCooldown(
                     quickAttack.BaseCooldownTicks,
-                    quickHaste,
-                    windMultiplier);
+                    quickHaste);
                 var electricIcon =
                     AttributeRichText.GetIcon(AllocationType.Electric);
-                var fireIcon =
-                    AttributeRichText.GetIcon(AllocationType.Fire);
-                return $"敵の先頭に{electricIcon}{electricDamage}と"
-                    + $"{fireIcon}{fireDamage}のDamageを与える。"
+                return $"敵の先頭に{electricIcon}{electricDamage}のDamageを与える。"
                     + $"現在の硬直は{recovery}、CDは{cooldown}。";
             }
 
@@ -433,7 +418,7 @@ namespace Pachimon.UI
                     out var cannonHaste))
             {
                 var preDefenseDamage = SignedStatMath.FloorNonNegative(
-                    cannon.BasePower
+                    cannon.BaseDamage
                     * SignedStatMath.AmplificationMultiplier(cannonElectric)
                     * SignedStatMath.AmplificationMultiplier(cannonDamageBonus));
                 var startup = BattleTickMath.GetEffectiveStartup(
@@ -500,7 +485,10 @@ namespace Pachimon.UI
                 if (skill is SecondWindSkillAsset secondWind)
                 {
                     var shield = SignedStatMath.FloorNonNegative(
-                        wind * secondWind.WindShieldRatio / 100m);
+                        SignedStatMath.ScaleFromBase(
+                            secondWind.BaseShieldValue,
+                            wind,
+                            secondWind.WindShieldRatio));
                     return $"自身へ{shield}のShieldを付与し、"
                         + $"{secondWind.DurationTicks}tickの間、最終Windを0にする。";
                 }
@@ -526,15 +514,17 @@ namespace Pachimon.UI
                     var ice = owner.TryGetStat(PachimonDisplayStat.Ice, out var value)
                         ? value
                         : 0;
-                    context.Set("statusValue", checked(
-                        SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
-                            electricInitial.ElectricParalysisBaseValue,
-                            initialAttribute,
-                            electricInitial.ElectricParalysisRatio))
-                        + SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
-                            electricInitial.IceParalysisBaseValue,
-                            ice,
-                            electricInitial.IceParalysisRatio))));
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                            SignedStatMath.ScaleFromBase(
+                                electricInitial.ParalysisBaseValue,
+                                initialAttribute,
+                                electricInitial.ParalysisValueRatio)))
+                        .Set("statusDuration", Math.Max(1,
+                            SignedStatMath.FloorNonNegative(
+                                SignedStatMath.ScaleFromBase(
+                                    electricInitial.ParalysisBaseDurationTicks,
+                                    ice,
+                                    electricInitial.ParalysisDurationRatio))));
                 }
                 else if (initial is PoisonNeedleSkillAsset poison)
                 {
@@ -586,6 +576,56 @@ namespace Pachimon.UI
             return string.IsNullOrWhiteSpace(skill.Description)
                 ? "説明未設定"
                 : skill.Description;
+        }
+    }
+
+    public static class SkillDisplayTextFormatter
+    {
+        private static readonly PachimonPreviewContent BaseStatPreview =
+            CreateBaseStatPreview();
+
+        public static string FormatTiming(SkillAsset skill, int upgradeLevel = 0)
+        {
+            if (skill == null)
+            {
+                return string.Empty;
+            }
+
+            var startup = SignedStatMath.CeilPositive(
+                SkillUpgradeMath.ScaleTiming(skill.BaseStartupTicks, upgradeLevel));
+            var recovery = SignedStatMath.CeilPositive(
+                SkillUpgradeMath.ScaleTiming(skill.BaseRecoveryTicks, upgradeLevel));
+            var mana = SignedStatMath.CeilPositive(
+                SkillUpgradeMath.ScaleManaCost(skill.BaseManaCost, upgradeLevel));
+            var timing = startup > 0
+                ? $"発生 {startup}  硬直 {recovery}"
+                : $"硬直 {recovery}";
+            return $"{timing}  CD {skill.BaseCooldownTicks}  MN {mana}";
+        }
+
+        public static string FormatBaseDescription(SkillAsset skill)
+        {
+            return DescriptionTemplateFormatter.Format(
+                SkillDetailDescriptionFormatter.Format(skill, BaseStatPreview));
+        }
+
+        private static PachimonPreviewContent CreateBaseStatPreview()
+        {
+            var stats = Enum.GetValues(typeof(PachimonDisplayStat))
+                .Cast<PachimonDisplayStat>()
+                .Select(stat => new PachimonStatPreview(stat, 0));
+            return new PachimonPreviewContent(
+                null,
+                string.Empty,
+                500,
+                500,
+                0,
+                500,
+                500,
+                stats,
+                null,
+                null,
+                null);
         }
     }
 }

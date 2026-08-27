@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Pachimon.Run;
 using Pachimon.Skills;
 using Pachimon.Passives;
 
@@ -15,8 +16,6 @@ namespace Pachimon.Battle
             int startupTicks,
             BattleSkillTimingPlan timing,
             SkillStatusConsumptionSnapshot statusConsumption,
-            int actualManaSpent,
-            decimal effectiveManaSpent,
             object runtimeData,
             int resolutionCount)
         {
@@ -26,8 +25,6 @@ namespace Pachimon.Battle
             StartupTicks = startupTicks;
             Timing = timing;
             StatusConsumption = statusConsumption;
-            ActualManaSpent = actualManaSpent;
-            EffectiveManaSpent = effectiveManaSpent;
             RuntimeData = runtimeData;
             ResolutionCount = resolutionCount;
         }
@@ -38,8 +35,6 @@ namespace Pachimon.Battle
         public int StartupTicks { get; }
         public BattleSkillTimingPlan Timing { get; }
         public SkillStatusConsumptionSnapshot StatusConsumption { get; }
-        public int ActualManaSpent { get; }
-        public decimal EffectiveManaSpent { get; }
         public object RuntimeData { get; }
         public int ResolutionCount { get; }
     }
@@ -86,7 +81,8 @@ namespace Pachimon.Battle
                     var isCooldownReady = remainingCooldown == 0;
                     var mana = BattleSkillManaCostCalculator.CreatePlan(
                         user,
-                        skill);
+                        skill,
+                        slot.UpgradeLevel);
                     var hasEnoughMn = skill.ConsumesAllCurrentMana
                         ? mana.Actual > 0
                         : user.CanSpendMn(mana.Actual);
@@ -98,6 +94,8 @@ namespace Pachimon.Battle
                     return new BattleSkillChoice(
                         slot.SlotId,
                         skill,
+                        slot.UpgradeLevel,
+                        mana.Actual,
                         isUsable,
                         readyTick,
                         isCooldownReady,
@@ -140,7 +138,7 @@ namespace Pachimon.Battle
                 ? GetStruggleSkill()
                 : GetSkillForSlot(user, skillSlotId);
             ValidateSkillSelection(state, user, skillSlotId, skill);
-            return skill.BaseStartupTicks > 0;
+            return CreateTimingPlan(state, user, skill, skillSlotId).StartupWork > 0m;
         }
 
         public SkillResolution ExecuteCurrentTurn(
@@ -158,7 +156,8 @@ namespace Pachimon.Battle
                 ? GetStruggleSkill()
                 : GetSkillForSlot(user, skillSlotId);
             ValidateSkillSelection(state, user, skillSlotId, skill);
-            if (skill.BaseStartupTicks > 0)
+            var timing = CreateTimingPlan(state, user, skill, skillSlotId);
+            if (timing.StartupWork > 0m)
             {
                 throw new InvalidOperationException(
                     $"Skill {skill.SkillId} requires Startup before it can resolve.");
@@ -169,12 +168,8 @@ namespace Pachimon.Battle
             {
                 var statusConsumption = state.Statuses
                     .CaptureSkillStatusConsumption(user);
-                var manaSpent = SpendMana(state, user, skill);
+                var manaSpent = SpendMana(state, user, skill, skillSlotId);
                 var resolutionCount = ConsumeResolutionCount(user);
-                var timing = SkillTimingCalculator.CreatePlan(
-                    skill,
-                    user,
-                    state);
                 var resolution = ResolveSkillRepeated(
                     state,
                     user,
@@ -196,7 +191,7 @@ namespace Pachimon.Battle
                     skillSlotId,
                     timing,
                     continueTurn,
-                    skill.DisplayName);
+                    GetDisplayName(user, skill, skillSlotId));
                 if (resolution.RefundCooldown && skillSlotId > 0)
                     user.ClearCooldown(skillSlotId);
                 state.Statuses.RefreshAllActionClockPauses();
@@ -224,7 +219,8 @@ namespace Pachimon.Battle
                 ? GetStruggleSkill()
                 : GetSkillForSlot(user, skillSlotId);
             ValidateSkillSelection(state, user, skillSlotId, skill);
-            if (skill.BaseStartupTicks <= 0)
+            var timing = CreateTimingPlan(state, user, skill, skillSlotId);
+            if (timing.StartupWork <= 0m)
             {
                 throw new InvalidOperationException(
                     $"Skill {skill.SkillId} does not require Startup.");
@@ -238,12 +234,7 @@ namespace Pachimon.Battle
 
             var statusConsumption = state.Statuses
                 .CaptureSkillStatusConsumption(user);
-            var manaSpent = SpendMana(state, user, skill);
             var resolutionCount = ConsumeResolutionCount(user);
-            var timing = SkillTimingCalculator.CreatePlan(
-                skill,
-                user,
-                state);
             var runtimeData = logic is IStartupSkillLogic startupLogic
                 ? startupLogic.BeginStartup(
                     new SkillExecutionContext(
@@ -256,7 +247,7 @@ namespace Pachimon.Battle
                 user,
                 skillSlotId,
                 timing,
-                skill.DisplayName);
+                GetDisplayName(user, skill, skillSlotId));
             return new PendingSkillAction(
                 user,
                 skill,
@@ -264,8 +255,6 @@ namespace Pachimon.Battle
                 startupTicks,
                 timing,
                 statusConsumption,
-                manaSpent.Actual,
-                manaSpent.Effective,
                 runtimeData,
                 resolutionCount);
         }
@@ -292,14 +281,19 @@ namespace Pachimon.Battle
             state.Presentation.Begin(action.User, action.Skill);
             try
             {
+                var manaSpent = SpendMana(
+                    state,
+                    action.User,
+                    action.Skill,
+                    action.SkillSlotId);
                 var resolution = ResolveSkillRepeated(
                     state,
                     action.User,
                     action.Skill,
                     action.ResolutionCount,
                     action.RuntimeData,
-                    action.ActualManaSpent,
-                    action.EffectiveManaSpent,
+                    manaSpent.Actual,
+                    manaSpent.Effective,
                     action.SkillSlotId);
                 var continueTurn = state.Passives.ShouldContinueTurn(
                     state,
@@ -353,6 +347,7 @@ namespace Pachimon.Battle
                 logic,
                 spendMana: true,
                 skillSlotId: skillSlotId,
+                upgradeLevel: GetUpgradeLevel(user, skillSlotId),
                 resolutionCount: GetResolutionCount(user));
         }
 
@@ -399,7 +394,10 @@ namespace Pachimon.Battle
                     $"Skill Slot {skillSlotId} can be used only once per Battle.");
             }
 
-            var mana = BattleSkillManaCostCalculator.CreatePlan(user, skill);
+            var mana = BattleSkillManaCostCalculator.CreatePlan(
+                user,
+                skill,
+                slot.UpgradeLevel);
             if (skill.ConsumesAllCurrentMana
                 ? mana.Actual <= 0
                 : !user.CanSpendMn(mana.Actual))
@@ -503,13 +501,15 @@ namespace Pachimon.Battle
         private static BattleSkillManaSpendPlan SpendMana(
             BattleState state,
             BattleUnitState user,
-            SkillAsset skill)
+            SkillAsset skill,
+            int skillSlotId)
         {
             var before = user.CurrentMn;
             var plan = BattleSkillManaCostCalculator.CreatePlan(
                 state,
                 user,
-                skill);
+                skill,
+                GetUpgradeLevel(user, skillSlotId));
             var amount = plan.Actual;
             if (amount <= 0 && skill.ConsumesAllCurrentMana)
             {
@@ -530,6 +530,38 @@ namespace Pachimon.Battle
             if (amount > 0)
                 state.Events.Publish(new MnSpentEvent(state, user, amount));
             return plan;
+        }
+
+        private static BattleSkillTimingPlan CreateTimingPlan(
+            BattleState state,
+            BattleUnitState user,
+            SkillAsset skill,
+            int skillSlotId)
+        {
+            return SkillTimingCalculator.CreatePlan(
+                skill,
+                user,
+                state,
+                GetUpgradeLevel(user, skillSlotId));
+        }
+
+        private static int GetUpgradeLevel(
+            BattleUnitState user,
+            int skillSlotId)
+        {
+            return skillSlotId == 0
+                ? 0
+                : user.GetSkillSlot(skillSlotId)?.UpgradeLevel ?? 0;
+        }
+
+        private static string GetDisplayName(
+            BattleUnitState user,
+            SkillAsset skill,
+            int skillSlotId)
+        {
+            return SkillUpgradeMath.FormatDisplayName(
+                skill.DisplayName,
+                GetUpgradeLevel(user, skillSlotId));
         }
 
         private static void ValidateUser(BattleState state, BattleUnitState user)

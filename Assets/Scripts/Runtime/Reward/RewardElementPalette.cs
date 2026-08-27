@@ -24,8 +24,8 @@ namespace Pachimon.Reward
                 RewardElementKind.MaxHp => ResourceColor,
                 RewardElementKind.MaxMn => ResourceColor,
                 RewardElementKind.BonusGold => GoldColor,
-                RewardElementKind.DamageBonus => CombatBonusColor,
-                RewardElementKind.ResistBonus => CombatBonusColor,
+                RewardElementKind.DamageBonus => TimingColor,
+                RewardElementKind.ResistBonus => TimingColor,
                 _ => throw new ArgumentOutOfRangeException(),
             };
         }

@@ -19,41 +19,6 @@ namespace Pachimon.Battle
         ResponsivePlant = 9,
     }
 
-    public sealed class BattleDefenseSnapshot
-    {
-        private readonly decimal[] _attributes;
-
-        private BattleDefenseSnapshot(decimal[] attributes, decimal resistBonus)
-        {
-            _attributes = attributes;
-            ResistBonus = resistBonus;
-        }
-
-        public decimal ResistBonus { get; }
-
-        public decimal GetAttribute(PachimonAttribute attribute)
-        {
-            return _attributes[(int)attribute];
-        }
-
-        public static BattleDefenseSnapshot Capture(
-            EffectivePachimonStats stats,
-            int ratio)
-        {
-            if (stats == null) throw new ArgumentNullException(nameof(stats));
-            if (ratio < 0) throw new ArgumentOutOfRangeException(nameof(ratio));
-            var attributes = Enum.GetValues(typeof(PachimonAttribute))
-                .Cast<PachimonAttribute>()
-                .Select(attribute =>
-                    stats.GetValue(PachimonStatTypeUtility.FromAttribute(attribute))
-                    * ratio / 100m)
-                .ToArray();
-            return new BattleDefenseSnapshot(
-                attributes,
-                stats.ResistBonus * ratio / 100m);
-        }
-    }
-
     public readonly struct BattleFieldInterceptionResult
     {
         public BattleFieldInterceptionResult(
@@ -97,28 +62,6 @@ namespace Pachimon.Battle
             _frozenGroundSources.Add(source);
             _value = value;
             SecondaryValue = secondaryValue;
-        }
-
-        private BattleFieldEffectInstance(
-            FireBarrierFieldEffectAsset definition,
-            BattleSide targetSide,
-            BattleUnitState source,
-            int value,
-            int hp,
-            int durationTicks,
-            BattleDefenseSnapshot defenseSnapshot)
-            : this(definition, targetSide, source, value)
-        {
-            if (hp <= 0) throw new ArgumentOutOfRangeException(nameof(hp));
-            if (durationTicks <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(durationTicks));
-            }
-            DefenseSnapshot = defenseSnapshot
-                ?? throw new ArgumentNullException(nameof(defenseSnapshot));
-            MaxHp = hp;
-            CurrentHp = hp;
-            RemainingTicks = durationTicks;
         }
 
         private BattleFieldEffectInstance(
@@ -166,10 +109,7 @@ namespace Pachimon.Battle
                 : _value;
         public int SecondaryValue { get; private set; }
         public BattleFieldEffectAsset Definition { get; private set; }
-        public int MaxHp { get; private set; }
-        public int CurrentHp { get; private set; }
         public int? RemainingTicks { get; private set; }
-        public BattleDefenseSnapshot DefenseSnapshot { get; private set; }
         public IReadOnlyList<BattleStatusInstance> Statuses => _statuses;
         public decimal ApplicationWork { get; private set; }
         public decimal DecayWork { get; private set; }
@@ -180,9 +120,7 @@ namespace Pachimon.Battle
             || (EffectId == BattleFieldEffectId.IceBlade
                 && RemainingTicks <= 0)
             || (EffectId == BattleFieldEffectId.PoisonMist
-                && RemainingTicks <= 0)
-            || (EffectId == BattleFieldEffectId.FireBarrier
-                && (CurrentHp <= 0 || RemainingTicks <= 0));
+                && RemainingTicks <= 0);
 
         public string DisplayName => Definition?.DisplayName ?? EffectId switch
         {
@@ -204,7 +142,17 @@ namespace Pachimon.Battle
         public decimal GetEffectiveResistBonus()
         {
             var erosion = GetStatus(BattleStatusId.WindErosion)?.Value ?? 0;
-            return DefenseSnapshot.ResistBonus - erosion;
+            var baseResist = Definition is FireBarrierFieldEffectAsset barrier
+                ? barrier.ResistBonus
+                : 0;
+            return baseResist - erosion;
+        }
+
+        public decimal GetDefense(PachimonAttribute attribute)
+        {
+            return Definition is FireBarrierFieldEffectAsset barrier
+                ? barrier.GetDefense(attribute)
+                : 0m;
         }
 
         internal int AddOrMergeStatus(BattleStatusInstance status)
@@ -321,24 +269,18 @@ namespace Pachimon.Battle
                     "Smog requires a Smog Field Effect Definition.");
             ApplicationWork += Value
                 * definition.ToxinApplicationRatio / 100m;
-            DecayWork += Value
-                * definition.DecayPerTickRatio / 100m;
             var appliedValue = SignedStatMath.FloorNonNegative(ApplicationWork);
             var decay = Math.Min(
                 Value,
-                SignedStatMath.FloorNonNegative(DecayWork));
+                definition.DecayPerTick);
             ApplicationWork -= appliedValue;
-            DecayWork -= decay;
             _value -= decay;
             return appliedValue;
         }
 
         internal void AddFireBarrierGeneration(
             BattleUnitState source,
-            int value,
-            int hp,
-            int durationTicks,
-            BattleDefenseSnapshot defenseSnapshot)
+            int value)
         {
             if (EffectId != BattleFieldEffectId.FireBarrier)
             {
@@ -346,12 +288,6 @@ namespace Pachimon.Battle
                     "Only Fire Barrier can add a Barrier generation.");
             }
             AddValue(source, value);
-            MaxHp = checked(MaxHp + hp);
-            CurrentHp = checked(CurrentHp + hp);
-            RemainingTicks = checked(RemainingTicks.GetValueOrDefault()
-                + durationTicks);
-            DefenseSnapshot = defenseSnapshot
-                ?? throw new ArgumentNullException(nameof(defenseSnapshot));
         }
 
         internal int ApplyFireBarrierDamage(int damage)
@@ -362,8 +298,8 @@ namespace Pachimon.Battle
                     "Only Fire Barrier can receive Barrier damage.");
             }
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
-            var absorbed = Math.Min(CurrentHp, damage);
-            CurrentHp -= absorbed;
+            var absorbed = Math.Min(Value, damage);
+            _value -= absorbed;
             return damage - absorbed;
         }
 
@@ -374,9 +310,7 @@ namespace Pachimon.Battle
                 throw new InvalidOperationException(
                     "Only Fire Barrier can use the Barrier tick policy.");
             }
-            RemainingTicks = Math.Max(
-                0,
-                RemainingTicks.GetValueOrDefault() - 1);
+            _value = Math.Max(0, _value - 1);
         }
 
         internal void AddIceBladeDuration(
@@ -502,19 +436,13 @@ namespace Pachimon.Battle
             FireBarrierFieldEffectAsset definition,
             BattleSide targetSide,
             BattleUnitState source,
-            int value,
-            int hp,
-            int durationTicks,
-            BattleDefenseSnapshot defenseSnapshot)
+            int value)
         {
             return new BattleFieldEffectInstance(
                 definition,
                 targetSide,
                 source,
-                value,
-                hp,
-                durationTicks,
-                defenseSnapshot);
+                value);
         }
 
         internal static BattleFieldEffectInstance CreateIceBlade(
@@ -562,13 +490,7 @@ namespace Pachimon.Battle
                     (FireBarrierFieldEffectAsset)Definition,
                     TargetSide,
                     sourceClone,
-                    Value,
-                    MaxHp,
-                    RemainingTicks.GetValueOrDefault(),
-                    DefenseSnapshot)
-                {
-                    CurrentHp = CurrentHp,
-                };
+                    Value);
                 CopyStatusesTo(clone, unitMap);
                 return clone;
             }
@@ -747,6 +669,12 @@ namespace Pachimon.Battle
                 throw new ArgumentException("A Plant Definition is required.", nameof(definition));
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
 
+            value = ApplyGenerationPower(source, value);
+            if (secondaryValue > 0)
+            {
+                secondaryValue = ApplyGenerationPower(source, secondaryValue);
+            }
+
             var plant = new BattleFieldEffectInstance(
                 definition,
                 source.Side,
@@ -771,6 +699,7 @@ namespace Pachimon.Battle
                 throw new ArgumentNullException(nameof(definition));
             }
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            value = ApplyGenerationPower(source, value);
             var beforeApplied = new BeforeFieldEffectValueAppliedEvent(
                 _state,
                 source,
@@ -815,18 +744,8 @@ namespace Pachimon.Battle
                 throw new ArgumentNullException(nameof(definition));
             }
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            value = ApplyGenerationPower(source, value);
 
-            var hp = Math.Max(
-                1,
-                SignedStatMath.FloorNonNegative(
-                    value * definition.ValueHpRatio / 100m));
-            var durationTicks = Math.Max(
-                1,
-                SignedStatMath.CeilPositive(
-                    value * definition.ValueDurationRatio / 100m));
-            var defense = BattleDefenseSnapshot.Capture(
-                source.GetBattleStats(),
-                definition.DefenseSnapshotRatio);
             var existing = _effects.FirstOrDefault(effect =>
                 effect.EffectId == BattleFieldEffectId.FireBarrier
                 && effect.TargetSide == source.Side);
@@ -834,10 +753,7 @@ namespace Pachimon.Battle
             {
                 existing.AddFireBarrierGeneration(
                     source,
-                    value,
-                    hp,
-                    durationTicks,
-                    defense);
+                    value);
                 LogFieldEffectCreated(source, existing, source.Side);
                 return existing;
             }
@@ -846,10 +762,7 @@ namespace Pachimon.Battle
                 definition,
                 source.Side,
                 source,
-                value,
-                hp,
-                durationTicks,
-                defense);
+                value);
             _effects.Add(barrier);
             LogFieldEffectCreated(source, barrier, source.Side);
             return barrier;
@@ -940,6 +853,7 @@ namespace Pachimon.Battle
                 throw new ArgumentNullException(nameof(definition));
             }
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            value = ApplyGenerationPower(source, value);
 
             var existing = _effects.FirstOrDefault(effect =>
                 effect.EffectId == BattleFieldEffectId.WaterVeil
@@ -982,6 +896,9 @@ namespace Pachimon.Battle
             if (minimumValue < 0 || minimumValue > value)
                 throw new ArgumentOutOfRangeException(nameof(minimumValue));
 
+            value = ApplyGenerationPower(source, value);
+            minimumValue = ApplyGenerationPower(source, minimumValue);
+
             var existing = Effects.FirstOrDefault(effect =>
                 effect.EffectId == BattleFieldEffectId.PoisonMist
                 && effect.TargetSide == source.Side);
@@ -1003,6 +920,25 @@ namespace Pachimon.Battle
             _effects.Add(mist);
             LogFieldEffectCreated(source, mist, source.Side);
             return mist;
+        }
+
+        private static int ApplyGenerationPower(
+            BattleUnitState source,
+            int value)
+        {
+            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+            if (value == 0 || source == null) return value;
+            var attribute = source.SubStatBindings.GetAttribute(
+                PachimonStatType.GenerationPower);
+            var attributeValue = source.GetBattleStatValue(attribute);
+            return Math.Max(
+                1,
+                SignedStatMath.FloorNonNegative(
+                    SignedStatMath.ReplacePreAppliedAmplification(
+                        value,
+                        attributeValue,
+                        source.GetBattleStatValue(
+                            PachimonStatType.GenerationPower))));
         }
 
         public bool TryEvadeSkillAttack(
@@ -1097,7 +1033,12 @@ namespace Pachimon.Battle
                     new DamageContext(
                         DamageOriginKind.Field,
                         (int)BattleFieldEffectId.IceBlade,
-                        statusEvent.AppliedValue,
+                        statusEvent.RequestedValue
+                        * ((IceBladeFieldEffectAsset)blade.Definition)
+                            .DamagePercent / 100m
+                        * SignedStatMath.AmplificationMultiplier(
+                            blade.Source.GetBattleStatValue(
+                                PachimonStatType.Ice)),
                         blade.Source.GetBattleStats(),
                         statusEvent.Target.GetBattleStats(),
                         PachimonAttribute.Ice,
@@ -1137,12 +1078,15 @@ namespace Pachimon.Battle
             }
         }
 
-        public bool TryTransformChillToFreeze(BattleUnitState target)
+        public decimal GetStatusValueDecayPerTick(BattleStatusInstance status)
         {
-            ValidateSource(target);
-            if (!target.IsAlive)
+            if (status == null) throw new ArgumentNullException(nameof(status));
+            var baseDecay = status.Definition is SlowStatusAsset slow
+                ? slow.DecayPerTick
+                : 1m;
+            if (status.StatusId != BattleStatusId.Chill)
             {
-                return false;
+                return baseDecay;
             }
 
             var field = _effects
@@ -1150,33 +1094,13 @@ namespace Pachimon.Battle
                     effect.EffectId == BattleFieldEffectId.FrozenGround
                     && !effect.IsExpired)
                 .FirstOrDefault();
-            var chill = target.GetStatus(BattleStatusId.Chill);
-            if (field == null || chill == null)
+            if (field == null)
             {
-                return false;
+                return baseDecay;
             }
 
             var definition = (FrozenGroundFieldEffectAsset)field.Definition;
-            var threshold = definition.CalculateFreezeThreshold(field.Value);
-            if (chill.Value < threshold)
-            {
-                return false;
-            }
-
-            var freezeValue = chill.Value;
-            _state.Statuses.TryConsumeStatus(
-                target,
-                BattleStatusId.Chill,
-                out _);
-            _state.Statuses.ApplyTransformedStatus(
-                target,
-                BattleStatusFactory.CreateFreeze(
-                    field.GetActiveFrozenGroundSource(),
-                    freezeValue,
-                    definition.FreezeStatus));
-            _state.AddLog(
-                $"{target.DisplayName}の冷気が凍結に変化した！");
-            return true;
+            return baseDecay * definition.CalculateChillDecayMultiplier(field.Value);
         }
 
         public BattleFieldInterceptionResult InterceptAttributeAttack(
@@ -1201,7 +1125,7 @@ namespace Pachimon.Battle
 
             var reducedDamage = preDefenseDamage
                 * SignedStatMath.ReductionMultiplier(
-                    barrier.DefenseSnapshot.GetAttribute(attribute))
+                    barrier.GetDefense(attribute))
                 * SignedStatMath.ReductionMultiplier(
                     barrier.GetEffectiveResistBonus());
             return ApplyBarrierDamage(
@@ -1328,7 +1252,7 @@ namespace Pachimon.Battle
                     && effect.TargetSide == side
                     && !effect.IsExpired)
                 .ToArray();
-            var removedHp = barriers.Sum(barrier => barrier.CurrentHp);
+            var removedHp = barriers.Sum(barrier => barrier.Value);
             foreach (var barrier in barriers)
             {
                 _effects.Remove(barrier);
@@ -1510,6 +1434,27 @@ namespace Pachimon.Battle
                     ApplyPlantDamage(plant, target,
                         SignedStatMath.FloorNonNegative(plant.Value * multiplier),
                         PachimonAttribute.Leaf);
+                    if (plant.EffectId == BattleFieldEffectId.BeatVine
+                        && target.IsAlive
+                        && plant.Definition is BeatVineFieldEffectAsset beatVine)
+                    {
+                        if (beatVine.PollenStatus == null)
+                            throw new InvalidOperationException(
+                                "Beat Vine requires a Pollen Definition.");
+                        var pollenValue = SignedStatMath.FloorNonNegative(
+                            plant.Value * beatVine.PollenValueRatio / 100m);
+                        if (pollenValue > 0)
+                        {
+                            _state.Statuses.ApplyStatus(
+                                target,
+                                BattleStatusFactory.CreatePollen(
+                                    plant.Source,
+                                    pollenValue,
+                                    beatVine.PollenStatus));
+                            _state.AddLog(
+                                $"{target.DisplayName}に花粉を{pollenValue}付与した！");
+                        }
+                    }
                     break;
             }
         }
@@ -1580,7 +1525,7 @@ namespace Pachimon.Battle
                     * toxinDefinition.DamagePerTickRatio / 100m;
                 var unroundedDamage = baseDamage
                     * SignedStatMath.ReductionMultiplier(
-                        barrier.DefenseSnapshot.GetAttribute(
+                        barrier.GetDefense(
                             PachimonAttribute.Poison))
                     * SignedStatMath.ReductionMultiplier(
                         barrier.GetEffectiveResistBonus());
@@ -1639,7 +1584,7 @@ namespace Pachimon.Battle
             }
 
             var multiplier = SignedStatMath.ReductionMultiplier(
-                effect.DefenseSnapshot.GetAttribute(defenseAttribute.Value));
+                effect.GetDefense(defenseAttribute.Value));
             if (status.StatusId == BattleStatusId.Toxin)
             {
                 var reducedToxin = new BattleStatusInstance(
@@ -1713,6 +1658,7 @@ namespace Pachimon.Battle
         {
             var incomingDamage = AttributeDamageCalculator.FinalizeNormalDamage(
                 unroundedDamage);
+            var valueBeforeHit = barrier.Value;
             var overflow = barrier.ApplyFireBarrierDamage(incomingDamage);
             var absorbed = incomingDamage - overflow;
             var damageEvent = new FieldEffectDamageAppliedEvent(
@@ -1727,7 +1673,7 @@ namespace Pachimon.Battle
             if (barrier.Definition is FireBarrierFieldEffectAsset definition)
             {
                 var burnValue = SignedStatMath.FloorNonNegative(
-                    barrier.Value * definition.ValueBurnRatio / 100m);
+                    valueBeforeHit * definition.ValueBurnRatio / 100m);
                 if (burnValue > 0)
                 {
                     _state.Statuses.ApplyStatus(

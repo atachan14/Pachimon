@@ -25,6 +25,7 @@ namespace Pachimon.UI
                 {
                     PachimonAttribute.Fire,
                     PachimonAttribute.Aqua,
+                    PachimonAttribute.Leaf,
                     PachimonAttribute.Wind,
                 },
                 AquaShockSkillAsset => new[]

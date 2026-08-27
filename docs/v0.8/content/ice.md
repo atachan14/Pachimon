@@ -85,10 +85,10 @@
 
 ```text
 気温低下Value
-= floor(BaseValue + Ice × 解決済IceRatio / 100)
+= floor(BaseValue × AmplificationMultiplier(Ice × 解決済IceRatio / 100))
 ```
 
-- 仮値は`BaseValue = 400`、`IceValueRatio = 100%`
+- 仮値は`BaseValue = 20`、`IceValueRatio = 100%`
 - 負の気温によるIce Ratio増加を受けるため、寒冷下で自己増幅する
 
 ##### [環境：気温 / 雪]
@@ -114,32 +114,31 @@
 - 名前:氷の大地
 - Implementation: `Implemented`
 - Passive ID: `30`
-- 効果:自身が生存中、全体フィールドにValue=氷の氷の大地を生成する。
+- 効果:自身が生存中、全体フィールドにValue=自身の氷の氷の大地を生成する。
 氷の地のValueは自身の氷に応じて変動する。
 
 氷の大地
-冷気が一定値を越えたとき、同じValueの[状態：凍結]に変化する。
+存在中、全Pachimonの冷気Value減衰を遅くする。
 
 ```text
-凍結閾値
-= max(1, floor(ThresholdNumerator / (氷の大地Value + ThresholdOffset)))
+冷気Value減衰量 / tick
+= 1 / (1 + 氷の大地Value / DurationDoubleValue)
+
+冷気の実質持続倍率
+= 1 + 氷の大地Value / DurationDoubleValue
 ```
 
-- 仮値は`ThresholdNumerator = 30000`、`ThresholdOffset = 200`
-- 氷の大地Value 100で閾値100、Value 200で閾値75
+- 仮値は`DurationDoubleValue = 500`
+- 氷の大地Value 400で約1.8倍、Value 500で2倍、Value 600で2.2倍持続する
+- 小数の減衰量は冷気Instanceごとに蓄積し、整数になった分だけ減算する
 - 複数の所持者がいる場合も氷の大地は1つだけ表示し、各所持者のValueを加算する
 - 所持者が戦闘不能になると、その所持者が加算していたValueだけを取り除く
 - 全所持者が戦闘不能になると氷の大地は消滅する
 - 各値は`FrozenGroundFieldEffectAsset`から調整可能にする
 
-変化
-付与時の軽減効果を受けない。
-
 ##### 凍結
 Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを受けたとき、受けた炎ダメージ/10だけ減少する。
 付与時、対象の氷によって軽減される。
-- 冷気からの変化では既存の冷気を全消費し、同じValueの凍結を付与する
-- 変化ではIceによる付与時軽減を再適用しない
 - 凍結中に凍結を追加した場合はValueを加算する
 - 炎Damageによる減少では、Shield適用後にHPへ実際に適用されたDamageを参照する
 
@@ -168,13 +167,20 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - 各値は`IceBladeSkillAsset`から調整可能にする
 
 [氷の刃]
-敵Pachimonが冷気を受けるとき、その値と同じ氷ダメージを同じ対象に与える。
-- 対象が実際に受け取った、Ice軽減後の冷気Valueを参照する
-- 氷の刃Damageには生成者のIce・DamageBonus・与Damage補正を再適用しない
+敵Pachimonが冷気を受けるとき、次の氷ダメージを同じ対象に与える。
+
+```text
+軽減前Ice Damage
+= 冷気の軽減前Value × 50% × AmplificationMultiplier(生成者Ice)
+```
+
+- 対象のIceによる冷気軽減前Valueを参照する
+- 氷の刃Damageには生成者のIceを式で1回だけ適用し、DamageBonus・与Damage補正は再適用しない
 - 対象のIce・ResistBonusによるDamage軽減は適用する
 - 氷の刃Damageは攻撃扱いにしない
 - 雪による冷気の追加付与対象にはしない
 - 追撃時はDamage表示の直前に`氷の刃の攻撃！`をBattle Logへ表示する
+- `DamagePercent = 50`は`IceBladeFieldEffectAsset`から調整可能にする
 
 #### Passive
 

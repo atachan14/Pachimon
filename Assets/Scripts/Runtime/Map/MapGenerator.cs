@@ -21,12 +21,14 @@ namespace Pachimon.Map
         private readonly ItemCatalog _itemCatalog;
         private readonly TrainerStyleCatalog _trainerStyleCatalog;
         private readonly TrainerNameCatalog _trainerNameCatalog;
+        private readonly PassiveStatModifierRegistry _passiveStatModifierRegistry;
 
         public MapGenerator(
             SkillCatalog skillCatalog,
             ItemCatalog itemCatalog,
             TrainerStyleCatalog trainerStyleCatalog,
             TrainerNameCatalog trainerNameCatalog,
+            PassiveStatModifierRegistry passiveStatModifierRegistry,
             MapGenerationSettings settings = null)
         {
             _skillCatalog = skillCatalog ?? throw new ArgumentNullException(nameof(skillCatalog));
@@ -35,6 +37,8 @@ namespace Pachimon.Map
                 ?? throw new ArgumentNullException(nameof(trainerStyleCatalog));
             _trainerNameCatalog = trainerNameCatalog
                 ?? throw new ArgumentNullException(nameof(trainerNameCatalog));
+            _passiveStatModifierRegistry = passiveStatModifierRegistry
+                ?? throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
             _settings = settings ?? new MapGenerationSettings();
         }
 
@@ -59,6 +63,7 @@ namespace Pachimon.Map
             AssignPachimon(rows, nodes, pachimonPool, random);
 
             var map = BuildRunMap(rows);
+            OrderNodePartiesByEffectiveDurability(map, pachimonPool);
             var skillDistributor = new MapSkillDistributor(
                 _skillCatalog,
                 _trainerStyleCatalog,
@@ -543,48 +548,83 @@ namespace Pachimon.Map
                 {
                     case NodeType.Start:
                         node.Content = new StartNodeContent(
-                            OrderPachimonByMaxHp(
-                                assignmentsByNode[node.NodeId],
-                                pachimonPool),
+                            assignmentsByNode[node.NodeId],
                             PartySize);
                         break;
                     case NodeType.Battle:
                         node.Content = new BattleNodeContent(
-                            OrderPachimonByMaxHp(
-                                assignmentsByNode[node.NodeId],
-                                pachimonPool),
+                            assignmentsByNode[node.NodeId],
                             node.NodeReward,
                             node.TrainerProfile);
                         break;
                     case NodeType.Gym:
                         node.Content = new GymNodeContent(
-                            OrderPachimonByMaxHp(
-                                assignmentsByNode[node.NodeId],
-                                pachimonPool),
+                            assignmentsByNode[node.NodeId],
                             node.NodeReward,
                             node.TrainerProfile);
                         break;
                     case NodeType.Elite:
                         node.Content = new EliteNodeContent(
-                            OrderPachimonByMaxHp(
-                                assignmentsByNode[node.NodeId],
-                                pachimonPool),
+                            assignmentsByNode[node.NodeId],
                             node.TrainerProfile);
                         break;
                 }
             }
         }
 
-        private static string[] OrderPachimonByMaxHp(
-            IEnumerable<string> instanceIds,
+        private void OrderNodePartiesByEffectiveDurability(
+            RunMap map,
             RunPachimonPool pachimonPool)
         {
-            return instanceIds
-                .OrderByDescending(instanceId =>
-                    pachimonPool.Get(instanceId)?.MaxHp
-                    ?? throw new MapGenerationException(
-                        $"Node content references missing Pachimon {instanceId}."))
-                .ToArray();
+            foreach (var node in map.Nodes.Values)
+            {
+                var instanceIds = GetOrderedPartyIds(node.Content);
+                if (instanceIds == null)
+                {
+                    continue;
+                }
+
+                var trainerModifiers = node.Content is StartNodeContent
+                    ? null
+                    : EnemyTrainerModifierFactory.Create(node);
+                var orderedIds = instanceIds
+                    .Select((instanceId, index) =>
+                    {
+                        var instance = pachimonPool.Get(instanceId)
+                            ?? throw new MapGenerationException(
+                                $"Node {node.NodeId} references missing Pachimon {instanceId}.");
+                        var stats = PachimonStatService.Calculate(
+                            instance,
+                            trainerModifiers,
+                            _passiveStatModifierRegistry);
+                        return new
+                        {
+                            InstanceId = instanceId,
+                            OriginalIndex = index,
+                            Stats = stats,
+                            Durability = PachimonDurabilityCalculator.Calculate(stats),
+                        };
+                    })
+                    .OrderByDescending(item => item.Durability)
+                    .ThenByDescending(item => item.Stats.MaxHp)
+                    .ThenBy(item => item.OriginalIndex)
+                    .Select(item => item.InstanceId)
+                    .ToArray();
+
+                Array.Copy(orderedIds, instanceIds, orderedIds.Length);
+            }
+        }
+
+        private static string[] GetOrderedPartyIds(NodeContent content)
+        {
+            return content switch
+            {
+                StartNodeContent start => start.CandidatePachimonInstanceIds,
+                BattleNodeContent battle => battle.EnemyPachimonInstanceIds,
+                GymNodeContent gym => gym.EnemyPachimonInstanceIds,
+                EliteNodeContent elite => elite.EnemyPachimonInstanceIds,
+                _ => null,
+            };
         }
 
         private bool TryAssignPachimon(
@@ -1177,10 +1217,10 @@ namespace Pachimon.Map
 
                 var entries = itemGroup.ToArray();
                 var minimumEffect = checked(
-                    ((healingItem.RecoveryPercent
+                    ((healingItem.RecoveryAmount
                         * CityStockGenerator.MinimumEffectPercent) + 99) / 100);
                 var maximumEffect = checked(
-                    (healingItem.RecoveryPercent
+                    (healingItem.RecoveryAmount
                         * CityStockGenerator.MaximumEffectPercent) / 100);
                 if (entries.Any(entry =>
                         !entry.GeneratedData.PrimaryEffectValue.HasValue
@@ -1188,7 +1228,7 @@ namespace Pachimon.Map
                         || entry.GeneratedData.PrimaryEffectValue.Value > maximumEffect)
                     || entries.Sum(entry =>
                         entry.GeneratedData.PrimaryEffectValue.Value)
-                        != healingItem.RecoveryPercent * entries.Length)
+                        != healingItem.RecoveryAmount * entries.Length)
                 {
                     throw new MapGenerationException(
                         $"City group {cityGroupId} Item {itemGroup.Key} effect values are invalid.");
@@ -1353,14 +1393,24 @@ namespace Pachimon.Map
             if (allEntries.Count(entry => entry.ItemId == ItemIds.Potion)
                     != CityStockGenerator.PotionTotalCopies
                 || allEntries.Count(entry => entry.ItemId == ItemIds.MnPotion)
-                    != CityStockGenerator.MnPotionTotalCopies)
+                    != CityStockGenerator.MnPotionTotalCopies
+                || allEntries.Count(entry => entry.ItemId == ItemIds.ReviveShard)
+                    != CityStockGenerator.ReviveShardTotalCopies
+                || allEntries.Count(entry => entry.ItemId == ItemIds.SkillForget)
+                    != CityStockGenerator.SkillForgetTotalCopies)
             {
                 throw new MapGenerationException(
-                    "City recovery Item distribution is invalid.");
+                    "City fixed Item distribution is invalid.");
             }
 
             foreach (var stock in cityStocks)
             {
+                if (!stock.Any(entry => entry.ItemId == ItemIds.SkillForget))
+                {
+                    throw new MapGenerationException(
+                        "Each City requires at least one Skill Forget Item.");
+                }
+
                 var equipmentCount = stock.Count(entry =>
                     _itemCatalog.Get(entry.ItemId) is EquipmentItemAsset);
                 if (equipmentCount != CityStockGenerator.EquipmentPerCity)
@@ -1373,12 +1423,18 @@ namespace Pachimon.Map
                     .Select(entry => _itemCatalog.Get(entry.ItemId))
                     .OfType<EngravingItemAsset>()
                     .Select(item => item.TargetStat)
+                    .Where(PachimonStatTypeUtility.IsGeneratedStat)
                     .Distinct()
                     .Count();
-                if (engravingStats != (int)PachimonStatType.Count)
+                var generatedStatCount = Enumerable.Range(
+                        0,
+                        (int)PachimonStatType.Count)
+                    .Select(index => (PachimonStatType)index)
+                    .Count(PachimonStatTypeUtility.IsGeneratedStat);
+                if (engravingStats != generatedStatCount)
                 {
                     throw new MapGenerationException(
-                        "Each City requires at least one Engraving for every Stat.");
+                        "Each City requires at least one Engraving for every generated Stat.");
                 }
 
                 var machines = stock
@@ -1399,7 +1455,10 @@ namespace Pachimon.Map
                 }
             }
 
-            foreach (var engraving in _itemCatalog.Items.OfType<EngravingItemAsset>())
+            foreach (var engraving in _itemCatalog.Items
+                         .OfType<EngravingItemAsset>()
+                         .Where(item => PachimonStatTypeUtility.IsGeneratedStat(
+                             item.TargetStat)))
             {
                 if (allEntries.Count(entry => entry.ItemId == engraving.ItemId)
                     != CityStockGenerator.EngravingCopiesPerStat)
@@ -1438,7 +1497,7 @@ namespace Pachimon.Map
             }
         }
 
-        private static void ValidateEnemyPartyOrder(
+        private void ValidateEnemyPartyOrder(
             RunMap map,
             RunPachimonPool pachimonPool)
         {
@@ -1456,19 +1515,29 @@ namespace Pachimon.Map
                     continue;
                 }
 
+                var trainerModifiers = EnemyTrainerModifierFactory.Create(node);
+                var previousDurability = decimal.MaxValue;
                 var previousMaxHp = int.MaxValue;
                 foreach (var instanceId in enemyIds)
                 {
                     var instance = pachimonPool.Get(instanceId)
                         ?? throw new MapGenerationException(
                             $"Node {node.NodeId} references missing Pachimon {instanceId}.");
-                    if (instance.MaxHp > previousMaxHp)
+                    var stats = PachimonStatService.Calculate(
+                        instance,
+                        trainerModifiers,
+                        _passiveStatModifierRegistry);
+                    var durability = PachimonDurabilityCalculator.Calculate(stats);
+                    if (durability > previousDurability
+                        || durability == previousDurability
+                        && stats.MaxHp > previousMaxHp)
                     {
                         throw new MapGenerationException(
-                            $"Node {node.NodeId} Enemy party is not ordered by MaxHP.");
+                            $"Node {node.NodeId} Enemy party is not ordered by effective durability.");
                     }
 
-                    previousMaxHp = instance.MaxHp;
+                    previousDurability = durability;
+                    previousMaxHp = stats.MaxHp;
                 }
             }
         }
@@ -1601,9 +1670,6 @@ namespace Pachimon.Map
                      {
                          RewardElementKind.MaxHp,
                          RewardElementKind.MaxMn,
-                         RewardElementKind.Speed,
-                         RewardElementKind.DamageBonus,
-                         RewardElementKind.ResistBonus,
                      })
             {
                 if (firstElements.Count(element => element.Kind == kind)

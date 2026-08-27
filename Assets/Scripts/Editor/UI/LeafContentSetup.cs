@@ -186,7 +186,7 @@ namespace Pachimon.Editor.UI
                 null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

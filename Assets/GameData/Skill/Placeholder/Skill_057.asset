@@ -20,17 +20,16 @@ MonoBehaviour:
   _baseRecoveryTicks: 120
   _baseCooldownTicks: 300
   _baseManaCost: 40
-  _description: "敵の先頭へ{icon:Fire}{color:Fire}{value:damage}{/color}の炎ダメージを与える。この攻撃は{value:penetration}%貫通し、値{value:weakness}の弱点を付与する。"
+  _description: "\u6575\u306E\u5148\u982D\u3078{color:Fire}{value:damage}{/color}\u306E{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002\u3053\u306E\u653B\u6483\u306FFire\u3092{value:penetration}%\u8CAB\u901A\u3059\u308B\uFF08\u8CAB\u901AValue
+    {value:penetrationValue}\uFF09\u3002\u5024{value:weakness}\u306E\u5F31\u70B9\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _baseFireDamage: 70
   _fireDamageRatio: 100
   _baseAquaDamage: 70
   _aquaDamageRatio: 100
-  _baseFirePenetration: 20
-  _firePenetrationRatio: 100
-  _baseAquaPenetration: 20
-  _aquaPenetrationRatio: 100
-  _baseFireWeakness: 10
+  _firePenetrationRatio: 10
+  _aquaPenetrationRatio: 10
+  _baseFireWeakness: 3
   _fireWeaknessRatio: 100
-  _baseAquaWeakness: 10
+  _baseAquaWeakness: 3
   _aquaWeaknessRatio: 100
   _weaknessStatus: {fileID: 11400000, guid: 8704caba705a10c4a9ad36050d1688ac, type: 2}

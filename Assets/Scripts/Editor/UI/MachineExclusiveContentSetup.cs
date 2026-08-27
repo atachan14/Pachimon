@@ -110,14 +110,14 @@ namespace Pachimon.Editor.UI
             var triAttack = GetOrCreate<TriAttackSkillAsset>(
                 $"{SkillFolder}/Skill_1000_TriAttack.asset");
             triAttack.ConfigureForEditor(
-                1000, 100, 100, 200, 20, 100, 100,
+                1000, 100, 100, 200, 20, 50, 100,
                 "先頭の敵へ、最も高い3つの属性値を参照した3属性のDamageを与える。");
 
             var bodySlam = GetOrCreate<BodySlamSkillAsset>(
                 $"{SkillFolder}/Skill_1001_BodySlam.asset");
             bodySlam.ConfigureForEditor(
-                1001, 100, 100, 200, 20, 10,
-                "先頭の敵へ、自身のCurrentHPの10%のTrue Damageを与える。");
+                1001, 100, 100, 200, 20, 5,
+                "先頭の敵へ、自身のCurrentHPの5%のTrue Damageを与える。");
 
             var fakeOut = GetOrCreate<FakeOutSkillAsset>(
                 $"{SkillFolder}/Skill_1002_FakeOut.asset");
@@ -128,8 +128,8 @@ namespace Pachimon.Editor.UI
             var destructionBeam = GetOrCreate<DestructionBeamSkillAsset>(
                 $"{SkillFolder}/Skill_1006_DestructionBeam.asset");
             destructionBeam.ConfigureForEditor(
-                1006, 100, 500, 1000, 100, 50,
-                "先頭の敵へ、対象のMaxHPの50%のTrue Damageを与える。");
+                1006, 100, 500, 1000, 100, 25,
+                "先頭の敵へ、対象のMaxHPの25%のTrue Damageを与える。");
 
             var sexyPose = GetOrCreate<SexyPoseSkillAsset>(
                 $"{SkillFolder}/Skill_1003_SexyPose.asset");
@@ -152,8 +152,8 @@ namespace Pachimon.Editor.UI
             var spiritBomb = GetOrCreate<SpiritBombSkillAsset>(
                 $"{SkillFolder}/Skill_1007_SpiritBomb.asset");
             spiritBomb.ConfigureForEditor(
-                1007, 20, 4,
-                "生存している味方全員のCurrentMNを20%ずつ消費し、合計消費MNの4倍のTrue Damageを敵全体へ分散する。");
+                1007, 20, 2,
+                "生存している味方全員のCurrentMNを20%ずつ消費し、合計消費MNの2倍のTrue Damageを敵全体へ分散する。");
 
             var plantRage = GetOrCreate<PlantRageSkillAsset>(
                 $"{SkillFolder}/Skill_1010_PlantRage.asset");
@@ -163,7 +163,7 @@ namespace Pachimon.Editor.UI
             var chainThunder = GetOrCreate<ChainThunderSkillAsset>(
                 $"{SkillFolder}/Skill_1011_ChainThunder.asset");
             chainThunder.ConfigureForEditor(
-                1011, 100, 120, 300, 80, 80, 100,
+                1011, 100, 120, 300, 80, 40, 100,
                 "Battle中に発生したElectric Damage回数だけ追加連鎖するElectric Damageを与える。");
             var deathmatch = GetOrCreate<DeathmatchSkillAsset>(
                 $"{SkillFolder}/Skill_1012_Deathmatch.asset");
@@ -173,12 +173,12 @@ namespace Pachimon.Editor.UI
             var freezing = GetOrCreate<FreezingSkillAsset>(
                 $"{SkillFolder}/Skill_1013_Freezing.asset");
             freezing.ConfigureForEditor(
-                1013, 100, 100, 300, 60, freeze,
-                "先頭の敵の冷気を解除し、同値の凍結とTrue Damageを与える。");
+                1013, 100, 100, 300, 60, 50, freeze,
+                "先頭の敵の冷気を解除し、同値の凍結と冷気の50%のTrue Damageを与える。");
             var windGod = GetOrCreate<WindGodSkillAsset>(
                 $"{SkillFolder}/Skill_1014_WindGod.asset");
             windGod.ConfigureForEditor(
-                1014, 100, 150, 400, 100, 500, 100, 300,
+                1014, 100, 150, 400, 100, 250, 100, 300,
                 windGodStatus,
                 "先頭の敵へWind Damageを与え、300tickの間、自身の全属性値とRBを0にする。");
             var dragonInstall = GetOrCreate<DragonInstallSkillAsset>(
@@ -285,7 +285,7 @@ namespace Pachimon.Editor.UI
             var cooldown = machine.BaseCooldownTicks;
             var mana = machine.BaseManaCost;
             var description = machine.Description;
-            var basePower = machine.BasePower;
+            var baseDamage = machine.BaseDamage;
             var fireRatio = machine.FireScalingPercent;
             machine.ConfigureForEditor(
                 1008,
@@ -294,7 +294,7 @@ namespace Pachimon.Editor.UI
                 cooldown,
                 mana,
                 description,
-                basePower,
+                baseDamage,
                 fireRatio,
                 isMapAssignable: false,
                 baseStartupTicks: startup);
@@ -310,6 +310,12 @@ namespace Pachimon.Editor.UI
                 41, 100, 100, 300, 60,
                 100, 100, 300, 100, 20, 100, burn,
                 "自身へFire Damage。その後、生存していれば先頭の敵へFire Damageと火傷を与える。");
+            replacement.SetDescriptionTemplateForEditor(
+                "自身に{color:Fire}{value:selfDamage}{/color}（{value:selfBaseDamage} × {icon:Fire}）の"
+                + "{icon:Fire}{color:Fire}ダメージ{/color}を与える。自身が生存した場合、"
+                + "敵の先頭に{color:Fire}{value:enemyDamage}{/color}（{value:enemyBaseDamage} × {icon:Fire}）の"
+                + "{icon:Fire}{color:Fire}ダメージ{/color}と{color:Fire}{value:burn}{/color}"
+                + "（{value:baseBurn} × {icon:Fire}）の火傷を与える。");
             return (machine, replacement);
         }
 
@@ -405,7 +411,7 @@ namespace Pachimon.Editor.UI
                 null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

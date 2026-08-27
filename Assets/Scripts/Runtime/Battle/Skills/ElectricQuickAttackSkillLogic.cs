@@ -20,21 +20,12 @@ namespace Pachimon.Battle
             ValidateSkill(context);
             var target = GetTarget(context);
             var hit = context.BeginAttackHit(target);
-            var electricResult = ResolveComponent(
-                context,
-                target,
-                PachimonAttribute.Electric,
-                hit);
-            var fireResult = ResolveComponent(
-                context,
-                target,
-                PachimonAttribute.Fire,
-                hit);
+            var result = ResolveDamage(context, target, hit);
             var effects = new[]
                 {
                     new SkillEffectResult(
                         hit.Target,
-                        checked(electricResult.AppliedDamage + fireResult.AppliedDamage),
+                        result.AppliedDamage,
                         isTrueDamage: false,
                         hit: hit),
                 };
@@ -44,66 +35,38 @@ namespace Pachimon.Battle
                 effects);
         }
 
-        public DamageCalculationResult CalculateComponent(
+        public DamageCalculationResult CalculateDamage(
             BattleUnitState user,
-            BattleUnitState target,
-            PachimonAttribute attribute)
-        {
-            return CalculateComponent(state: null, user, target, attribute);
-        }
-
-        private DamageCalculationResult CalculateComponent(
-            BattleState state,
-            BattleUnitState user,
-            BattleUnitState target,
-            PachimonAttribute attribute)
+            BattleUnitState target)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (target == null) throw new ArgumentNullException(nameof(target));
 
-            var statType = PachimonStatTypeUtility.FromAttribute(attribute);
-            var attributeValue = user.GetBattleStatValue(statType);
-            var baseDamage = attribute switch
-            {
-                PachimonAttribute.Electric =>
-                    ElectricQuickAttackMath.CalculateElectricBaseDamage(
-                        _skill,
-                        attributeValue),
-                PachimonAttribute.Fire =>
-                    ElectricQuickAttackMath.CalculateFireBaseDamage(
-                        _skill,
-                        attributeValue,
-                        state?.ResolveAttributeRatio(
-                            PachimonAttribute.Fire,
-                            100m) ?? 100m),
-                _ => throw new ArgumentOutOfRangeException(nameof(attribute)),
-            };
+            var electric = user.GetBattleStatValue(PachimonStatType.Electric);
+            var baseDamage = ElectricQuickAttackMath.CalculateElectricBaseDamage(
+                _skill,
+                electric);
             return AttributeDamageCalculator.Calculate(new DamageContext(
                 DamageOriginKind.Skill,
                 _skill.SkillId,
                 baseDamage,
                 user.GetBattleStats(),
                 target.GetBattleStats(),
-                attribute,
+                PachimonAttribute.Electric,
                 isAttack: true,
                 applyAttackerAttributeMultiplier: false));
         }
 
-        private BattleDamageApplicationResult ResolveComponent(
+        private BattleDamageApplicationResult ResolveDamage(
             SkillExecutionContext context,
             BattleUnitState target,
-            PachimonAttribute attribute,
             SkillHit hit)
         {
             return BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
                 target,
-                CalculateComponent(
-                    context.State,
-                    context.User,
-                    target,
-                    attribute).Context,
+                CalculateDamage(context.User, target).Context,
                 hit);
         }
 

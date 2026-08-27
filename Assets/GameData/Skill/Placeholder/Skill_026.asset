@@ -20,5 +20,6 @@ MonoBehaviour:
   _baseRecoveryTicks: 20
   _baseCooldownTicks: 120
   _baseManaCost: 0
-  _description: "次に使用するSkillの{icon:Aqua}水を{value:aquaMultiplier}%にし、MN消費を水に応じて軽減する。現在のMN消費倍率は{value:currentManaMultiplier}倍。Skill効果解決後に消費する。"
+  _description: "\u6B21\u306B\u4F7F\u7528\u3059\u308BSkill\u306E{icon:Aqua}\u6C34\u3092{value:aquaMultiplier}%\u306B\u3057\u3001MN\u6D88\u8CBB\u3092\u6C34\u306B\u5FDC\u3058\u3066\u8EFD\u6E1B\u3059\u308B\u3002\u73FE\u5728\u306EMN\u6D88\u8CBB\u500D\u7387\u306F{value:currentManaMultiplier}\u500D\uFF08100
+    \xF7\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:manaReductionRatio}%\uFF09\uFF09\u3002Skill\u52B9\u679C\u89E3\u6C7A\u5F8C\u306B\u6D88\u8CBB\u3059\u308B\u3002"
   _statusDefinition: {fileID: 11400000, guid: d0260000000000000000000000000001, type: 2}

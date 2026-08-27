@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce830a957e4041d589f05d2a6eb96512, type: 3}
   m_Name: SkillCatalog
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.SkillCatalog
+  _temperatureEnvironment: {fileID: 11400000, guid: 6a490000000000000000000000000001, type: 2}
+  _precipitationEnvironment: {fileID: 11400000, guid: 64c8822d2d084587b332417a7b4ea895, type: 2}
+  _windEnvironment: {fileID: 11400000, guid: 4cef4aff193845a19bdb2c7d6aca4c59, type: 2}
+  _moistureEnvironment: {fileID: 11400000, guid: 64d73cb3679f4df587855ea41eff42cc, type: 2}
+  _plasmaEnvironment: {fileID: 11400000, guid: a113d988169f40d5a14c66a1e04dc5b8, type: 2}
   _skills:
   - {fileID: 11400000, guid: 6de3973905690d04589b7092991f84b1, type: 2}
   - {fileID: 11400000, guid: f93ba8bd029f85542a4781f28f8c8ed5, type: 2}

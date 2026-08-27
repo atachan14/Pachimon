@@ -14,6 +14,7 @@ namespace Pachimon.Battle
             ISkillLogic logic,
             bool spendMana,
             int skillSlotId = 0,
+            int upgradeLevel = 0,
             int resolutionCount = 1)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
@@ -28,7 +29,8 @@ namespace Pachimon.Battle
                 ? BattleSkillManaCostCalculator.CreatePlan(
                     snapshot.State,
                     simulationUser,
-                    skill)
+                    skill,
+                    upgradeLevel)
                 : new BattleSkillManaSpendPlan(0, 0m);
             var manaSpent = manaPlan.Actual;
             if (spendMana
@@ -78,7 +80,8 @@ namespace Pachimon.Battle
                 SkillTimingCalculator.CreatePlan(
                     skill,
                     simulationUser,
-                    snapshot.State),
+                    snapshot.State,
+                    upgradeLevel),
                 wasTargetUnavailable);
         }
     }

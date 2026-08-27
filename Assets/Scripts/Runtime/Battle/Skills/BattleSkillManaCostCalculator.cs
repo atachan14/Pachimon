@@ -20,7 +20,8 @@ namespace Pachimon.Battle
     {
         public static BattleSkillManaSpendPlan CreatePlan(
             BattleUnitState user,
-            SkillAsset skill)
+            SkillAsset skill,
+            int upgradeLevel = 0)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (skill == null) throw new ArgumentNullException(nameof(skill));
@@ -32,9 +33,12 @@ namespace Pachimon.Battle
                     1,
                     SignedStatMath.FloorNonNegative(
                         user.MaxMn * regularWaterPulse.MaxMnCostPercent / 100m));
+                var upgradedCost = SkillUpgradeMath.ScaleManaCost(
+                    baseCost,
+                    upgradeLevel);
                 return new BattleSkillManaSpendPlan(
-                    SignedStatMath.CeilPositive(baseCost * multiplier),
-                    baseCost);
+                    SignedStatMath.CeilPositive(upgradedCost * multiplier),
+                    upgradedCost);
             }
             if (skill.ConsumesAllCurrentMana)
             {
@@ -43,18 +47,22 @@ namespace Pachimon.Battle
                     user.CurrentMn / multiplier);
             }
 
+            var upgradedManaCost = SkillUpgradeMath.ScaleManaCost(
+                skill.BaseManaCost,
+                upgradeLevel);
             var actual = SignedStatMath.CeilPositive(
-                skill.BaseManaCost * multiplier);
-            return new BattleSkillManaSpendPlan(actual, skill.BaseManaCost);
+                upgradedManaCost * multiplier);
+            return new BattleSkillManaSpendPlan(actual, upgradedManaCost);
         }
 
         public static BattleSkillManaSpendPlan CreatePlan(
             BattleState state,
             BattleUnitState user,
-            SkillAsset skill)
+            SkillAsset skill,
+            int upgradeLevel = 0)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
-            var defaultPlan = CreatePlan(user, skill);
+            var defaultPlan = CreatePlan(user, skill, upgradeLevel);
             if (skill is not WaterPulseSkillAsset waterPulse
                 || user.CurrentMn <= 0)
             {
@@ -149,15 +157,17 @@ namespace Pachimon.Battle
 
         private static decimal ResolveCostMultiplier(BattleUnitState user)
         {
+            var multiplier = 1m;
             var launch = user.GetStatus(BattleStatusId.LaunchCeremony);
             if (launch?.Definition is not LaunchCeremonyStatusAsset definition)
             {
-                return 1m;
+                return multiplier;
             }
 
             var scaledAqua = user.GetBattleStatValue(PachimonStatType.Aqua)
                 * definition.ManaReductionAquaRatio / 100m;
-            return SignedStatMath.ReductionMultiplier(scaledAqua);
+            return multiplier
+                * SignedStatMath.ReductionMultiplier(scaledAqua);
         }
     }
 }

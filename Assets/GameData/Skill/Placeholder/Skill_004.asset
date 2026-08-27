@@ -20,11 +20,12 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 20
-  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:damage}{/color}\u306E{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _description: "\u6575\u306E\u5148\u982D\u306B{color:Electric}{value:damage}{/color}\uFF08{value:baseDamage}
+    \xD7\uFF08100 + {icon:Electric}{value:attribute} \xD7 {value:ratio}%\uFF09%\uFF09\u306E{icon:Electric}{color:Electric}\u30C0\u30E1\u30FC\u30B8{/color}\u3068\u3001{value:statusDuration}tick\uFF08{value:statusDurationBase}
+    \xD7\uFF08100 + {icon:Ice}{value:statusDurationAttribute} \xD7 {value:statusDurationRatio}%\uFF09%\uFF09\u3001\u5024{value:statusValue}\uFF08{value:statusBaseValue}
+    \xD7\uFF08100 + {icon:Electric}{value:attribute} \xD7 {value:statusRatio}%\uFF09%\uFF09\u306E{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _baseDamage: 150
   _damageRatio: 100
-  _electricParalysisBaseValue: 50
-  _electricParalysisRatio: 100
-  _iceParalysisBaseValue: 25
-  _iceParalysisRatio: 100
+  _paralysisBaseValue: 80
+  _paralysisBaseDurationTicks: 50
   _paralysisStatus: {fileID: 11400000, guid: e83333335ac350ac91f5513dee8023e3, type: 2}

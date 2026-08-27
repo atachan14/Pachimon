@@ -72,6 +72,8 @@ namespace Pachimon.Run
 
         public RunContext Context { get; private set; }
 
+        public long? ActiveBattleTick => _activeBattleState?.CurrentTick;
+
         public void StartRun(RunContext context)
         {
             Context = context;
@@ -555,7 +557,7 @@ namespace Pachimon.Run
             switch (node.Content)
             {
                 case BattleNodeContent battle:
-                    var battleModifiers = BuildEnemyTrainerModifiers(node);
+                    var battleModifiers = EnemyTrainerModifierFactory.Create(node);
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(
                             battle.TrainerProfile,
@@ -567,7 +569,7 @@ namespace Pachimon.Run
                         battleModifiers);
                     break;
                 case GymNodeContent gym:
-                    var gymModifiers = BuildEnemyTrainerModifiers(node);
+                    var gymModifiers = EnemyTrainerModifierFactory.Create(node);
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(
                             gym.TrainerProfile,
@@ -579,7 +581,7 @@ namespace Pachimon.Run
                         gymModifiers);
                     break;
                 case EliteNodeContent elite:
-                    var eliteModifiers = BuildEnemyTrainerModifiers(node);
+                    var eliteModifiers = EnemyTrainerModifierFactory.Create(node);
                     ShowBattleNodeDetails(
                         BuildTrainerPreview(
                             elite.TrainerProfile,
@@ -736,6 +738,7 @@ namespace Pachimon.Run
             modifiers ??= new TrainerModifierSet();
             return Enumerable.Range(0, (int)PachimonStatType.Count)
                 .Select(index => (PachimonStatType)index)
+                .Where(PachimonStatTypeUtility.IsGeneratedStat)
                 .Select(statType => new TrainerStatPreview(
                     statType,
                     modifiers.GetStatAddition(statType)))
@@ -754,89 +757,6 @@ namespace Pachimon.Run
                     modifiers.GetBadgeCount(attribute)))
                 .Where(preview => includeEmptySlots || preview.Count > 0)
                 .ToArray();
-        }
-
-        private static TrainerModifierSet BuildEnemyTrainerModifiers(MapNode node)
-        {
-            var modifiers = new TrainerModifierSet();
-            switch (node?.Content)
-            {
-                case BattleNodeContent battle:
-                    ApplyRewardTrainerStatus(modifiers, battle.NodeReward);
-                    break;
-                case GymNodeContent gym
-                    when gym.NodeReward?.BadgeAttribute is PachimonAttribute attribute:
-                    modifiers.AddBadge(attribute);
-                    break;
-                case EliteNodeContent:
-                    foreach (PachimonAttribute eliteAttribute in
-                             Enum.GetValues(typeof(PachimonAttribute)))
-                    {
-                        modifiers.AddBadge(eliteAttribute);
-                    }
-                    break;
-            }
-
-            ApplyEnemyRowTrainerStatus(modifiers, node);
-            return modifiers;
-        }
-
-        private static void ApplyRewardTrainerStatus(
-            TrainerModifierSet modifiers,
-            NodeReward reward)
-        {
-            if (modifiers == null || reward == null)
-            {
-                return;
-            }
-
-            for (var index = 0; index < reward.Elements.Count; index++)
-            {
-                var element = reward.Elements[index];
-                if (element == null || element.Kind == RewardElementKind.BonusGold)
-                {
-                    continue;
-                }
-
-                var statType = element.Kind switch
-                {
-                    RewardElementKind.Attribute when element.Attribute.HasValue =>
-                        PachimonStatTypeUtility.FromAttribute(element.Attribute.Value),
-                    RewardElementKind.MaxHp => PachimonStatType.MaxHp,
-                    RewardElementKind.MaxMn => PachimonStatType.MaxMn,
-                    RewardElementKind.Speed => PachimonStatType.Speed,
-                    RewardElementKind.DamageBonus => PachimonStatType.DamageBonus,
-                    RewardElementKind.ResistBonus => PachimonStatType.ResistBonus,
-                    _ => PachimonStatType.Count,
-                };
-                if (statType == PachimonStatType.Count)
-                {
-                    continue;
-                }
-
-                modifiers.AddStat(
-                    statType,
-                    ModValueSettings.RuntimeDefault.GetAmount(
-                        element.Kind,
-                        index == 1));
-            }
-        }
-
-        private static void ApplyEnemyRowTrainerStatus(
-            TrainerModifierSet modifiers,
-            MapNode node)
-        {
-            var profile = node?.Content switch
-            {
-                BattleNodeContent battle => battle.TrainerProfile,
-                GymNodeContent gym => gym.TrainerProfile,
-                EliteNodeContent elite => elite.TrainerProfile,
-                _ => null,
-            };
-            EnemyTrainerScalingService.Apply(
-                modifiers,
-                node?.RowIndex ?? 0,
-                profile);
         }
 
         private static IReadOnlyList<TrainerRewardIconContent> BuildTrainerRewardIcons(
@@ -1423,6 +1343,8 @@ namespace Pachimon.Run
                 TryPurchaseCityItems,
                 TryApplyCityEngravings,
                 TryTeachCitySkill,
+                TryForgetCitySkill,
+                ShowCitySkillDetails,
                 TryEquipCityItem,
                 CompleteCurrentNode);
             _rightPaneView?.ShowCityShop(
@@ -1440,11 +1362,27 @@ namespace Pachimon.Run
                 .Select(instance =>
                 {
                     var definition = Context.PachimonCatalog.Get(instance.SpeciesId);
+                    var owner = BuildPachimonPreview(instance.InstanceId, true);
+                    var skills = instance.SkillSlots.Select(slot =>
+                    {
+                        var skill = Context.SkillCatalog.Get(slot.SkillId);
+                        return new CitySkillOption(
+                            slot.SlotId,
+                            new PachimonAbilityPreview(
+                                PachimonAbilityKind.Skill,
+                                slot.SkillId,
+                                SkillUpgradeMath.FormatDisplayName(
+                                    skill?.DisplayName ?? $"Skill #{slot.SkillId}",
+                                    slot.UpgradeLevel),
+                                skill,
+                                slot.UpgradeLevel),
+                            owner);
+                    });
                     return new CityPachimonOption(
                         instance.InstanceId,
                         definition?.DisplayName ?? $"Pachimon {instance.SpeciesId}",
                         definition?.FrontSprite,
-                        instance.SkillIds.Count,
+                        skills,
                         instance.Equipment.Keys);
                 })
                 .ToArray();
@@ -1514,11 +1452,16 @@ namespace Pachimon.Run
 
             foreach (var entry in entries)
             {
+                var engraving = (EngravingItemAsset)Context.ItemCatalog.Get(entry.ItemId);
                 ApplyPermanentCityChanges(
                     target,
                     entry.GeneratedData.StatChanges,
                     $"city:{entry.StockId}",
-                    Context.ItemCatalog.Get(entry.ItemId).DisplayName);
+                    engraving.DisplayName);
+                target.RecordAppliedEngraving(
+                    engraving.ItemId,
+                    engraving.DisplayName,
+                    entry.GeneratedData);
             }
             CommitCityStock(entries, totalPrice);
             RefreshPlayerPartyPane();
@@ -1535,6 +1478,9 @@ namespace Pachimon.Run
             }
 
             var target = Context.PachimonPool.Get(targetInstanceId);
+            var previousLevel = target?.SkillSlots
+                .FirstOrDefault(slot => slot.SkillId == machine.SkillId)
+                ?.UpgradeLevel;
             if (target == null || !target.AddSkill(machine.SkillId))
             {
                 ShowCurrentCityShop("これ以上おぼえられない。");
@@ -1543,7 +1489,47 @@ namespace Pachimon.Run
 
             CommitCityStock(new[] { entry }, totalPrice);
             RefreshPlayerPartyPane();
-            ShowCurrentCityShop($"{machine.Skill.DisplayName}を習得しました。");
+            ShowCurrentCityShop(previousLevel.HasValue
+                ? $"{machine.Skill.DisplayName}を+{previousLevel.Value + 1}に強化しました。"
+                : $"{machine.Skill.DisplayName}を習得しました。");
+        }
+
+        private void ShowCitySkillDetails(CitySkillOption option)
+        {
+            if (option == null)
+            {
+                return;
+            }
+
+            _gameRootView?.ShowAbilityDetails(option.Ability, option.Owner);
+        }
+
+        private void TryForgetCitySkill(
+            CityStockEntry entry,
+            string targetInstanceId,
+            int slotId)
+        {
+            if (!TryValidateCityTransaction(new[] { entry }, out var totalPrice, out var error)
+                || Context.ItemCatalog.Get(entry.ItemId) is not SkillForgetItemAsset)
+            {
+                ShowCurrentCityShop(error ?? "Skillを忘れられませんでした。");
+                return;
+            }
+
+            var target = Context.PachimonPool.Get(targetInstanceId);
+            var slot = target?.SkillSlots.FirstOrDefault(candidate => candidate.SlotId == slotId);
+            var skill = slot == null ? null : Context.SkillCatalog.Get(slot.SkillId);
+            if (target == null
+                || slot == null
+                || !target.TryForgetSkillSlot(slotId, out _))
+            {
+                ShowCurrentCityShop("忘れるSkillが見つかりませんでした。");
+                return;
+            }
+
+            CommitCityStock(new[] { entry }, totalPrice);
+            RefreshPlayerPartyPane();
+            ShowCurrentCityShop($"{skill?.DisplayName ?? $"Skill #{slot.SkillId}"}を忘れました。");
         }
 
         private void TryEquipCityItem(CityStockEntry entry, string targetInstanceId)
@@ -1702,9 +1688,10 @@ namespace Pachimon.Run
             var stateFactory = new BattleStateFactory(
                 Context.PachimonPool,
                 Context.PachimonCatalog,
+                Context.SkillCatalog,
                 Context.PassiveCatalog,
                 Context.PassiveStatModifierRegistry);
-            var enemyModifiers = BuildEnemyTrainerModifiers(node);
+            var enemyModifiers = EnemyTrainerModifierFactory.Create(node);
             var battleState = stateFactory.Create(
                 CreateBattleSeed(node),
                 Context.RunState.PlayerPachimonIds,
@@ -1756,7 +1743,8 @@ namespace Pachimon.Run
                         unit,
                         Context.PachimonCatalog,
                         Context.SkillCatalog,
-                        Context.PassiveCatalog))
+                        Context.PassiveCatalog,
+                        Context.PachimonPool.Get(unit.InstanceId)))
                     .ToArray());
             _rightPaneView?.ShowBattleStatus(
                 enemyTrainerPreview,
@@ -1765,7 +1753,8 @@ namespace Pachimon.Run
                         unit,
                         Context.PachimonCatalog,
                         Context.SkillCatalog,
-                        Context.PassiveCatalog))
+                        Context.PassiveCatalog,
+                        Context.PachimonPool.Get(unit.InstanceId)))
                     .ToArray());
             _leftPaneView?.PartyWindow?.ShowTab(leftSelectedTab);
             rightWindow?.ShowTab(rightSelectedTab);
@@ -1844,6 +1833,11 @@ namespace Pachimon.Run
                         definition?.FrontSprite);
                 })
                 .ToArray();
+            var itemChoices = new[]
+            {
+                BuildRewardItemChoice(ItemIds.Potion),
+                BuildRewardItemChoice(ItemIds.MnPotion),
+            };
 
             _mainPaneView.LogWindowView?.ClearOptions();
             _battleScreen.RewardOverlayView.Present(
@@ -1852,11 +1846,18 @@ namespace Pachimon.Run
                     session.UsesBadge,
                     sources,
                     targets,
+                    itemChoices,
                     slot => ClaimImmediateReward(session, slot),
                     (kind, rewardId, targetId) =>
                         CanGrantPachimonReward(session, kind, rewardId, targetId),
                     (kind, rewardId, targetId) =>
                         GrantPachimonReward(session, kind, rewardId, targetId),
+                    session.CanClaimItem,
+                    itemId => ClaimRewardItem(session, itemId),
+                    choice => _gameRootView?.ShowAbilityDetails(
+                        choice.Ability,
+                        choice.Owner),
+                    session.AbandonRemaining,
                     () =>
                     {
                         if (!session.IsComplete)
@@ -1870,9 +1871,24 @@ namespace Pachimon.Run
                     }));
         }
 
+        private RewardItemChoiceContent BuildRewardItemChoice(int itemId)
+        {
+            var item = Context.ItemCatalog.Get(itemId);
+            return new RewardItemChoiceContent(
+                itemId,
+                item?.DisplayName ?? $"Item #{itemId}",
+                BattleRewardSession.RewardItemRecoveryAmount);
+        }
+
         private RewardSourcePachimonContent BuildRewardSource(BattleUnitState unit)
         {
             var definition = Context.PachimonCatalog.Get(unit.SpeciesId);
+            var owner = PachimonPreviewFactory.FromBattleUnit(
+                unit,
+                Context.PachimonCatalog,
+                Context.SkillCatalog,
+                Context.PassiveCatalog,
+                Context.PachimonPool.Get(unit.InstanceId));
             return new RewardSourcePachimonContent(
                 unit.DisplayName,
                 definition?.FrontSprite,
@@ -1881,7 +1897,13 @@ namespace Pachimon.Run
                     var skill = Context.SkillCatalog.Get(skillId);
                     return new RewardChoiceContent(
                         skillId,
-                        skill?.DisplayName ?? $"Skill #{skillId}");
+                        skill?.DisplayName ?? $"Skill #{skillId}",
+                        new PachimonAbilityPreview(
+                            PachimonAbilityKind.Skill,
+                            skillId,
+                            skill?.DisplayName ?? $"Skill #{skillId}",
+                            skill),
+                        owner);
                 }),
                 unit.PassiveIds.Select(passiveId =>
                 {
@@ -1889,7 +1911,14 @@ namespace Pachimon.Run
                         is { } statDefinition
                             ? statDefinition.DisplayName
                             : AttributePlaceholderName.FromCyclicId(passiveId);
-                    return new RewardChoiceContent(passiveId, displayName);
+                    return new RewardChoiceContent(
+                        passiveId,
+                        displayName,
+                        new PachimonAbilityPreview(
+                            PachimonAbilityKind.Passive,
+                            passiveId,
+                            displayName),
+                        owner);
                 }));
         }
 
@@ -1939,6 +1968,19 @@ namespace Pachimon.Run
             }
 
             return granted;
+        }
+
+        private bool ClaimRewardItem(
+            BattleRewardSession session,
+            int itemId)
+        {
+            if (!session.ClaimItem(itemId))
+            {
+                return false;
+            }
+
+            _gameRootView?.RefreshItemPanel(true);
+            return true;
         }
 
         private int CreateBattleSeed(MapNode node)

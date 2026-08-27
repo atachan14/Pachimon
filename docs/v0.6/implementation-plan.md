@@ -11,7 +11,7 @@
 ## Phase 1: Item Domain
 
 1. [完了] Item ID、Item Instance、Inventoryを作る
-2. [完了] 最大9Slotと非Stackを実装する
+2. [完了] 最大6SlotとSkill重複禁止を実装する
 3. [完了] Item Logicと対象ルールを分離する
 4. [完了] Run用とBattle用の使用Contextを作る
 5. [完了] `きずぐすり`のLogicを実装する

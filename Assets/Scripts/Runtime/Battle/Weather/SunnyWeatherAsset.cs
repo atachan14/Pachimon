@@ -8,17 +8,24 @@ namespace Pachimon.Battle
         menuName = "Pachimon/Environment/Temperature")]
     public sealed class SunnyWeatherAsset : BattleWeatherAsset
     {
-        [SerializeField, Min(0)] private int _fireRatioScalingPercent = 10;
-        [SerializeField, Min(0)] private int _aquaRatioScalingPercent = 20;
-        [SerializeField, Min(0)] private int _iceRatioScalingPercent = 20;
-        [SerializeField, Min(0)] private int _coldFireRatioScalingPercent = 20;
-        [SerializeField, Min(0)] private int _coldIceRatioScalingPercent = 10;
+        [SerializeField, TextArea] private string _negativeDescription;
+        [SerializeField, Min(0)] private int _fireRatioScalingPercent = 100;
+        [SerializeField, Min(0)] private int _aquaRatioScalingPercent = 100;
+        [SerializeField, Min(0)] private int _iceRatioScalingPercent = 100;
+        [SerializeField, Min(0)] private int _coldFireRatioScalingPercent = 100;
+        [SerializeField, Min(0)] private int _coldIceRatioScalingPercent = 100;
+        [SerializeField, Min(0)] private float _damageChangePercent = 0.5f;
 
+        public string NegativeDescription => string.IsNullOrWhiteSpace(
+            _negativeDescription)
+                ? Description
+                : _negativeDescription;
         public int FireRatioScalingPercent => _fireRatioScalingPercent;
         public int AquaRatioScalingPercent => _aquaRatioScalingPercent;
         public int IceRatioScalingPercent => _iceRatioScalingPercent;
         public int ColdFireRatioScalingPercent => _coldFireRatioScalingPercent;
         public int ColdIceRatioScalingPercent => _coldIceRatioScalingPercent;
+        public float DamageChangePercent => _damageChangePercent;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -38,7 +45,9 @@ namespace Pachimon.Battle
             int iceRatioScalingPercent,
             int coldFireRatioScalingPercent,
             int coldIceRatioScalingPercent,
-            Sprite icon = null)
+            Sprite icon = null,
+            string negativeDescription = null,
+            float damageChangePercent = 0.5f)
         {
             ConfigureDefinitionForEditor(
                 BattleWeatherId.Temperature,
@@ -50,6 +59,11 @@ namespace Pachimon.Battle
             _iceRatioScalingPercent = iceRatioScalingPercent;
             _coldFireRatioScalingPercent = coldFireRatioScalingPercent;
             _coldIceRatioScalingPercent = coldIceRatioScalingPercent;
+            _damageChangePercent = damageChangePercent;
+            if (negativeDescription != null)
+            {
+                _negativeDescription = negativeDescription;
+            }
         }
 #endif
     }

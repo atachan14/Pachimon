@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Reward;
 using Pachimon.Run;
@@ -8,26 +9,35 @@ namespace Pachimon.Battle
 {
     public static class ToxinExplosionMath
     {
-        public static decimal CalculateBaseDamage(
+        public static decimal CalculateMainBaseDamage(
             ToxinExplosionSkillAsset skill,
             int consumedToxin,
             int poison,
+            decimal? poisonScalingPercent = null)
+        {
+            if (skill == null) throw new ArgumentNullException(nameof(skill));
+            if (consumedToxin <= 0) return 0m;
+            var toxinBase = consumedToxin
+                * skill.ToxinConversionPercent / 100m;
+            var scaledPoison = poison
+                * (poisonScalingPercent ?? skill.PoisonScalingPercent) / 100m;
+            return toxinBase
+                * SignedStatMath.AmplificationMultiplier(scaledPoison);
+        }
+
+        public static decimal CalculateAoeBaseDamage(
+            ToxinExplosionSkillAsset skill,
+            decimal mainBaseDamage,
             int fire,
-            decimal? poisonScalingPercent = null,
             decimal? fireScalingPercent = null)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
-            var toxinDamage = consumedToxin
-                * skill.ToxinConversionPercent / 100m;
-            var poisonDamage = SignedStatMath.ScaleFromBase(
-                skill.BasePoisonPower,
-                poison,
-                poisonScalingPercent ?? skill.PoisonScalingPercent);
-            var fireDamage = SignedStatMath.ScaleFromBase(
-                skill.BaseFirePower,
-                fire,
-                fireScalingPercent ?? skill.FireScalingPercent);
-            return toxinDamage + poisonDamage + fireDamage;
+            if (mainBaseDamage <= 0m) return 0m;
+            var scaledFire = fire
+                * (fireScalingPercent ?? skill.FireScalingPercent) / 100m;
+            return mainBaseDamage
+                * skill.AoeFirePercent / 100m
+                * SignedStatMath.AmplificationMultiplier(scaledFire);
         }
     }
 
@@ -57,47 +67,84 @@ namespace Pachimon.Battle
                     "No living Enemy target was found.");
             }
 
-            var toxinTarget = targets
-                .OrderByDescending(GetToxinValue)
-                .ThenBy(unit => unit.SlotIndex)
-                .First();
-            var consumedToxin = context.State.Statuses.TryConsumeStatus(
-                toxinTarget,
-                BattleStatusId.Toxin,
-                out var consumedStatus)
-                ? consumedStatus.Value
-                : 0;
-            if (consumedToxin > 0)
+            // Consume all Toxin before damage reactions can change the field.
+            var explosions = targets
+                .Select(target => new ToxinExplosionSource(
+                    target,
+                    ConsumeToxin(context, target)))
+                .Where(explosion => explosion.ConsumedToxin > 0)
+                .ToArray();
+            var poison = context.GetAttributeValue(PachimonAttribute.Poison);
+            var fire = context.GetAttributeValue(PachimonAttribute.Fire);
+            var poisonRatio = context.GetAttributeRatio(
+                PachimonAttribute.Poison,
+                _skill.PoisonScalingPercent);
+            var fireRatio = context.GetAttributeRatio(
+                PachimonAttribute.Fire,
+                _skill.FireScalingPercent);
+            var effects = new List<SkillEffectResult>();
+
+            foreach (var explosion in explosions)
             {
-                context.State.AddLog(
-                    $"{toxinTarget.DisplayName}の毒素{consumedToxin}を消費した！");
+                var mainBaseDamage = ToxinExplosionMath.CalculateMainBaseDamage(
+                    _skill,
+                    explosion.ConsumedToxin,
+                    poison,
+                    poisonRatio);
+                AddDamageEffect(
+                    context,
+                    explosion.Target,
+                    mainBaseDamage,
+                    PachimonAttribute.Poison,
+                    effects);
+
+                var aoeBaseDamage = ToxinExplosionMath.CalculateAoeBaseDamage(
+                    _skill,
+                    mainBaseDamage,
+                    fire,
+                    fireRatio);
+                foreach (var target in targets.Where(target => target.IsAlive))
+                {
+                    AddDamageEffect(
+                        context,
+                        target,
+                        aoeBaseDamage,
+                        PachimonAttribute.Fire,
+                        effects);
+                }
             }
 
-            var baseDamage = ToxinExplosionMath.CalculateBaseDamage(
-                _skill,
-                consumedToxin,
-                context.GetAttributeValue(PachimonAttribute.Poison),
-                context.GetAttributeValue(PachimonAttribute.Fire),
-                context.GetAttributeRatio(
-                    PachimonAttribute.Poison,
-                    _skill.PoisonScalingPercent),
-                context.GetAttributeRatio(
-                    PachimonAttribute.Fire,
-                    _skill.FireScalingPercent));
-            var effects = targets
-                .Select(target => ResolveDamage(context, target, baseDamage))
-                .ToArray();
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 effects);
         }
 
-        private SkillEffectResult ResolveDamage(
+        private int ConsumeToxin(
+            SkillExecutionContext context,
+            BattleUnitState target)
+        {
+            if (!context.State.Statuses.TryConsumeStatus(
+                    target,
+                    BattleStatusId.Toxin,
+                    out var consumedStatus))
+            {
+                return 0;
+            }
+
+            context.State.AddLog(
+                $"{target.DisplayName}の毒素{consumedStatus.Value}を消費した！");
+            return consumedStatus.Value;
+        }
+
+        private void AddDamageEffect(
             SkillExecutionContext context,
             BattleUnitState target,
-            decimal baseDamage)
+            decimal baseDamage,
+            PachimonAttribute attribute,
+            ICollection<SkillEffectResult> effects)
         {
+            if (baseDamage <= 0m || !target.IsAlive) return;
             var result = BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
@@ -108,18 +155,27 @@ namespace Pachimon.Battle
                     baseDamage,
                     context.User.GetBattleStats(),
                     target.GetBattleStats(),
-                    PachimonAttribute.Poison,
+                    attribute,
                     isAttack: true,
                     applyAttackerAttributeMultiplier: false));
-            return new SkillEffectResult(
+            effects.Add(new SkillEffectResult(
                 result.ActualTarget,
                 result.AppliedDamage,
-                isTrueDamage: false);
+                isTrueDamage: false));
         }
 
-        private static int GetToxinValue(BattleUnitState unit)
+        private readonly struct ToxinExplosionSource
         {
-            return unit?.GetStatus(BattleStatusId.Toxin)?.Value ?? 0;
+            public ToxinExplosionSource(
+                BattleUnitState target,
+                int consumedToxin)
+            {
+                Target = target;
+                ConsumedToxin = consumedToxin;
+            }
+
+            public BattleUnitState Target { get; }
+            public int ConsumedToxin { get; }
         }
     }
 }

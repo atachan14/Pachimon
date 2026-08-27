@@ -19,4 +19,4 @@ MonoBehaviour:
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 0
-  _description: System Skill used when no regular Skill is available.
+  _description: "\u4F7F\u7528\u8005\u306E8\u5C5E\u6027\u306E\u5E73\u5747\u5024\u3092\u3001\u6575\u306E\u5148\u982D\u3068\u81EA\u8EAB\u3078True Damage\u3068\u3057\u3066\u4E0E\u3048\u308B\u3002"

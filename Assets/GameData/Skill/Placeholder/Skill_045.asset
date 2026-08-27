@@ -16,13 +16,15 @@ MonoBehaviour:
   _displayName: "\u30DD\u30A4\u30BA\u30F3\u30B7\u30FC\u30EB\u30C9"
   _allocationType: 5
   _isMapAssignable: 1
-  _baseStartupTicks: 100
-  _baseRecoveryTicks: 100
-  _baseCooldownTicks: 300
+  _baseStartupTicks: 50
+  _baseRecoveryTicks: 150
+  _baseCooldownTicks: 450
   _baseManaCost: 50
-  _description: "\u81EA\u8EAB\u3078{color:Poison}{value:shield}{/color}\u306E{term:Shield|Shield}\u3092{value:duration}tick\u4ED8\u4E0E\u3057\u3001\u81EA\u8EAB\u306E{term:Toxin|\u6BD2\u7D20}\u3092{value:toxinReductionPercent}%\u53D6\u308A\u9664\u304F\u3002"
+  _description: "\u81EA\u8EAB\u3078{color:Poison}{value:shield}{/color}\uFF08{value:baseShield}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:shieldRatio}%\uFF09%\uFF09\u306E{term:Shield|Shield}\u3092{value:duration}tick\u4ED8\u4E0E\u3057\u3001\u81EA\u8EAB\u306E{term:Toxin|\u6BD2\u7D20}\u3092{value:toxinReductionPercent}\uFF08{value:baseReduction}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:reductionRatio}%\uFF09%\uFF09%\u53D6\u308A\u9664\u304F\u3002"
   _durationTicks: 200
-  _baseShieldValue: 100
+  _baseShieldValue: 50
   _shieldPoisonScalingPercent: 100
   _baseToxinReductionPercent: 30
   _reductionPoisonScalingPercent: 100

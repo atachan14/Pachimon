@@ -10,6 +10,8 @@ namespace Pachimon.Battle
         Rain = 2,
         Thunder = 3,
         Wind = 4,
+        Moisture = 5,
+        Plasma = 6,
     }
 
     public abstract class BattleWeatherAsset : ScriptableObject
@@ -46,5 +48,28 @@ namespace Pachimon.Battle
             _icon = icon;
         }
 #endif
+    }
+
+    public sealed class BattleEnvironmentDefinitions
+    {
+        public BattleEnvironmentDefinitions(
+            SunnyWeatherAsset temperature,
+            RainWeatherAsset precipitation,
+            WindWeatherAsset wind,
+            PairedAttributeEnvironmentAsset moisture,
+            PairedAttributeEnvironmentAsset plasma)
+        {
+            Temperature = temperature;
+            Precipitation = precipitation;
+            Wind = wind;
+            Moisture = moisture;
+            Plasma = plasma;
+        }
+
+        public SunnyWeatherAsset Temperature { get; }
+        public RainWeatherAsset Precipitation { get; }
+        public WindWeatherAsset Wind { get; }
+        public PairedAttributeEnvironmentAsset Moisture { get; }
+        public PairedAttributeEnvironmentAsset Plasma { get; }
     }
 }

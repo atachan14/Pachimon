@@ -13,7 +13,7 @@ namespace Pachimon.Battle
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return SignedStatMath.ScaleFromBase(
-                skill.BasePower,
+                skill.BaseDamage,
                 fire,
                 fireScalingPercent ?? skill.FireScalingPercent);
         }

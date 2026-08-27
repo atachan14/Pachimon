@@ -8,7 +8,8 @@ namespace Pachimon.Run
     {
         public StatCalculationResult Calculate(
             PachimonStats baseStats,
-            IEnumerable<IStatModifier> modifiers = null)
+            IEnumerable<IStatModifier> modifiers = null,
+            PachimonSubStatBindings bindings = null)
         {
             if (baseStats == null)
             {
@@ -25,7 +26,13 @@ namespace Pachimon.Run
 
             var contributions = new List<StatContribution>();
             var baseValues = CreateBaseValues(baseStats, contributions);
-            var baseSnapshot = new StatValueSnapshot(baseValues);
+            var baseReferenceValues = (decimal[])baseValues.Clone();
+            ApplySubStatDerivations(
+                baseReferenceValues,
+                new StatValueSnapshot(baseValues),
+                bindings,
+                contributions: null);
+            var baseSnapshot = new StatValueSnapshot(baseReferenceValues);
 
             var directAdditiveValues = (decimal[])baseValues.Clone();
             ApplyAdditiveModifiers(
@@ -35,7 +42,14 @@ namespace Pachimon.Run
                 baseSnapshot,
                 contributions);
 
-            var directAdditiveSnapshot = new StatValueSnapshot(directAdditiveValues);
+            var directReferenceValues = (decimal[])directAdditiveValues.Clone();
+            ApplySubStatDerivations(
+                directReferenceValues,
+                new StatValueSnapshot(directAdditiveValues),
+                bindings,
+                contributions: null);
+            var directAdditiveSnapshot = new StatValueSnapshot(
+                directReferenceValues);
             var additiveValues = (decimal[])directAdditiveValues.Clone();
             ApplyAdditiveModifiers(
                 additiveValues,
@@ -44,20 +58,48 @@ namespace Pachimon.Run
                 directAdditiveSnapshot,
                 contributions);
 
-            var additiveSnapshot = new StatValueSnapshot(additiveValues);
+            var additiveReferenceValues = (decimal[])additiveValues.Clone();
+            ApplySubStatDerivations(
+                additiveReferenceValues,
+                new StatValueSnapshot(additiveValues),
+                bindings,
+                contributions: null);
+            var additiveSnapshot = new StatValueSnapshot(additiveReferenceValues);
             var finalValues = (decimal[])additiveValues.Clone();
             ApplyMultiplicativeModifiers(
                 finalValues,
                 modifierArray,
                 StatModifierOperation.DirectMultiplicative,
                 baseSnapshot,
-                contributions);
+                contributions,
+                subStatsOnly: false);
             ApplyMultiplicativeModifiers(
                 finalValues,
                 modifierArray,
                 StatModifierOperation.DerivedMultiplicative,
                 additiveSnapshot,
+                contributions,
+                subStatsOnly: false);
+            ApplySubStatDerivations(
+                finalValues,
+                new StatValueSnapshot(finalValues),
+                bindings,
                 contributions);
+            var finalReferenceSnapshot = new StatValueSnapshot(finalValues);
+            ApplyMultiplicativeModifiers(
+                finalValues,
+                modifierArray,
+                StatModifierOperation.DirectMultiplicative,
+                baseSnapshot,
+                contributions,
+                subStatsOnly: true);
+            ApplyMultiplicativeModifiers(
+                finalValues,
+                modifierArray,
+                StatModifierOperation.DerivedMultiplicative,
+                finalReferenceSnapshot,
+                contributions,
+                subStatsOnly: true);
 
             var finalizedValues = new int[(int)PachimonStatType.Count];
             for (var index = 0; index < finalizedValues.Length; index++)
@@ -72,6 +114,34 @@ namespace Pachimon.Run
                 finalizedValues,
                 finalValues,
                 contributions);
+        }
+
+        private static void ApplySubStatDerivations(
+            decimal[] values,
+            StatValueSnapshot referenceStats,
+            PachimonSubStatBindings bindings,
+            ICollection<StatContribution> contributions)
+        {
+            if (bindings == null)
+            {
+                return;
+            }
+
+            foreach (var subStat in PachimonSubStatBindings.SubStats)
+            {
+                var attribute = bindings.GetAttribute(subStat);
+                var ratio = bindings.GetDerivationRatio(subStat);
+                var value = referenceStats.GetValue(attribute) * ratio / 100m;
+                values[(int)subStat] += value;
+                contributions?.Add(new StatContribution(
+                        subStat,
+                        StatModifierOperation.DerivedAdditive,
+                        value,
+                        new StatModifierSource(
+                            StatModifierSourceType.Base,
+                            $"binding:{attribute}:{subStat}:{ratio}",
+                            $"{attribute} Binding ({ratio}%)")));
+            }
         }
 
         private static decimal[] CreateBaseValues(
@@ -121,9 +191,13 @@ namespace Pachimon.Run
             IEnumerable<IStatModifier> modifiers,
             StatModifierOperation operation,
             StatValueSnapshot referenceStats,
-            ICollection<StatContribution> contributions)
+            ICollection<StatContribution> contributions,
+            bool subStatsOnly)
         {
-            foreach (var modifier in modifiers.Where(item => item.Operation == operation))
+            foreach (var modifier in modifiers.Where(item =>
+                         item.Operation == operation
+                         && PachimonSubStatBindings.IsSubStat(item.TargetStat)
+                            == subStatsOnly))
             {
                 var multiplier = modifier.Evaluate(referenceStats);
                 values[(int)modifier.TargetStat] *= multiplier;

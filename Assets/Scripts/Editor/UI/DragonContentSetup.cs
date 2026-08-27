@@ -89,7 +89,7 @@ namespace Pachimon.Editor.UI
                 24,
                 "ドラゴンフットワーク",
                 80,
-                300,
+                63,
                 80,
                 "{value:duration}tickの間、次に受ける攻撃と付随する状態を回避する。",
                 80,
@@ -187,8 +187,8 @@ namespace Pachimon.Editor.UI
             ragePassive.ConfigureForEditor(
                 40,
                 "龍の怒り",
-                "Dragonに応じて、自身が与えるAttribute Damageの貫通率が増加する。",
-                20);
+                "Dragonに応じて、自身が与えるAttribute DamageのResistBonus貫通率が増加する。",
+                25);
 
             var manyHitsPassive = GetOrCreate<ManyHitsPassiveAsset>(
                 $"{PassiveFolder}/Passive_048_ManyHits.asset");
@@ -373,7 +373,7 @@ namespace Pachimon.Editor.UI
                 null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

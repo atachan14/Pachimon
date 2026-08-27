@@ -29,18 +29,17 @@
 - 再付与時は、新しく追加するValueだけを軽減して既存Valueへ加算する
 - 軽減後Valueが0の場合は付与せず、付与イベントも発行しない
 - 毒素の付与履歴には軽減後Valueを記録する
-- 状態から別状態への「変化」は付与と区別し、個別仕様で明記しない限り再軽減しない
 - `ReductionMultiplier`の仕様は[Scaling](../mechanics/scaling.md#reductionmultiplier)を参照する
 
 ## Status Families
 
 - [Slow](./slow.md)
 - [Charge](./charge.md)
+- [Pollen](./pollen.md)
 - [Add Chain](../mechanics/chain.md)
 - 凍結
   - `Category`: `Stun`
   - 通常付与時は対象のIceでValueを軽減する
-  - 冷気からの変化では再軽減しない
   - 炎DamageでValueが減少し、0で解除する
 
 ## 移行予定

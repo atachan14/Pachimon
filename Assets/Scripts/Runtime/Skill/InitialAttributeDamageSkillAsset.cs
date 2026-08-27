@@ -6,7 +6,7 @@ namespace Pachimon.Skills
 {
     public abstract class InitialAttributeDamageSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _baseDamage = 200;
+        [SerializeField, Min(0)] private int _baseDamage = 100;
         [SerializeField, HideInInspector] private int _damageRatio = 100;
 
         public int BaseDamage => _baseDamage;

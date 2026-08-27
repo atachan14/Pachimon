@@ -19,17 +19,17 @@
 - 対象: 最後尾の敵
 - 効果:
   - 次のFireダメージを与える
-  - Poisonに応じた貫通率を持つ
+  - Poisonに応じたFire固定値貫通を持つ
 
 ```text
 ダメージ
 = 100 × AmplificationMultiplier(Fire × 100%)
 
-貫通率
+Fire固定値貫通
 = 10 × AmplificationMultiplier(Poison × 100%)
 ```
 
-- `BasePower / FireScalingPercent / BasePenetrationPercent / PoisonScalingPercent`はSOで調整する
+- `BaseDamage / BaseAttributeFixedPenetration / PoisonPenetrationRatio`はSOで調整する
 
 #### Passive
 
@@ -79,9 +79,9 @@ BaseDamage
 = 80 × AmplificationMultiplier(Fire × 100%)
 ```
 
-使用するごとに、自分へ[アドチェイン]を0.5付与する。
+使用するごとに、自分へ[アドチェイン]を1付与する。
 実際の追加連鎖回数には[アドチェイン]の小数部分を切り捨てて反映する。
-`BasePower / FireScalingPercent / BaseChainCount / AddChainGainUnits`はSOで調整可能にする。
+`BaseDamage / FireScalingPercent / BaseChainCount / AddChainGainUnits`はSOで調整可能にする。
 
 ##### [連鎖]
 本体を含むHit番号を`i = 0..N`、追加連鎖回数を`N`とすると、各Hitへ次の倍率を適用する。
@@ -163,41 +163,37 @@ DamageBonusPerChain = 10（仮値）
 
 ##### [生成物: 炎の障壁]
 
-- ValueHpRatio: `100`
-- ValueDurationRatio: `100`
 - ValueBurnRatio: `20`
-- DefenseSnapshotRatio: `50`
+- 固定防御Stat:
+  - Fire: `200`
+  - Aqua: `0`
+  - Leaf / Electric / Poison / Ice / Wind / Dragon: `100`
+  - ResistBonus: `0`
 
 ```text
-追加HP
-= floor(追加Value × ValueHpRatio / 100)
-
-追加効果時間
-= ceil(追加Value × ValueDurationRatio / 100)
-
 火傷Value
-= floor(現在Value × ValueBurnRatio / 100)
+= floor(被弾直前Value × ValueBurnRatio / 100)
 ```
 
-- 生成時に、生成者の8属性値とResistBonusをそれぞれ`DefenseSnapshotRatio%`でスナップショットする
+- Valueを耐久力・残り寿命・火傷の基準値として共通使用する
+- 毎tick、Valueを`1`減少させる
 - 味方が受ける攻撃の軽減前Damageを代わりに受ける
-- 肩代わりしたDamageは、Damage属性に対応する障壁の属性値とResistBonusで軽減する
+- 肩代わりしたDamageは、Damage属性に対応する障壁の固定属性値とResistBonusで軽減する
 - True Damageは属性軽減を受けない
-- 障壁による軽減後Damageを現在HPへ適用する
-- 障壁の現在HPを超えた余剰Damageは、元の対象へ引き継ぐ
+- 障壁による軽減後DamageをValueから減少させる
+- 障壁のValueを超えた余剰Damageは、元の対象へ引き継ぐ
 - 元の対象へ引き継いだ余剰Damageには、対象自身の属性値とResistBonusによる軽減を適用する
 - 元の対象が保持するShieldは、引き継いだ余剰Damageを通常どおり吸収できる
 - 炎の障壁は完全なBattle Unitではなく、Damageと一部の状態を受け取れる軽量なField Entityとして扱う
-- Shield破壊効果の対象となり、現在HPの全量をShield量として破壊する
+- Shield破壊効果の対象となり、現在Valueの全量をShield量として破壊する
 - [状態: 毒素]・[状態: 弱点]・[状態: 風化]を保持できる
 - 毒素は障壁のPoisonとResistBonusで軽減し、tickごとに障壁へDamageを与える
 - 弱点は次に障壁が受ける攻撃で消費し、そのDamageを増加させる
 - 風化は障壁のResistBonusを低下させ、通常どおり時間経過で減衰する
 - Slow・Stunなど行動順へ作用する状態は保持しない
 - 攻撃を受けたとき、攻撃者へ[状態: 火傷]を付与する
-- HPが0になるか、効果時間が0になると消滅する
-- 同じ陣営へ再生成した場合、Value・現在HP・最大HP・残り時間を加算する
-- 再生成時の防御Snapshotは、最新の生成者から取得した値で上書きする
+- Valueが0になると消滅する
+- 同じ陣営へ再生成した場合、Valueを加算する
 - 防御Snapshotは生成後の生成者のStat変化によって変動しない
 
 ##### [状態：火傷]
@@ -243,7 +239,7 @@ DamageBonusPerChain = 10（仮値）
   - 再発動ごとに対象を再選択する
   - MN不足、対象なし、使用者の戦闘不能、または対象を戦闘不能にできなかった場合は終了する
   - CDと硬直は最初の使用時に一度だけ適用する
-  - `BasePower / FireScalingPercent`はSOで調整する
+  - `BaseDamage / FireScalingPercent`はSOで調整する
 
 #### Passive
 
@@ -296,7 +292,7 @@ FireScalingPercent = 100%
   - 自傷にもDamageBonus、与ダメージPassive、被攻撃Passiveを適用する
   - 自傷は自身のFireとResistBonusによる軽減を受ける
   - 再発動してもCDと硬直は初回の一度だけ適用する
-  - 敵と自身は共通の`BasePower / FireScalingPercent`をSOで調整する
+  - 敵と自身は共通の`BaseDamage / FireScalingPercent`をSOで調整する
   - Previewは現行どおり、全発動分をまとめた最終変化を表示する
 
 #### Passive
@@ -325,7 +321,7 @@ FireScalingPercent = 100%
 - 硬直: `100`（仮値・SOで調整可能）
 - CD: `300`（仮値・SOで調整可能）
 - MN: `100`（仮値・SOで調整可能）
-- `BaseValue: 400`
+- `BaseValue: 20`
 - `ValueFireRatio: 100%`
 - 効果:Battle中の[気温]を次の値だけ恒久的に増加させる
 
@@ -333,11 +329,11 @@ FireScalingPercent = 100%
 TemperatureGain
 = max(1, floor(
     BaseValue
-    + Fire × 補正後ValueFireRatio / 100
+    × AmplificationMultiplier(Fire × 補正後ValueFireRatio / 100)
   ))
 ```
 
-- Fire `0 / 100 / 200`では、気温0の場合に`400 / 500 / 600`増加する
+- Fire `0 / 100 / 200`では、気温0の場合に`20 / 40 / 60`増加する
 - 現在の気温によるFire Ratio補正を`ValueFireRatio`にも適用する
 - 正の気温では自己増幅し、負の気温では増加量が抑制される
 - 例としてFire100・気温+500では、`ValueFireRatio 100% × 1.5 = 150%`となり、気温を550増加させる
@@ -349,21 +345,15 @@ TemperatureGain
 - 正負の変更量を加算し、0のときはFieldへ表示しない
 - 正の値を旧「晴れ」相当、負の値を寒冷相当として扱う
 
-- `FireRatioScalingPercent: 10%`
-- `AquaRatioScalingPercent: 20%`
-- `IceRatioScalingPercent: 20%`
-- `ColdFireRatioScalingPercent: 20%`
-- `ColdIceRatioScalingPercent: 10%`
+- `FireRatioScalingPercent: 100%`
+- `IceRatioScalingPercent: 100%`
+- `ColdFireRatioScalingPercent: 100%`
+- `ColdIceRatioScalingPercent: 100%`
 
 ```text
 FireRatioMultiplier
 = AmplificationMultiplier(
     Temperature × FireRatioScalingPercent / 100
-  )
-
-AquaRatioMultiplier
-= ReductionMultiplier(
-    Temperature × AquaRatioScalingPercent / 100
   )
 
 IceRatioMultiplier
@@ -385,15 +375,15 @@ ColdIceRatioMultiplier
 = 基本AttributeRatio × AttributeRatioMultiplier
 ```
 
-| Temperature | Fire Ratio | Aqua Ratio | Ice Ratio |
-| ---: | ---: | ---: | ---: |
-| 400 | 1.4倍 | 約0.556倍 | 約0.556倍 |
-| 500 | 1.5倍 | 0.5倍 | 0.5倍 |
-| 600 | 1.6倍 | 約0.455倍 | 約0.455倍 |
+| Temperature | Fire Ratio | Ice Ratio |
+| ---: | ---: | ---: |
+| 100 | 2倍 | 0.5倍 |
+| 200 | 3倍 | 約0.333倍 |
+| 500 | 6倍 | 約0.167倍 |
 
 - Damageと、状態Value・生成物ValueなどSkill/Passive固有効果のAttribute Ratioへ適用する
 - 防御側の属性値とResistBonusには適用しない
-- 正の気温によるAqua/Ice Ratioは気温が増えるほど0へ近づくが、有限値では0にならない
+- 正の気温によるIce Ratioは気温が増えるほど0へ近づくが、有限値では0にならない
 - 気温が負の場合、Fire Ratioを減少させ、Ice Ratioを増加させる
 - 気温が負の場合、Aqua Ratioは変化しない
 
@@ -432,13 +422,12 @@ Damage
     × AmplificationMultiplier(Aqua)
   )
 
-貫通率
-= floor(
-    BaseFirePenetration 20
-    × AmplificationMultiplier(Fire × FirePenetrationRatio 100%)
-  + BaseAquaPenetration 20
-    × AmplificationMultiplier(Aqua × AquaPenetrationRatio 100%)
-  )
+貫通Value
+= Fire × FirePenetrationRatio 25%
+  + Aqua × AquaPenetrationRatio 25%
+
+Fire割合貫通率
+= 貫通Value / (100 + 貫通Value)
 
 弱点Value
 = floor(
@@ -450,7 +439,7 @@ Damage
 ```
 
 - DamageはFire/Aquaの2Hitへ分割せず、合算後に1回のFire Damageとして解決する
-- 合算した貫通率を対象のFireとResistBonusによる防御値へ適用する
+- 合算した割合貫通率を対象のFireによる防御値だけへ適用する
 - Damageと弱点付与は同じSkill Hitとして扱い、回避・肩代わり先を共有する
 - 対象がDamageで戦闘不能になった場合、弱点は付与しない
 - 各BaseとRatio、Weakness DefinitionはSkill SOから調整可能にする

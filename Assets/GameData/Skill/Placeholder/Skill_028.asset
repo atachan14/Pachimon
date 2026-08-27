@@ -20,7 +20,7 @@ MonoBehaviour:
   _baseRecoveryTicks: 80
   _baseCooldownTicks: 300
   _baseManaCost: 30
-  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:electricDamage}{/color}\u306E{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3068\u3001{icon:Fire}{color:Fire}{value:fireDamage}{/color}\u306E{term:FireDamage|\u708E\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u73FE\u5728\u306E\u786C\u76F4\u306F{value:recovery}tick\u3001CD\u306F{value:cooldown}tick\u3002"
-  _electricBasePower: 75
-  _fireBasePower: 25
-  _windTimingPercent: 50
+  _description: "\u6575\u306E\u5148\u982D\u306B{color:Electric}{value:electricDamage}{/color}\uFF08{value:electricBaseDamage}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:damageRatio}%\uFF09%\uFF09\u306E{icon:Electric}{color:Electric}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002\u767A\u751F\u3068\u786C\u76F4\u3092{icon:Fire}\u708E\u306E{value:fireTimingRatio}%\u53C2\u7167\u3057\u3066\u77ED\u7E2E\u3059\u308B\u3002\u73FE\u5728\u306E\u786C\u76F4\u306F{value:recovery}tick\u3001CD\u306F{value:cooldown}tick\u3002"
+  _electricBaseDamage: 76
+  _fireTimingPercent: 50

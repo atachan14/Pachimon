@@ -77,6 +77,10 @@ namespace Pachimon.Items
                 itemInstance.GeneratedData.StatChanges,
                 $"item:{itemInstance.InstanceId}",
                 item.DisplayName);
+            context.RunTarget.RecordAppliedEngraving(
+                item.ItemId,
+                item.DisplayName,
+                itemInstance.GeneratedData);
             return itemInstance.GeneratedData.StatChanges
                 .Where(change => change.Amount > 0)
                 .Sum(change => change.Amount);

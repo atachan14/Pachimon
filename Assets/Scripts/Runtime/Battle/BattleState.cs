@@ -15,7 +15,8 @@ namespace Pachimon.Battle
             BattleSideState player,
             BattleSideState enemy,
             PassiveLogicRegistry passiveLogicRegistry = null,
-            bool publishBattleStarted = true)
+            bool publishBattleStarted = true,
+            BattleEnvironmentDefinitions environmentDefinitions = null)
         {
             if (player?.Side != BattleSide.Player)
             {
@@ -39,7 +40,7 @@ namespace Pachimon.Battle
             Statuses = new BattleStatusRuntime(this);
             SupportEffects = new BattleSupportEffectRuntime(this);
             Fields = new BattleFieldRuntime(this);
-            Weather = new BattleWeatherRuntime(this);
+            Weather = new BattleWeatherRuntime(this, environmentDefinitions);
             Passives = new BattlePassiveRuntime(
                 this,
                 PassiveLogicRegistry,
@@ -49,6 +50,7 @@ namespace Pachimon.Battle
                 unit.SetBattleModifierProvider(
                     () => Passives.CreateStatModifiers(this, unit)
                         .Concat(Weather.CreateStatModifiers(unit)));
+                unit.SetStatusDecayProvider(Fields.GetStatusValueDecayPerTick);
             }
         }
 

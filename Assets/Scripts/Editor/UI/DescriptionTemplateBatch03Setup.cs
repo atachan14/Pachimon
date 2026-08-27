@@ -46,7 +46,7 @@ namespace Pachimon.Editor.UI
 
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(17)?.Description?.Contains("{value:damage}") != true
+            if (skills?.Get(17)?.Description?.Contains("{value:baseDamage}") != true
                 || passives?.Get(17)?.Description?.Contains(
                     "{value:damageBonusPerChain}") != true)
             {
@@ -68,33 +68,54 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(asset);
         }
 
-        private static string CreateSkillTemplate(int id) => id switch
+        private static string CreateSkillTemplate(int id)
+        {
+            if (PenetrationDescriptionTemplates.TryGetSkill(id, out var template))
+                return template;
+            return id switch
         {
             17 => "先頭から後方へ{value:hitCount}回連鎖し、初撃で"
-                + "{icon:Fire}{color:Fire}{value:damage}{/color}の"
-                + "{term:FireDamage|炎ダメージ}を与える。以降は連鎖順に減衰する。"
+                + "{color:Fire}{value:damage}{/color}（{value:baseDamage} ×（100 + "
+                + "{icon:Fire}{value:fire} × {value:damageRatio}%）%）の"
+                + "{icon:Fire}{color:Fire}ダメージ{/color}を与える。以降は連鎖順に減衰する。"
                 + "使用ごとに{term:AddChain|アドチェイン}を{value:addChain}獲得する。",
-            18 => "値{color:Aqua}{value:rainValue}{/color}の{term:Rain|雨}を発生させる。",
+            18 => "値{color:Aqua}{value:rainValue}{/color}（{value:baseValue} + "
+                + "{icon:Aqua}{value:aqua} × {value:aquaRatio}%）の{term:Rain|雨}を発生させる。",
             19 => "先頭から後方へ{value:hitCount}回連鎖し、初撃で"
-                + "{icon:Leaf}{color:Leaf}{value:damage}{/color}の"
-                + "{term:LeafDamage|草ダメージ}と値{value:slow}の{term:Slow|Slow}を与える。"
+                + "{color:Leaf}{value:damage}{/color}（{value:baseDamage} ×（100 + "
+                + "{icon:Leaf}{value:leaf} × {value:damageRatio}%）%）の"
+                + "{icon:Leaf}{color:Leaf}ダメージ{/color}と、値{value:slow}（{value:baseSlow} ×（100 + "
+                + "{icon:Leaf}{value:leaf} × {value:slowRatio}%）%）の{term:Slow|Slow}を与える。"
                 + "以降は連鎖順に減衰する。使用ごとに{term:AddChain|アドチェイン}を"
                 + "{value:addChain}獲得する。",
-            20 => "敵の先頭に{icon:Electric}{color:Electric}{value:damage}{/color}の"
-                + "{term:ElectricDamage|電気ダメージ}を与える。"
-                + "{icon:Fire}炎による貫通率は{value:penetration}%。",
-            21 => "敵陣に値{color:Poison}{value:fieldValue}{/color}の"
+            20 => "敵の先頭に{color:Electric}{value:damage}{/color}（{value:baseDamage} ×（100 + "
+                + "{icon:Electric}{value:electric} × {value:electricRatio}%）% ×（100 + "
+                + "{icon:Fire}{value:fire} × {value:fireRatio}%）%）の"
+                + "{icon:Electric}{color:Electric}ダメージ{/color}を与える。貫通率は"
+                + "{value:penetration}（{icon:Fire}{value:fire} × {value:basePenetration}%）%。",
+            21 => "敵陣に値{color:Poison}{value:fieldValue}{/color}（{value:baseValue} ×（100 + "
+                + "{icon:Poison}{value:poison} × {value:ratio}%）%）の"
                 + "{term:Smog|スモッグ}を生成する。",
-            22 => "敵の先頭に{icon:Ice}{color:Ice}{value:frontDamage}{/color}の"
-                + "{term:IceDamage|氷ダメージ}と値{value:frontChill}の{term:Chill|冷気}を与える。"
-                + "他の敵には{icon:Ice}{color:Ice}{value:otherDamage}{/color}と"
-                + "値{value:otherChill}の冷気を与える。",
-            23 => "敵全体へ値{color:Wind}{value:erosionValue}{/color}の"
+            22 => "敵の先頭に{color:Ice}{value:frontDamage}{/color}（{value:frontBaseDamage} ×（100 + "
+                + "{icon:Ice}{value:ice} × {value:frontDamageRatio}%）%）の"
+                + "{icon:Ice}{color:Ice}ダメージ{/color}と、値{value:frontChill}（"
+                + "{value:frontBaseChill} ×（100 + {icon:Ice}{value:ice} × "
+                + "{value:frontChillRatio}%）%）の{term:Chill|冷気}を与える。"
+                + "他の敵には{color:Ice}{value:otherDamage}{/color}（{value:otherBaseDamage} ×（100 + "
+                + "{icon:Ice}{value:ice} × {value:otherDamageRatio}%）%）の"
+                + "{icon:Ice}{color:Ice}ダメージ{/color}と、値{value:otherChill}（"
+                + "{value:otherBaseChill} ×（100 + {icon:Ice}{value:ice} × "
+                + "{value:otherChillRatio}%）%）の冷気を与える。",
+            23 => "敵全体へ値{color:Wind}{value:erosionValue}{/color}（{value:baseValue} ×（100 + "
+                + "{icon:Wind}{value:wind} × {value:ratio}%）%）の"
                 + "{term:WindErosion|風化}を付与する。風化はRBをValueだけ減少させ、"
                 + "毎tick1減少する。",
-            24 => "次に受ける{term:Attack|攻撃}と、それに付随する状態を回避する。",
+            24 => "{value:duration}tick（{value:baseDuration} ×（100 + "
+                + "{icon:Dragon}{value:dragon} × {value:durationRatio}%）%）の間、次に受ける"
+                + "{term:Attack|攻撃}と、それに付随する状態を回避する。",
             _ => string.Empty,
-        };
+            };
+        }
 
         private static string CreatePassiveTemplate(int id) => id switch
         {

@@ -147,7 +147,7 @@ namespace Pachimon.Map
         {
             foreach (var node in nodes)
             {
-                var count = GetRandomSkillCount(node.RowIndex);
+                var count = GetAssignedRandomSkillCount(node);
                 foreach (var instanceId in GetAssignedInstanceIds(node))
                 {
                     var instance = GetRequiredInstance(pachimonPool, instanceId, node.NodeId);
@@ -235,6 +235,20 @@ namespace Pachimon.Map
                 : _settings.EarlyRandomSkillCount;
         }
 
+        private int GetAssignedRandomSkillCount(MapNode node)
+        {
+            var matchingCount = node.NodeType switch
+            {
+                NodeType.Gym => _settings.GymMatchingSkillCount,
+                NodeType.Elite => _settings.EliteMatchingSkillCount,
+                _ => 0,
+            };
+            var remainingSlots = Math.Max(
+                0,
+                PachimonInstance.MaxSkillSlots - 1 - matchingCount);
+            return Math.Min(GetRandomSkillCount(node.RowIndex), remainingSlots);
+        }
+
         private void ValidateDistribution(
             IEnumerable<MapNode> nodes,
             RunPachimonPool pachimonPool)
@@ -247,7 +261,8 @@ namespace Pachimon.Map
                     NodeType.Elite => _settings.EliteMatchingSkillCount,
                     _ => 0,
                 };
-                var expectedSkillCount = 1 + matchingCount + GetRandomSkillCount(node.RowIndex);
+                var randomSkillCount = GetAssignedRandomSkillCount(node);
+                var expectedSkillCount = 1 + matchingCount + randomSkillCount;
                 var matchingType = matchingCount > 0
                     ? GetLeagueAllocationType(node)
                     : AllocationType.Unassigned;
@@ -281,7 +296,7 @@ namespace Pachimon.Map
                         var otherTypeSkillCount = instance.SkillIds.Count(skillId =>
                             _skillCatalog.Get(skillId)?.AllocationType
                             != instance.AllocationType);
-                        if (GetRandomSkillCount(node.RowIndex) >= 2
+                        if (randomSkillCount >= 2
                             && (ownTypeSkillCount < 2 || otherTypeSkillCount < 1))
                         {
                             throw new MapGenerationException(

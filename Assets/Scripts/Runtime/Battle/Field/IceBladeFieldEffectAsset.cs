@@ -8,6 +8,10 @@ namespace Pachimon.Battle
         menuName = "Pachimon/Battle/Field Effect/Ice Blade")]
     public sealed class IceBladeFieldEffectAsset : BattleFieldEffectAsset
     {
+        [SerializeField, Min(0)] private int _damagePercent = 25;
+
+        public int DamagePercent => _damagePercent;
+
         public override void CollectValidationErrors(ICollection<string> errors)
         {
             base.CollectValidationErrors(errors);
@@ -21,6 +25,7 @@ namespace Pachimon.Battle
         public void ConfigureForEditor(
             string displayName,
             string description,
+            int damagePercent = 25,
             Sprite icon = null)
         {
             ConfigureDefinitionForEditor(
@@ -28,6 +33,7 @@ namespace Pachimon.Battle
                 displayName,
                 description,
                 icon);
+            _damagePercent = damagePercent;
         }
 #endif
     }

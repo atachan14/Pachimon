@@ -22,4 +22,4 @@ MonoBehaviour:
   _baseManaCost: 100
   _description: "\u5148\u982D\u306E\u6575\u3078\u3001\u5BFE\u8C61\u306EMaxHP\u306E50%\u306ETrue
     Damage\u3092\u4E0E\u3048\u308B\u3002"
-  _maxHpPercent: 50
+  _maxHpPercent: 25

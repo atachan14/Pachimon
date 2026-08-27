@@ -13,14 +13,15 @@ MonoBehaviour:
   m_Name: Skill_021
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.SmogSkillAsset
   _skillId: 21
-  _displayName: スモッグ
+  _displayName: "\u30B9\u30E2\u30C3\u30B0"
   _allocationType: 5
   _isMapAssignable: 1
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 40
-  _description: "敵陣に値{color:Poison}{value:fieldValue}{/color}の{term:Smog|スモッグ}を生成する。"
-  _baseFieldValue: 300
+  _description: "\u6575\u9663\u306B\u5024{color:Poison}{value:fieldValue}{/color}\uFF08{value:baseValue}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:ratio}%\uFF09%\uFF09\u306E{term:Smog|\u30B9\u30E2\u30C3\u30B0}\u3092\u751F\u6210\u3059\u308B\u3002"
+  _baseFieldValue: 100
   _poisonScalingPercent: 100
   _fieldEffect: {fileID: 11400000, guid: b5ee990827f94a65b045d5f074c15b1b, type: 2}

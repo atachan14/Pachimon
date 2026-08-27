@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.SlowStatusAsset
   _statusId: 102
   _displayName: "\u9EBB\u75FA"
-  _description: "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは電気で軽減される。"
+  _description: "効果時間中、Speedを{value:totalValue}減少させる。付与Valueは電気で軽減される。"
   _icon: {fileID: 0}
-  _decayPerTick: 1
+  _decayPerTick: 0
   _usesAttributeDefense: 1
   _defenseAttribute: 3

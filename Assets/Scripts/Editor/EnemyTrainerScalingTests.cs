@@ -8,18 +8,18 @@ namespace Pachimon.Editor.Tests
     public sealed class EnemyTrainerScalingTests
     {
         [Test]
-        public void Apply_NormalTrainer_UsesRowScalingForEveryStat()
+        public void Apply_NormalTrainer_ScalesResourcesAndAttributesOnly()
         {
             var modifiers = new TrainerModifierSet();
             var profile = new TrainerProfile(TrainerRole.Normal, "style", "name");
 
             EnemyTrainerScalingService.Apply(modifiers, 10, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(200));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(200));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(40));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Haste), Is.EqualTo(40));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.ResistBonus), Is.EqualTo(40));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(840));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(840));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(105));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Haste), Is.Zero);
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.ResistBonus), Is.Zero);
         }
 
         [Test]
@@ -35,10 +35,10 @@ namespace Pachimon.Editor.Tests
 
             EnemyTrainerScalingService.Apply(modifiers, 5, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(100));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(120));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(-80));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.EqualTo(20));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(240));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(80));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(-20));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.Zero);
         }
 
         [Test]
@@ -54,11 +54,11 @@ namespace Pachimon.Editor.Tests
 
             EnemyTrainerScalingService.Apply(modifiers, 40, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(1300));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(1300));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(560));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(-40));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.EqualTo(260));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(4840));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(4840));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(755));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(455));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.Zero);
         }
 
         [Test]

@@ -10,14 +10,11 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Neurotoxin Skill")]
     public sealed class NeurotoxinSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _basePoisonStunTicks = 50;
         [SerializeField, Min(0)] private int _baseElectricStunTicks = 50;
         [SerializeField, Min(0)] private int _baseToxinValue = 100;
         [SerializeField] private ToxinStatusAsset _toxinStatus;
         [SerializeField] private StunStatusAsset _stunStatus;
 
-        public int BasePoisonStunTicks => _basePoisonStunTicks;
-        public int PoisonStunScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseElectricStunTicks => _baseElectricStunTicks;
         public int ElectricStunScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseToxinValue => _baseToxinValue;
@@ -50,8 +47,6 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePoisonStunTicks,
-            int poisonStunScalingPercent,
             int baseElectricStunTicks,
             int electricStunScalingPercent,
             int baseToxinValue,
@@ -68,7 +63,6 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _basePoisonStunTicks = basePoisonStunTicks;
             _baseElectricStunTicks = baseElectricStunTicks;
             _baseToxinValue = baseToxinValue;
             _toxinStatus = toxinStatus;

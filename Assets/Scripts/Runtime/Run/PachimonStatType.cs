@@ -19,7 +19,11 @@ namespace Pachimon.Run
         Haste = 11,
         DamageBonus = 12,
         ResistBonus = 13,
-        Count = 14,
+        GenerationPower = 14,
+        StatusMastery = 15,
+        SustainPower = 16,
+        StatusResistance = 17,
+        Count = 18,
     }
 
     public static class PachimonStatTypeUtility
@@ -65,7 +69,43 @@ namespace Pachimon.Run
             return statType is PachimonStatType.Speed
                 or PachimonStatType.Haste
                 or PachimonStatType.DamageBonus
-                or PachimonStatType.ResistBonus;
+                or PachimonStatType.ResistBonus
+                or PachimonStatType.GenerationPower
+                or PachimonStatType.StatusMastery
+                or PachimonStatType.SustainPower
+                or PachimonStatType.StatusResistance;
+        }
+
+        public static bool IsSubStat(PachimonStatType statType)
+        {
+            return statType is PachimonStatType.Speed
+                or PachimonStatType.Haste
+                or PachimonStatType.DamageBonus
+                or PachimonStatType.ResistBonus
+                or PachimonStatType.GenerationPower
+                or PachimonStatType.StatusMastery
+                or PachimonStatType.SustainPower
+                or PachimonStatType.StatusResistance;
+        }
+
+        public static bool IsGeneratedStat(PachimonStatType statType)
+        {
+            return IsResource(statType) || TryGetAttribute(statType, out _);
+        }
+    }
+
+    public static class PachimonStatValueUnits
+    {
+        public const int ResourceBaseValue = 500;
+        public const int ResourceDisplayMultiplier = 8;
+
+        public static int ToDisplayedAmount(
+            PachimonStatType statType,
+            int valueUnits)
+        {
+            return PachimonStatTypeUtility.IsResource(statType)
+                ? checked(valueUnits * ResourceDisplayMultiplier)
+                : valueUnits;
         }
     }
 }

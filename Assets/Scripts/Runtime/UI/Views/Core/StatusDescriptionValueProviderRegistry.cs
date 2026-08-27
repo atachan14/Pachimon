@@ -25,7 +25,8 @@ namespace Pachimon.UI
             switch (status.Definition)
             {
                 case SlowStatusAsset slow:
-                    context.Set("decayPerTick", slow.DecayPerTick);
+                    context.Set("decayPerTick", slow.DecayPerTick)
+                        .Set("speedReduction", status.GetSpeedReduction());
                     break;
                 case ToxinStatusAsset toxin:
                     context.Set("damagePerTickRatio", toxin.DamagePerTickRatio)
@@ -51,6 +52,9 @@ namespace Pachimon.UI
                     break;
                 case WindErosionStatusAsset erosion:
                     context.Set("decayPerTick", erosion.DecayPerTick);
+                    break;
+                case PollenStatusAsset pollen:
+                    context.Set("decayPerTick", pollen.DecayPerTick);
                     break;
             }
 

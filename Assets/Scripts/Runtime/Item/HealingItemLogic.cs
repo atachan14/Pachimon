@@ -22,7 +22,13 @@ namespace Pachimon.Items
                 return ItemUseFailureReason.InvalidTarget;
             }
 
-            if (context.CurrentHp <= 0 && !healingItem.CanRevive)
+            var isDefeated = context.CurrentHp <= 0;
+            if (healingItem.DefeatedOnly && !isDefeated)
+            {
+                return ItemUseFailureReason.InvalidTarget;
+            }
+
+            if (isDefeated && !healingItem.CanRevive)
             {
                 return ItemUseFailureReason.InvalidTarget;
             }
@@ -47,13 +53,8 @@ namespace Pachimon.Items
                     nameof(item));
             }
 
-            var maximum = healingItem.ResourceType == RecoveryResourceType.Hp
-                ? context.EffectiveMaxHp
-                : context.EffectiveMaxMn;
-            var recoveryAmount = CalculateRecoveryAmount(
-                maximum,
-                itemInstance?.GeneratedData.PrimaryEffectValue
-                    ?? healingItem.RecoveryPercent);
+            var recoveryAmount = itemInstance?.GeneratedData.PrimaryEffectValue
+                ?? healingItem.RecoveryAmount;
             return healingItem.ResourceType == RecoveryResourceType.Hp
                 ? context.RestoreHp(recoveryAmount)
                 : context.RestoreMn(recoveryAmount);
@@ -64,14 +65,5 @@ namespace Pachimon.Items
             return Apply(item, null, context);
         }
 
-        private static int CalculateRecoveryAmount(int maximum, int percent)
-        {
-            if (maximum <= 0 || percent <= 0)
-            {
-                return 0;
-            }
-
-            return Math.Max(1, checked((int)((long)maximum * percent / 100)));
-        }
     }
 }

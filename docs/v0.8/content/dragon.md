@@ -127,10 +127,11 @@
 #### Passive
 
 - 名前:龍の怒り
-- 効果:竜に応じて、自身の与えるダメージが[貫通]を得る。
+- 効果:竜に応じて、自身の与えるAttribute DamageがRB割合貫通を得る。
 
-- 仮式: 貫通率 `= Dragon × 20%`
-- 既存Damage Contextの貫通率へ加算する
+- 貫通Value `= Dragon × PenetrationRatio 25%`
+- RB割合貫通率 `= 貫通Value / (100 + 貫通Value)`
+- 他のRB割合貫通とは乗算合成する
 - `ApplyOutgoingModifiers = true`のAttribute Damageを対象とする
 - 係数は`DragonRagePassiveAsset`から調整可能にする
 

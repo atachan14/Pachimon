@@ -22,4 +22,4 @@ MonoBehaviour:
   _baseManaCost: 20
   _description: "\u5148\u982D\u306E\u6575\u3078\u3001\u81EA\u8EAB\u306ECurrentHP\u306E10%\u306ETrue
     Damage\u3092\u4E0E\u3048\u308B\u3002"
-  _currentHpPercent: 10
+  _currentHpPercent: 5

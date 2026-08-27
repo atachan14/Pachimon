@@ -122,7 +122,7 @@ Valueはtickごとに減少し、0になると破棄される。
 - MN:30
 - CD:400
 - 効果:
-風 * 200% , 効果時間=200tickのシールドを獲得し、自身に200tickの[無風]を付与する。
+`BaseShieldValue 100 * AmplificationMultiplier(風 * WindShieldRatio 100%)`、効果時間200tickのシールドを獲得し、自身に200tickの[無風]を付与する。
 
 [無風]
 効果時間中、風が0になる。
@@ -193,7 +193,7 @@ Windダメージ = floor(100 × AmplificationMultiplier(Wind × 100%) × ChainRa
 風化Value = floor(20 × AmplificationMultiplier(Wind × 100%) × ChainRatio)
 ```
 
-- 使用後にアドチェインを`0.5`獲得する
+- 使用後にアドチェインを`1`獲得する
 - Base値・Ratio・連鎖数・アドチェイン獲得量は`CuttingDanceSkillAsset`から調整可能
 
 #### Passive:風乗り
@@ -216,12 +216,13 @@ Windダメージ = floor(100 × AmplificationMultiplier(Wind × 100%) × ChainRa
 
 - Implementation: `Implemented`
 - 先頭の生存敵を対象とする
-- Fire・Aqua・Windの3成分を同じ1 Hitとして順番に適用する
-- 回避・肩代わりの判定は3成分で共有する
+- Fire・Aqua・Leaf・Windの4成分を同じ1 Hitとして順番に適用する
+- 回避・肩代わりの判定は4成分で共有する
 
 ```text
 Fireダメージ = floor(50 × AmplificationMultiplier(Fire × 100%))
 Aquaダメージ = floor(50 × AmplificationMultiplier(Aqua × 100%))
+Leafダメージ = floor(50 × AmplificationMultiplier(Leaf × 100%))
 Windダメージ = floor(50 × AmplificationMultiplier(Wind × 100%))
 ```
 

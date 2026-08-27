@@ -20,9 +20,10 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 20
-  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Poison}{color:Poison}{value:damage}{/color}\u306E{term:PoisonDamage|\u6BD2\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002\u5024{value:statusValue}\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _description: "\u6575\u306E\u5148\u982D\u306B{color:Poison}{value:damage}{/color}\uFF08{value:baseDamage}
+    \xD7\uFF08100 + {icon:Poison}{value:attribute} \xD7 {value:ratio}%\uFF09%\uFF09\u306E{icon:Poison}{color:Poison}\u30C0\u30E1\u30FC\u30B8{/color}\u3068\u3001\u5024{value:statusValue}\uFF08{value:statusBaseValue}
+    \xD7\uFF08100 + {icon:Poison}{value:attribute} \xD7 {value:statusRatio}%\uFF09%\uFF09\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
   _baseDamage: 150
   _damageRatio: 100
   _toxinBaseValue: 150
-  _toxinRatio: 100
   _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}

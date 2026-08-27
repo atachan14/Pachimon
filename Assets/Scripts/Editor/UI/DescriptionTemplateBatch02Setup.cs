@@ -5,6 +5,45 @@ using UnityEngine;
 
 namespace Pachimon.Editor.UI
 {
+    public static class PenetrationDescriptionTemplates
+    {
+        public static bool TryGetSkill(int skillId, out string template)
+        {
+            template = skillId switch
+            {
+                9 => "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{color:Fire}{value:damage}{/color}"
+                    + "\u306E{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+                    + "\u3053\u306E\u30C0\u30E1\u30FC\u30B8\u306F{value:penetration}\u306EFire\u56FA\u5B9A\u5024\u8CAB\u901A\u3092\u6301\u3064\u3002",
+                20 => "\u6575\u306E\u5148\u982D\u306B{color:Electric}{value:damage}{/color}"
+                    + "\u306E{icon:Electric}{color:Electric}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+                    + "\u3053\u306E\u653B\u6483\u306FElectric\u3092{value:penetration}%\u8CAB\u901A\u3059\u308B"
+                    + "\uFF08\u8CAB\u901AValue {value:penetrationValue} = {icon:Fire}{value:fire} \u00D7 {value:penetrationRatio}%\uFF09\u3002",
+                42 => "\u6575\u306E\u5148\u982D\u3078{color:Aqua}{value:damage}{/color}"
+                    + "\u306E{icon:Aqua}{color:Aqua}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+                    + "\u3053\u306E\u653B\u6483\u306FAqua\u3092{value:penetration}%\u8CAB\u901A\u3059\u308B"
+                    + "\uFF08\u8CAB\u901AValue {value:penetrationValue} = {icon:Wind}{value:wind} \u00D7 {value:penetrationRatio}%\uFF09\u3002",
+                57 => "\u6575\u306E\u5148\u982D\u3078{color:Fire}{value:damage}{/color}"
+                    + "\u306E{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+                    + "\u3053\u306E\u653B\u6483\u306FFire\u3092{value:penetration}%\u8CAB\u901A\u3059\u308B"
+                    + "\uFF08\u8CAB\u901AValue {value:penetrationValue}\uFF09\u3002"
+                    + "\u5024{value:weakness}\u306E\u5F31\u70B9\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                _ => null,
+            };
+            return template != null;
+        }
+
+        public static bool TryGetPassive(int passiveId, out string template)
+        {
+            template = passiveId == 40
+                ? "{icon:Dragon}\u7ADC\u306B\u5FDC\u3058\u3066\u3001\u81EA\u8EAB\u304C\u4E0E\u3048\u308B\u5C5E\u6027\u30C0\u30E1\u30FC\u30B8\u304C"
+                  + "\u5BFE\u8C61\u306EResistBonus\u3092\u5272\u5408\u8CAB\u901A\u3059\u308B\u3002"
+                  + "\u73FE\u5728\u306E\u8CAB\u901A\u7387\u306F{value:currentPenetration}%"
+                  + "\uFF08\u8CAB\u901AValue {value:penetrationValue}\uFF09\u3002"
+                : null;
+            return template != null;
+        }
+    }
+
     public static class DescriptionTemplateBatch02Setup
     {
         private const string SkillCatalogPath =
@@ -67,37 +106,38 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(asset);
         }
 
-        private static string CreateSkillTemplate(int id) => id switch
+        private static string CreateSkillTemplate(int id)
         {
-            9 => "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{icon:Fire}{color:Fire}{value:damage}{/color}"
-                + "\u306E{term:FireDamage|\u708E\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002"
-                + "{icon:Poison}\u6BD2\u306B\u3088\u308B\u8CAB\u901A\u7387\u306F{value:penetration}%\u3002",
-            10 => "\u73FE\u5728MN\u3092\u3059\u3079\u3066\u6D88\u8CBB\u3057\u3001\u6575\u306E\u5148\u982D\u306B"
-                + "{icon:Aqua}{color:Aqua}{value:damage}{/color}\u306E"
-                + "{term:AquaDamage|\u6C34\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002"
-                + "\u6C34\u306E\u6CE2\u52D5\u672C\u4F53\u3060\u3051\u3067\u6226\u95D8\u4E0D\u80FD\u306B\u3067\u304D\u308B\u5834\u5408\u306F\u3001"
-                + "\u5FC5\u8981\u306AMN\u306E\u307F\u6D88\u8CBB\u3059\u308B\u3002",
-            11 => "\u81EA\u8EAB\u306EHP\u3092{color:Leaf}{value:healingBeforeWeather}{/color}\u56DE\u5FA9\u3059\u308B\u3002"
-                + "\u6B63\u306E{term:Temperature|\u6C17\u6E29}\u3067\u5897\u52A0\u3057\u3001"
-                + "{term:Rain|\u96E8}\u3067\u6E1B\u5C11\u3059\u308B\u3002",
-            12 => "\u6575\u306E\u5148\u982D\u306B{icon:Electric}{color:Electric}{value:electricDamage}{/color}\u306E"
-                + "{term:ElectricDamage|\u96FB\u6C17\u30C0\u30E1\u30FC\u30B8}\u3068"
-                + "{icon:Aqua}{color:Aqua}{value:aquaDamage}{/color}\u306E"
-                + "{term:AquaDamage|\u6C34\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u3001"
-                + "\u5024{value:leakValue}\u306E{term:Leak|\u6F0F\u96FB}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-            13 => "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{value:stunTicks}tick\u306E"
-                + "{term:Stun|Stun}\u3068\u3001\u5024{value:toxinValue}\u306E"
-                + "{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-            14 => "\u5148\u982D\u306E\u751F\u5B58\u5473\u65B9\u306B{color:Ice}{value:shield}{/color}\u306E"
-                + "{term:Shield|Shield}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-            15 => "\u767A\u751F\u4E2D\u306F{term:Flying|\u98DB\u884C}\u3057\u3001Speed\u304C{value:speed}\u5897\u52A0\u3059\u308B\u3002"
-                + "\u767A\u52D5\u6642\u3001\u6575\u306E\u5148\u982D\u306B{icon:Wind}{color:Wind}{value:damage}{/color}\u306E"
-                + "{term:WindDamage|\u98A8\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u308B\u3002",
-            16 => "\u6575\u306E\u5148\u982D\u306B{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E"
-                + "{term:DragonDamage|\u7ADC\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u3001"
-                + "{term:OneTwo|\u30EF\u30F3\u30FB\u30C4\u30FC}Value\u3092{value:oneTwoValue}\u7372\u5F97\u3059\u308B\u3002",
+            if (PenetrationDescriptionTemplates.TryGetSkill(id, out var template))
+                return template;
+            return id switch
+        {
+            9 => "\u6575\u306E\u6700\u5F8C\u5C3E\u306B"
+                + "{color:Fire}{value:damage}{/color}"
+                + "\uFF08{value:baseDamage} \u00D7\uFF08100 + {icon:Fire}{value:fire} \u00D7 {value:damageRatio}%\uFF09%\uFF09\u306E"
+                + "{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+                + "\u3053\u306E\u30C0\u30E1\u30FC\u30B8\u306F{value:penetration}%"
+                + "\uFF08{value:basePenetration} \u00D7\uFF08100 + {icon:Poison}{value:poison} \u00D7 {value:penetrationRatio}%\uFF09%\uFF09"
+                + "\u306E\u8CAB\u901A\u3092\u6301\u3064\u3002",
+            10 => "MaxMNの{value:maxMnCostPercent}%（{value:maxMn} × {value:maxMnCostPercent}% = {value:manaCost}）を消費し、敵の先頭に"
+                + "{color:Aqua}{value:damage}{/color}（{value:manaCost} × {value:damagePerMana} ×（100 + {icon:Aqua}{value:aqua} × {value:damageRatio}%）%）の"
+                + "{icon:Aqua}{color:Aqua}ダメージ{/color}を与える。",
+            11 => "自身のHPを{color:Leaf}{value:healingBeforeWeather}{/color}（{value:baseHealing} ×（100 + {icon:Leaf}{value:leaf} × {value:healingRatio}%）%）回復する。"
+                + "正の{term:Temperature|気温}で増加し、{term:Rain|雨}で減少する。",
+            12 => "敵の先頭に{color:Electric}{value:electricDamage}{/color}（{value:electricBaseDamage} ×（100 + {icon:Electric}{value:electric} × {value:electricRatio}%）%）の"
+                + "{icon:Electric}{color:Electric}ダメージ{/color}と、{color:Aqua}{value:aquaDamage}{/color}（{value:aquaBaseDamage} ×（100 + {icon:Aqua}{value:aqua} × {value:aquaRatio}%）%）の"
+                + "{icon:Aqua}{color:Aqua}ダメージ{/color}を与え、値{value:leakValue}（{value:leakBaseValue} ×（100 + {icon:Aqua}{value:aqua} × {value:leakRatio}%）%）の{term:Leak|漏電}を付与する。",
+            13 => "敵の最後尾に{value:stunTicks}tick（{value:baseElectricStun} ×（100 + {icon:Electric}{value:electric} × {value:electricRatio}%）%）の{term:Stun|Stun}を付与する。"
+                + "さらに値{value:toxinValue}（{value:baseToxin} ×（100 + {icon:Poison}{value:poison} × {value:toxinRatio}%）%）の{term:Toxin|毒素}を付与する。",
+            14 => "先頭の生存味方に{color:Ice}{value:shield}{/color}（{value:baseShield} ×（100 + {icon:Ice}{value:ice} × {value:shieldRatio}%）%）の{term:Shield|Shield}を付与する。",
+            15 => "発生中は{term:Flying|飛行}し、Speedが{value:speed}（{icon:Wind}{value:wind} × {value:speedRatio}%）増加する。"
+                + "発動時、敵の先頭に{color:Wind}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Wind}{value:wind} × {value:damageRatio}%）%）の"
+                + "{icon:Wind}{color:Wind}ダメージ{/color}を与える。",
+            16 => "敵の先頭に{color:Dragon}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Dragon}{value:dragon} × {value:damageRatio}%）%）の"
+                + "{icon:Dragon}{color:Dragon}ダメージ{/color}を与え、{term:OneTwo|ワン・ツー}Valueを{value:oneTwoValue}獲得する。",
             _ => string.Empty,
-        };
+            };
+        }
 
         private static string CreatePassiveTemplate(int id) => id switch
         {

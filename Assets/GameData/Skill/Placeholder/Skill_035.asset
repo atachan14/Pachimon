@@ -20,7 +20,7 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 20
-  _description: "敵の先頭と自身を{value:stunTicks}tickの{term:Stun|Stun}にする。"
+  _description: "敵の先頭と自身を{value:stunTicks}tick（{value:baseStun} ×（100 + {icon:Leaf}{value:leaf} × {value:stunRatio}%）%）の{term:Stun|Stun}にする。"
   _baseStun: 100
   _stunLeafRatio: 100
   _stunStatus: {fileID: 11400000, guid: c611111138a14e8a89d33f1bcc6e01c1, type: 2}

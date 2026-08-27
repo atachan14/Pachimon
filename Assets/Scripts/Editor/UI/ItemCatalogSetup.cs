@@ -16,6 +16,7 @@ namespace Pachimon.Editor.UI
         private const string PotionPath = DataFolder + "/Item_001_Potion.asset";
         private const string StonePath = DataFolder + "/Item_002_Stone.asset";
         private const string MnPotionPath = DataFolder + "/Item_003_MnPotion.asset";
+        private const string ReviveShardPath = DataFolder + "/Item_005_ReviveShard.asset";
         private const string BackfireMachinePath =
             DataFolder + "/Item_10009_TM_Backfire.asset";
         private const string FireArrowMachinePath =
@@ -184,12 +185,12 @@ namespace Pachimon.Editor.UI
                 ItemIds.Potion,
                 "きずぐすり",
                 potionIcon,
-                "対象の味方パチモンの最大HPの50%を回復する。",
+                "対象の味方パチモンのHPを500回復する。",
                 ItemCategory.Pharmacy,
                 300);
             potion.ConfigureHealingForEditor(
                 RecoveryResourceType.Hp,
-                50,
+                500,
                 false);
             EditorUtility.SetDirty(potion);
 
@@ -205,14 +206,37 @@ namespace Pachimon.Editor.UI
                 ItemIds.MnPotion,
                 "MNポーション",
                 potionIcon,
-                "対象の味方パチモンの最大MNの50%を回復する。",
+                "対象の味方パチモンのMNを500回復する。",
                 ItemCategory.Pharmacy,
                 300);
             mnPotion.ConfigureHealingForEditor(
                 RecoveryResourceType.Mn,
-                50,
+                500,
                 false);
             EditorUtility.SetDirty(mnPotion);
+
+            var reviveShard = AssetDatabase.LoadAssetAtPath<HealingItemAsset>(
+                ReviveShardPath);
+            if (reviveShard == null)
+            {
+                reviveShard = ScriptableObject.CreateInstance<HealingItemAsset>();
+                AssetDatabase.CreateAsset(reviveShard, ReviveShardPath);
+            }
+
+            Undo.RecordObject(reviveShard, "Configure Revive Shard Item");
+            reviveShard.ConfigureForEditor(
+                ItemIds.ReviveShard,
+                "元気のかけら",
+                potionIcon,
+                "戦闘不能の味方パチモンを500のHPで復活させる。",
+                ItemCategory.Pharmacy,
+                1500);
+            reviveShard.ConfigureHealingForEditor(
+                RecoveryResourceType.Hp,
+                500,
+                true,
+                true);
+            EditorUtility.SetDirty(reviveShard);
 
             var stone = AssetDatabase.LoadAssetAtPath<DamageItemAsset>(StonePath);
             if (stone == null)
@@ -260,7 +284,7 @@ namespace Pachimon.Editor.UI
             var sunnyDayMachine = ConfigureSkillMachine(
                 SunnyDayMachinePath,
                 SunnyDaySkillPath,
-                "技マシーン[温暖化]",
+                "技マシーン[にほんばれ]",
                 stoneIcon);
             var rainDanceMachine = ConfigureSkillMachine(
                 RainDanceMachinePath,
@@ -394,6 +418,7 @@ namespace Pachimon.Editor.UI
                 potion,
                 stone,
                 mnPotion,
+                reviveShard,
                 backfireMachine,
                 fireArrowMachine,
                 combustionMachine,
@@ -592,7 +617,7 @@ namespace Pachimon.Editor.UI
                 icon,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             item.ConfigureSkillForEditor(skill);
             EditorUtility.SetDirty(item);
             return item;
@@ -611,8 +636,8 @@ namespace Pachimon.Editor.UI
         private static readonly (Pachimon.Run.PachimonStatType Stat, string Name, int Value)[]
             Definitions =
             {
-                (Pachimon.Run.PachimonStatType.MaxHp, "生命の刻印", 50),
-                (Pachimon.Run.PachimonStatType.MaxMn, "活力の刻印", 50),
+                (Pachimon.Run.PachimonStatType.MaxHp, "生命の刻印", 180),
+                (Pachimon.Run.PachimonStatType.MaxMn, "活力の刻印", 180),
                 (Pachimon.Run.PachimonStatType.Fire, "炎の刻印", 30),
                 (Pachimon.Run.PachimonStatType.Aqua, "水の刻印", 30),
                 (Pachimon.Run.PachimonStatType.Leaf, "草の刻印", 30),
@@ -621,10 +646,6 @@ namespace Pachimon.Editor.UI
                 (Pachimon.Run.PachimonStatType.Ice, "氷の刻印", 30),
                 (Pachimon.Run.PachimonStatType.Wind, "風の刻印", 30),
                 (Pachimon.Run.PachimonStatType.Dragon, "竜の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Speed, "俊足の刻印", 10),
-                (Pachimon.Run.PachimonStatType.Haste, "加速の刻印", 10),
-                (Pachimon.Run.PachimonStatType.DamageBonus, "攻勢の刻印", 10),
-                (Pachimon.Run.PachimonStatType.ResistBonus, "守勢の刻印", 10),
             };
 
         [UnityEditor.InitializeOnLoadMethod]
@@ -702,14 +723,18 @@ namespace Pachimon.Editor.UI
             var engravings = catalog.Items
                 .OfType<Pachimon.Items.EngravingItemAsset>()
                 .Where(item => item.ItemId >= Pachimon.Items.ItemIds.FirstEngraving
-                    && item.ItemId <= Pachimon.Items.ItemIds.LastEngraving)
+                    && item.ItemId <= Pachimon.Items.ItemIds.LastEngraving
+                    && Pachimon.Run.PachimonStatTypeUtility.IsGeneratedStat(
+                        item.TargetStat))
                 .ToArray();
             var count = engravings
                 .Select(item => item.TargetStat)
                 .Distinct()
                 .Count();
-            if (count != (int)Pachimon.Run.PachimonStatType.Count
+            if (count != Definitions.Length
                 || engravings.Any(item => item.BasePrice != BasePrice
+                    || item.BaseEffectValue
+                        != Pachimon.Items.StatUnitValue.Get(item.TargetStat)
                     || !HasValidScriptReference(item)))
             {
                 Setup();

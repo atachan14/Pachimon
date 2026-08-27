@@ -98,17 +98,13 @@ namespace Pachimon.UI
             PachimonStatType.MaxHp,
             PachimonStatType.MaxMn,
             PachimonStatType.Fire,
-            PachimonStatType.Poison,
             PachimonStatType.Aqua,
-            PachimonStatType.Ice,
             PachimonStatType.Leaf,
-            PachimonStatType.Wind,
             PachimonStatType.Electric,
+            PachimonStatType.Ice,
+            PachimonStatType.Wind,
+            PachimonStatType.Poison,
             PachimonStatType.Dragon,
-            PachimonStatType.Speed,
-            PachimonStatType.Haste,
-            PachimonStatType.DamageBonus,
-            PachimonStatType.ResistBonus,
         };
 
         [SerializeField] private Image _graphic;
@@ -232,12 +228,12 @@ namespace Pachimon.UI
             SetPreferredHeight(_rowText.gameObject, 28f);
             _rowText.transform.SetSiblingIndex(2);
 
-            _statusSection = CreateSection("TrainerStatusSection", content, 308f);
+            _statusSection = CreateSection("TrainerStatusSection", content, 150f);
             _statusSection.transform.SetSiblingIndex(3);
             var statusBackground = _statusSection.GetComponent<Image>();
             statusBackground.color = GameUiPalette.Transparent;
             statusBackground.raycastTarget = false;
-            _statusGrid = CreateGrid(_statusSection.transform, "TrainerStatusGrid", 2, 38f);
+            _statusGrid = CreateGrid(_statusSection.transform, "TrainerStatusGrid", 4, 38f);
             _statusGrid.offsetMin = Vector2.zero;
             _statusGrid.offsetMax = Vector2.zero;
             _statusGrid.GetComponent<GridLayoutGroup>().spacing = new Vector2(7f, 7f);
@@ -245,6 +241,11 @@ namespace Pachimon.UI
             {
                 var card = CreateStatCard(_statusGrid, statType);
                 _statTexts[statType] = card;
+                if (statType == PachimonStatType.MaxMn)
+                {
+                    CreateStatSpacer(_statusGrid, "ResourceSpacer1");
+                    CreateStatSpacer(_statusGrid, "ResourceSpacer2");
+                }
             }
 
             _badgeSection = CreateSection("BadgeSection", content, 126f);
@@ -763,6 +764,12 @@ namespace Pachimon.UI
             return value;
         }
 
+        private static void CreateStatSpacer(Transform parent, string objectName)
+        {
+            var spacer = new GameObject(objectName, typeof(RectTransform));
+            spacer.transform.SetParent(parent, false);
+        }
+
         private static bool TryGetDisplayStat(
             PachimonStatType statType,
             out PachimonDisplayStat displayStat)
@@ -794,10 +801,8 @@ namespace Pachimon.UI
             {
                 PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
                     RewardElementPalette.ResourceColor,
-                PachimonStatType.Speed or PachimonStatType.Haste =>
+                _ when PachimonStatTypeUtility.IsSubStat(statType) =>
                     RewardElementPalette.TimingColor,
-                PachimonStatType.DamageBonus or PachimonStatType.ResistBonus =>
-                    RewardElementPalette.CombatBonusColor,
                 _ => GameUiPalette.StatCard,
             };
         }

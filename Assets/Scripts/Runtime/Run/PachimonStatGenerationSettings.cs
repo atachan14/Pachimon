@@ -5,38 +5,30 @@ namespace Pachimon.Run
     public sealed class PachimonStatGenerationSettings
     {
         public PachimonStatGenerationSettings(
-            int attributeAllocationBudget = 800,
-            int commonAllocationBudget = 200,
-            int resourceMinimumValueUnits = 100,
-            int resourceDisplayMultiplier = 5,
-            int initialMaxAllocation = 100,
-            int additionalMaxAllocation = 100)
+            int allocationBudget = 500,
+            int resourceBaseValue = PachimonStatValueUnits.ResourceBaseValue,
+            int resourceDisplayMultiplier = PachimonStatValueUnits.ResourceDisplayMultiplier,
+            int initialMaxAllocation = 50,
+            int additionalMaxAllocation = 50)
         {
-            if (attributeAllocationBudget < 0) throw new ArgumentOutOfRangeException(nameof(attributeAllocationBudget));
-            if (commonAllocationBudget < 0) throw new ArgumentOutOfRangeException(nameof(commonAllocationBudget));
-            if (resourceMinimumValueUnits < 0) throw new ArgumentOutOfRangeException(nameof(resourceMinimumValueUnits));
+            if (allocationBudget < 0) throw new ArgumentOutOfRangeException(nameof(allocationBudget));
+            if (resourceBaseValue < 0) throw new ArgumentOutOfRangeException(nameof(resourceBaseValue));
             if (resourceDisplayMultiplier < 1) throw new ArgumentOutOfRangeException(nameof(resourceDisplayMultiplier));
             if (initialMaxAllocation < 0) throw new ArgumentOutOfRangeException(nameof(initialMaxAllocation));
             if (additionalMaxAllocation < 1) throw new ArgumentOutOfRangeException(nameof(additionalMaxAllocation));
 
-            AttributeAllocationBudget = attributeAllocationBudget;
-            CommonAllocationBudget = commonAllocationBudget;
-            ResourceMinimumValueUnits = resourceMinimumValueUnits;
+            AllocationBudget = allocationBudget;
+            ResourceBaseValue = resourceBaseValue;
             ResourceDisplayMultiplier = resourceDisplayMultiplier;
             InitialMaxAllocation = initialMaxAllocation;
             AdditionalMaxAllocation = additionalMaxAllocation;
         }
 
-        public int AttributeAllocationBudget { get; }
-        public int CommonAllocationBudget { get; }
-        public int ResourceMinimumValueUnits { get; }
+        public int AllocationBudget { get; }
+        public int ResourceBaseValue { get; }
         public int ResourceDisplayMultiplier { get; }
         public int InitialMaxAllocation { get; }
         public int AdditionalMaxAllocation { get; }
-        public int TotalValueUnits =>
-            checked(
-                ResourceMinimumValueUnits * 2
-                + AttributeAllocationBudget
-                + CommonAllocationBudget);
+        public int TotalValueUnits => AllocationBudget;
     }
 }

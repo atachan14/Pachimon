@@ -271,13 +271,15 @@ Damage
 = floor(BaseAquaDamage 100
   × AmplificationMultiplier(Aqua))
 
-貫通率
-= floor(BasePenetrationPercent 20
-  × AmplificationMultiplier(Wind × WindPenetrationRatio 100%))
+貫通Value
+= Wind × WindPenetrationRatio 25%
+
+Aqua割合貫通率
+= 貫通Value / (100 + 貫通Value)
 ```
 
 - BaseDamageと貫通率はSkill SOから調整可能にする
-- 貫通率は対象のAquaとResistBonusによる防御値へ適用する
+- 割合貫通率は対象のAquaによる防御値だけへ適用する
 
 #### Passive
 

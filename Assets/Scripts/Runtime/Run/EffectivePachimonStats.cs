@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Pachimon.Run
 {
@@ -10,7 +11,8 @@ namespace Pachimon.Run
         public EffectivePachimonStats(PachimonStats baseStats, TrainerModifierSet modifiers)
             : this(Calculator.Calculate(
                 baseStats,
-                TrainerStatModifierFactory.Create(modifiers)))
+                TrainerStatModifierFactory.Create(modifiers),
+                PachimonSubStatBindings.CreateDefault()))
         {
         }
 
@@ -28,9 +30,13 @@ namespace Pachimon.Run
 
         public static EffectivePachimonStats Calculate(
             PachimonStats baseStats,
-            IEnumerable<IStatModifier> modifiers)
+            IEnumerable<IStatModifier> modifiers,
+            PachimonSubStatBindings bindings = null)
         {
-            return new EffectivePachimonStats(Calculator.Calculate(baseStats, modifiers));
+            return new EffectivePachimonStats(Calculator.Calculate(
+                baseStats,
+                modifiers,
+                bindings));
         }
 
         public int GetValue(PachimonStatType statType)

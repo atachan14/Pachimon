@@ -14,10 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.FireBarrierFieldEffectAsset
   _effectId: 2
   _displayName: 炎の障壁
-  _description: 味方への攻撃を肩代わりし、攻撃者へ火傷を与える。
+  _description: Valueを耐久力として味方への攻撃を肩代わりする。Valueは毎tick減少し、攻撃者へ被弾直前Valueに応じた火傷を与える。
   _icon: {fileID: 0}
-  _valueHpRatio: 100
-  _valueDurationRatio: 100
   _valueBurnRatio: 20
-  _defenseSnapshotRatio: 50
+  _fireDefense: 200
+  _aquaDefense: 0
+  _leafDefense: 100
+  _electricDefense: 100
+  _poisonDefense: 100
+  _iceDefense: 100
+  _windDefense: 100
+  _dragonDefense: 100
+  _resistBonus: 0
   _burnStatus: {fileID: 11400000, guid: 87271279bf9744ce9f4986edd3499b85, type: 2}

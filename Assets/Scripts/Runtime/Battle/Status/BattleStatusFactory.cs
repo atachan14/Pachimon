@@ -75,7 +75,8 @@ namespace Pachimon.Battle
         public static BattleStatusInstance CreateSlow(
             BattleUnitState source,
             int value,
-            SlowStatusAsset definition)
+            SlowStatusAsset definition,
+            int? durationTicks = null)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
@@ -89,6 +90,7 @@ namespace Pachimon.Battle
                 BattleStatusCategory.Slow,
                 source,
                 value,
+                durationTicks: durationTicks,
                 definition: definition);
         }
 
@@ -107,6 +109,22 @@ namespace Pachimon.Battle
             return new BattleStatusInstance(
                 BattleStatusId.Burn,
                 BattleStatusCategory.Burn,
+                source,
+                value,
+                definition: definition);
+        }
+
+        public static BattleStatusInstance CreatePollen(
+            BattleUnitState source,
+            int value,
+            PollenStatusAsset definition)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (value <= 0) throw new ArgumentOutOfRangeException(nameof(value));
+            if (definition == null) throw new ArgumentNullException(nameof(definition));
+            return new BattleStatusInstance(
+                BattleStatusId.Pollen,
+                BattleStatusCategory.None,
                 source,
                 value,
                 definition: definition);

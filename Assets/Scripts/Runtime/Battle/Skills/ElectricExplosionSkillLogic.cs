@@ -55,15 +55,11 @@ namespace Pachimon.Battle
             var baseDamage = ElectricExplosionMath.CalculateBaseDamage(
                 _skill,
                 electric,
-                fire,
                 state?.ResolveAttributeRatio(
                     PachimonAttribute.Electric,
-                    _skill.ElectricScalingPercent),
-                state?.ResolveAttributeRatio(
-                    PachimonAttribute.Fire,
-                    _skill.FireScalingPercent));
-            var penetrationPercent =
-                ElectricExplosionMath.CalculatePenetrationPercent(
+                    _skill.ElectricScalingPercent));
+            var penetrationValue =
+                ElectricExplosionMath.CalculateAttributePenetrationValue(
                     _skill,
                     fire,
                     state?.ResolveAttributeRatio(
@@ -78,7 +74,10 @@ namespace Pachimon.Battle
                 PachimonAttribute.Electric,
                 isAttack: true,
                 applyAttackerAttributeMultiplier: false,
-                penetrationPercent: penetrationPercent));
+                penetration: new DamagePenetration(
+                    attributePercentage:
+                        PenetrationMath.CalculateDiminishingPercentage(
+                            penetrationValue))));
         }
 
         private static BattleUnitState GetTarget(SkillExecutionContext context)

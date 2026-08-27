@@ -20,9 +20,15 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 40
-  _description: "\u6575\u5168\u4F53\u3078\u5024{color:Electric}{value:paralysis}{/color}\u306E{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
-  _baseLeafParalysis: 40
-  _leafRatio: 100
-  _basePoisonParalysis: 20
-  _poisonRatio: 100
+  _description: "\u6575\u5168\u4F53\u3078{value:paralysisDuration}tick\uFF08{value:baseDuration}
+    \xD7\uFF08100 + {icon:Leaf}{value:leaf} \xD7 {value:durationRatio}%\uFF09%\uFF09\u3001\u5024{color:Electric}{value:paralysis}{/color}\uFF08{value:electricValue}\uFF08{value:baseElectricValue}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:electricRatio}%\uFF09%\uFF09+
+    {value:poisonValue}\uFF08{value:basePoisonValue} \xD7\uFF08100 + {icon:Poison}{value:poison}
+    \xD7 {value:poisonRatio}%\uFF09%\uFF09\uFF09\u306E{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u5024{value:pollen}\uFF08{value:pollenBaseValue}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:pollenRatio}%\uFF09%\uFF09\u306E{term:Pollen|\u82B1\u7C89}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _baseDurationTicks: 50
+  _baseElectricValue: 30
+  _basePoisonValue: 20
   _paralysisStatus: {fileID: 11400000, guid: e83333335ac350ac91f5513dee8023e3, type: 2}
+  _pollenBaseValue: 50
+  _pollenStatus: {fileID: 11400000, guid: b1420000000000000000000000000001, type: 2}

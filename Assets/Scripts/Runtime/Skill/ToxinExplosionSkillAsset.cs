@@ -10,15 +10,13 @@ namespace Pachimon.Skills
     public sealed class ToxinExplosionSkillAsset : SkillAsset
     {
         [SerializeField, Min(0)] private int _toxinConversionPercent = 100;
-        [SerializeField, Min(0)] private int _basePoisonPower = 50;
         [SerializeField, HideInInspector] private int _poisonScalingPercent = 100;
-        [SerializeField, Min(0)] private int _baseFirePower = 50;
+        [SerializeField, Min(0)] private int _aoeFirePercent = 5;
         [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
 
         public int ToxinConversionPercent => _toxinConversionPercent;
-        public int BasePoisonPower => _basePoisonPower;
         public int PoisonScalingPercent => AttributeDamageRules.ScalingRatio;
-        public int BaseFirePower => _baseFirePower;
+        public int AoeFirePercent => _aoeFirePercent;
         public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -39,9 +37,8 @@ namespace Pachimon.Skills
             int baseManaCost,
             string description,
             int toxinConversionPercent,
-            int basePoisonPower,
             int poisonScalingPercent,
-            int baseFirePower,
+            int aoeFirePercent,
             int fireScalingPercent)
         {
             base.ConfigureForEditor(
@@ -54,9 +51,8 @@ namespace Pachimon.Skills
                 description,
                 baseManaCost);
             _toxinConversionPercent = toxinConversionPercent;
-            _basePoisonPower = basePoisonPower;
             _poisonScalingPercent = poisonScalingPercent;
-            _baseFirePower = baseFirePower;
+            _aoeFirePercent = aoeFirePercent;
             _fireScalingPercent = fireScalingPercent;
         }
 #endif

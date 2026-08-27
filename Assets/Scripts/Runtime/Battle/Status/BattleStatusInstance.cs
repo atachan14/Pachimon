@@ -49,6 +49,7 @@ namespace Pachimon.Battle
         Clone = 139,
         WindGod = 140,
         DragonInstall = 141,
+        Pollen = 142,
     }
 
     [Flags]
@@ -138,6 +139,7 @@ namespace Pachimon.Battle
         public object RuntimeData { get; }
         public BattleStatusAsset Definition { get; }
         public decimal DamageWork { get; private set; }
+        public decimal DecayWork { get; private set; }
         public IReadOnlyList<ToxinApplicationRecord> ToxinApplications =>
             _toxinApplications;
         public bool IsTimed => RemainingTicks.HasValue;
@@ -146,6 +148,7 @@ namespace Pachimon.Battle
             RemainingTicks == 0
             || (StatusId == BattleStatusId.Freeze && Value <= 0)
             || (StatusId == BattleStatusId.WindErosion && Value <= 0)
+            || (StatusId == BattleStatusId.Pollen && Value <= 0)
             || (((Categories
                     & (BattleStatusCategory.Slow | BattleStatusCategory.Toxin)) != 0)
                 && Value <= 0);
@@ -188,6 +191,7 @@ namespace Pachimon.Battle
                 $"{Definition?.DisplayName ?? "毒素"} {Value}",
             BattleStatusId.ToxinGrowth =>
                 $"毒素適応 +{Value * StackCount}%",
+            BattleStatusId.Pollen => $"{Definition?.DisplayName ?? "花粉"} {Value}",
             BattleStatusId.FireGrowth =>
                 $"燃える男 Fire +{Value * StackCount}",
             BattleStatusId.AddChain =>
@@ -245,6 +249,24 @@ namespace Pachimon.Battle
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
             Value = Math.Max(0, Value - amount);
+        }
+
+        internal void AccumulateValueDecay(decimal amount)
+        {
+            if (amount < 0m) throw new ArgumentOutOfRangeException(nameof(amount));
+            DecayWork += amount;
+            var decay = Math.Min(Value, SignedStatMath.FloorNonNegative(DecayWork));
+            DecayWork -= decay;
+            Value -= decay;
+        }
+
+        public int GetSpeedReduction(int valueOverride = -1)
+        {
+            var value = valueOverride >= 0 ? valueOverride : Value;
+            var totalValue = checked(value * StackCount);
+            return Definition is SlowStatusAsset slow
+                ? slow.CalculateSpeedReduction(totalValue)
+                : totalValue;
         }
 
         internal void AddToxinApplication(
@@ -323,6 +345,7 @@ namespace Pachimon.Battle
         {
             if (original == null) throw new ArgumentNullException(nameof(original));
             DamageWork = original.DamageWork;
+            DecayWork = original.DecayWork;
             _toxinApplications.Clear();
             _toxinApplications.AddRange(original._toxinApplications);
         }

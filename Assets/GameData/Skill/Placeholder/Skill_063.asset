@@ -20,10 +20,16 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 25
-  _description: "\u6575\u306E\u5148\u982D\u3078{icon:Fire}{color:Fire}{value:fireDamage}{/color}\u306E\u708E\u3001{icon:Aqua}{color:Aqua}{value:aquaDamage}{/color}\u306E\u6C34\u3001{icon:Wind}{color:Wind}{value:windDamage}{/color}\u306E\u98A8\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002"
-  _baseFireDamage: 75
+  _description: "\u6575\u306E\u5148\u982D\u3078{color:Fire}{value:fireDamage}{/color}\uFF08{value:baseFireDamage}
+    \xD7\uFF08100 + {icon:Fire}{value:fire} \xD7 {value:fireRatio}%\uFF09%\uFF09\u306E{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3001{color:Aqua}{value:aquaDamage}{/color}\uFF08{value:baseAquaDamage}
+    \xD7\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:aquaRatio}%\uFF09%\uFF09\u306E{icon:Aqua}{color:Aqua}\u30C0\u30E1\u30FC\u30B8{/color}\u3001{color:Leaf}{value:leafDamage}{/color}\uFF08{value:baseLeafDamage}
+    \xD7\uFF08100 + {icon:Leaf}{value:leaf} \xD7 {value:leafRatio}%\uFF09%\uFF09\u306E{icon:Leaf}{color:Leaf}\u30C0\u30E1\u30FC\u30B8{/color}\u3001{color:Wind}{value:windDamage}{/color}\uFF08{value:baseWindDamage}
+    \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u306E{icon:Wind}{color:Wind}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+  _baseFireDamage: 65
   _fireDamageRatio: 100
-  _baseAquaDamage: 75
+  _baseAquaDamage: 65
   _aquaDamageRatio: 100
-  _baseWindDamage: 75
+  _baseLeafDamage: 65
+  _leafDamageRatio: 100
+  _baseWindDamage: 65
   _windDamageRatio: 100

@@ -432,6 +432,7 @@ namespace Pachimon.Battle
             BattleUnitState source,
             BattleUnitState target,
             BattleStatusId statusId,
+            int requestedValue,
             int appliedValue)
             : base(state, source, target)
         {
@@ -441,10 +442,12 @@ namespace Pachimon.Battle
                 throw new ArgumentOutOfRangeException(nameof(appliedValue));
             }
             StatusId = statusId;
+            RequestedValue = requestedValue;
             AppliedValue = appliedValue;
         }
 
         public BattleStatusId StatusId { get; }
+        public int RequestedValue { get; }
         public int AppliedValue { get; }
     }
 

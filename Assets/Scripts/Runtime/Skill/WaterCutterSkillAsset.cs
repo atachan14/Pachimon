@@ -11,12 +11,10 @@ namespace Pachimon.Skills
     {
         [SerializeField, Min(0)] private int _baseAquaDamage = 100;
         [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
-        [SerializeField, Min(0)] private int _basePenetrationPercent = 20;
-        [SerializeField, Min(0)] private int _windPenetrationRatio = 100;
+        [SerializeField, Min(0)] private int _windPenetrationRatio = 25;
 
         public int BaseAquaDamage => _baseAquaDamage;
         public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
-        public int BasePenetrationPercent => _basePenetrationPercent;
         public int WindPenetrationRatio => _windPenetrationRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -36,7 +34,6 @@ namespace Pachimon.Skills
             string description,
             int baseAquaDamage,
             int aquaDamageRatio,
-            int basePenetrationPercent,
             int windPenetrationRatio)
         {
             base.ConfigureForEditor(
@@ -45,7 +42,6 @@ namespace Pachimon.Skills
                 description, baseManaCost);
             _baseAquaDamage = baseAquaDamage;
             _aquaDamageRatio = aquaDamageRatio;
-            _basePenetrationPercent = basePenetrationPercent;
             _windPenetrationRatio = windPenetrationRatio;
         }
 #endif

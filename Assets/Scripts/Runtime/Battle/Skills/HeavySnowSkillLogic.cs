@@ -30,11 +30,12 @@ namespace Pachimon.Battle
             }
 
             var value = SignedStatMath.FloorNonNegative(
-                _skill.BaseValue
-                + context.GetAttributeValue(PachimonAttribute.Ice)
-                * context.GetAttributeRatio(
-                    PachimonAttribute.Ice,
-                    _skill.IceValueRatio) / 100m,
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseValue,
+                    context.GetAttributeValue(PachimonAttribute.Ice),
+                    context.GetAttributeRatio(
+                        PachimonAttribute.Ice,
+                        _skill.IceValueRatio)),
                 minimum: 1);
             if (value > 0)
             {

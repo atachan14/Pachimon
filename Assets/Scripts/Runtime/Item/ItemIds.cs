@@ -7,6 +7,8 @@ namespace Pachimon.Items
         public const int Potion = 1;
         public const int Stone = 2;
         public const int MnPotion = 3;
+        public const int SkillForget = 4;
+        public const int ReviveShard = 5;
         public const int FirstEngraving = 100;
         public const int LastEngraving = 113;
         public const int FirstEquipment = 200;

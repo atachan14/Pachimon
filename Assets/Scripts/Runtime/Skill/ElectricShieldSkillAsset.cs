@@ -15,6 +15,7 @@ namespace Pachimon.Skills
         [SerializeField, HideInInspector] private int _selfParalysisElectricRatio = 100;
         [SerializeField, Min(0)] private int _baseCounterParalysis = 25;
         [SerializeField, HideInInspector] private int _counterParalysisElectricRatio = 100;
+        [SerializeField, Min(1)] private int _baseCounterParalysisDurationTicks = 25;
         [SerializeField] private SlowStatusAsset _paralysisStatus;
         [SerializeField] private ElectricShieldStatusAsset _shieldStatus;
 
@@ -25,6 +26,10 @@ namespace Pachimon.Skills
         public int SelfParalysisElectricRatio => AttributeDamageRules.ScalingRatio;
         public int BaseCounterParalysis => _baseCounterParalysis;
         public int CounterParalysisElectricRatio => AttributeDamageRules.ScalingRatio;
+        public int BaseCounterParalysisDurationTicks =>
+            _baseCounterParalysisDurationTicks;
+        public int CounterParalysisDurationIceRatio =>
+            AttributeDamageRules.ScalingRatio;
         public SlowStatusAsset ParalysisStatus => _paralysisStatus;
         public ElectricShieldStatusAsset ShieldStatus => _shieldStatus;
 
@@ -45,6 +50,7 @@ namespace Pachimon.Skills
             int baseShieldValue, int shieldElectricRatio,
             int baseSelfParalysis, int selfParalysisElectricRatio,
             int baseCounterParalysis, int counterParalysisElectricRatio,
+            int baseCounterParalysisDurationTicks,
             SlowStatusAsset paralysisStatus,
             ElectricShieldStatusAsset shieldStatus)
         {
@@ -57,6 +63,8 @@ namespace Pachimon.Skills
             _selfParalysisElectricRatio = selfParalysisElectricRatio;
             _baseCounterParalysis = baseCounterParalysis;
             _counterParalysisElectricRatio = counterParalysisElectricRatio;
+            _baseCounterParalysisDurationTicks =
+                baseCounterParalysisDurationTicks;
             _paralysisStatus = paralysisStatus;
             _shieldStatus = shieldStatus;
         }

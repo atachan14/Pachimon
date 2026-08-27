@@ -9,23 +9,17 @@ namespace Pachimon.Battle
         public static decimal CalculateBaseDamage(
             ElectricExplosionSkillAsset skill,
             decimal electric,
-            decimal fire,
-            decimal? electricScalingPercent = null,
-            decimal? fireScalingPercent = null)
+            decimal? electricScalingPercent = null)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
 
             return SignedStatMath.ScaleFromBase(
-                    skill.BasePower,
-                    electric,
-                    electricScalingPercent ?? skill.ElectricScalingPercent)
-                * SignedStatMath.AmplificationMultiplier(
-                    fire
-                    * (fireScalingPercent ?? skill.FireScalingPercent)
-                    / 100m);
+                skill.BaseDamage,
+                electric,
+                electricScalingPercent ?? skill.ElectricScalingPercent);
         }
 
-        public static decimal CalculatePenetrationPercent(
+        public static decimal CalculateAttributePenetrationValue(
             ElectricExplosionSkillAsset skill,
             decimal fire,
             decimal fireScalingPercent = 100m)
@@ -33,7 +27,7 @@ namespace Pachimon.Battle
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             return fire
                 * fireScalingPercent / 100m
-                * skill.PenetrationPercentAtFire100 / 100m;
+                * skill.FirePenetrationRatio / 100m;
         }
     }
 }

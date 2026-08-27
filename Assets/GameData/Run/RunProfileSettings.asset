@@ -14,4 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Run.RunProfileSettings
   _productionProfile: {fileID: 11400000, guid: ac2f86ec14d44ef5a15e0c69dca2eaf4, type: 2}
   _developmentProfile: {fileID: 11400000, guid: 7adf496a623640af9485c2e9676eb37f, type: 2}
-  _editorSelection: 0
+  _editorSelection: 1

@@ -13,24 +13,23 @@
 
 - 名前、説明、Icon、調整値はField Effect Definition SOへ保持する
 - Skill SOは生成するField Effect Definitionを参照する
-- 現在Value、HP、残り時間、所属陣営、生成者などの可変値はRuntime Instanceへ保持する
+- 現在Value、HP、残り時間、所属陣営、生成者など、効果ごとに必要な可変値だけをRuntime Instanceへ保持する
 - StatusとWeatherも同様にDefinition SOとRuntime Instanceを分離する
 - Field Effectから付与するStatusの生成量はField Effect Definition側へ保持する
 - Status Definitionは、受け取ったValueの作用と終了条件を定義する
 
-### 防御Snapshotを持つ生成物
+### 防御値を持つ生成物
 
-- 生成時のStatを指定RatioでSnapshotし、生成後の生成者のStat変化から切り離す
-- 再生成でValueを加算する場合でも、防御Snapshotは最新の生成者から取得した値で上書きできる
-- 属性攻撃を肩代わりする場合は攻撃対象側の軽減を適用せず、軽減前Damageへ生成物自身のSnapshot防御を適用する
-- 生成物のHPを超えた余剰Damageは、生成物による軽減後の値のまま元の対象へ引き継げる
+- 防御値はDefinition SOの固定値、または生成時Snapshotなど、生成物ごとに定義する
+- 属性攻撃を肩代わりする場合は攻撃対象側の軽減を適用せず、軽減前Damageへ生成物自身の防御を適用する
+- 生成物の耐久値を超えた余剰Damageは、生成物による軽減後の値のまま元の対象へ引き継げる
 - 引き継いだ余剰Damageへ元の対象の属性値とResistBonusによる軽減を適用する
 - 元の対象が持つShieldなど、Damage適用段階の防御は余剰Damageにも適用する
 
 ### 軽量Field Entity
 
 - Damageや状態を受け取る必要がある生成物でも、Turn・Skill・MNなどを必要としなければ完全な`BattleUnitState`にはしない
-- Runtime InstanceへHP、防御Snapshot、許可された状態だけを保持する
+- Runtime Instanceへ耐久値と許可された状態など、その生成物に必要な情報だけを保持する
 - 生成物ごとに受け取れる状態を限定し、Slow・Stunなど行動用の状態は行動主体でない生成物へ適用しない
 - 生成物へのDamageは`FieldEffectDamageAppliedEvent`として通知し、Passiveや別のField Effectが反応できる
 - Field Effect由来Damageから同じ反応を再帰させないなど、Originによるループ防止を行う
@@ -77,14 +76,15 @@
 - `WeatherId`: `Temperature`
 - 初期値は`0`とし、Battle中は時間経過で減衰しない
 - 正負の変更量を加算し、合計が`0`になった場合はRuntime Instanceを削除する
-- 正の気温ではFire Attribute Ratioへ`AmplificationMultiplier(Temperature × 10%)`を乗算する
-- 正の気温ではAquaとIce Attribute Ratioへ`ReductionMultiplier(Temperature × 20%)`を乗算する
-- 負の気温ではFire Attribute Ratioへ`ReductionMultiplier(abs(Temperature) × 20%)`を乗算する
-- 負の気温ではIce Attribute Ratioへ`AmplificationMultiplier(abs(Temperature) × 10%)`を乗算する
+- 正の気温ではFire Attribute Ratioへ`AmplificationMultiplier(Temperature × 100%)`を乗算する
+- 正の気温ではIce Attribute Ratioへ`ReductionMultiplier(Temperature × 100%)`を乗算する
+- 負の気温ではFire Attribute Ratioへ`ReductionMultiplier(abs(Temperature) × 100%)`を乗算する
+- 負の気温ではIce Attribute Ratioへ`AmplificationMultiplier(abs(Temperature) × 100%)`を乗算する
 - 負の気温はAqua Ratioへ影響しない
 - 補正後RatioはDamageとSkill/Passive固有効果のAttribute参照へ使用する
 - 防御側の属性軽減には気温補正を使用しない
 - Ratio Scaling PercentはSOで調整可能にする
+- 詳細Overlayでは現在の気温から実際のRatio増加率・減少率を計算して表示する
 - `温暖化`は気温を恒久的に増加させる
 - `温暖化`自身のValueFireRatioにも現在の気温補正を適用し、自己増幅と寒冷による抑制を認める
 
@@ -108,24 +108,36 @@
 - 雨Valueが`500`から`400`へ減衰する100tickで、漏電Valueは約`31`増える
 - 漏電発動で消費された後も、雨が続いていれば次のtickから再蓄積する
 - 雨の消滅や雪への切替時は小数Workだけを破棄し、既に加算された漏電Valueは残す
+- 詳細Overlayでは、暴風を含む現在の実効Rain ValueからRatio補正、漏電/tick、湿潤増加、雪の冷気Valueを計算して表示する
+- 晴天の詳細Overlayでは、現在ValueからRatio補正と10tickごとの気温・湿潤変化を表示する
 
 ### 暴風
 
 - `WeatherId`: `Wind`
 - 同じ暴風を再生成した場合はValueを加算し、生成者を最新の使用者へ更新する
 - 毎tickの基本減衰量は`1`
+- Wind Damageが発生すると、軽減前Damageの`10%`を暴風Valueへ加算する
 - 風Attribute Ratioへ`AmplificationMultiplier(暴風Value × WindRatioScalingPercent / 100)`を乗算する
 - 全PachimonのSpeedへ`Wind × SpeedFromWindRatio / 100`を派生加算する
 - 雨・雪の実効Valueを`Rain Value × AmplificationMultiplier(暴風Value × RainEffectRatioScalingPercent / 100)`とする
 - 実効Rain Valueは、雨のAqua/Fire Ratio、雨による漏電加算、雪による冷気付与、雨男Passiveで共通使用する
 - 仮値はWind Ratio `10%`、Speed参照 `20%`、雨・雪強化Ratio `10%`とする
+- 詳細Overlayでは現在ValueによるWind Ratio増加率と雨・雪の実効増幅率を表示する
+
+### 雷
+
+- Electric Attribute Ratioを現在Valueに応じて増加する
+- 全PachimonのElectricをSOのRatioで参照し、Speedへ派生加算する
+- SOで指定した間隔ごとに、発動時ValueをDamageDivisorで割ったElectric Damageを全Pachimonへ与える
+- 毎tickの基本減衰量は`1`
+- 詳細Overlayでは現在のRatio増加率、Speed参照率、攻撃間隔、現在Value基準の軽減前Damageを表示する
 
 ### スモッグ
 
 - `FieldEffectId`: `Smog`
-- 名前、説明、毒素付与Ratio、Value減衰Ratio、付与する`ToxinStatusAsset`を`SmogFieldEffectAsset`へ保持する
+- 名前、説明、毒素付与Ratio、固定のtick減衰値、付与する`ToxinStatusAsset`を`SmogFieldEffectAsset`へ保持する
 - スモッグを生成するSkill SOは`SmogFieldEffectAsset`を参照する
 - 敵陣単位で保持し、同じ敵陣への再生成ではValueを加算する
 - 再生成時は同一Definitionの使用を必須とする
-- 毎tickのStatus付与とValue減衰に、それぞれ小数Workを使用する
+- 毎tickのStatus付与には小数Workを使用し、Valueは固定で1減少する
 - Field Effectが付与したStatusは次のtickから更新する

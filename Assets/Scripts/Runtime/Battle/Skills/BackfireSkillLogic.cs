@@ -58,7 +58,7 @@ namespace Pachimon.Battle
                 state?.ResolveAttributeRatio(
                     PachimonAttribute.Fire,
                     _skill.FireScalingPercent));
-            var penetrationPercent = BackfireMath.CalculatePenetrationPercent(
+            var penetration = BackfireMath.CalculateAttributeFixedPenetration(
                 _skill,
                 user.GetBattleStatValue(PachimonStatType.Poison));
             return AttributeDamageCalculator.Calculate(new DamageContext(
@@ -70,7 +70,8 @@ namespace Pachimon.Battle
                 PachimonAttribute.Fire,
                 isAttack: true,
                 applyAttackerAttributeMultiplier: false,
-                penetrationPercent: penetrationPercent));
+                penetration: new DamagePenetration(
+                    attributeFixed: Math.Max(0m, penetration))));
         }
 
         private void ValidateSkill(SkillExecutionContext context)

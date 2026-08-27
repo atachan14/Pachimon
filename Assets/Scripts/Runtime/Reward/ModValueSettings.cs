@@ -8,9 +8,9 @@ namespace Pachimon.Reward
         menuName = "Pachimon/Reward/Mod Value Settings")]
     public sealed class ModValueSettings : ScriptableObject
     {
-        [SerializeField, Min(0)] private int _attributeAmount = 60;
-        [SerializeField, Min(0)] private int _maxHpAmount = 100;
-        [SerializeField, Min(0)] private int _maxMnAmount = 100;
+        [SerializeField, Min(0)] private int _attributeAmount = 30;
+        [SerializeField, Min(0)] private int _maxHpAmount = 240;
+        [SerializeField, Min(0)] private int _maxMnAmount = 240;
         [SerializeField, Min(0)] private int _speedAmount = 20;
         [SerializeField, Min(0)] private int _damageBonusAmount = 20;
         [SerializeField, Min(0)] private int _resistBonusAmount = 20;

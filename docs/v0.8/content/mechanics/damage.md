@@ -8,7 +8,7 @@
 - 増幅倍率としてStatを参照する場合は`AmplificationMultiplier(Stat)`を使用する
 - 割合そのものを表す場合は、式の結果が`%`であることを明記する
 - Damage Typeは`Fire / Aqua / Leaf / Electric / Poison / Ice / Wind / Dragon / True`を使用する
-- 実装では`DamageContext`が発生源、属性、基礎Damage、貫通率、`IsAttack`を保持する
+- 実装では`DamageContext`が発生源、属性、基礎Damage、`DamagePenetration`、`IsAttack`を保持する
 - `DamageCalculationResult`が軽減前Damage、軽減用Stat、軽減後Damage、最終Damageを保持する
 
 ## 攻撃判定
@@ -41,7 +41,7 @@
 
 ### 攻撃倍率
 
-属性値とDamageBonusは、攻撃側の仕様で参照された場合に[AmplificationMultiplier](./scaling.md#amplificationmultiplier)を使用する。
+属性値とDamageBonusは先に加算し、攻撃側の仕様で参照された場合に`AmplificationMultiplier(属性値 + DamageBonus)`を1回使用する。
 
 - 正数は与えるDamageを増加させる
 - 負数は与えるDamageを漸減させる
@@ -49,7 +49,7 @@
 
 ### 防御倍率
 
-属性値とResistBonusは、防御側で参照された場合に[ReductionMultiplier](./scaling.md#reductionmultiplier)を`DefenseMultiplier`として使用する。
+属性値とResistBonusは貫通を個別に適用してから加算し、`ReductionMultiplier(軽減後属性値 + 軽減後ResistBonus)`を`DefenseMultiplier`として1回使用する。
 
 - 正数は受けるDamageを軽減する
 - 負数は受けるDamageを線形に増加させる
@@ -69,10 +69,10 @@
 StatからDamageを生成する場合は、原則として次の式を使用する。
 
 ```text
-Damage = BasePower × AmplificationMultiplier(Stat)
+Damage = BaseDamage × AmplificationMultiplier(Stat)
 ```
 
-- `Stat = 0`でも`BasePower`分のDamageを持つ
+- `Stat = 0`でも`BaseDamage`分のDamageを持つ
 - 複数Statを別々のDamage成分へ変換する場合は、成分ごとに計算する
 - 複数Statを同じDamageへ乗算する場合は、各Statの`AmplificationMultiplier`を乗算する
 - スナップショット、割合Damage、スタック由来Damageなどは個別仕様を優先する
@@ -87,20 +87,42 @@ Damage = BasePower × AmplificationMultiplier(Stat)
 
 ## 貫通
 
-貫通率を持つダメージは、対象の該当属性値とResistBonusによる軽減を、貫通率分だけ減少させて計算する。
+貫通は対象と方式を分けて扱う。
+
+- 属性固定値貫通：Damageと同じ属性の防御値を固定値で減少
+- 属性割合貫通：Damageと同じ属性の正の防御値を割合で減少
+- RB固定値貫通：ResistBonusを固定値で減少
+- RB割合貫通：正のResistBonusを割合で減少
+
+割合貫通は、まず参照StatとSkill SOのRatioから貫通Valueを作り、次の漸減式で実効率へ変換する。
 
 ```text
-軽減計算用属性値 = 対象属性値 × (1 - 貫通率)
-軽減計算用ResistBonus = ResistBonus × (1 - 貫通率)
+貫通Value = 参照Stat × Ratio / 100
+貫通率 = 貫通Value / (100 + 貫通Value)
+
+例：参照Stat 200、Ratio 25%
+貫通Value = 50
+貫通率 = 50 / 150 = 33.33...%
 ```
 
-- 貫通率に上限は設けない
-- 貫通率が100%を超えた場合、軽減計算用属性値とResistBonusは負数になり得る
+- 割合貫通は100%へ漸近し、100%以上にはならない
+- 算出した貫通Valueが負数の場合は0として扱う
+- 複数の割合貫通は`1 - Π(1 - 各貫通率)`で乗算合成する
+- 割合貫通は正の防御値にのみ適用し、元から負の防御値を変化させない
+- 固定値貫通は上限を持たず、適用後の防御値が負数になることを許容する
 
-- 属性値とResistBonusのそれぞれに共通の`DefenseMultiplier`を適用する
-- 属性値とResistBonusの防御倍率はそれぞれ適用する
+```text
+軽減計算用防御値
+= min(0, 元の防御値)
+  + max(0, 元の防御値) × (1 - 割合貫通率)
+  - 固定値貫通
+```
+
+- 属性値とResistBonusへ貫通を個別に適用した後、両者を加算する
+- 加算した防御値へ共通の`DefenseMultiplier`を1回適用する
 - 防御倍率の途中計算では端数を維持し、最終Damageで一度だけ切り捨てる
-- `DamageContext.PenetrationPercent`として実装済み
+- 汎用SubStatとしての貫通は持たない
+- Skill・Passive固有の貫通を`DamageContext.Penetration`として適用する
 
 ## 超過ダメージ
 

@@ -20,3 +20,5 @@ MonoBehaviour:
   _baseValue: 50
   _leafValueRatio: 100
   _attackIntervalTicks: 100
+  _pollenValueRatio: 50
+  _pollenStatus: {fileID: 11400000, guid: b1420000000000000000000000000001, type: 2}

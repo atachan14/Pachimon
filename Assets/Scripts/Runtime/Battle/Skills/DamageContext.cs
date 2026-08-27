@@ -14,6 +14,88 @@ namespace Pachimon.Battle
         Field = 5,
     }
 
+    public readonly struct DamagePenetration
+    {
+        public DamagePenetration(
+            decimal attributeFixed = 0m,
+            decimal attributePercentage = 0m,
+            decimal resistBonusFixed = 0m,
+            decimal resistBonusPercentage = 0m)
+        {
+            if (attributeFixed < 0m)
+                throw new ArgumentOutOfRangeException(nameof(attributeFixed));
+            if (resistBonusFixed < 0m)
+                throw new ArgumentOutOfRangeException(nameof(resistBonusFixed));
+            ValidatePercentage(attributePercentage, nameof(attributePercentage));
+            ValidatePercentage(resistBonusPercentage, nameof(resistBonusPercentage));
+
+            AttributeFixed = attributeFixed;
+            AttributePercentage = attributePercentage;
+            ResistBonusFixed = resistBonusFixed;
+            ResistBonusPercentage = resistBonusPercentage;
+        }
+
+        public decimal AttributeFixed { get; }
+        public decimal AttributePercentage { get; }
+        public decimal ResistBonusFixed { get; }
+        public decimal ResistBonusPercentage { get; }
+
+        public DamagePenetration WithAdditionalResistBonusPercentage(
+            decimal percentage)
+        {
+            return new DamagePenetration(
+                AttributeFixed,
+                AttributePercentage,
+                ResistBonusFixed,
+                PenetrationMath.CombinePercentages(
+                    ResistBonusPercentage,
+                    percentage));
+        }
+
+        private static void ValidatePercentage(decimal value, string parameterName)
+        {
+            if (value < 0m || value >= 100m)
+                throw new ArgumentOutOfRangeException(parameterName);
+        }
+    }
+
+    public static class PenetrationMath
+    {
+        public static decimal CalculateDiminishingPercentage(decimal value)
+        {
+            return value <= 0m ? 0m : value / (100m + value) * 100m;
+        }
+
+        public static decimal CombinePercentages(decimal first, decimal second)
+        {
+            ValidatePercentage(first, nameof(first));
+            ValidatePercentage(second, nameof(second));
+            return 100m - (100m - first) * (100m - second) / 100m;
+        }
+
+        public static decimal ApplyToDefense(
+            decimal defense,
+            decimal percentage,
+            decimal fixedValue)
+        {
+            ValidatePercentage(percentage, nameof(percentage));
+            if (fixedValue < 0m)
+                throw new ArgumentOutOfRangeException(nameof(fixedValue));
+
+            var negativeDefense = Math.Min(0m, defense);
+            var positiveDefense = Math.Max(0m, defense);
+            return negativeDefense
+                + positiveDefense * (1m - percentage / 100m)
+                - fixedValue;
+        }
+
+        private static void ValidatePercentage(decimal value, string parameterName)
+        {
+            if (value < 0m || value >= 100m)
+                throw new ArgumentOutOfRangeException(parameterName);
+        }
+    }
+
     public sealed class DamageContext
     {
         public DamageContext(
@@ -25,9 +107,10 @@ namespace Pachimon.Battle
             PachimonAttribute attribute,
             bool isAttack,
             bool applyAttackerAttributeMultiplier = true,
-            decimal penetrationPercent = 0m,
+            DamagePenetration penetration = default,
             bool applyDamageBonusMultiplier = true,
-            bool applyOutgoingModifiers = true)
+            bool applyOutgoingModifiers = true,
+            decimal? attackerAttributeValue = null)
         {
             if (originId <= 0) throw new ArgumentOutOfRangeException(nameof(originId));
             if (baseDamage < 0m) throw new ArgumentOutOfRangeException(nameof(baseDamage));
@@ -42,9 +125,10 @@ namespace Pachimon.Battle
             Attribute = attribute;
             IsAttack = isAttack;
             ApplyAttackerAttributeMultiplier = applyAttackerAttributeMultiplier;
-            PenetrationPercent = penetrationPercent;
+            Penetration = penetration;
             ApplyDamageBonusMultiplier = applyDamageBonusMultiplier;
             ApplyOutgoingModifiers = applyOutgoingModifiers;
+            AttackerAttributeValue = attackerAttributeValue;
         }
 
         public DamageOriginKind OriginKind { get; }
@@ -55,11 +139,12 @@ namespace Pachimon.Battle
         public PachimonAttribute Attribute { get; }
         public bool IsAttack { get; }
         public bool ApplyAttackerAttributeMultiplier { get; }
-        public decimal PenetrationPercent { get; }
+        public DamagePenetration Penetration { get; }
         public bool ApplyDamageBonusMultiplier { get; }
         public bool ApplyOutgoingModifiers { get; }
+        public decimal? AttackerAttributeValue { get; }
 
-        public DamageContext WithPenetrationPercent(decimal penetrationPercent)
+        public DamageContext WithPenetration(DamagePenetration penetration)
         {
             return new DamageContext(
                 OriginKind,
@@ -70,9 +155,10 @@ namespace Pachimon.Battle
                 Attribute,
                 IsAttack,
                 ApplyAttackerAttributeMultiplier,
-                penetrationPercent,
+                penetration,
                 ApplyDamageBonusMultiplier,
-                ApplyOutgoingModifiers);
+                ApplyOutgoingModifiers,
+                AttackerAttributeValue);
         }
 
         public DamageContext WithDefenderStats(
@@ -87,9 +173,27 @@ namespace Pachimon.Battle
                 Attribute,
                 IsAttack,
                 ApplyAttackerAttributeMultiplier,
-                PenetrationPercent,
+                Penetration,
                 ApplyDamageBonusMultiplier,
-                ApplyOutgoingModifiers);
+                ApplyOutgoingModifiers,
+                AttackerAttributeValue);
+        }
+
+        public DamageContext WithAttackerAttributeValue(decimal value)
+        {
+            return new DamageContext(
+                OriginKind,
+                OriginId,
+                BaseDamage,
+                AttackerStats,
+                DefenderStats,
+                Attribute,
+                IsAttack,
+                ApplyAttackerAttributeMultiplier,
+                Penetration,
+                ApplyDamageBonusMultiplier,
+                ApplyOutgoingModifiers,
+                value);
         }
     }
 

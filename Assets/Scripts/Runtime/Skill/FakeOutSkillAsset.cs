@@ -7,7 +7,7 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "FakeOutSkill", menuName = "Pachimon/Skills/Machine/Fake Out")]
     public sealed class FakeOutSkillAsset : MachineExclusiveSkillAsset
     {
-        [SerializeField, Min(0)] private int _trueDamage = 100;
+        [SerializeField, Min(0)] private int _trueDamage = 50;
         [SerializeField, Min(1)] private int _stunTicks = 100;
         [SerializeField] private StunStatusAsset _stunStatus;
 

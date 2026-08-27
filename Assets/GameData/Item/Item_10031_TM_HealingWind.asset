@@ -11,5 +11,5 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _description: 対象が「治癒の風」を習得する。
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: 168bf0cc49ba8364bac66b1aa11f81ed, type: 2}

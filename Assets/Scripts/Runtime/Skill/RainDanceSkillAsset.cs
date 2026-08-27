@@ -10,7 +10,7 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Rain Dance Skill")]
     public sealed class RainDanceSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _baseValue = 1000;
+        [SerializeField, Min(0)] private int _baseValue = 50;
         [SerializeField, HideInInspector] private int _aquaValueRatio = 100;
         [SerializeField] private RainWeatherAsset _rainDefinition;
 

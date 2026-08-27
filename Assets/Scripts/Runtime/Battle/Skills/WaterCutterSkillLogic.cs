@@ -26,10 +26,13 @@ namespace Pachimon.Battle
                 context.GetAttributeRatio(
                     PachimonAttribute.Aqua,
                     _skill.AquaDamageRatio));
-            var penetration = SignedStatMath.ScaleFromBase(
-                _skill.BasePenetrationPercent,
-                wind,
-                _skill.WindPenetrationRatio);
+            var penetrationValue = wind
+                * context.GetAttributeRatio(
+                    PachimonAttribute.Wind,
+                    100m)
+                / 100m
+                * _skill.WindPenetrationRatio
+                / 100m;
             var result = BattleAttributeDamageService.Apply(
                 context.State,
                 context.User,
@@ -43,7 +46,10 @@ namespace Pachimon.Battle
                     PachimonAttribute.Aqua,
                     isAttack: true,
                     applyAttackerAttributeMultiplier: false,
-                    penetrationPercent: penetration));
+                    penetration: new DamagePenetration(
+                        attributePercentage:
+                            PenetrationMath.CalculateDiminishingPercentage(
+                                penetrationValue))));
             return new SkillResolution(
                 context.User,
                 _skill,

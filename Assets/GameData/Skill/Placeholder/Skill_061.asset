@@ -20,10 +20,14 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 30
-  _description: "\u6575\u306E\u5148\u982D\u3078{icon:Poison}{color:Poison}{value:damage}{/color}\u306E\u6BD2\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002\u5BFE\u8C61\u304C\u6700\u5927HP\u672A\u6E80\u306A\u3089\u5024{value:normalToxin}\u306E\u6BD2\u7D20\u3092\u4E0E\u3048\u308B\u3002\u6700\u5927HP\u306A\u3089\u8FFD\u52A0\u3067{value:bonusDamage}\u30C0\u30E1\u30FC\u30B8\u3068\u5024{value:toxin}\u306E\u6BD2\u7D20\u3092\u4E0E\u3048\u308B\u3002"
-  _baseDamage: 75
+  _description: "\u6575\u306E\u5148\u982D\u3078{color:Poison}{value:damage}{/color}\uFF08{value:baseDamage}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:ratio}%\uFF09%\uFF09\u306E{icon:Poison}{color:Poison}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002\u5BFE\u8C61\u304C\u6700\u5927HP\u672A\u6E80\u306A\u3089\u5024{value:normalToxin}\uFF08{value:baseNormalToxin}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:ratio}%\uFF09%\uFF09\u306E\u6BD2\u7D20\u3092\u4E0E\u3048\u308B\u3002\u6700\u5927HP\u306A\u3089\u8FFD\u52A0\u3067{value:bonusDamage}\uFF08{value:baseBonusDamage}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:ratio}%\uFF09%\uFF09\u30C0\u30E1\u30FC\u30B8\u3068\u5024{value:toxin}\uFF08{value:baseToxin}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:ratio}%\uFF09%\uFF09\u306E\u6BD2\u7D20\u3092\u4E0E\u3048\u308B\u3002"
+  _baseDamage: 76
   _baseNormalToxinValue: 50
-  _bonusBaseDamage: 300
-  _baseToxinValue: 150
+  _bonusBaseDamage: 200
+  _baseToxinValue: 200
   _poisonRatio: 100
   _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}

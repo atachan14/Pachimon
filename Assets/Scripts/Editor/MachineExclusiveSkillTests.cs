@@ -67,7 +67,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void FakeOut_CanBeUsedOncePerSkillSlot()
+        public void FakeOut_CanBeUsedOncePerBattle()
         {
             var stun = ScriptableObject.CreateInstance<StunStatusAsset>();
             var skill = ScriptableObject.CreateInstance<FakeOutSkillAsset>();
@@ -77,11 +77,7 @@ namespace Pachimon.Editor.Tests
                 skill.ConfigureForEditor(1002, 100, 100, stun, string.Empty);
                 var user = CreateUnit(
                     "user", BattleSide.Player, 0, 5000,
-                    skillSlots: new[]
-                    {
-                        new PachimonSkillSlot(1, 1002),
-                        new PachimonSkillSlot(2, 1002),
-                    });
+                    skillSlots: new[] { new PachimonSkillSlot(1, 1002) });
                 var target = CreateUnit("target", BattleSide.Enemy, 0, 5000);
                 var state = CreateState(user, target);
                 var logic = new FakeOutSkillLogic(skill);
@@ -93,10 +89,6 @@ namespace Pachimon.Editor.Tests
                     () => logic.Resolve(new SkillExecutionContext(
                         state, user, skill, skillSlotId: 1)),
                     Throws.InvalidOperationException);
-                Assert.That(
-                    () => logic.Resolve(new SkillExecutionContext(
-                        state, user, skill, skillSlotId: 2)),
-                    Throws.Nothing);
             }
             finally
             {

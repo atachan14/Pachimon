@@ -24,7 +24,8 @@ namespace Pachimon.Battle
                     context.GetAttributeValue(PachimonAttribute.Aqua)
                     * context.GetAttributeRatio(
                         PachimonAttribute.Aqua,
-                        _skill.AquaDamageRatio) / 100m),
+                        _skill.AquaDamageRatio) / 100m)
+                * _skill.DamagePercent / 100m,
                 minimum: 1);
             var result = BattleAttributeDamageService.Apply(
                 context.State,

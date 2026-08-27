@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Pachimon.Battle;
 using Pachimon.Data;
@@ -34,25 +35,40 @@ namespace Pachimon.UI
                     .Set("ratio", AttributeDamageRules.ScalingRatio);
                 if (initial is ElectricShockSkillAsset electric)
                 {
-                    context.Set("statusValue", checked(
-                        SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
-                            electric.ElectricParalysisBaseValue,
-                            initialAttribute,
-                            electric.ElectricParalysisRatio))
-                        + SignedStatMath.FloorNonNegative(SignedStatMath.ScaleFromBase(
-                            electric.IceParalysisBaseValue,
-                            TryGetAttribute(owner, AllocationType.Ice, out var ice)
-                                ? ice
-                                : 0,
-                            electric.IceParalysisRatio))));
+                    var ice = TryGetAttribute(
+                        owner,
+                        AllocationType.Ice,
+                        out var electricIce)
+                        ? electricIce
+                        : 0;
+                    context.Set("statusValue", SignedStatMath.FloorNonNegative(
+                            SignedStatMath.ScaleFromBase(
+                                electric.ParalysisBaseValue,
+                                initialAttribute,
+                                electric.ParalysisValueRatio)))
+                        .Set("statusDuration", Math.Max(1,
+                            SignedStatMath.FloorNonNegative(
+                                SignedStatMath.ScaleFromBase(
+                                    electric.ParalysisBaseDurationTicks,
+                                    ice,
+                                    electric.ParalysisDurationRatio))));
+                    context.Set("statusBaseValue", electric.ParalysisBaseValue)
+                        .Set("statusRatio", electric.ParalysisValueRatio)
+                        .Set("statusDurationBase",
+                            electric.ParalysisBaseDurationTicks)
+                        .Set("statusDurationAttribute", ice)
+                        .Set("statusDurationRatio",
+                            electric.ParalysisDurationRatio);
                 }
                 else if (initial is PoisonNeedleSkillAsset poison)
                 {
                     context.Set("statusValue", SignedStatMath.FloorNonNegative(
                         SignedStatMath.ScaleFromBase(
-                            poison.ToxinBaseValue,
-                            initialAttribute,
-                            poison.ToxinRatio)));
+                             poison.ToxinBaseValue,
+                             initialAttribute,
+                             poison.ToxinRatio)))
+                        .Set("statusBaseValue", poison.ToxinBaseValue)
+                        .Set("statusRatio", poison.ToxinRatio);
                 }
                 else if (initial is ColdHandSkillAsset cold)
                 {
@@ -60,7 +76,23 @@ namespace Pachimon.UI
                         SignedStatMath.ScaleFromBase(
                             cold.ChillBaseValue,
                             initialAttribute,
-                            cold.ChillRatio)));
+                            cold.ChillRatio)))
+                        .Set("statusBaseValue", cold.ChillBaseValue)
+                        .Set("statusRatio", cold.ChillRatio);
+                }
+                else if (initial is LeafSlicerSkillAsset leafSlicer
+                    && TryGetAttribute(
+                        owner,
+                        AllocationType.Wind,
+                        out var leafSlicerWind))
+                {
+                    context.Set("pollen", Scale(
+                            leafSlicer.PollenBaseValue,
+                            leafSlicerWind,
+                            leafSlicer.PollenWindRatio))
+                        .Set("pollenBaseValue", leafSlicer.PollenBaseValue)
+                        .Set("pollenAttribute", leafSlicerWind)
+                        .Set("pollenRatio", leafSlicer.PollenWindRatio);
                 }
                 return true;
             }
@@ -91,10 +123,61 @@ namespace Pachimon.UI
             {
                 context.Set("damage", SignedStatMath.FloorNonNegative(
                         BackfireMath.CalculateBaseDamage(backfire, backfireFire)))
-                    .Set("penetration", BackfireMath.CalculatePenetrationPercent(
+                    .Set("penetration", BackfireMath.CalculateAttributeFixedPenetration(
                         backfire, backfirePoison).ToString("0.##"))
+                    .Set("baseDamage", backfire.BaseDamage)
+                    .Set("damageRatio", backfire.FireScalingPercent)
+                    .Set("basePenetration", backfire.BaseAttributeFixedPenetration)
+                    .Set("penetrationRatio", backfire.PoisonPenetrationRatio)
                     .Set("fire", backfireFire)
                     .Set("poison", backfirePoison);
+                return true;
+            }
+
+            if (skill is BurningStrikeSkillAsset burningStrike
+                && TryGetStat(owner, PachimonDisplayStat.Fire, out var burningFire))
+            {
+                context.Set("selfDamage", Scale(
+                        burningStrike.SelfBaseDamage,
+                        burningFire,
+                        burningStrike.SelfFireRatio))
+                    .Set("enemyDamage", Scale(
+                        burningStrike.EnemyBaseDamage,
+                        burningFire,
+                        burningStrike.EnemyFireRatio))
+                    .Set("burn", Scale(
+                        burningStrike.BaseBurnValue,
+                        burningFire,
+                        burningStrike.BurnFireRatio))
+                    .Set("selfBaseDamage", burningStrike.SelfBaseDamage)
+                    .Set("enemyBaseDamage", burningStrike.EnemyBaseDamage)
+                    .Set("baseBurn", burningStrike.BaseBurnValue)
+                    .Set("fire", burningFire);
+                return true;
+            }
+
+            if (skill is WaterPulseReplacementSkillAsset regularWaterPulse
+                && TryGetStat(owner, PachimonDisplayStat.Aqua, out var regularPulseAqua))
+            {
+                var manaCost = Math.Max(
+                    1,
+                    SignedStatMath.FloorNonNegative(
+                        (owner?.MaxMn ?? 0)
+                        * regularWaterPulse.MaxMnCostPercent / 100m));
+                context.Set("manaCost", manaCost)
+                    .Set("maxMn", owner?.MaxMn ?? 0)
+                    .Set("maxMnCostPercent",
+                        regularWaterPulse.MaxMnCostPercent)
+                    .Set("damagePerMana", regularWaterPulse.DamagePerMana)
+                    .Set("aqua", regularPulseAqua)
+                    .Set("damageRatio", regularWaterPulse.AquaDamageRatio)
+                    .Set("damage", SignedStatMath.FloorNonNegative(
+                        manaCost
+                        * regularWaterPulse.DamagePerMana
+                        * SignedStatMath.AmplificationMultiplier(
+                            regularPulseAqua
+                            * regularWaterPulse.AquaDamageRatio / 100m),
+                        1));
                 return true;
             }
 
@@ -106,7 +189,9 @@ namespace Pachimon.UI
                     .Set("aqua", pulseAqua)
                     .Set("damage", SignedStatMath.FloorNonNegative(
                         mana * SignedStatMath.AmplificationMultiplier(
-                            pulseAqua * waterPulse.AquaDamageRatio / 100m), 1));
+                            pulseAqua * waterPulse.AquaDamageRatio / 100m)
+                        * waterPulse.DamagePercent / 100m,
+                        1));
                 return true;
             }
 
@@ -115,6 +200,7 @@ namespace Pachimon.UI
             {
                 context.Set("baseHealing", sunbath.BaseHealing)
                     .Set("leaf", sunbathLeaf)
+                    .Set("healingRatio", sunbath.LeafHealingRatio)
                     .Set("healingBeforeWeather", SignedStatMath.FloorNonNegative(
                         SignedStatMath.ScaleFromBase(
                             sunbath.BaseHealing,
@@ -135,7 +221,15 @@ namespace Pachimon.UI
                     .Set("aquaDamage", SignedStatMath.FloorNonNegative(
                         AquaShockMath.CalculateAquaBaseDamage(aquaShock, shockAqua)))
                     .Set("leakValue", AquaShockMath.CalculateLeakValue(
-                        aquaShock, shockAqua));
+                        aquaShock, shockAqua))
+                    .Set("electricBaseDamage", aquaShock.ElectricBaseDamage)
+                    .Set("aquaBaseDamage", aquaShock.AquaBaseDamage)
+                    .Set("leakBaseValue", aquaShock.LeakBaseValue)
+                    .Set("electric", shockElectric)
+                    .Set("aqua", shockAqua)
+                    .Set("electricRatio", AttributeDamageRules.ScalingRatio)
+                    .Set("aquaRatio", AttributeDamageRules.ScalingRatio)
+                    .Set("leakRatio", AttributeDamageRules.ScalingRatio);
                 return true;
             }
 
@@ -144,9 +238,20 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Electric, out var neuroElectric))
             {
                 context.Set("stunTicks", NeurotoxinMath.CalculateStunTicks(
-                        neurotoxin, neuroPoison, neuroElectric))
+                        neurotoxin, neuroElectric))
                     .Set("toxinValue", NeurotoxinMath.CalculateToxinValue(
-                        neurotoxin, neuroPoison));
+                        neurotoxin, neuroPoison))
+                    .Set("electricStun", SignedStatMath.FloorNonNegative(
+                        SignedStatMath.ScaleFromBase(
+                            neurotoxin.BaseElectricStunTicks,
+                            neuroElectric,
+                            neurotoxin.ElectricStunScalingPercent)))
+                    .Set("baseElectricStun", neurotoxin.BaseElectricStunTicks)
+                    .Set("baseToxin", neurotoxin.BaseToxinValue)
+                    .Set("poison", neuroPoison)
+                    .Set("electric", neuroElectric)
+                    .Set("electricRatio", neurotoxin.ElectricStunScalingPercent)
+                    .Set("toxinRatio", neurotoxin.ToxinScalingPercent);
                 return true;
             }
 
@@ -154,7 +259,10 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Ice, out var shieldIce))
             {
                 context.Set("shield", IceShieldMath.CalculateShieldValue(
-                    iceShield, shieldIce));
+                        iceShield, shieldIce))
+                    .Set("baseShield", iceShield.BaseShieldValue)
+                    .Set("ice", shieldIce)
+                    .Set("shieldRatio", iceShield.IceShieldRatio);
                 return true;
             }
 
@@ -169,7 +277,12 @@ namespace Pachimon.UI
                     .Set("speed", SignedStatMath.FloorNonNegative(
                         flyingWind
                         * (flyingAttack.FlyingStatus?.WindSpeedRatio ?? 0)
-                        / 100m));
+                        / 100m))
+                    .Set("baseDamage", flyingAttack.BaseWindDamage)
+                    .Set("wind", flyingWind)
+                    .Set("damageRatio", flyingAttack.WindDamageRatio)
+                    .Set("speedRatio",
+                        flyingAttack.FlyingStatus?.WindSpeedRatio ?? 0);
                 return true;
             }
 
@@ -181,7 +294,10 @@ namespace Pachimon.UI
                             dragonJab.BaseDragonDamage,
                             jabDragon,
                             dragonJab.DragonDamageRatio)))
-                    .Set("oneTwoValue", dragonJab.OneTwoValue);
+                    .Set("oneTwoValue", dragonJab.OneTwoValue)
+                    .Set("baseDamage", dragonJab.BaseDragonDamage)
+                    .Set("dragon", jabDragon)
+                    .Set("damageRatio", dragonJab.DragonDamageRatio);
                 return true;
             }
 
@@ -190,24 +306,31 @@ namespace Pachimon.UI
             {
                 context.Set("damage", SignedStatMath.FloorNonNegative(
                         SignedStatMath.ScaleFromBase(
-                            chainBurn.BasePower,
+                            chainBurn.BaseDamage,
                             chainFire,
                             chainBurn.FireScalingPercent)))
                     .Set("hitCount", chainBurn.BaseChainCount + 1)
                     .Set("addChain", AddChainRuntime.FormatUnits(
-                        chainBurn.AddChainGainUnits));
+                        chainBurn.AddChainGainUnits))
+                    .Set("baseDamage", chainBurn.BaseDamage)
+                    .Set("fire", chainFire)
+                    .Set("damageRatio", chainBurn.FireScalingPercent);
                 return true;
             }
 
             if (skill is RainDanceSkillAsset rainDance
-                && TryGetStat(owner, PachimonDisplayStat.Aqua, out var rainAqua))
+                && TryGetStat(owner, PachimonDisplayStat.Aqua, out var rainAqua)
+                && TryGetStat(owner, PachimonDisplayStat.GenerationPower, out var rainGeneration))
             {
-                context.Set("rainValue", SignedStatMath.FloorNonNegative(
-                        rainDance.BaseValue
-                        + rainAqua * rainDance.AquaValueRatio / 100m,
-                        minimum: 1))
+                context.Set("rainValue", CalculateGeneratedWeatherValue(
+                        rainDance.BaseValue,
+                        rainAqua,
+                        rainDance.AquaValueRatio,
+                        rainGeneration))
                     .Set("baseValue", rainDance.BaseValue)
-                    .Set("aquaRatio", rainDance.AquaValueRatio);
+                    .Set("aqua", rainAqua)
+                    .Set("aquaRatio", rainDance.AquaValueRatio)
+                    .Set("generationPower", rainGeneration);
                 return true;
             }
 
@@ -226,7 +349,12 @@ namespace Pachimon.UI
                             chainVines.SlowLeafRatio)))
                     .Set("hitCount", chainVines.BaseChainCount + 1)
                     .Set("addChain", AddChainRuntime.FormatUnits(
-                        chainVines.AddChainGainUnits));
+                        chainVines.AddChainGainUnits))
+                    .Set("baseDamage", chainVines.BaseLeafDamage)
+                    .Set("baseSlow", chainVines.BaseSlow)
+                    .Set("leaf", vinesLeaf)
+                    .Set("damageRatio", AttributeDamageRules.ScalingRatio)
+                    .Set("slowRatio", chainVines.SlowLeafRatio);
                 return true;
             }
 
@@ -237,12 +365,21 @@ namespace Pachimon.UI
                 context.Set("damage", SignedStatMath.FloorNonNegative(
                         ElectricExplosionMath.CalculateBaseDamage(
                             explosion,
-                            explosionElectric,
-                            explosionFire)))
+                            explosionElectric)))
                     .Set("penetration",
-                        ElectricExplosionMath.CalculatePenetrationPercent(
+                        PenetrationMath.CalculateDiminishingPercentage(
+                            ElectricExplosionMath.CalculateAttributePenetrationValue(
+                                explosion,
+                                explosionFire)).ToString("0.##"))
+                    .Set("baseDamage", explosion.BaseDamage)
+                    .Set("electric", explosionElectric)
+                    .Set("fire", explosionFire)
+                    .Set("electricRatio", explosion.ElectricScalingPercent)
+                    .Set("penetrationValue",
+                        ElectricExplosionMath.CalculateAttributePenetrationValue(
                             explosion,
-                            explosionFire).ToString("0.##"));
+                            explosionFire).ToString("0.##"))
+                    .Set("penetrationRatio", explosion.FirePenetrationRatio);
                 return true;
             }
 
@@ -253,7 +390,10 @@ namespace Pachimon.UI
                     SignedStatMath.ScaleFromBase(
                         smog.BaseFieldValue,
                         smogPoison,
-                        smog.PoisonScalingPercent)));
+                        smog.PoisonScalingPercent)))
+                    .Set("baseValue", smog.BaseFieldValue)
+                    .Set("poison", smogPoison)
+                    .Set("ratio", smog.PoisonScalingPercent);
                 return true;
             }
 
@@ -275,7 +415,16 @@ namespace Pachimon.UI
                     .Set("otherChill", Scale(
                         iceShard.OtherBaseChill,
                         shardIce,
-                        iceShard.OtherChillIceRatio));
+                        iceShard.OtherChillIceRatio))
+                    .Set("frontBaseDamage", iceShard.FrontBaseDamage)
+                    .Set("frontBaseChill", iceShard.FrontBaseChill)
+                    .Set("otherBaseDamage", iceShard.OtherBaseDamage)
+                    .Set("otherBaseChill", iceShard.OtherBaseChill)
+                    .Set("ice", shardIce)
+                    .Set("frontDamageRatio", iceShard.FrontDamageIceRatio)
+                    .Set("frontChillRatio", iceShard.FrontChillIceRatio)
+                    .Set("otherDamageRatio", iceShard.OtherDamageIceRatio)
+                    .Set("otherChillRatio", iceShard.OtherChillIceRatio);
                 return true;
             }
 
@@ -285,7 +434,10 @@ namespace Pachimon.UI
                 context.Set("erosionValue", Scale(
                     erosion.BaseErosionValue,
                     erosionWind,
-                    erosion.WindValueRatio));
+                    erosion.WindValueRatio))
+                    .Set("baseValue", erosion.BaseErosionValue)
+                    .Set("wind", erosionWind)
+                    .Set("ratio", erosion.WindValueRatio);
                 return true;
             }
 
@@ -295,7 +447,10 @@ namespace Pachimon.UI
                 context.Set("duration", System.Math.Max(1, Scale(
                     footwork.BaseDurationTicks,
                     footworkDragon,
-                    footwork.DurationDragonRatio)));
+                    footwork.DurationDragonRatio)))
+                    .Set("baseDuration", footwork.BaseDurationTicks)
+                    .Set("dragon", footworkDragon)
+                    .Set("durationRatio", footwork.DurationDragonRatio);
                 return true;
             }
 
@@ -308,16 +463,13 @@ namespace Pachimon.UI
                     fireBarrier.FireValueRatio);
                 var field = fireBarrier.FieldEffect;
                 context.Set("value", value)
-                    .Set("hp", System.Math.Max(1, ScaleRatio(
-                        value,
-                        field?.ValueHpRatio ?? 0)))
-                    .Set("duration", System.Math.Max(1,
-                        SignedStatMath.CeilPositive(
-                            value * (field?.ValueDurationRatio ?? 0) / 100m)))
                     .Set("burn", ScaleRatio(
                         value,
                         field?.ValueBurnRatio ?? 0))
-                    .Set("defenseRatio", field?.DefenseSnapshotRatio ?? 0);
+                    .Set("baseValue", fireBarrier.BaseValue)
+                    .Set("fire", barrierFire)
+                    .Set("valueRatio", fireBarrier.FireValueRatio)
+                    .Set("burnRatio", field?.ValueBurnRatio ?? 0);
                 return true;
             }
 
@@ -333,20 +485,32 @@ namespace Pachimon.UI
                     context.Set("currentManaMultiplier",
                         SignedStatMath.ReductionMultiplier(
                             launchAqua
-                            * (definition?.ManaReductionAquaRatio ?? 0)
-                            / 100m).ToString("0.##"));
+                             * (definition?.ManaReductionAquaRatio ?? 0)
+                             / 100m).ToString("0.##"))
+                        .Set("aqua", launchAqua);
                 }
                 return true;
             }
 
             if (skill is SolarBeamSkillAsset solarBeam
-                && TryGetStat(owner, PachimonDisplayStat.Leaf, out var solarLeaf))
+                && TryGetStat(owner, PachimonDisplayStat.Leaf, out var solarLeaf)
+                && TryGetStat(owner, PachimonDisplayStat.Wind, out var solarWind))
             {
                 context.Set("damage", Scale(
                         solarBeam.BaseLeafDamage,
                         solarLeaf,
                         AttributeDamageRules.ScalingRatio))
                     .Set("baseStartup", solarBeam.BaseStartupTicks)
+                    .Set("baseDamage", solarBeam.BaseLeafDamage)
+                    .Set("leaf", solarLeaf)
+                    .Set("damageRatio", AttributeDamageRules.ScalingRatio)
+                    .Set("pollen", Scale(
+                        solarBeam.PollenBaseValue,
+                        solarWind,
+                        solarBeam.PollenWindRatio))
+                    .Set("pollenBaseValue", solarBeam.PollenBaseValue)
+                    .Set("wind", solarWind)
+                    .Set("pollenRatio", solarBeam.PollenWindRatio)
                     .Set("temperatureRatio",
                         solarBeam.TemperatureStartupRatio);
                 return true;
@@ -355,36 +519,50 @@ namespace Pachimon.UI
             if (skill is ElectricQuickAttackSkillAsset quickAttack
                 && TryGetStat(owner, PachimonDisplayStat.Electric, out var quickElectric)
                 && TryGetStat(owner, PachimonDisplayStat.Fire, out var quickFire)
-                && TryGetStat(owner, PachimonDisplayStat.Wind, out var quickWind)
                 && TryGetStat(owner, PachimonDisplayStat.Speed, out var quickSpeed)
                 && TryGetStat(owner, PachimonDisplayStat.Haste, out var quickHaste))
             {
-                var windMultiplier =
-                    SkillTimingCalculator.CalculateWindMultiplier(
+                var fireTimingMultiplier =
+                    SkillTimingCalculator.CalculateFireTimingMultiplier(
                         quickAttack,
-                        quickWind);
+                        quickFire);
                 context.Set("electricDamage", SignedStatMath.FloorNonNegative(
                         ElectricQuickAttackMath.CalculateElectricBaseDamage(
                             quickAttack,
                             quickElectric)))
-                    .Set("fireDamage", SignedStatMath.FloorNonNegative(
-                        ElectricQuickAttackMath.CalculateFireBaseDamage(
-                            quickAttack,
-                            quickFire)))
                     .Set("recovery", BattleTickMath.GetEffectiveRecovery(
                         quickAttack.BaseRecoveryTicks,
                         quickSpeed,
-                        windMultiplier))
+                        fireTimingMultiplier))
                     .Set("cooldown", BattleTickMath.GetEffectiveCooldown(
                         quickAttack.BaseCooldownTicks,
-                        quickHaste,
-                        windMultiplier));
+                        quickHaste))
+                    .Set("electricBaseDamage", quickAttack.ElectricBaseDamage)
+                    .Set("electric", quickElectric)
+                    .Set("fire", quickFire)
+                    .Set("damageRatio", AttributeDamageRules.ScalingRatio)
+                    .Set("fireTimingRatio", quickAttack.FireTimingPercent);
                 return true;
             }
 
             if (skill is ToxinTransferSkillAsset toxinTransfer)
             {
+                var baseToxin = toxinTransfer.BaseToxinValue;
+                var transferPoison = 0;
+                if (TryGetStat(
+                        owner,
+                        PachimonDisplayStat.Poison,
+                        out transferPoison))
+                {
+                    baseToxin = ToxinTransferMath.CalculateBaseValue(
+                        toxinTransfer,
+                        transferPoison);
+                }
                 context.Set("removalPercent", toxinTransfer.RemovalPercent)
+                    .Set("baseToxin", baseToxin)
+                    .Set("rawBaseToxin", toxinTransfer.BaseToxinValue)
+                    .Set("poison", transferPoison)
+                    .Set("toxinRatio", toxinTransfer.PoisonScalingPercent)
                     .Set("applicationPercent",
                         toxinTransfer.ApplicationPercent);
                 return true;
@@ -395,10 +573,13 @@ namespace Pachimon.UI
             {
                 context.Set("temperatureReduction",
                         SignedStatMath.FloorNonNegative(
-                            heavySnow.BaseValue
-                            + snowIce * heavySnow.IceValueRatio / 100m,
+                            SignedStatMath.ScaleFromBase(
+                                heavySnow.BaseValue,
+                                snowIce,
+                                heavySnow.IceValueRatio),
                             minimum: 1))
                     .Set("baseValue", heavySnow.BaseValue)
+                    .Set("ice", snowIce)
                     .Set("iceRatio", heavySnow.IceValueRatio);
                 return true;
             }
@@ -418,7 +599,12 @@ namespace Pachimon.UI
                         healingWind.BaseSpeedBonus,
                         healingWindStat,
                         healingWind.WindRatio))
-                    .Set("duration", healingWind.DurationTicks);
+                    .Set("duration", healingWind.DurationTicks)
+                    .Set("baseHealing", healingWind.BaseHealing)
+                    .Set("baseWindBonus", healingWind.BaseWindBonus)
+                    .Set("baseSpeedBonus", healingWind.BaseSpeedBonus)
+                    .Set("wind", healingWindStat)
+                    .Set("windRatio", healingWind.WindRatio);
                 return true;
             }
 
@@ -433,10 +619,13 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Fire, out var arrowFire))
             {
                 context.Set("damage", Scale(
-                        fireArrow.BasePower,
+                        fireArrow.BaseDamage,
                         arrowFire,
                         fireArrow.FireScalingPercent))
-                    .Set("repeatManaCost", fireArrow.BaseManaCost);
+                    .Set("repeatManaCost", fireArrow.BaseManaCost)
+                    .Set("baseDamage", fireArrow.BaseDamage)
+                    .Set("fire", arrowFire)
+                    .Set("damageRatio", fireArrow.FireScalingPercent);
                 return true;
             }
 
@@ -451,7 +640,10 @@ namespace Pachimon.UI
                     .Set("healingPerTick", definition?.HealingPerTick ?? 0)
                     .Set("decayPerTick", definition?.DecayPerTick ?? 0)
                     .Set("reductionPercent",
-                        definition?.DamageReductionPercent ?? 0);
+                        definition?.DamageReductionPercent ?? 0)
+                    .Set("baseValue", waterVeil.BaseFieldValue)
+                    .Set("aqua", veilAqua)
+                    .Set("valueRatio", waterVeil.AquaValueRatio);
                 return true;
             }
 
@@ -461,7 +653,10 @@ namespace Pachimon.UI
                 context.Set("stunTicks", System.Math.Max(1, Scale(
                     entanglingVines.BaseStun,
                     entangleLeaf,
-                    entanglingVines.StunLeafRatio)));
+                    entanglingVines.StunLeafRatio)))
+                    .Set("baseStun", entanglingVines.BaseStun)
+                    .Set("leaf", entangleLeaf)
+                    .Set("stunRatio", entanglingVines.StunLeafRatio);
                 return true;
             }
 
@@ -472,22 +667,28 @@ namespace Pachimon.UI
                 context.Set("chargeValue", System.Math.Max(1, chargeElectric))
                     .Set("startup", BattleTickMath.GetEffectiveStartup(
                         charge.BaseStartupTicks,
-                        chargeSpeed));
+                        chargeSpeed))
+                    .Set("electric", chargeElectric)
+                    .Set("baseStartup", charge.BaseStartupTicks)
+                    .Set("speed", chargeSpeed);
                 return true;
             }
 
-            if (skill is ToxinExplosionSkillAsset toxinExplosion
-                && TryGetStat(owner, PachimonDisplayStat.Poison, out var toxinPoison)
-                && TryGetStat(owner, PachimonDisplayStat.Fire, out var toxinFire))
+            if (skill is ToxinExplosionSkillAsset toxinExplosion)
             {
-                context.Set("fixedDamage", SignedStatMath.FloorNonNegative(
-                        ToxinExplosionMath.CalculateBaseDamage(
-                            toxinExplosion,
-                            consumedToxin: 0,
-                            toxinPoison,
-                            toxinFire)))
-                    .Set("toxinConversion",
-                        toxinExplosion.ToxinConversionPercent);
+                context.Set("toxinConversion",
+                        toxinExplosion.ToxinConversionPercent)
+                    .Set("aoeFirePercent", toxinExplosion.AoeFirePercent)
+                    .Set("poisonRatio", toxinExplosion.PoisonScalingPercent)
+                    .Set("fireRatio", toxinExplosion.FireScalingPercent);
+                if (TryGetStat(owner, PachimonDisplayStat.Poison, out var explosionPoison))
+                {
+                    context.Set("poison", explosionPoison);
+                }
+                if (TryGetStat(owner, PachimonDisplayStat.Fire, out var toxinExplosionFire))
+                {
+                    context.Set("fire", toxinExplosionFire);
+                }
                 return true;
             }
 
@@ -495,17 +696,27 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Ice, out var bladeIce))
             {
                 context.Set("duration",
-                    IceBladeSkillLogic.CalculateDuration(iceBlade, bladeIce));
+                        IceBladeSkillLogic.CalculateDuration(iceBlade, bladeIce))
+                    .Set("damagePercent",
+                        iceBlade.FieldEffect?.DamagePercent ?? 0)
+                    .Set("baseDuration", iceBlade.BaseDurationTicks)
+                    .Set("scalingDuration", iceBlade.ScalingDurationTicks)
+                    .Set("ice", bladeIce)
+                    .Set("durationRatio", iceBlade.IceDurationRatio);
                 return true;
             }
 
             if (skill is SecondWindSkillAsset secondWind
                 && TryGetStat(owner, PachimonDisplayStat.Wind, out var secondWindStat))
             {
-                context.Set("shield", ScaleRatio(
+                context.Set("shield", Scale(
+                        secondWind.BaseShieldValue,
                         secondWindStat,
                         secondWind.WindShieldRatio))
-                    .Set("duration", secondWind.DurationTicks);
+                    .Set("baseShield", secondWind.BaseShieldValue)
+                    .Set("duration", secondWind.DurationTicks)
+                    .Set("wind", secondWindStat)
+                    .Set("shieldRatio", secondWind.WindShieldRatio);
                 return true;
             }
 
@@ -515,7 +726,10 @@ namespace Pachimon.UI
                 context.Set("damage", Scale(
                     dragonBreak.BaseDragonDamage,
                     breakDragon,
-                    dragonBreak.DragonDamageRatio));
+                    dragonBreak.DragonDamageRatio))
+                    .Set("baseDamage", dragonBreak.BaseDragonDamage)
+                    .Set("dragon", breakDragon)
+                    .Set("damageRatio", dragonBreak.DragonDamageRatio);
                 return true;
             }
 
@@ -523,9 +737,12 @@ namespace Pachimon.UI
                 && TryGetStat(owner, PachimonDisplayStat.Fire, out var combustionFire))
             {
                 context.Set("damage", Scale(
-                        combustion.BasePower,
+                        combustion.BaseDamage,
                         combustionFire,
-                        combustion.FireScalingPercent));
+                        combustion.FireScalingPercent))
+                    .Set("baseDamage", combustion.BaseDamage)
+                    .Set("fire", combustionFire)
+                    .Set("damageRatio", combustion.FireScalingPercent);
                 return true;
             }
 
@@ -537,28 +754,64 @@ namespace Pachimon.UI
                         waterCutter.BaseAquaDamage,
                         cutterAqua,
                         waterCutter.AquaDamageRatio))
-                    .Set("penetration", Scale(
-                        waterCutter.BasePenetrationPercent,
-                        cutterWind,
-                        waterCutter.WindPenetrationRatio));
+                    .Set("penetration",
+                        PenetrationMath.CalculateDiminishingPercentage(
+                            cutterWind * waterCutter.WindPenetrationRatio / 100m)
+                        .ToString("0.##"))
+                    .Set("penetrationValue",
+                        (cutterWind * waterCutter.WindPenetrationRatio / 100m)
+                        .ToString("0.##"))
+                    .Set("baseDamage", waterCutter.BaseAquaDamage)
+                    .Set("aqua", cutterAqua)
+                    .Set("damageRatio", waterCutter.AquaDamageRatio)
+                    .Set("wind", cutterWind)
+                    .Set("penetrationRatio", waterCutter.WindPenetrationRatio);
                 return true;
             }
 
             if (skill is ParalysisPowderSkillAsset paralysisPowder
                 && TryGetStat(owner, PachimonDisplayStat.Leaf, out var powderLeaf)
+                && TryGetStat(owner, PachimonDisplayStat.Electric, out var powderElectric)
                 && TryGetStat(owner, PachimonDisplayStat.Poison, out var powderPoison))
             {
                 context.Set("paralysis", checked(
-                    Scale(paralysisPowder.BaseLeafParalysis, powderLeaf, paralysisPowder.LeafRatio)
-                    + Scale(paralysisPowder.BasePoisonParalysis, powderPoison, paralysisPowder.PoisonRatio)));
+                        Scale(paralysisPowder.BaseElectricValue, powderElectric,
+                            paralysisPowder.ElectricValueRatio)
+                        + Scale(paralysisPowder.BasePoisonValue, powderPoison,
+                            paralysisPowder.PoisonValueRatio)))
+                    .Set("paralysisDuration", Math.Max(1,
+                        Scale(paralysisPowder.BaseDurationTicks, powderLeaf,
+                            paralysisPowder.DurationLeafRatio)))
+                    .Set("baseDuration", paralysisPowder.BaseDurationTicks)
+                    .Set("leaf", powderLeaf)
+                    .Set("durationRatio", paralysisPowder.DurationLeafRatio)
+                    .Set("electricValue", Scale(paralysisPowder.BaseElectricValue,
+                        powderElectric, paralysisPowder.ElectricValueRatio))
+                    .Set("baseElectricValue", paralysisPowder.BaseElectricValue)
+                    .Set("electric", powderElectric)
+                    .Set("electricRatio", paralysisPowder.ElectricValueRatio)
+                    .Set("poisonValue", Scale(paralysisPowder.BasePoisonValue,
+                        powderPoison, paralysisPowder.PoisonValueRatio))
+                    .Set("basePoisonValue", paralysisPowder.BasePoisonValue)
+                    .Set("poison", powderPoison)
+                    .Set("poisonRatio", paralysisPowder.PoisonValueRatio)
+                    .Set("pollen", Scale(
+                        paralysisPowder.PollenBaseValue,
+                        powderPoison,
+                        paralysisPowder.PollenPoisonRatio))
+                    .Set("pollenBaseValue", paralysisPowder.PollenBaseValue)
+                    .Set("pollenRatio", paralysisPowder.PollenPoisonRatio);
                 return true;
             }
 
             if (skill is ElectromagneticCannonSkillAsset cannon
                 && TryGetStat(owner, PachimonDisplayStat.Electric, out var cannonElectric))
             {
-                context.Set("damage", Scale(cannon.BasePower, cannonElectric, 100))
-                    .Set("startup", cannon.BaseStartupTicks);
+                context.Set("damage", Scale(cannon.BaseDamage, cannonElectric, 100))
+                    .Set("startup", cannon.BaseStartupTicks)
+                    .Set("baseDamage", cannon.BaseDamage)
+                    .Set("electric", cannonElectric)
+                    .Set("damageRatio", AttributeDamageRules.ScalingRatio);
                 return true;
             }
 
@@ -570,7 +823,12 @@ namespace Pachimon.UI
                     .Set("duration", poisonShield.DurationTicks)
                     .Set("toxinReductionPercent",
                         PoisonShieldMath.CalculateToxinReductionPercent(
-                            poisonShield, shieldPoison).ToString("0.##"));
+                            poisonShield, shieldPoison).ToString("0.##"))
+                    .Set("baseShield", poisonShield.BaseShieldValue)
+                    .Set("poison", shieldPoison)
+                    .Set("shieldRatio", poisonShield.ShieldPoisonScalingPercent)
+                    .Set("baseReduction", poisonShield.BaseToxinReductionPercent)
+                    .Set("reductionRatio", poisonShield.ReductionPoisonScalingPercent);
                 return true;
             }
 
@@ -588,17 +846,30 @@ namespace Pachimon.UI
                     .Set("healingPerTick", Scale(
                         frozenBreak.BaseHealPerTick,
                         frozenIce,
-                        frozenBreak.HealIceRatio));
+                        frozenBreak.HealIceRatio))
+                    .Set("baseDamage", frozenBreak.BaseIceDamage)
+                    .Set("baseDuration", frozenBreak.BaseDuration)
+                    .Set("baseHealing", frozenBreak.BaseHealPerTick)
+                    .Set("ice", frozenIce)
+                    .Set("damageRatio", frozenBreak.IceDamageRatio)
+                    .Set("durationRatio", frozenBreak.DurationIceRatio)
+                    .Set("healingRatio", frozenBreak.HealIceRatio);
                 return true;
             }
 
             if (skill is WindStormSkillAsset windStorm
-                && TryGetStat(owner, PachimonDisplayStat.Wind, out var stormWind))
+                && TryGetStat(owner, PachimonDisplayStat.Wind, out var stormWind)
+                && TryGetStat(owner, PachimonDisplayStat.GenerationPower, out var stormGeneration))
             {
-                context.Set("value", System.Math.Max(1,
-                    SignedStatMath.FloorNonNegative(
-                        windStorm.BaseValue
-                        + stormWind * windStorm.WindValueRatio / 100m)));
+                context.Set("value", CalculateGeneratedWeatherValue(
+                        windStorm.BaseValue,
+                        stormWind,
+                        windStorm.WindValueRatio,
+                        stormGeneration))
+                    .Set("baseValue", windStorm.BaseValue)
+                    .Set("wind", stormWind)
+                    .Set("valueRatio", windStorm.WindValueRatio)
+                    .Set("generationPower", stormGeneration);
                 return true;
             }
 
@@ -612,7 +883,12 @@ namespace Pachimon.UI
                     .Set("crankerValue", System.Math.Max(1,
                         SignedStatMath.FloorNonNegative(
                             dragonHook.BaseCrankerValue
-                            + hookDragon * dragonHook.CrankerDragonRatio / 100m)));
+                            + hookDragon * dragonHook.CrankerDragonRatio / 100m)))
+                    .Set("baseDamage", dragonHook.BaseDragonDamage)
+                    .Set("baseCranker", dragonHook.BaseCrankerValue)
+                    .Set("dragon", hookDragon)
+                    .Set("damageRatio", dragonHook.DragonDamageRatio)
+                    .Set("crankerRatio", dragonHook.CrankerDragonRatio);
                 return true;
             }
 
@@ -621,8 +897,13 @@ namespace Pachimon.UI
             {
                 context.Set("temperature", System.Math.Max(1,
                     SignedStatMath.FloorNonNegative(
-                        sunnyDay.BaseValue
-                        + sunnyFire * sunnyDay.FireValueRatio / 100m)));
+                        SignedStatMath.ScaleFromBase(
+                            sunnyDay.BaseValue,
+                            sunnyFire,
+                            sunnyDay.FireValueRatio))))
+                    .Set("baseValue", sunnyDay.BaseValue)
+                    .Set("fire", sunnyFire)
+                    .Set("valueRatio", sunnyDay.FireValueRatio);
                 return true;
             }
 
@@ -637,7 +918,13 @@ namespace Pachimon.UI
                     .Set("slow", Scale(
                         muddyWater.BaseSlow,
                         muddyPoison,
-                        muddyWater.PoisonSlowRatio));
+                        muddyWater.PoisonSlowRatio))
+                    .Set("baseDamage", muddyWater.BaseAquaDamage)
+                    .Set("baseSlow", muddyWater.BaseSlow)
+                    .Set("aqua", muddyAqua)
+                    .Set("poison", muddyPoison)
+                    .Set("damageRatio", muddyWater.AquaDamageRatio)
+                    .Set("slowRatio", muddyWater.PoisonSlowRatio);
                 return true;
             }
 
@@ -648,17 +935,34 @@ namespace Pachimon.UI
                         beatVine.FieldEffect?.BaseValue ?? 0,
                         beatLeaf,
                         beatVine.FieldEffect?.LeafValueRatio ?? 0))
-                    .Set("interval", beatVine.FieldEffect?.AttackIntervalTicks ?? 0);
+                    .Set("interval", beatVine.FieldEffect?.AttackIntervalTicks ?? 0)
+                    .Set("baseValue", beatVine.FieldEffect?.BaseValue ?? 0)
+                    .Set("leaf", beatLeaf)
+                    .Set("valueRatio", beatVine.FieldEffect?.LeafValueRatio ?? 0)
+                    .Set("pollen", ScaleRatio(
+                        Scale(
+                            beatVine.FieldEffect?.BaseValue ?? 0,
+                            beatLeaf,
+                            beatVine.FieldEffect?.LeafValueRatio ?? 0),
+                        beatVine.FieldEffect?.PollenValueRatio ?? 0))
+                    .Set("pollenRatio",
+                        beatVine.FieldEffect?.PollenValueRatio ?? 0);
                 return true;
             }
 
             if (skill is LightningCloudSkillAsset lightningCloud
-                && TryGetStat(owner, PachimonDisplayStat.Electric, out var cloudElectric))
+                && TryGetStat(owner, PachimonDisplayStat.Electric, out var cloudElectric)
+                && TryGetStat(owner, PachimonDisplayStat.GenerationPower, out var cloudGeneration))
             {
-                context.Set("value", System.Math.Max(1,
-                    SignedStatMath.FloorNonNegative(
-                        lightningCloud.BaseValue
-                        + cloudElectric * lightningCloud.ElectricValueRatio / 100m)));
+                context.Set("value", CalculateGeneratedWeatherValue(
+                        lightningCloud.BaseValue,
+                        cloudElectric,
+                        lightningCloud.ElectricValueRatio,
+                        cloudGeneration))
+                    .Set("baseValue", lightningCloud.BaseValue)
+                    .Set("electric", cloudElectric)
+                    .Set("valueRatio", lightningCloud.ElectricValueRatio)
+                    .Set("generationPower", cloudGeneration);
                 return true;
             }
 
@@ -670,7 +974,16 @@ namespace Pachimon.UI
                 context.Set("value", poisonMist.CalculateMistValue(mistPoison))
                     .Set("duration", poisonMist.CalculateDurationTicks(mistAqua))
                     .Set("minimumValue",
-                        poisonMist.CalculateMinimumValue(mistPoison, mistWind));
+                        poisonMist.CalculateMinimumValue(mistPoison, mistWind))
+                    .Set("baseValue", poisonMist.BaseMistValue)
+                    .Set("baseDuration", poisonMist.BaseDurationTicks)
+                    .Set("baseMinimum", poisonMist.BaseMinimumValue)
+                    .Set("poison", mistPoison)
+                    .Set("aqua", mistAqua)
+                    .Set("wind", mistWind)
+                    .Set("valueRatio", poisonMist.PoisonValueRatio)
+                    .Set("durationRatio", poisonMist.AquaDurationRatio)
+                    .Set("minimumRatio", poisonMist.WindMinimumValueRatio);
                 return true;
             }
 
@@ -680,7 +993,12 @@ namespace Pachimon.UI
                 context.Set("damage", Scale(icePebble.BaseDamage, pebbleIce))
                     .Set("chill", Scale(icePebble.BaseChill, pebbleIce, icePebble.IceRatio))
                     .Set("shield", Scale(icePebble.BaseShield, pebbleIce, icePebble.IceRatio))
-                    .Set("duration", icePebble.ShieldDurationTicks);
+                    .Set("duration", icePebble.ShieldDurationTicks)
+                    .Set("baseDamage", icePebble.BaseDamage)
+                    .Set("baseChill", icePebble.BaseChill)
+                    .Set("baseShield", icePebble.BaseShield)
+                    .Set("ice", pebbleIce)
+                    .Set("ratio", icePebble.IceRatio);
                 return true;
             }
 
@@ -697,7 +1015,12 @@ namespace Pachimon.UI
                         cuttingDance.ErosionWindRatio))
                     .Set("hitCount", cuttingDance.BaseChainCount + 1)
                     .Set("addChain", AddChainRuntime.FormatUnits(
-                        cuttingDance.AddChainGainUnits));
+                        cuttingDance.AddChainGainUnits))
+                    .Set("baseDamage", cuttingDance.BaseWindDamage)
+                    .Set("baseErosion", cuttingDance.BaseErosion)
+                    .Set("wind", danceWind)
+                    .Set("damageRatio", cuttingDance.WindDamageRatio)
+                    .Set("erosionRatio", cuttingDance.ErosionWindRatio);
                 return true;
             }
 
@@ -708,7 +1031,10 @@ namespace Pachimon.UI
                         dragonUpper.BaseDragonDamage,
                         upperDragon,
                         dragonUpper.DragonDamageRatio))
-                    .Set("knockoutDuration", dragonUpper.KnockoutDurationTicks);
+                    .Set("knockoutDuration", dragonUpper.KnockoutDurationTicks)
+                    .Set("baseDamage", dragonUpper.BaseDragonDamage)
+                    .Set("dragon", upperDragon)
+                    .Set("damageRatio", dragonUpper.DragonDamageRatio);
                 return true;
             }
 
@@ -719,12 +1045,24 @@ namespace Pachimon.UI
                 context.Set("damage", checked(
                         Scale(evaporation.BaseFireDamage, evaporationFire, evaporation.FireDamageRatio)
                         + Scale(evaporation.BaseAquaDamage, evaporationAqua, evaporation.AquaDamageRatio)))
-                    .Set("penetration", checked(
-                        Scale(evaporation.BaseFirePenetration, evaporationFire, evaporation.FirePenetrationRatio)
-                        + Scale(evaporation.BaseAquaPenetration, evaporationAqua, evaporation.AquaPenetrationRatio)))
+                    .Set("penetration",
+                        PenetrationMath.CalculateDiminishingPercentage(
+                            evaporationFire * evaporation.FirePenetrationRatio / 100m
+                            + evaporationAqua * evaporation.AquaPenetrationRatio / 100m)
+                        .ToString("0.##"))
+                    .Set("penetrationValue",
+                        (evaporationFire * evaporation.FirePenetrationRatio / 100m
+                         + evaporationAqua * evaporation.AquaPenetrationRatio / 100m)
+                        .ToString("0.##"))
                     .Set("weakness", checked(
                         Scale(evaporation.BaseFireWeakness, evaporationFire, evaporation.FireWeaknessRatio)
-                        + Scale(evaporation.BaseAquaWeakness, evaporationAqua, evaporation.AquaWeaknessRatio)));
+                        + Scale(evaporation.BaseAquaWeakness, evaporationAqua, evaporation.AquaWeaknessRatio)))
+                    .Set("baseFireDamage", evaporation.BaseFireDamage).Set("baseAquaDamage", evaporation.BaseAquaDamage)
+                    .Set("baseFireWeakness", evaporation.BaseFireWeakness).Set("baseAquaWeakness", evaporation.BaseAquaWeakness)
+                    .Set("fire", evaporationFire).Set("aqua", evaporationAqua)
+                    .Set("fireDamageRatio", evaporation.FireDamageRatio).Set("aquaDamageRatio", evaporation.AquaDamageRatio)
+                    .Set("firePenetrationRatio", evaporation.FirePenetrationRatio).Set("aquaPenetrationRatio", evaporation.AquaPenetrationRatio)
+                    .Set("fireWeaknessRatio", evaporation.FireWeaknessRatio).Set("aquaWeaknessRatio", evaporation.AquaWeaknessRatio);
                 return true;
             }
 
@@ -738,7 +1076,9 @@ namespace Pachimon.UI
                             spoutAqua * waterSpout.AquaDamageRatio / 100m)
                            + (decimal)hp / waterSpout.CurrentHpDivisor)))
                     .Set("currentHp", hp)
-                    .Set("hpDivisor", waterSpout.CurrentHpDivisor);
+                    .Set("hpDivisor", waterSpout.CurrentHpDivisor)
+                    .Set("baseDamage", waterSpout.BaseAquaDamage).Set("aqua", spoutAqua)
+                    .Set("damageRatio", waterSpout.AquaDamageRatio);
                 return true;
             }
 
@@ -753,13 +1093,17 @@ namespace Pachimon.UI
                     .Set("fireValue", Scale(
                         fireVine.FieldEffect?.BaseFireValue ?? 0,
                         vineFire,
-                        fireVine.FieldEffect?.FireValueRatio ?? 0));
+                        fireVine.FieldEffect?.FireValueRatio ?? 0))
+                    .Set("baseLeafValue", fireVine.FieldEffect?.BaseLeafValue ?? 0).Set("baseFireValue", fireVine.FieldEffect?.BaseFireValue ?? 0)
+                    .Set("leaf", vineLeaf).Set("fire", vineFire)
+                    .Set("leafRatio", fireVine.FieldEffect?.LeafValueRatio ?? 0).Set("fireRatio", fireVine.FieldEffect?.FireValueRatio ?? 0);
                 return true;
             }
 
             if (skill is ElectricShieldSkillAsset electricShield
                 && TryGetStat(owner, PachimonDisplayStat.Electric, out var electricShieldStat))
             {
+                var electricCounterIce = TryGetStat(owner, PachimonDisplayStat.Ice, out var foundCounterIce) ? foundCounterIce : 0;
                 context.Set("shield", Scale(
                         electricShield.BaseShieldValue,
                         electricShieldStat,
@@ -772,7 +1116,17 @@ namespace Pachimon.UI
                         electricShield.BaseCounterParalysis,
                         electricShieldStat,
                         electricShield.CounterParalysisElectricRatio))
-                    .Set("duration", electricShield.DurationTicks);
+                    .Set("counterParalysisDuration", Math.Max(1,
+                        Scale(
+                            electricShield.BaseCounterParalysisDurationTicks,
+                            electricCounterIce,
+                            electricShield.CounterParalysisDurationIceRatio)))
+                    .Set("duration", electricShield.DurationTicks)
+                    .Set("baseShield", electricShield.BaseShieldValue).Set("baseSelfParalysis", electricShield.BaseSelfParalysis)
+                    .Set("baseCounterParalysis", electricShield.BaseCounterParalysis).Set("baseCounterDuration", electricShield.BaseCounterParalysisDurationTicks)
+                    .Set("electric", electricShieldStat).Set("ice", electricCounterIce)
+                    .Set("shieldRatio", electricShield.ShieldElectricRatio).Set("selfRatio", electricShield.SelfParalysisElectricRatio)
+                    .Set("counterRatio", electricShield.CounterParalysisElectricRatio).Set("counterDurationRatio", electricShield.CounterParalysisDurationIceRatio);
                 return true;
             }
 
@@ -782,7 +1136,10 @@ namespace Pachimon.UI
                 context.Set("damage", Scale(firstTouch.BaseDamage, touchPoison))
                     .Set("normalToxin", Scale(firstTouch.BaseNormalToxinValue, touchPoison, firstTouch.PoisonRatio))
                     .Set("bonusDamage", Scale(firstTouch.BonusBaseDamage, touchPoison))
-                    .Set("toxin", Scale(firstTouch.BaseToxinValue, touchPoison, firstTouch.PoisonRatio));
+                    .Set("toxin", Scale(firstTouch.BaseToxinValue, touchPoison, firstTouch.PoisonRatio))
+                    .Set("baseDamage", firstTouch.BaseDamage).Set("baseNormalToxin", firstTouch.BaseNormalToxinValue)
+                    .Set("baseBonusDamage", firstTouch.BonusBaseDamage).Set("baseToxin", firstTouch.BaseToxinValue)
+                    .Set("poison", touchPoison).Set("ratio", firstTouch.PoisonRatio);
                 return true;
             }
 
@@ -792,18 +1149,25 @@ namespace Pachimon.UI
                 context.Set("damage", Scale(frostArrow.BaseDamage, frostIce))
                     .Set("chill", Scale(frostArrow.BaseChill, frostIce, frostArrow.IceRatio))
                     .Set("manaRefund", frostArrow.BaseManaCost)
-                    .Set("cooldownRefund", frostArrow.BaseCooldownTicks);
+                    .Set("cooldownRefund", frostArrow.BaseCooldownTicks)
+                    .Set("baseDamage", frostArrow.BaseDamage).Set("baseChill", frostArrow.BaseChill)
+                    .Set("ice", frostIce).Set("ratio", frostArrow.IceRatio);
                 return true;
             }
 
             if (skill is KachofugetsuSkillAsset kachofugetsu
                 && TryGetStat(owner, PachimonDisplayStat.Fire, out var kachoFire)
                 && TryGetStat(owner, PachimonDisplayStat.Aqua, out var kachoAqua)
+                && TryGetStat(owner, PachimonDisplayStat.Leaf, out var kachoLeaf)
                 && TryGetStat(owner, PachimonDisplayStat.Wind, out var kachoWind))
             {
                 context.Set("fireDamage", Scale(kachofugetsu.BaseFireDamage, kachoFire, kachofugetsu.FireDamageRatio))
                     .Set("aquaDamage", Scale(kachofugetsu.BaseAquaDamage, kachoAqua, kachofugetsu.AquaDamageRatio))
-                    .Set("windDamage", Scale(kachofugetsu.BaseWindDamage, kachoWind, kachofugetsu.WindDamageRatio));
+                    .Set("leafDamage", Scale(kachofugetsu.BaseLeafDamage, kachoLeaf, kachofugetsu.LeafDamageRatio))
+                    .Set("windDamage", Scale(kachofugetsu.BaseWindDamage, kachoWind, kachofugetsu.WindDamageRatio))
+                    .Set("baseFireDamage", kachofugetsu.BaseFireDamage).Set("baseAquaDamage", kachofugetsu.BaseAquaDamage).Set("baseLeafDamage", kachofugetsu.BaseLeafDamage).Set("baseWindDamage", kachofugetsu.BaseWindDamage)
+                    .Set("fire", kachoFire).Set("aqua", kachoAqua).Set("leaf", kachoLeaf).Set("wind", kachoWind)
+                    .Set("fireRatio", kachofugetsu.FireDamageRatio).Set("aquaRatio", kachofugetsu.AquaDamageRatio).Set("leafRatio", kachofugetsu.LeafDamageRatio).Set("windRatio", kachofugetsu.WindDamageRatio);
                 return true;
             }
 
@@ -814,7 +1178,9 @@ namespace Pachimon.UI
                         dragonDefense.BaseShieldValue,
                         defenseDragon,
                         dragonDefense.DragonShieldRatio))
-                    .Set("duration", dragonDefense.DurationTicks);
+                    .Set("duration", dragonDefense.DurationTicks)
+                    .Set("baseShield", dragonDefense.BaseShieldValue).Set("dragon", defenseDragon)
+                    .Set("shieldRatio", dragonDefense.DragonShieldRatio);
                 return true;
             }
 
@@ -830,6 +1196,24 @@ namespace Pachimon.UI
 
         private static int ScaleRatio(int value, int ratio) =>
             SignedStatMath.FloorNonNegative(value * ratio / 100m);
+
+        private static int CalculateGeneratedWeatherValue(
+            int baseValue,
+            int attribute,
+            int attributeRatio,
+            int generationPower)
+        {
+            var attributeScaled = SignedStatMath.FloorNonNegative(
+                SignedStatMath.ScaleFromBase(
+                    baseValue,
+                    attribute,
+                    attributeRatio),
+                minimum: 1);
+            return SignedStatMath.FloorNonNegative(
+                attributeScaled
+                * SignedStatMath.AmplificationMultiplier(generationPower),
+                minimum: 1);
+        }
 
         private static bool TryGetAttribute(
             PachimonPreviewContent owner,
@@ -1012,19 +1396,19 @@ namespace Pachimon.UI
                     return true;
                 case StaticElectricityPassiveAsset staticElectricity:
                     context.Set("electricBaseValue",
-                            staticElectricity.ElectricBaseValue)
-                        .Set("iceBaseValue",
-                            staticElectricity.IceBaseValue);
+                            staticElectricity.BaseValue)
+                        .Set("iceBaseDuration",
+                            staticElectricity.BaseDurationTicks);
                     if (TryGetStat(owner, PachimonDisplayStat.Electric, out var staticElectric)
                         && TryGetStat(owner, PachimonDisplayStat.Ice, out var staticIce))
                     {
-                        context.Set("paralysisValue", checked(
+                        context.Set("paralysisValue",
                             Scale(
-                                staticElectricity.ElectricBaseValue,
+                                staticElectricity.BaseValue,
                                 staticElectric,
-                                100)
-                            + Scale(
-                                staticElectricity.IceBaseValue,
+                                100))
+                            .Set("paralysisDuration", Math.Max(1, Scale(
+                                staticElectricity.BaseDurationTicks,
                                 staticIce,
                                 100)));
                     }
@@ -1044,8 +1428,12 @@ namespace Pachimon.UI
                         dragonRage.PenetrationRatio);
                     if (TryGetStat(owner, PachimonDisplayStat.Dragon, out var rageDragon))
                     {
-                        context.Set("currentPenetration", decimal.Floor(
-                            rageDragon * dragonRage.PenetrationRatio / 100m));
+                        var penetrationValue = decimal.Floor(
+                            rageDragon * dragonRage.PenetrationRatio / 100m);
+                        context.Set("penetrationValue", penetrationValue)
+                            .Set("currentPenetration",
+                                PenetrationMath.CalculateDiminishingPercentage(
+                                    penetrationValue).ToString("0.##"));
                     }
                     return true;
                 case FireGrowthOnDamagePassiveAsset burningMan:

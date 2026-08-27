@@ -16,12 +16,13 @@ MonoBehaviour:
   _displayName: "\u6C34\u306E\u6CE2\u52D5"
   _allocationType: 2
   _isMapAssignable: 1
-  _baseStartupTicks: 100
+  _baseStartupTicks: 150
   _baseRecoveryTicks: 150
-  _baseCooldownTicks: 300
+  _baseCooldownTicks: 500
   _baseManaCost: 0
-  _description: "MaxMN\u306E4%\u3092\u6D88\u8CBB\u3057\u3001\u6D88\u8CBBMN\u306E3\u500D\u3092\u57FA\u790E\u5024\u3068\u3059\u308BAqua
-    Damage\u3092\u5148\u982D\u306E\u6575\u3078\u4E0E\u3048\u308B\u3002"
-  _maxMnCostPercent: 4
+  _description: "MaxMN\u306E{value:maxMnCostPercent}%\uFF08{value:maxMn} \xD7 {value:maxMnCostPercent}%
+    = {value:manaCost}\uFF09\u3092\u6D88\u8CBB\u3057\u3001\u6575\u306E\u5148\u982D\u306B{color:Aqua}{value:damage}{/color}\uFF08{value:manaCost}
+    \xD7 {value:damagePerMana} \xD7\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:damageRatio}%\uFF09%\uFF09\u306E{icon:Aqua}{color:Aqua}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
+  _maxMnCostPercent: 10
   _damagePerMana: 3
   _aquaDamageRatio: 100

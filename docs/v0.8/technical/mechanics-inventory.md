@@ -133,7 +133,7 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 
 ### 実装方針
 
-- Skill選択時に消費予定量を計算し、確定した実消費量をSkill Contextへ保存する
+- Skill選択時は消費予定量から使用可否とPreviewを判定し、発動時に最新状態で実消費量を再計算してSkill Contextへ保存する
 - 回復はDamageと分離した共通Recovery Effectとして、PreviewとResolveで同じCalculatorを使う
 
 ## 実装優先順位
@@ -154,7 +154,7 @@ v0.8のコンテンツ案から判明したMechanicsと、想定する実装境�
 - 2. 派生Stat Passive: 完了
 - 3. Damage Contextとイベント情報: 属性ダメージの適用前・適用後イベント、貫通、超過ダメージの再軽減まで完了
 - 4. Status InstanceとCategory: 通常漏電の保持・Value加算・消費、蓄電のスタック操作、Battle中UI表示まで実装
-- 6. Timelineの発生・停止・再発動: 発生、Timed Status、Stun停止・再開、動的Speed/Haste、SlowのValue減衰と進行中Phaseへの反映まで実装済み
+- 6. Timelineの発生・停止・再発動: 発生、Timed Status、Stun停止・再開、動的Speed/Haste、Value減衰型SlowとDuration型麻痺の進行中Phaseへの反映まで実装済み
 - 9. 複雑な追加Damage: 漏電からParty全体への追加Electricダメージを実装。Status Damageは別の漏電を発動しない
 
 後続Mechanicsをすべて先に完成させる必要はない。各段階で代表Skill・Passiveを1つ実装し、共通基盤と固有Logicの境界を確認してから次へ進む。

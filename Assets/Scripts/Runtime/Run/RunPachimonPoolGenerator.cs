@@ -95,7 +95,10 @@ namespace Pachimon.Run
                         definition.AllocationType,
                         definition.FixedSkillId,
                         definition.PassiveId,
-                        _statsGenerator.Generate(random, definition)));
+                        _statsGenerator.Generate(random, definition),
+                        PachimonSubStatBindings.CreateRandom(
+                            random,
+                            definition.InitialStats)));
                 }
             }
 

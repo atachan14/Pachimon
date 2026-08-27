@@ -56,33 +56,37 @@ namespace Pachimon.Battle
     {
         public static BattleSkillTimingPlan CreatePlan(
             SkillAsset skill,
-            EffectivePachimonStats stats)
+            EffectivePachimonStats stats,
+            int upgradeLevel = 0)
         {
             var multipliers = Calculate(skill, stats);
+            var upgradeMultiplier = SkillUpgradeMath.GetTimingMultiplier(upgradeLevel);
             return new BattleSkillTimingPlan(
-                skill.BaseStartupTicks * multipliers.Startup,
-                skill.BaseRecoveryTicks * multipliers.Recovery,
+                skill.BaseStartupTicks * multipliers.Startup * upgradeMultiplier,
+                skill.BaseRecoveryTicks * multipliers.Recovery * upgradeMultiplier,
                 skill.BaseCooldownTicks * multipliers.Cooldown);
         }
 
         public static BattleSkillTimingPlan CreatePlan(
             SkillAsset skill,
-            BattleUnitState unit)
+            BattleUnitState unit,
+            int upgradeLevel = 0)
         {
-            return CreatePlan(skill, unit, state: null);
+            return CreatePlan(skill, unit, state: null, upgradeLevel);
         }
 
         public static BattleSkillTimingPlan CreatePlan(
             SkillAsset skill,
             BattleUnitState unit,
-            BattleState state)
+            BattleState state,
+            int upgradeLevel = 0)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
             if (unit == null) throw new ArgumentNullException(nameof(unit));
 
             var multipliers = Calculate(
                 skill,
-                unit.GetBattleStatValue(PachimonStatType.Wind));
+                unit.GetBattleStatValue(PachimonStatType.Fire));
             var baseRecoveryTicks = skill is FrozenBreakSkillAsset frozenBreak
                 && unit.GetStatus(BattleStatusId.FrozenBreakSelf) != null
                     ? frozenBreak.LowHpRecoveryTicks
@@ -104,9 +108,10 @@ namespace Pachimon.Battle
                     state.Weather.Temperature
                     * solarBeam.TemperatureStartupRatio / 100m);
             }
+            var upgradeMultiplier = SkillUpgradeMath.GetTimingMultiplier(upgradeLevel);
             return new BattleSkillTimingPlan(
-                skill.BaseStartupTicks * startupMultiplier,
-                baseRecoveryTicks * recoveryMultiplier,
+                skill.BaseStartupTicks * startupMultiplier * upgradeMultiplier,
+                baseRecoveryTicks * recoveryMultiplier * upgradeMultiplier,
                 skill.BaseCooldownTicks * multipliers.Cooldown);
         }
 
@@ -124,32 +129,34 @@ namespace Pachimon.Battle
 
             return Calculate(
                 skill,
-                stats.GetValue(PachimonStatType.Wind));
+                stats.GetValue(PachimonStatType.Fire));
         }
 
         private static SkillTimingMultipliers Calculate(
             SkillAsset skill,
-            decimal wind)
+            decimal fire)
         {
             if (skill is not ElectricQuickAttackSkillAsset quickAttack)
             {
                 return SkillTimingMultipliers.Neutral;
             }
 
-            var windMultiplier = CalculateWindMultiplier(quickAttack, wind);
+            var fireTimingMultiplier = CalculateFireTimingMultiplier(
+                quickAttack,
+                fire);
             return new SkillTimingMultipliers(
-                startup: 1m,
-                recovery: windMultiplier,
-                cooldown: windMultiplier);
+                startup: fireTimingMultiplier,
+                recovery: fireTimingMultiplier,
+                cooldown: 1m);
         }
 
-        public static decimal CalculateWindMultiplier(
+        public static decimal CalculateFireTimingMultiplier(
             ElectricQuickAttackSkillAsset skill,
-            decimal wind)
+            decimal fire)
         {
             if (skill == null) throw new ArgumentNullException(nameof(skill));
-            var scaledWind = wind * skill.WindTimingPercent / 100m;
-            return SignedStatMath.ReductionMultiplier(scaledWind);
+            var scaledFire = fire * skill.FireTimingPercent / 100m;
+            return SignedStatMath.ReductionMultiplier(scaledFire);
         }
     }
 }

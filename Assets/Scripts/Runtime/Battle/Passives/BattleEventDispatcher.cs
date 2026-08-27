@@ -47,12 +47,12 @@ namespace Pachimon.Battle
 
     public interface IOutgoingPenetrationModifierProvider
     {
-        decimal ModifyPenetrationPercent(
+        DamagePenetration ModifyPenetration(
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
             DamageContext context,
-            decimal penetrationPercent);
+            DamagePenetration penetration);
     }
 
     public interface IContinueTurnAfterSkillProvider

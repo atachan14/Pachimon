@@ -11,5 +11,5 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _description: 対象が「風化の風」を習得する。
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: cc1523218efd0664d9e3dcc5bb7a90be, type: 2}

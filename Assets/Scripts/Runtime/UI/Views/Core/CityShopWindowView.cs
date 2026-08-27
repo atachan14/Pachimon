@@ -14,6 +14,9 @@ namespace Pachimon.UI
 {
     public sealed class CityShopWindowView : MonoBehaviour
     {
+        private const float DefaultStockRowHeight = 50f;
+        private const float SkillMachineStockRowHeight = 210f;
+
         private static readonly PachimonStatType[] EngravingDisplayOrder =
         {
             PachimonStatType.MaxHp,
@@ -26,10 +29,6 @@ namespace Pachimon.UI
             PachimonStatType.Wind,
             PachimonStatType.Electric,
             PachimonStatType.Dragon,
-            PachimonStatType.Speed,
-            PachimonStatType.Haste,
-            PachimonStatType.DamageBonus,
-            PachimonStatType.ResistBonus,
         };
 
         private readonly Dictionary<ItemCategory, bool> _expandedCategories = new();
@@ -625,10 +624,20 @@ namespace Pachimon.UI
             Action<string> onPurchase)
         {
             binding.Root.name = $"Stock_{entry.StockId}";
+            SetLayoutHeight(
+                binding.Root,
+                item is SkillMachineItemAsset
+                    ? SkillMachineStockRowHeight
+                    : DefaultStockRowHeight);
             binding.Background.color = entry.IsPurchased
                 ? GameUiPalette.MissingGraphic
                 : GameUiPalette.StatCard;
             binding.NameText.richText = true;
+            binding.NameText.fontSize = item is SkillMachineItemAsset ? 15f : 18f;
+            binding.NameText.fontStyle = FontStyles.Normal;
+            binding.NameText.alignment = item is SkillMachineItemAsset
+                ? TextAlignmentOptions.TopLeft
+                : TextAlignmentOptions.MidlineLeft;
             binding.NameText.text = FormatStockDisplayName(
                 item,
                 entry.GeneratedData);
@@ -674,12 +683,17 @@ namespace Pachimon.UI
             ItemAsset item,
             GeneratedItemData generatedData)
         {
+            if (item is SkillMachineItemAsset machine && machine.Skill != null)
+            {
+                return FormatSkillMachine(machine);
+            }
+
             if (item is EquipmentItemAsset
                 && generatedData?.EquipmentSlot.HasValue == true
                 && generatedData.StatChanges.Count >= 2)
             {
                 return $"{item.DisplayName}（"
-                    + $"{string.Join("/", generatedData.StatChanges.Select(FormatStatChange))}）";
+                    + $"{string.Join("/", generatedData.StatChanges.Select(change => FormatStatChange(change, true)))}）";
             }
 
             if (item is not EngravingItemAsset
@@ -701,7 +715,17 @@ namespace Pachimon.UI
                 + $"/{FormatStatChange(downside)}）";
         }
 
-        internal static string FormatStatChange(GeneratedStatChange change)
+        private static string FormatSkillMachine(SkillMachineItemAsset machine)
+        {
+            var skill = machine.Skill;
+            return $"{machine.DisplayName}\n"
+                + $"{SkillDisplayTextFormatter.FormatTiming(skill)}\n"
+                + SkillDisplayTextFormatter.FormatBaseDescription(skill);
+        }
+
+        internal static string FormatStatChange(
+            GeneratedStatChange change,
+            bool subStatIsDerivationRatio = false)
         {
             var amount = change.Amount > 0
                 ? $"+{change.Amount}"
@@ -718,18 +742,20 @@ namespace Pachimon.UI
             {
                 PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
                     RewardElementPalette.ResourceColor,
-                PachimonStatType.Speed or PachimonStatType.Haste =>
+                _ when PachimonStatTypeUtility.IsSubStat(change.StatType) =>
                     RewardElementPalette.TimingColor,
-                PachimonStatType.DamageBonus or PachimonStatType.ResistBonus =>
-                    RewardElementPalette.CombatBonusColor,
                 _ => GameUiPalette.StatCard,
             };
             var foreground = AttributeCardPalette.GetReadableTextColor(background);
             var backgroundHex = ColorUtility.ToHtmlStringRGBA(background);
             var foregroundHex = ColorUtility.ToHtmlStringRGBA(foreground);
+            var suffix = subStatIsDerivationRatio
+                && PachimonSubStatBindings.IsSubStat(change.StatType)
+                    ? $"対応率{amount}%"
+                    : amount;
             return $"<mark=#{backgroundHex}>"
                 + $"<color=#{foregroundHex}>{GetStatLabel(change.StatType)}</color>"
-                + $"</mark>{amount}";
+                + $"</mark>{suffix}";
         }
 
         internal static Color GetStockAccentColor(
@@ -740,6 +766,11 @@ namespace Pachimon.UI
             {
                 var colors = AttributeCardPalette.GetSkillColors(machine.Skill);
                 return colors.Count > 0 ? colors[0] : GameUiPalette.SkillChip;
+            }
+
+            if (item is SkillForgetItemAsset)
+            {
+                return GameUiPalette.SkillChip;
             }
 
             if (item is EquipmentItemAsset equipment)
@@ -782,10 +813,8 @@ namespace Pachimon.UI
             {
                 PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
                     RewardElementPalette.ResourceColor,
-                PachimonStatType.Speed or PachimonStatType.Haste =>
+                _ when PachimonStatTypeUtility.IsSubStat(statType) =>
                     RewardElementPalette.TimingColor,
-                PachimonStatType.DamageBonus or PachimonStatType.ResistBonus =>
-                    RewardElementPalette.CombatBonusColor,
                 _ => GameUiPalette.StatCard,
             };
         }
@@ -820,9 +849,12 @@ namespace Pachimon.UI
                 return "売り切れ";
             }
 
-            if (item is EquipmentItemAsset)
+            if (item is EquipmentItemAsset
+                || item is SkillMachineItemAsset
+                || item is SkillForgetItemAsset
+                || item is EngravingItemAsset)
             {
-                return "準備中";
+                return "MainPaneで利用";
             }
 
             if (runState?.ItemInventory.IsFull ?? true)

@@ -137,7 +137,7 @@ v0.3では挑戦Logと各Battle Logを「おう」ボタンで送り、次の表
 
 ## Skill Grid
 
-- Player Turnでは所持Skillを最大9件、3列Gridで表示する
+- Player Turnでは所持Skillを最大6件、3列Gridで表示する
 - 使用可能Skillは黒背景、使用不可Skillは灰色で表示する
 - 使用不可Skillには残りCooldown Tickを表示し、Buttonを操作不能にする
 - 全Skillが使用不可でもGridは維持する

@@ -19,7 +19,10 @@ namespace Pachimon.Battle
 
             var wind = context.User.GetBattleStatValue(PachimonStatType.Wind);
             var shield = SignedStatMath.FloorNonNegative(
-                wind * _skill.WindShieldRatio / 100m);
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseShieldValue,
+                    wind,
+                    _skill.WindShieldRatio));
             if (shield > 0)
             {
                 context.State.SupportEffects.ApplyShield(

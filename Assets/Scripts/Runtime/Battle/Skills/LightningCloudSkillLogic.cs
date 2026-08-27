@@ -14,11 +14,12 @@ namespace Pachimon.Battle
         public SkillResolution Resolve(SkillExecutionContext context)
         {
             var value = SignedStatMath.FloorNonNegative(
-                _skill.BaseValue
-                + context.GetAttributeValue(PachimonAttribute.Electric)
-                * context.GetAttributeRatio(
-                    PachimonAttribute.Electric,
-                    _skill.ElectricValueRatio) / 100m,
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseValue,
+                    context.GetAttributeValue(PachimonAttribute.Electric),
+                    context.GetAttributeRatio(
+                        PachimonAttribute.Electric,
+                        _skill.ElectricValueRatio)),
                 minimum: 1);
             var weather = context.State.Weather.CreateOrAdd(
                 context.User,

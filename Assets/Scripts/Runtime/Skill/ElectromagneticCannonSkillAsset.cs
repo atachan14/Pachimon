@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pachimon.Data;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Pachimon.Skills
 {
@@ -9,9 +10,10 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Electromagnetic Cannon Skill")]
     public sealed class ElectromagneticCannonSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _basePower = 400;
+        [FormerlySerializedAs("_basePower")]
+        [SerializeField, Min(0)] private int _baseDamage = 400;
 
-        public int BasePower => _basePower;
+        public int BaseDamage => _baseDamage;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -28,10 +30,10 @@ namespace Pachimon.Skills
                     $"Skill {SkillId}: Electromagnetic Cannon requires Startup.");
             }
 
-            if (_basePower <= 0)
+            if (_baseDamage <= 0)
             {
                 errors.Add(
-                    $"Skill {SkillId}: Base Power must be positive.");
+                    $"Skill {SkillId}: Base Damage must be positive.");
             }
         }
 
@@ -44,7 +46,7 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePower)
+            int baseDamage)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -56,7 +58,7 @@ namespace Pachimon.Skills
                 description,
                 baseManaCost);
             SetBaseStartupTicksForEditor(baseStartupTicks);
-            _basePower = basePower;
+            _baseDamage = baseDamage;
         }
 #endif
     }

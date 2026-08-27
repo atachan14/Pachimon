@@ -9,11 +9,11 @@ namespace Pachimon.Battle
     public sealed class SmogFieldEffectAsset : BattleFieldEffectAsset
     {
         [SerializeField, Min(0)] private int _toxinApplicationRatio = 1;
-        [SerializeField, Min(0)] private int _decayPerTickRatio = 1;
+        [SerializeField, Min(1)] private int _decayPerTick = 1;
         [SerializeField] private ToxinStatusAsset _toxinStatus;
 
         public int ToxinApplicationRatio => _toxinApplicationRatio;
-        public int DecayPerTickRatio => _decayPerTickRatio;
+        public int DecayPerTick => _decayPerTick;
         public ToxinStatusAsset ToxinStatus => _toxinStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -34,7 +34,7 @@ namespace Pachimon.Battle
             string displayName,
             string description,
             int toxinApplicationRatio,
-            int decayPerTickRatio,
+            int decayPerTick,
             ToxinStatusAsset toxinStatus,
             Sprite icon = null)
         {
@@ -44,7 +44,7 @@ namespace Pachimon.Battle
                 description,
                 icon);
             _toxinApplicationRatio = toxinApplicationRatio;
-            _decayPerTickRatio = decayPerTickRatio;
+            _decayPerTick = decayPerTick;
             _toxinStatus = toxinStatus;
         }
 #endif

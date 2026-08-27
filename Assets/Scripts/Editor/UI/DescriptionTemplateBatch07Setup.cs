@@ -26,7 +26,14 @@ namespace Pachimon.Editor.UI
 
             for (var id = 49; id <= 56; id++)
             {
-                SetTemplate(skills.Get(id), CreateSkillTemplate(id));
+                var skillTemplate = CreateSkillTemplate(id);
+                if (id == 51)
+                {
+                    skillTemplate += "\u653B\u6483\u3054\u3068\u306B\u30C0\u30E1\u30FC\u30B8Value\u306E"
+                        + "{value:pollenRatio}%\uFF08\u73FE\u5728{value:pollen}\uFF09\u306E"
+                        + "{term:Pollen|\u82B1\u7C89}\u3092\u4ED8\u4E0E\u3059\u308B\u3002";
+                }
+                SetTemplate(skills.Get(id), skillTemplate);
                 SetTemplate(passives.Get(id), CreatePassiveTemplate(id));
             }
 
@@ -39,7 +46,8 @@ namespace Pachimon.Editor.UI
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(49)?.Description?.Contains("{value:temperature}") != true
+            if (skills?.Get(49)?.Description?.Contains("晴天") != true
+                || skills?.Get(51)?.Description?.Contains("{value:pollen}") != true
                 || passives?.Get(49)?.Description?.Contains("{value:increasePercent}") != true)
             {
                 Setup();
@@ -62,14 +70,14 @@ namespace Pachimon.Editor.UI
 
         private static string CreateSkillTemplate(int id) => id switch
         {
-            49 => "Battle中の気温を{color:Fire}{value:temperature}{/color}上昇させる。気温はBattle終了まで減衰しない。",
-            50 => "敵の先頭へ{icon:Aqua}{color:Aqua}{value:damage}{/color}の水ダメージと、値{color:Poison}{value:slow}{/color}のSlowを与える。",
-            51 => "自陣に値{color:Leaf}{value:value}{/color}の{term:BeatVine|ビートヴァイン}を生成する。{value:interval}tickごとに敵を攻撃する。",
-            52 => "値{color:Electric}{value:value}{/color}の天気{term:Thunder|雷}を発生させる。",
-            53 => "自陣に初期値{color:Poison}{value:value}{/color}、最小値{color:Wind}{value:minimumValue}{/color}、{value:duration}tickの{term:PoisonMist|毒の霧}を生成する。現在Value以下の軽減前Damageとなる敵Skill攻撃を回避する。",
-            54 => "敵の先頭へ{icon:Ice}{color:Ice}{value:damage}{/color}の氷ダメージと値{value:chill}の冷気を与え、自身へ値{value:shield}、{value:duration}tickのShieldを付与する。",
-            55 => "{value:hitCount}体へ連鎖し、各対象へ{icon:Wind}{color:Wind}{value:damage}{/color}の風ダメージと値{value:erosion}の風化を与える。使用後、アドチェインを{value:addChain}得る。",
-            56 => "敵の先頭へ{icon:Dragon}{color:Dragon}{value:damage}{/color}の竜ダメージと、{value:knockoutDuration}tickのノックアウトを与える。",
+            49 => "{icon:Fire}に応じて晴天を{color:Fire}{value:temperature}{/color}発生させる。晴天は10tick毎に気温を上げ、湿潤を下げる。",
+            50 => "敵の先頭へ{color:Aqua}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Aqua}{value:aqua} × {value:damageRatio}%）%）の{icon:Aqua}{color:Aqua}ダメージ{/color}と、値{color:Poison}{value:slow}{/color}（{value:baseSlow} ×（100 + {icon:Poison}{value:poison} × {value:slowRatio}%）%）のSlowを与える。",
+            51 => "自陣に値{color:Leaf}{value:value}{/color}（{value:baseValue} ×（100 + {icon:Leaf}{value:leaf} × {value:valueRatio}%）%）の{term:BeatVine|ビートヴァイン}を生成する。{value:interval}tickごとに敵を攻撃する。",
+            52 => "値{color:Electric}{value:value}{/color}（{value:baseValue} + {icon:Electric}{value:electric} × {value:valueRatio}%）の天気{term:Thunder|雷}を発生させる。",
+            53 => "自陣に初期値{color:Poison}{value:value}{/color}（{value:baseValue} ×（100 + {icon:Poison}{value:poison} × {value:valueRatio}%）%）、最小値{color:Wind}{value:minimumValue}{/color}（{value:baseMinimum} ×（100 + {icon:Poison}{value:poison} × 100% + {icon:Wind}{value:wind} × {value:minimumRatio}%）%）、{value:duration}tick（{value:baseDuration} ×（100 + {icon:Aqua}{value:aqua} × {value:durationRatio}%）%）の{term:PoisonMist|毒の霧}を生成する。現在Value以下の軽減前Damageとなる敵Skill攻撃を回避する。",
+            54 => "敵の先頭へ{color:Ice}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Ice}{value:ice} × {value:ratio}%）%）の{icon:Ice}{color:Ice}ダメージ{/color}と値{value:chill}（{value:baseChill} ×（100 + {icon:Ice}{value:ice} × {value:ratio}%）%）の冷気を与え、自身へ値{value:shield}（{value:baseShield} ×（100 + {icon:Ice}{value:ice} × {value:ratio}%）%）、{value:duration}tickのShieldを付与する。",
+            55 => "{value:hitCount}体へ連鎖し、各対象へ{color:Wind}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Wind}{value:wind} × {value:damageRatio}%）%）の{icon:Wind}{color:Wind}ダメージ{/color}と値{value:erosion}（{value:baseErosion} ×（100 + {icon:Wind}{value:wind} × {value:erosionRatio}%）%）の風化を与える。使用後、アドチェインを{value:addChain}得る。",
+            56 => "敵の先頭へ{color:Dragon}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Dragon}{value:dragon} × {value:damageRatio}%）%）の{icon:Dragon}{color:Dragon}ダメージ{/color}と、{value:knockoutDuration}tickのノックアウトを与える。",
             _ => string.Empty,
         };
 

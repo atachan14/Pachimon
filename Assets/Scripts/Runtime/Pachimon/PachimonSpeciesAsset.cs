@@ -87,6 +87,11 @@ namespace Pachimon.Data
                 return;
             }
 
+            foreach (var error in _initialStats.ValidateFixedSubStatBindings())
+            {
+                errors?.Add($"Species {_speciesId}: {error}");
+            }
+
             foreach (var statType in new[]
                      {
                          PachimonStatType.MaxHp,

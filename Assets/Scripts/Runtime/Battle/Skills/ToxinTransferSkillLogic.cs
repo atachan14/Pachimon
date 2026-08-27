@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Pachimon.Reward;
 using Pachimon.Run;
 using Pachimon.Skills;
 
@@ -32,10 +33,24 @@ namespace Pachimon.Battle
 
         public static int CalculateApplication(
             int removedValue,
+            int baseValue,
             int applicationPercent)
         {
             return SignedStatMath.FloorNonNegative(
-                removedValue * applicationPercent / 100m);
+                (removedValue + baseValue) * applicationPercent / 100m);
+        }
+
+        public static int CalculateBaseValue(
+            ToxinTransferSkillAsset skill,
+            decimal poison,
+            decimal? poisonScalingPercent = null)
+        {
+            if (skill == null) throw new ArgumentNullException(nameof(skill));
+            return SignedStatMath.FloorNonNegative(
+                SignedStatMath.ScaleFromBase(
+                    skill.BaseToxinValue,
+                    poison,
+                    poisonScalingPercent ?? skill.PoisonScalingPercent));
         }
     }
 
@@ -59,9 +74,22 @@ namespace Pachimon.Battle
             }
 
             var targets = SelectTargets(context);
-            var toxinDefinition = targets.Source
-                .GetStatus(BattleStatusId.Toxin)?.Definition as ToxinStatusAsset;
             var sourceValue = GetToxinValue(targets.Source);
+            var baseValue = ToxinTransferMath.CalculateBaseValue(
+                _skill,
+                context.GetAttributeValue(PachimonAttribute.Poison),
+                context.GetAttributeRatio(
+                    PachimonAttribute.Poison,
+                    _skill.PoisonScalingPercent));
+            if (sourceValue <= 0)
+            {
+                ApplyToxin(context, targets.Source, baseValue);
+                return new SkillResolution(
+                    context.User,
+                    context.Skill,
+                    Array.Empty<SkillEffectResult>());
+            }
+
             var requestedRemoval = ToxinTransferMath.CalculateRemoval(
                 sourceValue,
                 _skill.RemovalPercent);
@@ -71,6 +99,7 @@ namespace Pachimon.Battle
                 requestedRemoval);
             var applied = ToxinTransferMath.CalculateApplication(
                 removed,
+                baseValue,
                 _skill.ApplicationPercent);
 
             if (removed > 0)
@@ -81,18 +110,27 @@ namespace Pachimon.Battle
 
             if (applied > 0)
             {
-                context.BeginStatusHit(targets.Destination).ApplyStatus(
-                    BattleStatusFactory.CreateToxin(
-                        context.User,
-                        applied,
-                        toxinDefinition ?? throw new InvalidOperationException(
-                            "Transferred Toxin requires a Definition.")));
+                ApplyToxin(context, targets.Destination, applied);
             }
 
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 Array.Empty<SkillEffectResult>());
+        }
+
+        private void ApplyToxin(
+            SkillExecutionContext context,
+            BattleUnitState target,
+            int value)
+        {
+            if (value <= 0) return;
+            context.BeginStatusHit(target).ApplyStatus(
+                BattleStatusFactory.CreateToxin(
+                    context.User,
+                    value,
+                    _skill.ToxinStatus ?? throw new InvalidOperationException(
+                        "Toxin Transfer requires a Toxin Definition.")));
         }
 
         public static ToxinTransferTargets SelectTargets(

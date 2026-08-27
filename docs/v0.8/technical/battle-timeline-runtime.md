@@ -29,8 +29,8 @@ Battle全体の`CurrentTick`を1tick進めるたび、全Unitを次の順序で�
 
 1. 現在のSpeed/Hasteから1tick分の進行量を求める
 2. 発生、硬直、初期待機、Cooldownの残り作業量を減らす
-3. SlowのValueを1減らす
-4. Valueが0になったSlowを取り除く
+3. Value減衰型SlowのValueをDefinitionの`DecayPerTick`だけ減らす
+4. Valueが0、またはRemainingTicksが0になったSlowを取り除く
 5. `CurrentTick`を進める
 
 `IsPaused`のUnitは行動時計とCooldownの両方を進めない。
@@ -64,10 +64,11 @@ BattleSpeed = StartingSpeed - TotalSlow
 ```
 
 - Speedは負数になり得る
-- Slowは時間を持たず、各tickの進行後にValueを1減らす
-- Valueが0になったSlowは終了する
+- Slowと冷気は各tickの進行後にValueを1減らし、Valueが0になると終了する
+- 麻痺はValueを減衰させず、付与ごとのRemainingTicksが0になると終了する
 - 現在進行中の発生・硬直・初期待機にも即座に反映する
-- 同じStatus IDのSlowを再付与した場合はValueを加算する
+- Slowと冷気は同じStatus IDの再付与時にValueを加算する
+- 麻痺は再付与ごとに独立したスタックとして保持する
 - 麻痺と冷気など異なるStatus IDのSlowは別々に保持し、合計する
 
 ## Statの参照タイミング

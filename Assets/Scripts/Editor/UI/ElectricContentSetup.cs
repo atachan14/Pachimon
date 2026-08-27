@@ -71,7 +71,7 @@ namespace Pachimon.Editor.UI
             shield.ConfigureForEditor(
                 60, "エレキシールド", 100, 300, 100,
                 "自身へShieldと麻痺を付与し、Shield持続中は攻撃者へ麻痺を返す。",
-                100, 150, 100, 50, 100, 25, 100,
+                200, 50, 100, 50, 100, 25, 100, 25,
                 paralysis, shieldStatus);
 
             var thunderMan = GetOrCreate<ThunderManPassiveAsset>(
@@ -127,7 +127,7 @@ namespace Pachimon.Editor.UI
                 $"{ItemFolder}/Item_{itemId}_TM_{typeName}.asset");
             item.ConfigureForEditor(itemId, $"技マシーン[{skill.DisplayName}]", null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
-                ItemCategory.SkillMachine, 5000);
+                ItemCategory.SkillMachine, 1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

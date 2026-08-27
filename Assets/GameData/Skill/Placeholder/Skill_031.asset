@@ -13,15 +13,18 @@ MonoBehaviour:
   m_Name: Skill_031
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Skills.HealingWindSkillAsset
   _skillId: 31
-  _displayName: 治癒の風
+  _displayName: "\u6CBB\u7652\u306E\u98A8"
   _allocationType: 7
   _isMapAssignable: 1
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300
   _baseManaCost: 80
-  _description: "HP割合が最も低い味方を{color:Wind}{value:healing}{/color}回復し、{value:duration}tickの間、{icon:Wind}風を{value:windBonus}、Speedを{value:speedBonus}増加させる。"
-  _baseHealing: 100
+  _description: "HP\u5272\u5408\u304C\u6700\u3082\u4F4E\u3044\u5473\u65B9\u3092{color:Wind}{value:healing}{/color}\uFF08{value:baseHealing}
+    \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u56DE\u5FA9\u3057\u3001{value:duration}tick\u306E\u9593\u3001{icon:Wind}\u98A8\u3092{value:windBonus}\uFF08{value:baseWindBonus}
+    \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u3001Speed\u3092{value:speedBonus}\uFF08{value:baseSpeedBonus}
+    \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u5897\u52A0\u3055\u305B\u308B\u3002"
+  _baseHealing: 50
   _baseWindBonus: 50
   _baseSpeedBonus: 50
   _windRatio: 100

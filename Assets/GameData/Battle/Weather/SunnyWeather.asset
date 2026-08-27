@@ -14,10 +14,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Battle.SunnyWeatherAsset
   _weatherId: 1
   _displayName: "\u6C17\u6E29"
-  _description: "Battle\u4E2D\u306B\u6052\u4E45\u7684\u306B\u4FDD\u6301\u3059\u308B\u74B0\u5883\u5024\u3002\u6B63\u3067Fire\u3092\u5F37\u5316\u3057Aqua\u3068Ice\u3092\u5F31\u5316\u3001\u8CA0\u3067Fire\u3092\u5F31\u5316\u3057Ice\u3092\u5F37\u5316\u3059\u308B\u3002"
+  _description: "{icon:Fire}Ratio\u3092{color:Fire}{value:increasePercent}%{/color}\u5897\u52A0\u3057\u3001{icon:Ice}Ratio\u3092{color:Ice}{value:decreasePercent}%{/color}\u6E1B\u5C11\u3059\u308B\u3002"
   _icon: {fileID: 0}
-  _fireRatioScalingPercent: 10
-  _aquaRatioScalingPercent: 20
-  _iceRatioScalingPercent: 20
-  _coldFireRatioScalingPercent: 20
-  _coldIceRatioScalingPercent: 10
+  _negativeDescription: "{icon:Ice}Ratio\u3092{color:Ice}{value:increasePercent}%{/color}\u5897\u52A0\u3057\u3001{icon:Fire}Ratio\u3092{color:Fire}{value:decreasePercent}%{/color}\u6E1B\u5C11\u3059\u308B\u3002"
+  _fireRatioScalingPercent: 100
+  _aquaRatioScalingPercent: 100
+  _iceRatioScalingPercent: 100
+  _coldFireRatioScalingPercent: 100
+  _coldIceRatioScalingPercent: 100
+  _damageChangePercent: 0.5

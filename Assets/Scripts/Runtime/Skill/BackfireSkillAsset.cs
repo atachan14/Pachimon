@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Pachimon.Data;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Pachimon.Skills
 {
@@ -9,15 +10,18 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Backfire Skill")]
     public sealed class BackfireSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _basePower = 100;
+        [FormerlySerializedAs("_basePower")]
+        [SerializeField, Min(0)] private int _baseDamage = 100;
         [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
-        [SerializeField, Min(0)] private int _basePenetrationPercent = 10;
-        [SerializeField, Min(0)] private int _poisonScalingPercent = 100;
+        [FormerlySerializedAs("_basePenetrationPercent")]
+        [SerializeField, Min(0)] private int _baseAttributeFixedPenetration = 10;
+        [FormerlySerializedAs("_poisonScalingPercent")]
+        [SerializeField, Min(0)] private int _poisonPenetrationRatio = 100;
 
-        public int BasePower => _basePower;
+        public int BaseDamage => _baseDamage;
         public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
-        public int BasePenetrationPercent => _basePenetrationPercent;
-        public int PoisonScalingPercent => _poisonScalingPercent;
+        public int BaseAttributeFixedPenetration => _baseAttributeFixedPenetration;
+        public int PoisonPenetrationRatio => _poisonPenetrationRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -36,10 +40,10 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePower,
+            int baseDamage,
             int fireScalingPercent,
-            int basePenetrationPercent,
-            int poisonScalingPercent)
+            int baseAttributeFixedPenetration,
+            int poisonPenetrationRatio)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -50,10 +54,10 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _basePower = basePower;
+            _baseDamage = baseDamage;
             _fireScalingPercent = fireScalingPercent;
-            _basePenetrationPercent = basePenetrationPercent;
-            _poisonScalingPercent = poisonScalingPercent;
+            _baseAttributeFixedPenetration = baseAttributeFixedPenetration;
+            _poisonPenetrationRatio = poisonPenetrationRatio;
         }
 #endif
     }

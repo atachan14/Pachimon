@@ -21,6 +21,7 @@ namespace Pachimon.UI
         [field: SerializeField] public MapOverlayView MapOverlayView { get; private set; }
         public ItemPanelView ItemPanelView { get; private set; }
         public SettingsOverlayView SettingsOverlayView { get; private set; }
+        public RuntimeErrorOverlayView RuntimeErrorOverlayView { get; private set; }
         [field: SerializeField] public LayoutMode LayoutMode { get; private set; }
 
         [SerializeField, Min(0f)] private float _drawerTransitionDuration = 0.25f;
@@ -62,6 +63,12 @@ namespace Pachimon.UI
         private bool _isInitialized;
 
         public CompactPane CurrentCompactPane => _compactPane;
+
+        public void BindErrorDiagnostics(
+            System.Func<RuntimeErrorDiagnosticContext> contextProvider)
+        {
+            RuntimeErrorOverlayView?.ConfigureDiagnostics(contextProvider);
+        }
 
         public void Initialize(
             HeaderView headerView,
@@ -211,6 +218,13 @@ namespace Pachimon.UI
             BringOverlayToFront(_contentDetailViewport);
             _contentDetailOverlayView.Show(
                 _contentDetailFactory.CreateItem(item, generatedData));
+        }
+
+        public void ShowAbilityDetails(
+            PachimonAbilityPreview ability,
+            PachimonPreviewContent owner)
+        {
+            HandleAbilityDetailsRequested(ability, owner);
         }
 
         public void ShowFieldEffectDetails(BattleFieldEffectInstance effect)
@@ -460,6 +474,9 @@ namespace Pachimon.UI
             {
                 _overlayLayer.gameObject.AddComponent<RectMask2D>();
             }
+            RuntimeErrorOverlayView =
+                Pachimon.UI.RuntimeErrorOverlayView.CreateRuntime(
+                    transform as RectTransform ?? _bodyRect);
             _leftDrawerViewport = CreateDrawerViewport(
                 "LeftDrawerViewport",
                 _overlayLayer,

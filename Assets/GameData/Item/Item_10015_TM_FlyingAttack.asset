@@ -11,5 +11,5 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _description: 対象が「フライングアタック」を習得する。
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: 4be2d682fcc648f409cde2713c9ee871, type: 2}

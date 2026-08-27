@@ -10,19 +10,37 @@ using UnityEngine.UI;
 
 namespace Pachimon.UI
 {
+    public sealed class CitySkillOption
+    {
+        public CitySkillOption(
+            int slotId,
+            PachimonAbilityPreview ability,
+            PachimonPreviewContent owner)
+        {
+            SlotId = slotId;
+            Ability = ability;
+            Owner = owner;
+        }
+
+        public int SlotId { get; }
+        public PachimonAbilityPreview Ability { get; }
+        public PachimonPreviewContent Owner { get; }
+        public string DisplayName => Ability.DisplayName;
+    }
+
     public sealed class CityPachimonOption
     {
         public CityPachimonOption(
             string instanceId,
             string displayName,
             Sprite frontSprite,
-            int skillCount,
+            IEnumerable<CitySkillOption> skills,
             IEnumerable<EquipmentSlot> occupiedSlots)
         {
             InstanceId = instanceId;
             DisplayName = displayName;
             FrontSprite = frontSprite;
-            SkillCount = skillCount;
+            Skills = (skills ?? Array.Empty<CitySkillOption>()).ToArray();
             OccupiedSlots = new HashSet<EquipmentSlot>(
                 occupiedSlots ?? Array.Empty<EquipmentSlot>());
         }
@@ -30,7 +48,8 @@ namespace Pachimon.UI
         public string InstanceId { get; }
         public string DisplayName { get; }
         public Sprite FrontSprite { get; }
-        public int SkillCount { get; }
+        public IReadOnlyList<CitySkillOption> Skills { get; }
+        public int SkillCount => Skills.Count;
         public IReadOnlyCollection<EquipmentSlot> OccupiedSlots { get; }
     }
 
@@ -49,6 +68,8 @@ namespace Pachimon.UI
         private Action<IReadOnlyList<CityStockEntry>> _buyItems;
         private Action<IReadOnlyList<CityStockEntry>, string> _applyEngravings;
         private Action<CityStockEntry, string> _teachSkill;
+        private Action<CityStockEntry, string, int> _forgetSkill;
+        private Action<CitySkillOption> _showSkillDetails;
         private Action<CityStockEntry, string> _equip;
         private Action _proceed;
 
@@ -62,6 +83,8 @@ namespace Pachimon.UI
             Action<IReadOnlyList<CityStockEntry>> buyItems,
             Action<IReadOnlyList<CityStockEntry>, string> applyEngravings,
             Action<CityStockEntry, string> teachSkill,
+            Action<CityStockEntry, string, int> forgetSkill,
+            Action<CitySkillOption> showSkillDetails,
             Action<CityStockEntry, string> equip,
             Action proceed)
         {
@@ -74,6 +97,8 @@ namespace Pachimon.UI
             _buyItems = buyItems;
             _applyEngravings = applyEngravings;
             _teachSkill = teachSkill;
+            _forgetSkill = forgetSkill;
+            _showSkillDetails = showSkillDetails;
             _equip = equip;
             _proceed = proceed;
             EnsureCityRoot();
@@ -213,7 +238,12 @@ namespace Pachimon.UI
             horizontal.childForceExpandWidth = true;
             horizontal.childForceExpandHeight = false;
             columns.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            foreach (var itemId in new[] { ItemIds.Potion, ItemIds.MnPotion })
+            foreach (var itemId in new[]
+                     {
+                         ItemIds.Potion,
+                         ItemIds.MnPotion,
+                         ItemIds.ReviveShard,
+                     })
             {
                 var column = CreateVertical($"Item{itemId}", columns);
                 var heading = CreateText("Heading", column, _catalog.Get(itemId)?.DisplayName ?? "Item", 20f, FontStyles.Bold);
@@ -280,10 +310,30 @@ namespace Pachimon.UI
         private void OpenEntrySelector(CityStockEntry entry)
         {
             var item = _catalog.Get(entry.ItemId);
+            if (item is SkillForgetItemAsset)
+            {
+                PachimonSelectionOverlayView.CreateRuntime(_cityRoot).PresentSkillForget(
+                    "技を忘れるパチモンを選択",
+                    entry.Price,
+                    _party,
+                    _showSkillDetails,
+                    (instanceId, slotId) => _forgetSkill?.Invoke(
+                        entry,
+                        instanceId,
+                        slotId));
+                return;
+            }
+
             string Reason(CityPachimonOption option)
             {
-                if (item is SkillMachineItemAsset && option.SkillCount >= PachimonInstance.MaxSkillSlots)
-                    return "これ以上おぼえられない";
+                if (item is SkillMachineItemAsset machine)
+                {
+                    var alreadyKnown = option.Skills.Any(
+                        skill => skill.Ability.Id == machine.SkillId);
+                    if (!alreadyKnown
+                        && option.SkillCount >= PachimonInstance.MaxSkillSlots)
+                        return "これ以上おぼえられない";
+                }
                 if (item is EquipmentItemAsset equipment && option.OccupiedSlots.Contains(equipment.Slot))
                     return "この部位は装備済み";
                 return null;
@@ -347,7 +397,8 @@ namespace Pachimon.UI
             layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = true;
-            row.gameObject.AddComponent<LayoutElement>().preferredHeight = 54f;
+            row.gameObject.AddComponent<LayoutElement>().preferredHeight =
+                item is SkillMachineItemAsset ? 180f : 54f;
             var details = CreateButton(
                 "Details",
                 row,
@@ -357,6 +408,13 @@ namespace Pachimon.UI
                 () => _showDetails?.Invoke(entry),
                 Color.clear);
             details.GetComponentInChildren<TMP_Text>().color = textColor;
+            if (item is SkillMachineItemAsset)
+            {
+                var detailText = details.GetComponentInChildren<TMP_Text>();
+                detailText.fontSize = 15f;
+                detailText.fontStyle = FontStyles.Normal;
+                detailText.alignment = TextAlignmentOptions.TopLeft;
+            }
             details.gameObject.AddComponent<LayoutElement>().flexibleWidth = 1f;
             var price = CreateText(
                 "Price",

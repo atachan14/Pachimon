@@ -108,6 +108,7 @@ namespace Pachimon.UI
                 rightPaneRect,
                 _compactBreakpoint);
             _gameRootView.BindAbilityDetails(_skillCatalog, _passiveCatalog);
+            _gameRootView.BindErrorDiagnostics(BuildErrorDiagnosticContext);
 
             RegisterScreens();
             WireButtons();
@@ -230,6 +231,15 @@ namespace Pachimon.UI
             _battleScreen.BattleMainView?.ConfigureUnitClicks(
                 CurrentRunContext.MapRunController.FocusPlayerBattleUnit,
                 CurrentRunContext.MapRunController.FocusEnemyBattleUnit);
+        }
+
+        private RuntimeErrorDiagnosticContext BuildErrorDiagnosticContext()
+        {
+            var runState = CurrentRunContext?.RunState;
+            return new RuntimeErrorDiagnosticContext(
+                runState?.RunSeed,
+                runState?.CurrentNodeId,
+                CurrentRunContext?.MapRunController.ActiveBattleTick);
         }
 
         public bool ConfigureTrainerCatalogs(

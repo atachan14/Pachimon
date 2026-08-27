@@ -33,6 +33,8 @@ namespace Pachimon.Items
         public const int MaximumEffectPercent = 130;
         public const int PotionTotalCopies = 40;
         public const int MnPotionTotalCopies = 40;
+        public const int ReviveShardTotalCopies = 40;
+        public const int SkillForgetTotalCopies = 16;
         public const int MachineCopiesPerPoolPerCity = 1;
         public const int EngravingCopiesPerStat = 32;
         public const int EquipmentCopiesPerDefinition = 2;
@@ -52,6 +54,14 @@ namespace Pachimon.Items
 
             var potion = GetRequiredItem(itemCatalog, ItemIds.Potion, "Potion");
             var mnPotion = GetRequiredItem(itemCatalog, ItemIds.MnPotion, "MN Potion");
+            var reviveShard = GetRequiredItem(
+                itemCatalog,
+                ItemIds.ReviveShard,
+                "Revive Shard");
+            var skillForget = GetRequiredItem(
+                itemCatalog,
+                ItemIds.SkillForget,
+                "Skill Forget");
             var machineItems = itemCatalog.Items
                 .OfType<SkillMachineItemAsset>()
                 .Where(item => item.Skill != null
@@ -67,6 +77,8 @@ namespace Pachimon.Items
                 .ToArray();
             var engravings = itemCatalog.Items
                 .OfType<EngravingItemAsset>()
+                .Where(item => PachimonStatTypeUtility.IsGeneratedStat(
+                    item.TargetStat))
                 .OrderBy(item => item.TargetStat)
                 .ToArray();
             var equipment = itemCatalog.Items
@@ -94,6 +106,18 @@ namespace Pachimon.Items
             DistributeRandomCopies(
                 mnPotion,
                 MnPotionTotalCopies,
+                requests,
+                assignedItems,
+                random);
+            DistributeRandomCopies(
+                reviveShard,
+                ReviveShardTotalCopies,
+                requests,
+                assignedItems,
+                random);
+            DistributeRandomCopies(
+                skillForget,
+                SkillForgetTotalCopies,
                 requests,
                 assignedItems,
                 random);
@@ -187,13 +211,21 @@ namespace Pachimon.Items
         private static void ValidateEngravings(
             IReadOnlyCollection<EngravingItemAsset> engravings)
         {
-            var expectedCount = (int)PachimonStatType.Count;
+            var expectedStats = Enumerable.Range(
+                    0,
+                    (int)PachimonStatType.Count)
+                .Select(index => (PachimonStatType)index)
+                .Where(PachimonStatTypeUtility.IsGeneratedStat)
+                .ToArray();
+            var expectedCount = expectedStats.Length;
             if (engravings.Count != expectedCount
                 || engravings.Select(item => item.TargetStat).Distinct().Count()
-                    != expectedCount)
+                    != expectedCount
+                || expectedStats.Any(stat => engravings.All(
+                    item => item.TargetStat != stat)))
             {
                 throw new InvalidOperationException(
-                    "City stock generation requires one Engraving Item for every Pachimon Stat.");
+                    "City stock generation requires one Engraving Item for every generated Pachimon Stat.");
             }
         }
 
@@ -338,7 +370,7 @@ namespace Pachimon.Items
                 var healingItem = (HealingItemAsset)group.First().Item;
                 var values = CreateBalancedEffectValues(
                     group.Count(),
-                    healingItem.RecoveryPercent,
+                    healingItem.RecoveryAmount,
                     random);
                 var orderedDrafts = group
                     .OrderBy(draft => draft.Price)

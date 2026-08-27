@@ -43,6 +43,10 @@ namespace Pachimon.Editor.UI
             "Assets/GameData/Battle/Weather/RainWeather.asset";
         private const string WindWeatherPath =
             "Assets/GameData/Battle/Weather/WindWeather.asset";
+        private const string MoistureEnvironmentPath =
+            "Assets/GameData/Battle/Weather/MoistureEnvironment.asset";
+        private const string PlasmaEnvironmentPath =
+            "Assets/GameData/Battle/Weather/PlasmaEnvironment.asset";
         private const string FlyingStatusPath =
             "Assets/GameData/Battle/Status/FlyingStatus.asset";
         private const string WindErosionStatusPath =
@@ -112,6 +116,10 @@ namespace Pachimon.Editor.UI
                 RainWeatherPath);
             var windWeather = AssetDatabase.LoadAssetAtPath<WindWeatherAsset>(
                 WindWeatherPath);
+            var moistureEnvironment = AssetDatabase.LoadAssetAtPath<
+                PairedAttributeEnvironmentAsset>(MoistureEnvironmentPath);
+            var plasmaEnvironment = AssetDatabase.LoadAssetAtPath<
+                PairedAttributeEnvironmentAsset>(PlasmaEnvironmentPath);
             var flyingStatus = AssetDatabase.LoadAssetAtPath<FlyingStatusAsset>(
                 FlyingStatusPath);
             var windErosionStatus = AssetDatabase
@@ -133,6 +141,8 @@ namespace Pachimon.Editor.UI
                 || sunnyWeather == null
                 || rainWeather == null
                 || windWeather == null
+                || moistureEnvironment == null
+                || plasmaEnvironment == null
                 || flyingStatus == null
                 || windErosionStatus == null
                 || healingWindStatus == null
@@ -181,10 +191,10 @@ namespace Pachimon.Editor.UI
                         description:
                             "最後尾の敵へFireダメージを与える。"
                             + "Poisonに応じた貫通を持つ。",
-                        basePower: 100,
+                        baseDamage: 100,
                         fireScalingPercent: 100,
-                        basePenetrationPercent: 10,
-                        poisonScalingPercent: 100);
+                        baseAttributeFixedPenetration: 10,
+                        poisonPenetrationRatio: 100);
                     EditorUtility.SetDirty(backfire);
                 }
                 else if (skill is FireArrowSkillAsset fireArrow)
@@ -199,7 +209,7 @@ namespace Pachimon.Editor.UI
                         description:
                             "CurrentHPが最も低い敵へFireダメージ。"
                             + "戦闘不能にした場合はMNを消費して再発動する。",
-                        basePower: 100,
+                        baseDamage: 100,
                         fireScalingPercent: 100);
                     EditorUtility.SetDirty(fireArrow);
                 }
@@ -215,7 +225,7 @@ namespace Pachimon.Editor.UI
                         description:
                             "先頭の敵と自身へFireダメージ。"
                             + "両者が生存している間はMNを追加消費せず再発動する。",
-                        basePower: 100,
+                        baseDamage: 100,
                         fireScalingPercent: 100);
                     EditorUtility.SetDirty(combustion);
                 }
@@ -230,11 +240,11 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "先頭から後方へ往復するFire連鎖攻撃。"
-                            + "使うたびにアドチェインが0.5増加する。",
-                        basePower: 80,
+                            + "使うたびにアドチェインが1増加する。",
+                        baseDamage: 80,
                         fireScalingPercent: 100,
                         baseChainCount: 1,
-                        addChainGainUnits: 50);
+                        addChainGainUnits: 100);
                     EditorUtility.SetDirty(chainBurn);
                 }
                 else if (skill is FireBarrierSkillAsset fireBarrier)
@@ -251,7 +261,7 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "自陣に、味方への攻撃を肩代わりする炎の障壁を生成する。",
-                        baseValue: 400,
+                        baseValue: 100,
                         fireValueRatio: 100,
                         fieldEffect);
                     EditorUtility.SetDirty(fireBarrier);
@@ -261,7 +271,7 @@ namespace Pachimon.Editor.UI
                     Undo.RecordObject(sunnyDay, "Update Sunny Day Skill");
                     sunnyDay.ConfigureForEditor(
                         skillId: 49,
-                        displayName: "温暖化",
+                        displayName: "にほんばれ",
                         baseRecoveryTicks: 100,
                         baseCooldownTicks: 300,
                         baseManaCost: 100,
@@ -270,6 +280,10 @@ namespace Pachimon.Editor.UI
                         baseValue: 400,
                         fireValueRatio: 100,
                         temperatureDefinition: sunnyWeather);
+                    sunnyDay.SetPrecipitationDefinitionForEditor(rainWeather);
+                    sunnyDay.SetDescriptionTemplateForEditor(
+                        "{icon:Fire}に応じて晴天を{color:Fire}{value:temperature}{/color}発生させる。"
+                        + "晴天は10tick毎に気温を上げ、湿潤を下げる。");
                     EditorUtility.SetDirty(sunnyDay);
                 }
                 else if (skill is RainDanceSkillAsset rainDance)
@@ -283,7 +297,7 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "Aquaに応じたValueの雨を発生させる。",
-                        baseValue: 400,
+                        baseValue: 200,
                         aquaValueRatio: 100,
                         rainDefinition: rainWeather);
                     EditorUtility.SetDirty(rainDance);
@@ -361,7 +375,7 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "\u5148\u982D\u306E\u751F\u5B58\u5473\u65B9\u3078Ice\u4F9D\u5B58\u306EShield\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-                        baseShieldValue: 300,
+                        baseShieldValue: 50,
                         iceShieldRatio: 100);
                     EditorUtility.SetDirty(iceShield);
                 }
@@ -421,7 +435,7 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "Windに応じたValueの暴風を発生させる。",
-                        baseValue: 400,
+                        baseValue: 200,
                         windValueRatio: 100,
                         windDefinition: windWeather);
                     EditorUtility.SetDirty(windStorm);
@@ -450,7 +464,7 @@ namespace Pachimon.Editor.UI
                     healingWind.ConfigureForEditor(
                         31, "治癒の風", 100, 300, 100,
                         "HP割合が最も低い味方を回復し、WindとSpeedを増加させる。",
-                        100, 50, 50, 100, 200, healingWindStatus);
+                        50, 50, 50, 100, 200, healingWindStatus);
                     EditorUtility.SetDirty(healingWind);
                 }
                 else if (skill is SecondWindSkillAsset secondWind)
@@ -459,7 +473,7 @@ namespace Pachimon.Editor.UI
                     secondWind.ConfigureForEditor(
                         39, "セカンドウィンド", 100, 400, 100,
                         "Wind参照のShieldを得て、200tickの間Windが0になる。",
-                        200, 200, stillAirStatus);
+                        100, 100, 200, stillAirStatus);
                     EditorUtility.SetDirty(secondWind);
                 }
                 else if (skill is DragonJabSkillAsset dragonJab)
@@ -489,8 +503,8 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 80,
                         description:
                             "ElectricとAquaのダメージを与え、漏電を付与する。",
-                        electricBasePower: 10,
-                        aquaBasePower: 10,
+                        electricBaseDamage: 10,
+                        aquaBaseDamage: 10,
                         leakBaseValue: 10);
                     EditorUtility.SetDirty(aquaShock);
                 }
@@ -506,12 +520,11 @@ namespace Pachimon.Editor.UI
                         baseCooldownTicks: 250,
                         baseManaCost: 130,
                         description:
-                            "ElectricとFireを参照するElectricダメージ。"
+                            "Electricを参照するElectricダメージ。"
                             + "Fireに応じた貫通を持つ。",
-                        basePower: 50,
+                        baseDamage: 50,
                         electricScalingPercent: 100,
-                        fireScalingPercent: 100,
-                        penetrationPercentAtFire100: 20);
+                        firePenetrationRatio: 25);
                     EditorUtility.SetDirty(electricExplosion);
                 }
                 else if (skill is ElectricQuickAttackSkillAsset quickAttack)
@@ -526,11 +539,10 @@ namespace Pachimon.Editor.UI
                         baseCooldownTicks: 100,
                         baseManaCost: 60,
                         description:
-                            "ElectricとFireの複合攻撃。"
-                            + "Windに応じて硬直とCDを軽減する。",
-                        electricBasePower: 25,
-                        fireBasePower: 10,
-                        windTimingPercent: 100);
+                            "Electricダメージを与える。"
+                            + "Fireに応じて発生と硬直を軽減する。",
+                        electricBaseDamage: 25,
+                        fireTimingPercent: 100);
                     EditorUtility.SetDirty(quickAttack);
                 }
                 else if (skill is ElectromagneticCannonSkillAsset cannon)
@@ -548,7 +560,7 @@ namespace Pachimon.Editor.UI
                         description:
                             "300tick後にElectricダメージを与え、"
                             + "超過分を次の先頭へ引き継ぐ。",
-                        basePower: 400);
+                        baseDamage: 400);
                     EditorUtility.SetDirty(cannon);
                 }
                 else if (skill is ChargeSkillAsset charge)
@@ -593,10 +605,8 @@ namespace Pachimon.Editor.UI
                         baseCooldownTicks: 300,
                         baseManaCost: 100,
                         description:
-                            "最後尾の敵へPoisonとElectricに応じたStunと、"
+                            "最後尾の敵へElectricに応じたStunと、"
                             + "Poisonに応じた毒素を付与する。",
-                        basePoisonStunTicks: 50,
-                        poisonStunScalingPercent: 100,
                         baseElectricStunTicks: 50,
                         electricStunScalingPercent: 100,
                         baseToxinValue: 100,
@@ -616,9 +626,12 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "最も毒素が多い敵から50%を取り除き、"
-                            + "別の最少対象へ除去量の200%を付与する。",
+                            + "別の最少対象へ基礎値との合計の200%を付与する。",
                         removalPercent: 50,
-                        applicationPercent: 200);
+                        baseToxinValue: 150,
+                        poisonScalingPercent: 100,
+                        applicationPercent: 200,
+                        toxinStatus: toxinStatus);
                     EditorUtility.SetDirty(toxinTransfer);
                 }
                 else if (skill is ToxinExplosionSkillAsset toxinExplosion)
@@ -631,12 +644,11 @@ namespace Pachimon.Editor.UI
                         baseCooldownTicks: 400,
                         baseManaCost: 200,
                         description:
-                            "最も多い敵の毒素を全消費し、PoisonとFireを"
-                            + "加えたPoisonダメージを敵全体へ与える。",
+                            "敵全員の毒素を消費し、各対象へ毒本体ダメージと"
+                            + "その5%を基礎とする炎全体ダメージを与える。",
                         toxinConversionPercent: 100,
-                        basePoisonPower: 50,
                         poisonScalingPercent: 100,
-                        baseFirePower: 50,
+                        aoeFirePercent: 5,
                         fireScalingPercent: 100);
                     EditorUtility.SetDirty(toxinExplosion);
                 }
@@ -653,7 +665,7 @@ namespace Pachimon.Editor.UI
                             "自身へ80tickのPoison依存Shieldを付与し、"
                             + "自身の毒素をPoison依存の割合で取り除く。",
                         durationTicks: 80,
-                        baseShieldValue: 100,
+                        baseShieldValue: 50,
                         shieldPoisonScalingPercent: 100,
                         baseToxinReductionPercent: 30,
                         reductionPoisonScalingPercent: 100);
@@ -708,7 +720,7 @@ namespace Pachimon.Editor.UI
                     false,
                     100,
                     0,
-                    "System Skill used when no regular Skill is available.");
+                    "使用者の8属性の平均値を、敵の先頭と自身へTrue Damageとして与える。");
             }
             else
             {
@@ -720,13 +732,19 @@ namespace Pachimon.Editor.UI
                     false,
                     100,
                     0,
-                    "System Skill used when no regular Skill is available.");
+                    "使用者の8属性の平均値を、敵の先頭と自身へTrue Damageとして与える。");
                 EditorUtility.SetDirty(struggle);
             }
 
             skillsById[SkillIdRanges.StruggleId] = struggle;
 
             catalog.SetSkillsForEditor(skillsById.Values.OrderBy(skill => skill.SkillId));
+            catalog.SetEnvironmentDefinitionsForEditor(
+                sunnyWeather,
+                rainWeather,
+                windWeather,
+                moistureEnvironment,
+                plasmaEnvironment);
             EditorUtility.SetDirty(catalog);
             AssignCatalogToSceneInstaller(catalog);
             AssetDatabase.SaveAssets();

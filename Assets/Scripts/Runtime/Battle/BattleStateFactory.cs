@@ -4,6 +4,7 @@ using System.Linq;
 using Pachimon.Data;
 using Pachimon.Run;
 using Pachimon.Passives;
+using Pachimon.Skills;
 
 namespace Pachimon.Battle
 {
@@ -13,10 +14,12 @@ namespace Pachimon.Battle
         private readonly PachimonCatalog _pachimonCatalog;
         private readonly PassiveStatModifierRegistry _passiveStatModifierRegistry;
         private readonly PassiveCatalog _passiveCatalog;
+        private readonly SkillCatalog _skillCatalog;
 
         public BattleStateFactory(
             RunPachimonPool pachimonPool,
             PachimonCatalog pachimonCatalog,
+            SkillCatalog skillCatalog,
             PassiveCatalog passiveCatalog,
             PassiveStatModifierRegistry passiveStatModifierRegistry)
         {
@@ -24,6 +27,8 @@ namespace Pachimon.Battle
                 ?? throw new ArgumentNullException(nameof(pachimonPool));
             _pachimonCatalog = pachimonCatalog
                 ?? throw new ArgumentNullException(nameof(pachimonCatalog));
+            _skillCatalog = skillCatalog
+                ?? throw new ArgumentNullException(nameof(skillCatalog));
             _passiveStatModifierRegistry = passiveStatModifierRegistry
                 ?? throw new ArgumentNullException(nameof(passiveStatModifierRegistry));
             _passiveCatalog = passiveCatalog
@@ -49,7 +54,8 @@ namespace Pachimon.Battle
                 battleSeed,
                 CreateSide(BattleSide.Player, playerIds, playerModifiers),
                 CreateSide(BattleSide.Enemy, enemyIds, enemyModifiers),
-                new PassiveLogicRegistry(_passiveCatalog));
+                new PassiveLogicRegistry(_passiveCatalog),
+                environmentDefinitions: _skillCatalog.EnvironmentDefinitions);
         }
 
         private BattleSideState CreateSide(
@@ -79,6 +85,11 @@ namespace Pachimon.Battle
                 instance,
                 modifiers,
                 _passiveStatModifierRegistry);
+            var staticModifiers = instance.PermanentStatModifiers
+                .Concat(TrainerStatModifierFactory.Create(modifiers))
+                .Concat(_passiveStatModifierRegistry.CreateModifiers(
+                    instance.PassiveIds))
+                .ToArray();
             var startingHp = Math.Min(instance.CurrentHp, effectiveStats.MaxHp);
             var startingMn = Math.Min(instance.CurrentMn, effectiveStats.MaxMn);
             if (side == BattleSide.Enemy)
@@ -102,11 +113,13 @@ namespace Pachimon.Battle
                 definition.DisplayName,
                 side,
                 slotIndex,
-                effectiveStats,
+                instance.Stats,
+                staticModifiers,
                 startingHp,
                 startingMn,
                 instance.SkillSlots,
-                instance.PassiveIds);
+                instance.PassiveIds,
+                instance.SubStatBindings);
         }
 
         private static string[] ValidatePartyIds(

@@ -100,7 +100,7 @@ namespace Pachimon.UI
                 weather.IsSnow ? -weather.Value : weather.Value);
             var valueLabel = weather.WeatherId == BattleWeatherId.Temperature
                 ? weather.Value.ToString("+#;-#;0")
-                : weather.Value.ToString();
+                : Math.Abs(weather.Value).ToString();
             PrepareCard(
                 binding,
                 $"{weather.WeatherId}WeatherCard",
@@ -227,7 +227,7 @@ namespace Pachimon.UI
                     " / ",
                     effect.Statuses.Select(status => status.DisplayName)) + "]";
             var label = effect.EffectId == BattleFieldEffectId.FireBarrier
-                ? $"{effect.DisplayName} {effect.CurrentHp}/{effect.MaxHp}{statusLabel}"
+                ? $"{effect.DisplayName} {effect.Value}{statusLabel}"
                 : effect.EffectId == BattleFieldEffectId.IceBlade
                     ? $"{effect.DisplayName} [{effect.RemainingTicks}]"
                     : $"{effect.DisplayName} {effect.Value}";
@@ -385,6 +385,14 @@ namespace Pachimon.UI
                     RewardElementPalette.GetAttributeColor(PachimonAttribute.Electric),
                 BattleWeatherId.Wind =>
                     RewardElementPalette.GetAttributeColor(PachimonAttribute.Wind),
+                BattleWeatherId.Moisture when value < 0 =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Fire),
+                BattleWeatherId.Moisture =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Aqua),
+                BattleWeatherId.Plasma when value < 0 =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Leaf),
+                BattleWeatherId.Plasma =>
+                    RewardElementPalette.GetAttributeColor(PachimonAttribute.Electric),
                 _ => GameUiPalette.StatusChip,
             };
         }

@@ -11,10 +11,14 @@ namespace Pachimon.Battle
         [SerializeField, Min(0)] private int _baseValue = 30;
         [SerializeField, Min(0)] private int _leafValueRatio = 100;
         [SerializeField, Min(1)] private int _attackIntervalTicks = 100;
+        [SerializeField, Min(0)] private int _pollenValueRatio = 50;
+        [SerializeField] private PollenStatusAsset _pollenStatus;
 
         public int BaseValue => _baseValue;
         public int LeafValueRatio => _leafValueRatio;
         public int AttackIntervalTicks => _attackIntervalTicks;
+        public int PollenValueRatio => _pollenValueRatio;
+        public PollenStatusAsset PollenStatus => _pollenStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -25,6 +29,8 @@ namespace Pachimon.Battle
                 errors?.Add("Beat Vine must use the Plant category.");
             if (_attackIntervalTicks <= 0)
                 errors?.Add("Beat Vine requires a positive attack interval.");
+            if (_pollenStatus == null)
+                errors?.Add("Beat Vine requires a Pollen Status.");
         }
 
 #if UNITY_EDITOR
@@ -43,6 +49,14 @@ namespace Pachimon.Battle
             _baseValue = baseValue;
             _leafValueRatio = leafValueRatio;
             _attackIntervalTicks = attackIntervalTicks;
+        }
+
+        public void ConfigurePollenForEditor(
+            PollenStatusAsset pollenStatus,
+            int pollenValueRatio = 50)
+        {
+            _pollenStatus = pollenStatus;
+            _pollenValueRatio = pollenValueRatio;
         }
 #endif
     }

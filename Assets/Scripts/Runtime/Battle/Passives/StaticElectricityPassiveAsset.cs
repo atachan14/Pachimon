@@ -12,29 +12,31 @@ namespace Pachimon.Passives
     {
         public const int DefaultPassiveId = 36;
 
+        [FormerlySerializedAs("_electricBaseValue")]
         [FormerlySerializedAs("_electricPercent")]
-        [SerializeField, Min(0)] private int _electricBaseValue = 20;
+        [SerializeField, Min(0)] private int _baseValue = 25;
+        [FormerlySerializedAs("_iceBaseValue")]
         [FormerlySerializedAs("_icePercent")]
-        [SerializeField, Min(0)] private int _iceBaseValue = 10;
+        [SerializeField, Min(1)] private int _baseDurationTicks = 25;
         [SerializeField] private SlowStatusAsset _paralysisStatus;
 
-        public int ElectricBaseValue => _electricBaseValue;
-        public int IceBaseValue => _iceBaseValue;
+        public int BaseValue => _baseValue;
+        public int BaseDurationTicks => _baseDurationTicks;
         public SlowStatusAsset ParalysisStatus => _paralysisStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
             base.CollectValidationErrors(errors);
-            if (_electricBaseValue < 0)
+            if (_baseValue < 0)
             {
                 errors.Add(
                     $"Passive {PassiveId}: Electric Base Value cannot be negative.");
             }
 
-            if (_iceBaseValue < 0)
+            if (_baseDurationTicks <= 0)
             {
                 errors.Add(
-                    $"Passive {PassiveId}: Ice Base Value cannot be negative.");
+                    $"Passive {PassiveId}: Base Duration must be positive.");
             }
             if (_paralysisStatus == null)
             {
@@ -48,13 +50,13 @@ namespace Pachimon.Passives
             int passiveId,
             string displayName,
             string description,
-            int electricBaseValue,
-            int iceBaseValue,
+            int baseValue,
+            int baseDurationTicks,
             SlowStatusAsset paralysisStatus = null)
         {
             ConfigureBaseForEditor(passiveId, displayName, description);
-            _electricBaseValue = electricBaseValue;
-            _iceBaseValue = iceBaseValue;
+            _baseValue = baseValue;
+            _baseDurationTicks = baseDurationTicks;
             _paralysisStatus = paralysisStatus;
         }
 #endif

@@ -11,11 +11,13 @@ namespace Pachimon.Battle
         [SerializeField, Min(0)] private int _windRatioScalingPercent = 10;
         [SerializeField, Min(0)] private int _speedFromWindRatio = 20;
         [SerializeField, Min(0)] private int _rainEffectRatioScalingPercent = 10;
+        [SerializeField, Min(0)] private int _damageChangePercent = 10;
 
         public int WindRatioScalingPercent => _windRatioScalingPercent;
         public int SpeedFromWindRatio => _speedFromWindRatio;
         public int RainEffectRatioScalingPercent =>
             _rainEffectRatioScalingPercent;
+        public int DamageChangePercent => _damageChangePercent;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {

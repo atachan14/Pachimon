@@ -47,7 +47,7 @@ namespace Pachimon.Battle
                     hitIndex,
                     additionalChainCount);
                 var baseDamage = context.ScaleFromAttribute(
-                    _skill.BasePower,
+                    _skill.BaseDamage,
                     PachimonAttribute.Fire,
                     _skill.FireScalingPercent)
                     * ratio;

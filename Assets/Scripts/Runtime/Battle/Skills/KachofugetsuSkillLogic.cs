@@ -43,6 +43,8 @@ namespace Pachimon.Battle
                 _skill.FireDamageRatio);
             yield return (PachimonAttribute.Aqua, _skill.BaseAquaDamage,
                 _skill.AquaDamageRatio);
+            yield return (PachimonAttribute.Leaf, _skill.BaseLeafDamage,
+                _skill.LeafDamageRatio);
             yield return (PachimonAttribute.Wind, _skill.BaseWindDamage,
                 _skill.WindDamageRatio);
         }

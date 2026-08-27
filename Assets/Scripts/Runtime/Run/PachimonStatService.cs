@@ -4,6 +4,23 @@ using System.Linq;
 
 namespace Pachimon.Run
 {
+    public static class PachimonDurabilityCalculator
+    {
+        public static decimal Calculate(EffectivePachimonStats stats)
+        {
+            if (stats == null) throw new ArgumentNullException(nameof(stats));
+
+            return Calculate(stats.MaxHp, stats.ResistBonus);
+        }
+
+        public static decimal Calculate(int maxHp, int resistBonus)
+        {
+            if (maxHp < 0) throw new ArgumentOutOfRangeException(nameof(maxHp));
+
+            return maxHp / SignedStatMath.ReductionMultiplier(resistBonus);
+        }
+    }
+
     public static class PachimonStatService
     {
         public static EffectivePachimonStats Calculate(
@@ -25,7 +42,8 @@ namespace Pachimon.Run
                 trainerModifiers,
                 instance.PassiveIds,
                 passiveRegistry,
-                modifiers);
+                modifiers,
+                instance.SubStatBindings);
         }
 
         public static EffectivePachimonStats Calculate(
@@ -33,7 +51,8 @@ namespace Pachimon.Run
             TrainerModifierSet trainerModifiers,
             IEnumerable<int> passiveIds,
             PassiveStatModifierRegistry passiveRegistry,
-            IEnumerable<IStatModifier> contextModifiers = null)
+            IEnumerable<IStatModifier> contextModifiers = null,
+            PachimonSubStatBindings bindings = null)
         {
             if (baseStats == null) throw new ArgumentNullException(nameof(baseStats));
             if (passiveRegistry == null)
@@ -49,7 +68,10 @@ namespace Pachimon.Run
                 modifiers.AddRange(contextModifiers);
             }
 
-            return EffectivePachimonStats.Calculate(baseStats, modifiers);
+            return EffectivePachimonStats.Calculate(
+                baseStats,
+                modifiers,
+                bindings ?? PachimonSubStatBindings.CreateDefault());
         }
     }
 }

@@ -10,8 +10,10 @@ namespace Pachimon.Skills
     public sealed class WaterPulseSkillAsset : SkillAsset
     {
         [SerializeField, HideInInspector] private int _aquaDamageRatio = 100;
+        [SerializeField, Range(0, 100)] private int _damagePercent = 50;
 
         public int AquaDamageRatio => AttributeDamageRules.ScalingRatio;
+        public int DamagePercent => _damagePercent;
         public override bool ConsumesAllCurrentMana => true;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -32,7 +34,8 @@ namespace Pachimon.Skills
             string description,
             int aquaDamageRatio,
             bool isMapAssignable = true,
-            int baseStartupTicks = 100)
+            int baseStartupTicks = 100,
+            int damagePercent = 50)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -45,6 +48,7 @@ namespace Pachimon.Skills
                 baseManaCost: 0,
                 baseStartupTicks);
             _aquaDamageRatio = aquaDamageRatio;
+            _damagePercent = damagePercent;
         }
 #endif
     }

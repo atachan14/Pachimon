@@ -20,13 +20,18 @@ MonoBehaviour:
   _baseRecoveryTicks: 150
   _baseCooldownTicks: 300
   _baseManaCost: 50
-  _description: "\u81EA\u8EAB\u3078\u5024{color:Electric}{value:shield}{/color}\u3001{value:duration}tick\u306EShield\u3068\u5024{value:selfParalysis}\u306E\u9EBB\u75FA\u3092\u4ED8\u4E0E\u3059\u308B\u3002Shield\u4E2D\u306B\u653B\u6483\u3057\u305F\u76F8\u624B\u3078\u5024{value:counterParalysis}\u306E\u9EBB\u75FA\u3092\u8FD4\u3059\u3002"
+  _description: "\u81EA\u8EAB\u3078\u5024{color:Electric}{value:shield}{/color}\uFF08{value:baseShield}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:shieldRatio}%\uFF09%\uFF09\u3001{value:duration}tick\u306EShield\u3068\u5024{value:selfParalysis}\uFF08{value:baseSelfParalysis}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:selfRatio}%\uFF09%\uFF09\u306E\u9EBB\u75FA\u3092\u4ED8\u4E0E\u3059\u308B\u3002Shield\u4E2D\u306B\u653B\u6483\u3057\u305F\u76F8\u624B\u3078{value:counterParalysisDuration}tick\uFF08{value:baseCounterDuration}
+    \xD7\uFF08100 + {icon:Ice}{value:ice} \xD7 {value:counterDurationRatio}%\uFF09%\uFF09\u3001\u5024{value:counterParalysis}\uFF08{value:baseCounterParalysis}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:counterRatio}%\uFF09%\uFF09\u306E\u9EBB\u75FA\u3092\u8FD4\u3059\u3002"
   _durationTicks: 200
-  _baseShieldValue: 100
+  _baseShieldValue: 50
   _shieldElectricRatio: 100
   _baseSelfParalysis: 50
   _selfParalysisElectricRatio: 100
   _baseCounterParalysis: 25
   _counterParalysisElectricRatio: 100
+  _baseCounterParalysisDurationTicks: 25
   _paralysisStatus: {fileID: 11400000, guid: e83333335ac350ac91f5513dee8023e3, type: 2}
   _shieldStatus: {fileID: 11400000, guid: 9048c160cefb2f2428e5c9982a8544b7, type: 2}

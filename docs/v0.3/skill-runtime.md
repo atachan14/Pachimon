@@ -101,7 +101,7 @@ Startup: 0
 Recovery: 100
 Cooldown: 0
 Target: 先頭の生存Enemy
-Damage: 使用者の8属性のうち最も低い値の100%をTrue Damageとして使用する
+Damage: 使用者の8属性の平均値を切り捨て、True Damageとして使用する
 ```
 
 - 所持Skill一覧へ通常表示しない
@@ -110,7 +110,7 @@ Damage: 使用者の8属性のうち最も低い値の100%をTrue Damageとし�
 - 攻撃側の属性値とDamageBonusを参照しない
 - 防御側の属性値とResistBonusによる軽減を受けない
 - 敵の先頭と使用者自身へ同じTrue Damageを与える
-- 最低属性値が0なら、双方へ0 True Damageを与える
+- 平均値が0以下なら、双方へ0 True Damageを与える
 - DamageBonus、対象属性値、ResistBonus、Passiveの属性Damage補正を参照しない
 
 ## Skill実行順

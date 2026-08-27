@@ -10,7 +10,7 @@ namespace Pachimon.Skills
         menuName = "Pachimon/Skills/Wind Storm Skill")]
     public sealed class WindStormSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _baseValue = 400;
+        [SerializeField, Min(0)] private int _baseValue = 50;
         [SerializeField, HideInInspector] private int _windValueRatio = 100;
         [SerializeField] private WindWeatherAsset _windDefinition;
 

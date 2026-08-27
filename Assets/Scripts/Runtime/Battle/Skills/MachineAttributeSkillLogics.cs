@@ -143,7 +143,8 @@ namespace Pachimon.Battle
                 new TrueDamageContext(
                     DamageOriginKind.Skill,
                     _skill.SkillId,
-                    value,
+                    SignedStatMath.FloorNonNegative(
+                        value * _skill.DamagePercent / 100m),
                     isAttack: true),
                 hit);
             if (value > 0 && target.IsAlive)

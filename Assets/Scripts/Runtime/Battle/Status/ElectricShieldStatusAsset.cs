@@ -5,12 +5,21 @@ namespace Pachimon.Battle
 {
     public sealed class ElectricShieldRuntimeData
     {
-        public ElectricShieldRuntimeData(long shieldApplicationOrder)
+        public ElectricShieldRuntimeData(
+            long shieldApplicationOrder,
+            int counterParalysisDurationTicks)
         {
+            if (counterParalysisDurationTicks <= 0)
+            {
+                throw new System.ArgumentOutOfRangeException(
+                    nameof(counterParalysisDurationTicks));
+            }
             ShieldApplicationOrder = shieldApplicationOrder;
+            CounterParalysisDurationTicks = counterParalysisDurationTicks;
         }
 
         public long ShieldApplicationOrder { get; }
+        public int CounterParalysisDurationTicks { get; }
     }
 
     [CreateAssetMenu(fileName = "ElectricShieldStatus", menuName = "Pachimon/Battle/Status/Electric Shield")]

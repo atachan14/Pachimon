@@ -30,11 +30,12 @@ namespace Pachimon.Battle
             }
 
             var value = SignedStatMath.FloorNonNegative(
-                _skill.BaseValue
-                + context.GetAttributeValue(PachimonAttribute.Wind)
-                * context.GetAttributeRatio(
-                    PachimonAttribute.Wind,
-                    _skill.WindValueRatio) / 100m,
+                SignedStatMath.ScaleFromBase(
+                    _skill.BaseValue,
+                    context.GetAttributeValue(PachimonAttribute.Wind),
+                    context.GetAttributeRatio(
+                        PachimonAttribute.Wind,
+                        _skill.WindValueRatio)),
                 minimum: 1);
             var weather = context.State.Weather.CreateOrAdd(
                 context.User,

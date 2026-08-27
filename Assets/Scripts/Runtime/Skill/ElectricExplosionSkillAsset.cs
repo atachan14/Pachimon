@@ -11,18 +11,17 @@ namespace Pachimon.Skills
     public sealed class ElectricExplosionSkillAsset : SkillAsset
     {
         [FormerlySerializedAs("_electricDamagePercent")]
-        [SerializeField, Min(0)] private int _basePower = 50;
+        [FormerlySerializedAs("_basePower")]
+        [SerializeField, Min(0)] private int _baseDamage = 50;
         [SerializeField, HideInInspector] private int _electricScalingPercent = 100;
-        [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
-        [SerializeField, Min(0)] private int _penetrationPercentAtFire100 = 20;
+        [FormerlySerializedAs("_penetrationPercentAtFire100")]
+        [SerializeField, Min(0)] private int _firePenetrationRatio = 25;
 
-        public int BasePower => _basePower;
+        public int BaseDamage => _baseDamage;
 
         public int ElectricScalingPercent => AttributeDamageRules.ScalingRatio;
 
-        public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
-
-        public int PenetrationPercentAtFire100 => _penetrationPercentAtFire100;
+        public int FirePenetrationRatio => _firePenetrationRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -41,10 +40,9 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePower,
+            int baseDamage,
             int electricScalingPercent,
-            int fireScalingPercent,
-            int penetrationPercentAtFire100)
+            int firePenetrationRatio)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -55,10 +53,9 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _basePower = basePower;
+            _baseDamage = baseDamage;
             _electricScalingPercent = electricScalingPercent;
-            _fireScalingPercent = fireScalingPercent;
-            _penetrationPercentAtFire100 = penetrationPercentAtFire100;
+            _firePenetrationRatio = firePenetrationRatio;
         }
 #endif
     }

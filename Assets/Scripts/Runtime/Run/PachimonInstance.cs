@@ -7,13 +7,14 @@ namespace Pachimon.Run
 {
     public sealed class PachimonInstance
     {
-        public const int MaxSkillSlots = 9;
+        public const int MaxSkillSlots = 6;
 
         private readonly List<int> _skillIds = new();
         private readonly List<PachimonSkillSlot> _skillSlots = new();
         private readonly List<int> _passiveIds = new();
         private readonly List<IStatModifier> _permanentStatModifiers = new();
         private readonly Dictionary<EquipmentSlot, EquippedItem> _equipment = new();
+        private readonly List<AppliedEngraving> _engravings = new();
         private int _nextSkillSlotId = 1;
 
         public PachimonInstance(
@@ -22,7 +23,8 @@ namespace Pachimon.Run
             AllocationType allocationType,
             int fixedSkillId,
             int fixedPassiveId,
-            PachimonStats stats)
+            PachimonStats stats,
+            PachimonSubStatBindings subStatBindings = null)
         {
             if (string.IsNullOrWhiteSpace(instanceId))
             {
@@ -45,6 +47,7 @@ namespace Pachimon.Run
             FixedSkillId = fixedSkillId;
             FixedPassiveId = fixedPassiveId;
             Stats = stats ?? throw new ArgumentNullException(nameof(stats));
+            SubStatBindings = subStatBindings ?? PachimonSubStatBindings.CreateDefault();
             CurrentHp = Stats.MaxHp;
             CurrentMn = Stats.MaxMn;
             AddSkillSlot(fixedSkillId);
@@ -62,6 +65,8 @@ namespace Pachimon.Run
         public int FixedPassiveId { get; }
 
         public PachimonStats Stats { get; }
+
+        public PachimonSubStatBindings SubStatBindings { get; }
 
         public int CurrentHp { get; private set; }
 
@@ -84,16 +89,46 @@ namespace Pachimon.Run
 
         public IReadOnlyDictionary<EquipmentSlot, EquippedItem> Equipment => _equipment;
 
+        public IReadOnlyList<AppliedEngraving> Engravings => _engravings;
+
         public bool CanAddSkill => _skillSlots.Count < MaxSkillSlots;
+
+        public bool CanAddSkillId(int skillId)
+        {
+            return skillId > 0 && (_skillIds.Contains(skillId) || CanAddSkill);
+        }
 
         public bool AddSkill(int skillId)
         {
-            if (skillId <= 0 || !CanAddSkill)
+            if (!CanAddSkillId(skillId))
             {
                 return false;
             }
 
-            AddSkillSlot(skillId);
+            var existing = _skillSlots.Find(slot => slot.SkillId == skillId);
+            if (existing != null)
+            {
+                existing.Upgrade();
+            }
+            else
+            {
+                AddSkillSlot(skillId);
+            }
+            return true;
+        }
+
+        public bool TryForgetSkillSlot(int slotId, out int forgottenSkillId)
+        {
+            forgottenSkillId = 0;
+            var index = _skillSlots.FindIndex(slot => slot.SlotId == slotId);
+            if (index < 0)
+            {
+                return false;
+            }
+
+            forgottenSkillId = _skillSlots[index].SkillId;
+            _skillSlots.RemoveAt(index);
+            _skillIds.RemoveAt(index);
             return true;
         }
 
@@ -130,11 +165,20 @@ namespace Pachimon.Run
 
             foreach (var change in generatedData.StatChanges)
             {
-                AddPermanentStatModifier(
-                    change.StatType,
-                    change.Amount,
-                    sourceId,
-                    item.DisplayName);
+                if (PachimonSubStatBindings.IsSubStat(change.StatType))
+                {
+                    SubStatBindings.AddDerivationRatio(
+                        change.StatType,
+                        change.Amount);
+                }
+                else
+                {
+                    AddPermanentStatModifier(
+                        change.StatType,
+                        change.Amount,
+                        sourceId,
+                        item.DisplayName);
+                }
             }
 
             _equipment.Add(
@@ -163,6 +207,33 @@ namespace Pachimon.Run
                     StatModifierSourceType.Item,
                     sourceId,
                     displayName)));
+        }
+
+        public void RecordAppliedEngraving(
+            int itemId,
+            string displayName,
+            GeneratedItemData generatedData)
+        {
+            if (itemId <= 0) throw new ArgumentOutOfRangeException(nameof(itemId));
+            if (string.IsNullOrWhiteSpace(displayName))
+            {
+                throw new ArgumentException(
+                    "Display name is required.",
+                    nameof(displayName));
+            }
+            if (generatedData == null
+                || generatedData.ItemId != itemId
+                || generatedData.StatChanges.Count == 0)
+            {
+                throw new ArgumentException(
+                    "Applied Engraving data is invalid.",
+                    nameof(generatedData));
+            }
+
+            _engravings.Add(new AppliedEngraving(
+                itemId,
+                displayName,
+                generatedData));
         }
 
         public int SetCurrentHp(int currentHp)
@@ -289,6 +360,23 @@ namespace Pachimon.Run
     public sealed class EquippedItem
     {
         public EquippedItem(
+            int itemId,
+            string displayName,
+            GeneratedItemData generatedData)
+        {
+            ItemId = itemId;
+            DisplayName = displayName;
+            GeneratedData = generatedData;
+        }
+
+        public int ItemId { get; }
+        public string DisplayName { get; }
+        public GeneratedItemData GeneratedData { get; }
+    }
+
+    public sealed class AppliedEngraving
+    {
+        public AppliedEngraving(
             int itemId,
             string displayName,
             GeneratedItemData generatedData)

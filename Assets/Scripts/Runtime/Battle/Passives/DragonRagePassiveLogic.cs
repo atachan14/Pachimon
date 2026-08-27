@@ -21,16 +21,19 @@ namespace Pachimon.Battle
         public BattleUnitState Owner { get; }
         public void Handle(IBattleEvent battleEvent) { }
 
-        public decimal ModifyPenetrationPercent(
+        public DamagePenetration ModifyPenetration(
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
             DamageContext context,
-            decimal penetrationPercent)
+            DamagePenetration penetration)
         {
-            return penetrationPercent + decimal.Floor(
+            var penetrationValue = decimal.Floor(
                 Owner.GetBattleStatValue(PachimonStatType.Dragon)
                 * _definition.PenetrationRatio / 100m);
+            return penetration.WithAdditionalResistBonusPercentage(
+                PenetrationMath.CalculateDiminishingPercentage(
+                    penetrationValue));
         }
     }
 }

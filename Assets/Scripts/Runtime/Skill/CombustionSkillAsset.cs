@@ -11,10 +11,11 @@ namespace Pachimon.Skills
     public sealed class CombustionSkillAsset : SkillAsset
     {
         [FormerlySerializedAs("_enemyBasePower")]
-        [SerializeField, Min(0)] private int _basePower = 100;
+        [FormerlySerializedAs("_basePower")]
+        [SerializeField, Min(0)] private int _baseDamage = 100;
         [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
 
-        public int BasePower => _basePower;
+        public int BaseDamage => _baseDamage;
         public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -34,7 +35,7 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int basePower,
+            int baseDamage,
             int fireScalingPercent,
             bool isMapAssignable = true,
             int baseStartupTicks = 100)
@@ -49,7 +50,7 @@ namespace Pachimon.Skills
                 description,
                 baseManaCost,
                 baseStartupTicks);
-            _basePower = basePower;
+            _baseDamage = baseDamage;
             _fireScalingPercent = fireScalingPercent;
         }
 #endif

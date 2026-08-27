@@ -42,7 +42,7 @@ namespace Pachimon.Editor.UI
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
             var skills = AssetDatabase.LoadAssetAtPath<SkillCatalog>(SkillCatalogPath);
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
-            if (skills?.Get(33)?.Description?.Contains("{value:damage}") != true
+            if (skills?.Get(33)?.Description?.Contains("{value:baseDamage}") != true
                 || passives?.Get(33)?.Description?.Contains(
                     "{value:currentMissingHpPercent}") != true)
             {
@@ -66,31 +66,45 @@ namespace Pachimon.Editor.UI
 
         private static string CreateSkillTemplate(int id) => id switch
         {
-            33 => "Current HPが最も低い敵へ{icon:Fire}{color:Fire}{value:damage}{/color}の"
-                + "{term:FireDamage|炎ダメージ}を与える。戦闘不能にした場合、MNを"
+            33 => "Current HPが最も低い敵へ{color:Fire}{value:damage}{/color}（{value:baseDamage} ×（100 + "
+                + "{icon:Fire}{value:fire} × {value:damageRatio}%）%）の"
+                + "{icon:Fire}{color:Fire}ダメージ{/color}を与える。戦闘不能にした場合、MNを"
                 + "{value:repeatManaCost}消費して次の対象へ再発動する。",
-            34 => "味方側に値{color:Aqua}{value:fieldValue}{/color}の"
+            34 => "味方側に値{color:Aqua}{value:fieldValue}{/color}（{value:baseValue} ×（100 + "
+                + "{icon:Aqua}{value:aqua} × {value:valueRatio}%）%）の"
                 + "{term:WaterVeil|水のベール}を生成する。毎tick味方全員を"
                 + "{value:healingPerTick}回復し、Valueが{value:decayPerTick}減少する。"
                 + "受ける水・炎ダメージを{value:reductionPercent}%軽減する。",
-            35 => "敵の先頭と自身を{value:stunTicks}tickの{term:Stun|Stun}にする。",
-            36 => "{value:startup}tickの発生開始時に{icon:Electric}電気を保存して"
+            35 => "敵の先頭と自身を{value:stunTicks}tick（{value:baseStun} ×（100 + "
+                + "{icon:Leaf}{value:leaf} × {value:stunRatio}%）%）の{term:Stun|Stun}にする。",
+            36 => "{value:startup}tick（基本{value:baseStartup}tickをSpeed {value:speed}で短縮）の"
+                + "発生開始時に{icon:Electric}電気を保存して"
                 + "値{color:Electric}{value:chargeValue}{/color}の{term:Charging|充電中}になり、"
                 + "発動時に同じValueの{term:Charged|充電完了}になる。",
-            37 => "最も{term:Toxin|毒素}が多い敵の毒素をすべて消費し、敵全体へ"
-                + "Stat由来の{icon:Poison}{color:Poison}{value:fixedDamage}{/color}に"
-                + "消費Valueの{value:toxinConversion}%を加えた毒ダメージを与える。",
-            38 => "自陣に{value:duration}tickの{term:IceBlade|氷の刃}を生成する。"
-                + "敵へ冷気を付与するたび、その付与Valueと同値の氷ダメージを追加する。",
-            39 => "自身に{color:Wind}{value:shield}{/color}のShieldを付与し、"
+            37 => "敵全員の{term:Toxin|毒素}をすべて消費する。各対象へ消費Valueの"
+                + "{value:toxinConversion}% ×（100 + {icon:Poison}{value:poison} × {value:poisonRatio}%）%を"
+                + "基礎とする{icon:Poison}{color:Poison}ダメージ{/color}を与え、その"
+                + "{value:aoeFirePercent}% ×（100 + {icon:Fire}{value:fire} × {value:fireRatio}%）%を基礎とする"
+                + "{icon:Fire}{color:Fire}ダメージ{/color}を敵全体へ与える。",
+            38 => "自陣に{value:duration}tick（{value:baseDuration} + {value:scalingDuration} ×（100 + "
+                + "{icon:Ice}{value:ice} × {value:durationRatio}%）%）の{term:IceBlade|氷の刃}を生成する。"
+                + "敵へ冷気を付与するたび、軽減前Valueの{value:damagePercent}%を基礎とする"
+                + "{icon:Ice}{color:Ice}ダメージ{/color}を追加する。",
+            39 => "自身に{color:Wind}{value:shield}{/color}（{value:baseShield} ×（100 + "
+                + "{icon:Wind}{value:wind} × {value:shieldRatio}%）%）のShieldを付与し、"
                 + "{value:duration}tickの間{term:StillAir|無風}になって風を0にする。",
             40 => "先頭の敵のShieldをすべて破壊し、"
-                + "{icon:Dragon}{color:Dragon}{value:damage}{/color}の"
-                + "{term:DragonDamage|竜ダメージ}を与える。",
+                + "{color:Dragon}{value:damage}{/color}（{value:baseDamage} ×（100 + "
+                + "{icon:Dragon}{value:dragon} × {value:damageRatio}%）%）の"
+                + "{icon:Dragon}{color:Dragon}ダメージ{/color}を与える。",
             _ => string.Empty,
         };
 
-        private static string CreatePassiveTemplate(int id) => id switch
+        private static string CreatePassiveTemplate(int id)
+        {
+            if (PenetrationDescriptionTemplates.TryGetPassive(id, out var template))
+                return template;
+            return id switch
         {
             33 => "Skillダメージを与えたとき、対象の減少HPの"
                 + "{value:currentMissingHpPercent}%を基礎値とする追加の"
@@ -100,9 +114,8 @@ namespace Pachimon.Editor.UI
             35 => "自身が発生中または{term:Stun|Stun}中、{icon:Leaf}草の"
                 + "{value:leafResistRatio}%をResistBonusへ加算する。"
                 + "現在の加算値は{value:currentResistBonus}。",
-            36 => "攻撃を受けるたび攻撃者へ値{value:paralysisValue}の"
-                + "{term:Paralysis|麻痺}を付与する。電気基礎値{value:electricBaseValue}と"
-                + "氷基礎値{value:iceBaseValue}を各Statで増幅して合計する。",
+            36 => "攻撃を受けるたび攻撃者へ{value:paralysisDuration}tick、値{value:paralysisValue}の"
+                + "{term:Paralysis|麻痺}を付与する。",
             37 => "{icon:Fire}炎の{value:percent}%を{icon:Poison}毒へ加算する。"
                 + "現在の加算値は{value:contribution}。",
             38 => "氷ダメージが発生するたび、Battle中の{icon:Ice}氷が"
@@ -113,6 +126,7 @@ namespace Pachimon.Editor.UI
                 + "{value:penetrationRatio}%を加算する。現在の加算値は"
                 + "{value:currentPenetration}%。",
             _ => string.Empty,
-        };
+            };
+        }
     }
 }

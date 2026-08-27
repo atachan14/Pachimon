@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Battle;
 using Pachimon.Data;
+using Pachimon.Reward;
 using Pachimon.Skills;
 using UnityEngine;
 
@@ -197,10 +198,10 @@ namespace Pachimon.UI
                         0L,
                         choice.CooldownReadyTick - _currentState.CurrentTick);
                     var label = choice.IsUsable
-                        ? choice.Skill.DisplayName
+                        ? choice.DisplayName
                         : !choice.IsCooldownReady
-                            ? $"{choice.Skill.DisplayName}\nCD {remainingCooldown}"
-                            : $"{choice.Skill.DisplayName}\nMN {choice.Skill.BaseManaCost}";
+                            ? $"{choice.DisplayName}\nCD {remainingCooldown}"
+                            : $"{choice.DisplayName}\nMN {choice.ManaCost}";
                     var skillSlotId = choice.SlotId;
                     return new LogWindowSkillOption(
                         skillSlotId,
@@ -382,9 +383,15 @@ namespace Pachimon.UI
 
             foreach (var effect in resolution.Effects)
             {
-                var damageKind = effect.IsTrueDamage ? "確定ダメージ" : "ダメージ";
+                var fallbackAttribute = effect.IsTrueDamage
+                    ? (PachimonAttribute?)null
+                    : TryGetSkillAttribute(resolution.Skill.AllocationType);
                 fallbackLines.Add(new DialogueLine(
-                    $"{effect.Target.DisplayName}に{effect.Damage}の{damageKind}！",
+                    BattleDamageLogFormatter.FormatDamage(
+                        effect.Target.DisplayName,
+                        effect.Damage,
+                        fallbackAttribute,
+                        effect.IsTrueDamage),
                     () => FocusBattleUnit(effect.Target)));
                 if (effect.Target.IsDefeated)
                 {
@@ -395,6 +402,15 @@ namespace Pachimon.UI
             }
 
             return new DialoguePage(new[] { new DialogueBlock(fallbackLines) });
+        }
+
+        private static PachimonAttribute? TryGetSkillAttribute(
+            AllocationType allocationType)
+        {
+            return allocationType is >= AllocationType.Fire
+                and <= AllocationType.Dragon
+                ? (PachimonAttribute)((int)allocationType - 1)
+                : null;
         }
 
         private void BeginBattleDialogueBlock(

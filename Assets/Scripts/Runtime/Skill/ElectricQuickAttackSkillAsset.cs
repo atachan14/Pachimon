@@ -11,16 +11,15 @@ namespace Pachimon.Skills
     public sealed class ElectricQuickAttackSkillAsset : SkillAsset
     {
         [FormerlySerializedAs("_electricDamagePercent")]
-        [SerializeField, Min(0)] private int _electricBasePower = 25;
-        [FormerlySerializedAs("_fireDamagePercent")]
-        [SerializeField, Min(0)] private int _fireBasePower = 10;
-        [SerializeField, Min(0)] private int _windTimingPercent = 100;
+        [FormerlySerializedAs("_electricBasePower")]
+        [SerializeField, Min(0)] private int _electricBaseDamage = 25;
+        [FormerlySerializedAs("_windTimingPercent")]
+        [FormerlySerializedAs("_fireRecoveryPercent")]
+        [SerializeField, Min(0)] private int _fireTimingPercent = 100;
 
-        public int ElectricBasePower => _electricBasePower;
+        public int ElectricBaseDamage => _electricBaseDamage;
 
-        public int FireBasePower => _fireBasePower;
-
-        public int WindTimingPercent => _windTimingPercent;
+        public int FireTimingPercent => _fireTimingPercent;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -39,9 +38,8 @@ namespace Pachimon.Skills
             int baseCooldownTicks,
             int baseManaCost,
             string description,
-            int electricBasePower,
-            int fireBasePower,
-            int windTimingPercent)
+            int electricBaseDamage,
+            int fireTimingPercent)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -52,9 +50,8 @@ namespace Pachimon.Skills
                 baseCooldownTicks,
                 description,
                 baseManaCost);
-            _electricBasePower = electricBasePower;
-            _fireBasePower = fireBasePower;
-            _windTimingPercent = windTimingPercent;
+            _electricBaseDamage = electricBaseDamage;
+            _fireTimingPercent = fireTimingPercent;
         }
 #endif
     }

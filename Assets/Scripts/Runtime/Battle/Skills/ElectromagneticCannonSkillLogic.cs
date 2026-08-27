@@ -61,7 +61,7 @@ namespace Pachimon.Battle
             return AttributeDamageCalculator.Calculate(new DamageContext(
                 DamageOriginKind.Skill,
                 _skill.SkillId,
-                _skill.BasePower,
+                _skill.BaseDamage,
                 user.GetBattleStats(),
                 target.GetBattleStats(),
                 PachimonAttribute.Electric,
@@ -89,7 +89,6 @@ namespace Pachimon.Battle
                 PachimonAttribute.Electric,
                 isAttack: true,
                 applyAttackerAttributeMultiplier: false,
-                penetrationPercent: 0m,
                 applyDamageBonusMultiplier: false,
                 applyOutgoingModifiers: false));
         }

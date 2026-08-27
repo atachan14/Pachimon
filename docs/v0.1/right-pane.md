@@ -101,7 +101,7 @@ PachimonTab (ScrollRect)
 - Resourceは`CurrentHP / MaxHP`と`CurrentMN / MaxMN`を表示する
 - StatsGridは8属性、Speed、DamageBonus、ResistBonusの合計11枠とする
 - StatsGridはRightPaneの幅に追従し、中央で均等な2columnへ分割する
-- Skillは最大9枠を常に表示し、3column x 3rowに固定する
+- Skillは最大6枠を常に表示し、3column x 2rowに固定する
 - 未取得のSkill枠は`---`で表示する
 - 状態異常は内容数と利用可能幅に応じて折り返す
 - PassiveはSkillと同じ要素サイズ・3columnとし、所持数に応じて行を追加する

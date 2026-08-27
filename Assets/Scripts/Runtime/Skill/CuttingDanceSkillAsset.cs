@@ -13,7 +13,7 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseErosion = 20;
         [SerializeField, HideInInspector] private int _erosionWindRatio = 100;
         [SerializeField, Min(0)] private int _baseChainCount = 2;
-        [SerializeField, Min(1)] private int _addChainGainUnits = 50;
+        [SerializeField, Min(1)] private int _addChainGainUnits = 100;
         [SerializeField] private WindErosionStatusAsset _erosionStatus;
 
         public int BaseWindDamage => _baseWindDamage;

@@ -61,7 +61,8 @@ namespace Pachimon.Run
                 skillCatalog,
                 itemCatalog,
                 trainerStyleCatalog,
-                trainerNameCatalog);
+                trainerNameCatalog,
+                passiveStatModifierRegistry);
             var runMap = mapGenerator.Generate(runSeed, pachimonPool);
 
             var mapRunController = new MapRunController(

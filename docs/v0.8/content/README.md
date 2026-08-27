@@ -30,6 +30,7 @@ Pachimon、固定Skill、PassiveをAllocation Typeごとにまとめる。
 
 ## Shared Content
 
+- [Battle Environment](./mechanics/environment.md)
 - [Status Contents](./statuses/README.md)
 - [Shared Rules](./shared-rules.md)
 - [Implementation Questions](./implementation-questions.md)

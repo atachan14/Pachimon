@@ -14,18 +14,27 @@ namespace Pachimon.UI
     {
         Passive = 0,
         Skill = 1,
+        Item = 2,
     }
 
     public sealed class RewardChoiceContent
     {
-        public RewardChoiceContent(int id, string displayName)
+        public RewardChoiceContent(
+            int id,
+            string displayName,
+            PachimonAbilityPreview ability,
+            PachimonPreviewContent owner)
         {
             Id = id;
             DisplayName = displayName;
+            Ability = ability;
+            Owner = owner;
         }
 
         public int Id { get; }
         public string DisplayName { get; }
+        public PachimonAbilityPreview Ability { get; }
+        public PachimonPreviewContent Owner { get; }
     }
 
     public sealed class RewardSourcePachimonContent
@@ -65,6 +74,23 @@ namespace Pachimon.UI
         public Sprite FrontSprite { get; }
     }
 
+    public sealed class RewardItemChoiceContent
+    {
+        public RewardItemChoiceContent(
+            int itemId,
+            string displayName,
+            int recoveryAmount)
+        {
+            ItemId = itemId;
+            DisplayName = displayName;
+            RecoveryAmount = recoveryAmount;
+        }
+
+        public int ItemId { get; }
+        public string DisplayName { get; }
+        public int RecoveryAmount { get; }
+    }
+
     public sealed class RewardOverlayContent
     {
         public RewardOverlayContent(
@@ -72,18 +98,28 @@ namespace Pachimon.UI
             bool usesBadge,
             IReadOnlyList<RewardSourcePachimonContent> sources,
             IReadOnlyList<RewardTargetPachimonContent> targets,
+            IReadOnlyList<RewardItemChoiceContent> itemChoices,
             Func<BattleRewardSlot, bool> claimImmediate,
             Func<RewardSelectionKind, int, string, bool> canGrant,
             Func<RewardSelectionKind, int, string, bool> grant,
+            Func<int, bool> canClaimItem,
+            Func<int, bool> claimItem,
+            Action<RewardChoiceContent> showDetails,
+            Func<bool> abandonRemaining,
             Action completed)
         {
             Gold = gold;
             UsesBadge = usesBadge;
             Sources = sources ?? Array.Empty<RewardSourcePachimonContent>();
             Targets = targets ?? Array.Empty<RewardTargetPachimonContent>();
+            ItemChoices = itemChoices ?? Array.Empty<RewardItemChoiceContent>();
             ClaimImmediate = claimImmediate;
             CanGrant = canGrant;
             Grant = grant;
+            CanClaimItem = canClaimItem;
+            ClaimItem = claimItem;
+            ShowDetails = showDetails;
+            AbandonRemaining = abandonRemaining;
             Completed = completed;
         }
 
@@ -91,9 +127,14 @@ namespace Pachimon.UI
         public bool UsesBadge { get; }
         public IReadOnlyList<RewardSourcePachimonContent> Sources { get; }
         public IReadOnlyList<RewardTargetPachimonContent> Targets { get; }
+        public IReadOnlyList<RewardItemChoiceContent> ItemChoices { get; }
         public Func<BattleRewardSlot, bool> ClaimImmediate { get; }
         public Func<RewardSelectionKind, int, string, bool> CanGrant { get; }
         public Func<RewardSelectionKind, int, string, bool> Grant { get; }
+        public Func<int, bool> CanClaimItem { get; }
+        public Func<int, bool> ClaimItem { get; }
+        public Action<RewardChoiceContent> ShowDetails { get; }
+        public Func<bool> AbandonRemaining { get; }
         public Action Completed { get; }
     }
 
@@ -109,24 +150,56 @@ namespace Pachimon.UI
             new Color32(225, 235, 218, 255);
         private static readonly Color DisabledTargetColor =
             new Color32(175, 178, 175, 255);
+        private static readonly Color SelectedColor =
+            new Color32(224, 151, 64, 255);
+        private static readonly Color FooterButtonColor =
+            new Color32(55, 71, 75, 255);
 
         [field: SerializeField] public TMP_Text TitleText { get; private set; }
         [field: SerializeField] public TMP_Text BodyText { get; private set; }
 
         private readonly Dictionary<BattleRewardSlot, Button> _rewardButtons = new();
+        private readonly List<ChoiceButtonBinding> _choiceButtons = new();
+        private readonly List<ItemChoiceButtonBinding> _itemChoiceButtons = new();
         private readonly List<TargetButtonBinding> _targetButtons = new();
         private RectTransform _runtimeRoot;
         private RectTransform _buttonContainer;
         private RectTransform _selectionRoot;
+        private RectTransform _selectionBody;
         private RectTransform _targetGrid;
         private ScrollRect _selectionScrollRect;
         private TMP_Text _selectionStatusText;
+        private Button _selectionBackButton;
+        private Button _selectionDetailsButton;
+        private Button _selectionPrimaryButton;
+        private Button _abandonButton;
         private CanvasGroup _canvasGroup;
         private RewardOverlayContent _content;
         private RewardSelectionKind _selectionKind;
-        private int _selectedChoiceId;
+        private RewardChoiceContent _selectedChoice;
+        private RewardItemChoiceContent _selectedItemChoice;
+        private RewardTargetPachimonContent _selectedTarget;
+        private SelectionPhase _selectionPhase;
         private int _claimedCount;
         private bool _isClosing;
+
+        private enum SelectionPhase
+        {
+            Choice,
+            Target,
+        }
+
+        private sealed class ChoiceButtonBinding
+        {
+            public ChoiceButtonBinding(RewardChoiceContent choice, Button button)
+            {
+                Choice = choice;
+                Button = button;
+            }
+
+            public RewardChoiceContent Choice { get; }
+            public Button Button { get; }
+        }
 
         private sealed class TargetButtonBinding
         {
@@ -140,6 +213,20 @@ namespace Pachimon.UI
             public Button Button { get; }
             public Image Graphic { get; }
             public TMP_Text Label { get; }
+        }
+
+        private sealed class ItemChoiceButtonBinding
+        {
+            public ItemChoiceButtonBinding(
+                RewardItemChoiceContent choice,
+                Button button)
+            {
+                Choice = choice;
+                Button = button;
+            }
+
+            public RewardItemChoiceContent Choice { get; }
+            public Button Button { get; }
         }
 
         public void Initialize(TMP_Text titleText, TMP_Text bodyText)
@@ -220,6 +307,9 @@ namespace Pachimon.UI
                 _selectionRoot.gameObject.SetActive(false);
                 Destroy(_selectionRoot.gameObject);
                 _selectionRoot = null;
+                _selectionBody = null;
+                _choiceButtons.Clear();
+                _itemChoiceButtons.Clear();
                 _targetButtons.Clear();
             }
 
@@ -235,6 +325,12 @@ namespace Pachimon.UI
                 button.interactable = true;
                 button.transform.localScale = Vector3.one;
                 button.transform.localRotation = Quaternion.identity;
+            }
+            if (_abandonButton != null)
+            {
+                _abandonButton.gameObject.SetActive(true);
+                _abandonButton.interactable = true;
+                _abandonButton.transform.localScale = Vector3.one;
             }
         }
 
@@ -292,6 +388,22 @@ namespace Pachimon.UI
                 BattleRewardSlot.Skill,
                 "スキル",
                 () => OpenSelection(RewardSelectionKind.Skill));
+            CreateRewardButton(
+                BattleRewardSlot.Item,
+                "Item",
+                () => OpenSelection(RewardSelectionKind.Item));
+
+            _abandonButton = CreateButton(
+                "AbandonRemainingButton",
+                _buttonContainer,
+                "残りを放棄して進む",
+                AbandonRemaining,
+                new Color32(121, 75, 70, 255),
+                Color.white);
+            var abandonLayout = _abandonButton.gameObject.AddComponent<LayoutElement>();
+            abandonLayout.preferredHeight = 48f;
+            abandonLayout.minHeight = 44f;
+            abandonLayout.flexibleWidth = 1f;
         }
 
         private void CreateRewardButton(
@@ -321,6 +433,19 @@ namespace Pachimon.UI
             }
         }
 
+        private void AbandonRemaining()
+        {
+            if (_isClosing
+                || _content.AbandonRemaining?.Invoke() != true)
+            {
+                return;
+            }
+
+            _abandonButton.interactable = false;
+            _canvasGroup.interactable = false;
+            StartCoroutine(AnimateOverlayClose());
+        }
+
         private void OpenSelection(RewardSelectionKind kind)
         {
             if (_selectionRoot != null)
@@ -329,13 +454,18 @@ namespace Pachimon.UI
             }
 
             _selectionKind = kind;
-            _selectedChoiceId = 0;
+            _selectedChoice = null;
+            _selectedItemChoice = null;
+            _selectedTarget = null;
+            _selectionPhase = SelectionPhase.Choice;
             BuildSelectionWindow();
             StartCoroutine(AnimateSelectionOpen());
         }
 
         private void BuildSelectionWindow()
         {
+            _choiceButtons.Clear();
+            _itemChoiceButtons.Clear();
             _targetButtons.Clear();
             var selectionObject = new GameObject(
                 "RewardSelectionWindow",
@@ -357,7 +487,9 @@ namespace Pachimon.UI
                 _selectionRoot,
                 _selectionKind == RewardSelectionKind.Skill
                     ? "取得するスキルを選択"
-                    : "取得するパッシヴを選択",
+                    : _selectionKind == RewardSelectionKind.Passive
+                        ? "取得するパッシヴを選択"
+                        : "取得するItemを選択",
                 26f,
                 FontStyles.Bold,
                 TextAlignmentOptions.Center);
@@ -366,7 +498,9 @@ namespace Pachimon.UI
             _selectionStatusText = CreateText(
                 "SelectionStatus",
                 _selectionRoot,
-                "Enemyから候補を選んでください",
+                _selectionKind == RewardSelectionKind.Item
+                    ? "どちらか一つを選んでください"
+                    : "Enemyから候補を選んでください",
                 18f,
                 FontStyles.Normal,
                 TextAlignmentOptions.Center);
@@ -375,12 +509,49 @@ namespace Pachimon.UI
                 new Vector2(0f, 0.84f),
                 new Vector2(1f, 0.9f));
 
-            _selectionScrollRect = CreateScrollView(_selectionRoot, out var contentRect);
-            BuildSelectionContent(contentRect);
+            BuildSelectionFooter();
+            RenderChoicePhase();
         }
 
-        private void BuildSelectionContent(RectTransform contentRect)
+        private void BuildSelectionFooter()
         {
+            var footerObject = new GameObject(
+                "SelectionFooter",
+                typeof(RectTransform),
+                typeof(HorizontalLayoutGroup));
+            footerObject.layer = gameObject.layer;
+            var footer = footerObject.GetComponent<RectTransform>();
+            footer.SetParent(_selectionRoot, false);
+            SetAnchors(footer, new Vector2(0.03f, 0.02f), new Vector2(0.97f, 0.12f));
+
+            var layout = footerObject.GetComponent<HorizontalLayoutGroup>();
+            layout.spacing = 12f;
+            layout.padding = new RectOffset(4, 4, 4, 4);
+            layout.childAlignment = TextAnchor.MiddleCenter;
+            layout.childControlWidth = true;
+            layout.childControlHeight = true;
+            layout.childForceExpandWidth = true;
+            layout.childForceExpandHeight = true;
+
+            _selectionBackButton = CreateButton(
+                "BackButton", footer, "戻る", null, FooterButtonColor, Color.white);
+            _selectionDetailsButton = CreateButton(
+                "DetailsButton", footer, "詳細を見る", null, FooterButtonColor, Color.white);
+            _selectionPrimaryButton = CreateButton(
+                "PrimaryButton", footer, "パチモンを選択", null, SelectedColor, Color.black);
+        }
+
+        private void RenderChoicePhase()
+        {
+            _selectionPhase = SelectionPhase.Choice;
+            _selectedTarget = null;
+            if (_selectionKind == RewardSelectionKind.Item)
+            {
+                RenderItemChoicePhase();
+                return;
+            }
+
+            var contentRect = RebuildSelectionBody();
             var vertical = contentRect.gameObject.AddComponent<VerticalLayoutGroup>();
             vertical.padding = new RectOffset(18, 18, 16, 24);
             vertical.spacing = 18f;
@@ -402,9 +573,88 @@ namespace Pachimon.UI
                 BuildSourceColumn(sourceGrid, source);
             }
 
-            CreateSectionLabel(contentRect, "Player");
-            _targetGrid = CreateThreeColumnGrid("PlayerTargetGrid", contentRect, 210f);
-            RebuildTargetGrid();
+            RefreshChoiceButtons();
+            _selectionStatusText.text = _selectedChoice == null
+                ? "Enemyから候補を選んでください"
+                : $"{_selectedChoice.DisplayName}を選択中";
+            ConfigureSelectionFooter();
+        }
+
+        private void RenderItemChoicePhase()
+        {
+            var contentRect = RebuildSelectionBody();
+            var vertical = contentRect.gameObject.AddComponent<VerticalLayoutGroup>();
+            vertical.padding = new RectOffset(18, 18, 28, 28);
+            vertical.spacing = 18f;
+            vertical.childAlignment = TextAnchor.UpperCenter;
+            vertical.childControlWidth = true;
+            vertical.childControlHeight = true;
+            vertical.childForceExpandWidth = true;
+            vertical.childForceExpandHeight = false;
+            var fitter = contentRect.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            CreateSectionLabel(contentRect, "Item");
+            var grid = CreateThreeColumnGrid(
+                "RewardItemGrid",
+                contentRect,
+                150f);
+            foreach (var choice in _content.ItemChoices)
+            {
+                var capturedChoice = choice;
+                var canClaim = _content.CanClaimItem?.Invoke(choice.ItemId) == true;
+                var button = CreateButton(
+                    $"RewardItem{choice.ItemId}",
+                    grid,
+                    $"{choice.DisplayName}\n回復量 {choice.RecoveryAmount}",
+                    () => SelectItemChoice(capturedChoice),
+                    canClaim ? FooterButtonColor : DisabledTargetColor,
+                    canClaim ? Color.white : Color.black);
+                button.interactable = canClaim;
+                button.gameObject.AddComponent<LayoutElement>().preferredHeight = 120f;
+                _itemChoiceButtons.Add(new ItemChoiceButtonBinding(choice, button));
+            }
+
+            RefreshItemChoiceButtons();
+            var anyClaimable = _content.ItemChoices.Any(
+                choice => _content.CanClaimItem?.Invoke(choice.ItemId) == true);
+            _selectionStatusText.text = anyClaimable
+                ? _selectedItemChoice == null
+                    ? "どちらか一つを選んでください"
+                    : $"{_selectedItemChoice.DisplayName}を選択中"
+                : "バッグがいっぱいだ！";
+            ConfigureSelectionFooter();
+        }
+
+        private void SelectItemChoice(RewardItemChoiceContent choice)
+        {
+            _selectedItemChoice = choice;
+            _selectionStatusText.text = $"{choice.DisplayName}を選択中";
+            RefreshItemChoiceButtons();
+            ConfigureSelectionFooter();
+        }
+
+        private void RefreshItemChoiceButtons()
+        {
+            foreach (var binding in _itemChoiceButtons)
+            {
+                var selected = ReferenceEquals(binding.Choice, _selectedItemChoice);
+                var canClaim = _content.CanClaimItem?.Invoke(
+                    binding.Choice.ItemId) == true;
+                binding.Button.interactable = canClaim;
+                binding.Button.targetGraphic.color = selected
+                    ? SelectedColor
+                    : canClaim
+                        ? FooterButtonColor
+                        : DisabledTargetColor;
+                var label = binding.Button.GetComponentInChildren<TMP_Text>();
+                if (label != null)
+                {
+                    label.color = selected || !canClaim
+                        ? Color.black
+                        : Color.white;
+                }
+            }
         }
 
         private void BuildSourceColumn(
@@ -452,15 +702,152 @@ namespace Pachimon.UI
                     new Color32(55, 71, 75, 255),
                     Color.white);
                 button.gameObject.AddComponent<LayoutElement>().preferredHeight = 34f;
+                _choiceButtons.Add(new ChoiceButtonBinding(choice, button));
             }
         }
 
         private void SelectChoice(RewardChoiceContent choice)
         {
-            _selectedChoiceId = choice.Id;
-            _selectionStatusText.text = $"{choice.DisplayName}：覚えさせるパチモンを選択";
+            _selectedChoice = choice;
+            _selectionStatusText.text = $"{choice.DisplayName}を選択中";
+            RefreshChoiceButtons();
+            ConfigureSelectionFooter();
+        }
+
+        private void RefreshChoiceButtons()
+        {
+            foreach (var binding in _choiceButtons)
+            {
+                var selected = ReferenceEquals(binding.Choice, _selectedChoice);
+                binding.Button.targetGraphic.color = selected
+                    ? SelectedColor
+                    : FooterButtonColor;
+                var label = binding.Button.GetComponentInChildren<TMP_Text>();
+                if (label != null)
+                {
+                    label.color = selected ? Color.black : Color.white;
+                }
+            }
+        }
+
+        private void RenderTargetPhase()
+        {
+            if (_selectedChoice == null)
+            {
+                return;
+            }
+
+            _selectionPhase = SelectionPhase.Target;
+            _selectedTarget = null;
+            var contentRect = RebuildSelectionBody();
+            var vertical = contentRect.gameObject.AddComponent<VerticalLayoutGroup>();
+            vertical.padding = new RectOffset(18, 18, 16, 24);
+            vertical.spacing = 18f;
+            vertical.childAlignment = TextAnchor.UpperCenter;
+            vertical.childControlWidth = true;
+            vertical.childControlHeight = true;
+            vertical.childForceExpandWidth = true;
+            vertical.childForceExpandHeight = false;
+            var fitter = contentRect.gameObject.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            var summary = CreateText(
+                "SelectedRewardSummary",
+                contentRect,
+                $"選択中：{_selectedChoice.DisplayName}",
+                22f,
+                FontStyles.Bold,
+                TextAlignmentOptions.Center);
+            summary.gameObject.AddComponent<LayoutElement>().preferredHeight = 42f;
+
+            CreateSectionLabel(contentRect, "Player");
+            _targetGrid = CreateThreeColumnGrid("PlayerTargetGrid", contentRect, 210f);
             RebuildTargetGrid();
-            StartCoroutine(ScrollToPlayerTargets());
+            _selectionStatusText.text = "覚えさせるパチモンを選んでください";
+            ConfigureSelectionFooter();
+        }
+
+        private RectTransform RebuildSelectionBody()
+        {
+            if (_selectionBody != null)
+            {
+                _selectionBody.gameObject.SetActive(false);
+                Destroy(_selectionBody.gameObject);
+            }
+
+            _choiceButtons.Clear();
+            _itemChoiceButtons.Clear();
+            _targetButtons.Clear();
+            _targetGrid = null;
+            _selectionScrollRect = CreateScrollView(_selectionRoot, out var contentRect);
+            _selectionBody = _selectionScrollRect.transform as RectTransform;
+            return contentRect;
+        }
+
+        private void ConfigureSelectionFooter()
+        {
+            _selectionBackButton.onClick.RemoveAllListeners();
+            _selectionDetailsButton.onClick.RemoveAllListeners();
+            _selectionPrimaryButton.onClick.RemoveAllListeners();
+
+            if (_selectionKind == RewardSelectionKind.Item)
+            {
+                _selectionBackButton.onClick.AddListener(CloseSelectionWithoutClaim);
+                _selectionDetailsButton.gameObject.SetActive(false);
+                SetButtonLabel(_selectionPrimaryButton, "取得");
+                _selectionPrimaryButton.onClick.AddListener(ConfirmItemClaim);
+                _selectionPrimaryButton.interactable = _selectedItemChoice != null
+                    && _content.CanClaimItem?.Invoke(
+                        _selectedItemChoice.ItemId) == true;
+                return;
+            }
+
+            _selectionDetailsButton.gameObject.SetActive(true);
+
+            if (_selectionPhase == SelectionPhase.Choice)
+            {
+                _selectionBackButton.onClick.AddListener(CloseSelectionWithoutClaim);
+                SetButtonLabel(_selectionPrimaryButton, "パチモンを選択");
+                _selectionPrimaryButton.onClick.AddListener(RenderTargetPhase);
+            }
+            else
+            {
+                _selectionBackButton.onClick.AddListener(RenderChoicePhase);
+                SetButtonLabel(_selectionPrimaryButton, "確定");
+                _selectionPrimaryButton.onClick.AddListener(ConfirmGrant);
+            }
+
+            _selectionDetailsButton.onClick.AddListener(ShowSelectedChoiceDetails);
+            _selectionDetailsButton.interactable = _selectedChoice != null;
+            _selectionPrimaryButton.interactable = _selectionPhase == SelectionPhase.Choice
+                ? _selectedChoice != null
+                : _selectedTarget != null;
+        }
+
+        private void ConfirmItemClaim()
+        {
+            if (_selectedItemChoice == null
+                || _content.ClaimItem?.Invoke(_selectedItemChoice.ItemId) != true)
+            {
+                RefreshItemChoiceButtons();
+                ConfigureSelectionFooter();
+                return;
+            }
+
+            StartCoroutine(AnimateSelectionClose(BattleRewardSlot.Item));
+        }
+
+        private void ShowSelectedChoiceDetails()
+        {
+            if (_selectedChoice != null)
+            {
+                _content.ShowDetails?.Invoke(_selectedChoice);
+            }
+        }
+
+        private void CloseSelectionWithoutClaim()
+        {
+            StartCoroutine(AnimateSelectionBack());
         }
 
         private void RebuildTargetGrid()
@@ -473,10 +860,10 @@ namespace Pachimon.UI
             for (var index = 0; index < _content.Targets.Count; index++)
             {
                 var target = _content.Targets[index];
-                var canGrant = _selectedChoiceId > 0
+                var canGrant = _selectedChoice != null
                     && _content.CanGrant?.Invoke(
                         _selectionKind,
-                        _selectedChoiceId,
+                        _selectedChoice.Id,
                         target.InstanceId) == true;
                 var binding = GetOrCreateTargetButton(index);
                 BindTargetButton(binding, target, canGrant);
@@ -515,7 +902,7 @@ namespace Pachimon.UI
             layout.childForceExpandHeight = false;
 
             var label = button.GetComponentInChildren<TMP_Text>();
-            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 30f;
+            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 48f;
             return new TargetButtonBinding(button, graphic, label);
         }
 
@@ -527,23 +914,39 @@ namespace Pachimon.UI
             binding.Button.gameObject.name = $"RewardTarget{target.InstanceId}";
             binding.Button.gameObject.SetActive(true);
             binding.Button.interactable = canGrant;
-            binding.Button.targetGraphic.color = canGrant
-                ? EnabledTargetColor
-                : DisabledTargetColor;
+            var selected = ReferenceEquals(target, _selectedTarget);
+            binding.Button.targetGraphic.color = selected
+                ? SelectedColor
+                : canGrant
+                    ? EnabledTargetColor
+                    : DisabledTargetColor;
             binding.Graphic.sprite = target.FrontSprite;
             binding.Graphic.enabled = target.FrontSprite != null;
-            binding.Label.text = target.DisplayName;
+            binding.Label.text = canGrant
+                ? target.DisplayName
+                : _selectionKind == RewardSelectionKind.Skill
+                    ? $"{target.DisplayName}\nこれ以上おぼえられない"
+                    : $"{target.DisplayName}\n取得できない";
             binding.Button.onClick.RemoveAllListeners();
-            binding.Button.onClick.AddListener(() => GrantToTarget(target));
+            binding.Button.onClick.AddListener(() => SelectTarget(target));
         }
 
-        private void GrantToTarget(RewardTargetPachimonContent target)
+        private void SelectTarget(RewardTargetPachimonContent target)
         {
-            if (_selectedChoiceId <= 0
+            _selectedTarget = target;
+            _selectionStatusText.text = $"{target.DisplayName}を選択中";
+            RebuildTargetGrid();
+            ConfigureSelectionFooter();
+        }
+
+        private void ConfirmGrant()
+        {
+            if (_selectedChoice == null
+                || _selectedTarget == null
                 || _content.Grant?.Invoke(
                     _selectionKind,
-                    _selectedChoiceId,
-                    target.InstanceId) != true)
+                    _selectedChoice.Id,
+                    _selectedTarget.InstanceId) != true)
             {
                 return;
             }
@@ -597,7 +1000,7 @@ namespace Pachimon.UI
 
             button.gameObject.SetActive(false);
             _claimedCount++;
-            if (_claimedCount >= 4)
+            if (_claimedCount >= 5)
             {
                 StartCoroutine(AnimateOverlayClose());
             }
@@ -622,6 +1025,33 @@ namespace Pachimon.UI
             _selectionRoot.localScale = Vector3.one;
         }
 
+        private IEnumerator AnimateSelectionBack()
+        {
+            var closingRoot = _selectionRoot;
+            if (closingRoot == null)
+            {
+                yield break;
+            }
+
+            _selectionRoot = null;
+            var canvasGroup = closingRoot.GetComponent<CanvasGroup>();
+            var elapsed = 0f;
+            while (elapsed < SelectionOpenDuration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                var progress = Smooth(Mathf.Clamp01(elapsed / SelectionOpenDuration));
+                canvasGroup.alpha = 1f - progress;
+                closingRoot.localScale = Vector3.one * (1f - progress);
+                yield return null;
+            }
+
+            Destroy(closingRoot.gameObject);
+            _selectionBody = null;
+            _choiceButtons.Clear();
+            _itemChoiceButtons.Clear();
+            _targetButtons.Clear();
+        }
+
         private IEnumerator AnimateSelectionClose(BattleRewardSlot slot)
         {
             var closingRoot = _selectionRoot;
@@ -637,6 +1067,9 @@ namespace Pachimon.UI
             }
 
             Destroy(closingRoot.gameObject);
+            _selectionBody = null;
+            _choiceButtons.Clear();
+            _itemChoiceButtons.Clear();
             _targetButtons.Clear();
             StartCoroutine(AnimateRewardButtonClaim(_rewardButtons[slot]));
         }
@@ -705,7 +1138,7 @@ namespace Pachimon.UI
             scrollRectTransform.SetParent(parent, false);
             SetAnchors(
                 scrollRectTransform,
-                new Vector2(0.03f, 0.04f),
+                new Vector2(0.03f, 0.14f),
                 new Vector2(0.97f, 0.84f));
 
             var viewportObject = new GameObject(

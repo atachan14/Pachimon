@@ -1,9 +1,24 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Pachimon.Run;
 using UnityEngine;
 
 namespace Pachimon.Data
 {
+    public enum FixedSubStatBinding
+    {
+        Random = 0,
+        DamageBonus = 1,
+        GenerationPower = 2,
+        Haste = 3,
+        Speed = 4,
+        ResistBonus = 5,
+        SustainPower = 6,
+        StatusMastery = 7,
+        StatusResistance = 8,
+    }
+
     [Serializable]
     public sealed class PachimonInitialStats
     {
@@ -21,11 +36,68 @@ namespace Pachimon.Data
         [SerializeField, Min(0)] private int _electric;
         [SerializeField, Min(0)] private int _dragon;
 
-        [Header("Common Stats")]
-        [SerializeField, Min(0)] private int _speed;
-        [SerializeField, Min(0)] private int _haste;
-        [SerializeField, Min(0)] private int _damageBonus;
-        [SerializeField, Min(0)] private int _resistBonus;
+        [Header("Fixed Attribute / SubStat Bindings")]
+        [SerializeField] private FixedSubStatBinding _fireSubStat;
+        [SerializeField] private FixedSubStatBinding _aquaSubStat;
+        [SerializeField] private FixedSubStatBinding _leafSubStat;
+        [SerializeField] private FixedSubStatBinding _electricSubStat;
+        [SerializeField] private FixedSubStatBinding _iceSubStat;
+        [SerializeField] private FixedSubStatBinding _windSubStat;
+        [SerializeField] private FixedSubStatBinding _poisonSubStat;
+        [SerializeField] private FixedSubStatBinding _dragonSubStat;
+
+        public bool TryGetFixedSubStat(
+            PachimonStatType attribute,
+            out PachimonStatType subStat)
+        {
+            var binding = attribute switch
+            {
+                PachimonStatType.Fire => _fireSubStat,
+                PachimonStatType.Aqua => _aquaSubStat,
+                PachimonStatType.Leaf => _leafSubStat,
+                PachimonStatType.Electric => _electricSubStat,
+                PachimonStatType.Ice => _iceSubStat,
+                PachimonStatType.Wind => _windSubStat,
+                PachimonStatType.Poison => _poisonSubStat,
+                PachimonStatType.Dragon => _dragonSubStat,
+                _ => throw new ArgumentOutOfRangeException(nameof(attribute)),
+            };
+            subStat = ToStatType(binding);
+            return binding != FixedSubStatBinding.Random;
+        }
+
+        public IReadOnlyList<string> ValidateFixedSubStatBindings()
+        {
+            var fixedSubStats = PachimonSubStatBindings.Attributes
+                .Select(attribute => TryGetFixedSubStat(attribute, out var subStat)
+                    ? subStat
+                    : (PachimonStatType?)null)
+                .Where(value => value.HasValue)
+                .Select(value => value.Value)
+                .ToArray();
+            return fixedSubStats
+                .GroupBy(value => value)
+                .Where(group => group.Count() > 1)
+                .Select(group => $"Fixed SubStat {group.Key} is assigned more than once.")
+                .ToArray();
+        }
+
+        private static PachimonStatType ToStatType(FixedSubStatBinding binding)
+        {
+            return binding switch
+            {
+                FixedSubStatBinding.Random => PachimonStatType.DamageBonus,
+                FixedSubStatBinding.DamageBonus => PachimonStatType.DamageBonus,
+                FixedSubStatBinding.GenerationPower => PachimonStatType.GenerationPower,
+                FixedSubStatBinding.Haste => PachimonStatType.Haste,
+                FixedSubStatBinding.Speed => PachimonStatType.Speed,
+                FixedSubStatBinding.ResistBonus => PachimonStatType.ResistBonus,
+                FixedSubStatBinding.SustainPower => PachimonStatType.SustainPower,
+                FixedSubStatBinding.StatusMastery => PachimonStatType.StatusMastery,
+                FixedSubStatBinding.StatusResistance => PachimonStatType.StatusResistance,
+                _ => throw new ArgumentOutOfRangeException(nameof(binding)),
+            };
+        }
 
         public int GetDisplayedValue(PachimonStatType statType)
         {
@@ -41,10 +113,14 @@ namespace Pachimon.Data
                 PachimonStatType.Ice => _ice,
                 PachimonStatType.Wind => _wind,
                 PachimonStatType.Dragon => _dragon,
-                PachimonStatType.Speed => _speed,
-                PachimonStatType.Haste => _haste,
-                PachimonStatType.DamageBonus => _damageBonus,
-                PachimonStatType.ResistBonus => _resistBonus,
+                PachimonStatType.Speed => 0,
+                PachimonStatType.Haste => 0,
+                PachimonStatType.DamageBonus => 0,
+                PachimonStatType.ResistBonus => 0,
+                PachimonStatType.GenerationPower => 0,
+                PachimonStatType.StatusMastery => 0,
+                PachimonStatType.SustainPower => 0,
+                PachimonStatType.StatusResistance => 0,
                 _ => throw new ArgumentOutOfRangeException(nameof(statType), statType, null),
             };
         }
@@ -86,11 +162,7 @@ namespace Pachimon.Data
             int poison = 0,
             int ice = 0,
             int wind = 0,
-            int dragon = 0,
-            int speed = 0,
-            int haste = 0,
-            int damageBonus = 0,
-            int resistBonus = 0)
+            int dragon = 0)
         {
             _maxHp = maxHp;
             _maxMn = maxMn;
@@ -102,10 +174,26 @@ namespace Pachimon.Data
             _ice = ice;
             _wind = wind;
             _dragon = dragon;
-            _speed = speed;
-            _haste = haste;
-            _damageBonus = damageBonus;
-            _resistBonus = resistBonus;
+        }
+
+        public void ConfigureFixedSubStatsForEditor(
+            FixedSubStatBinding fire = FixedSubStatBinding.Random,
+            FixedSubStatBinding aqua = FixedSubStatBinding.Random,
+            FixedSubStatBinding leaf = FixedSubStatBinding.Random,
+            FixedSubStatBinding electric = FixedSubStatBinding.Random,
+            FixedSubStatBinding ice = FixedSubStatBinding.Random,
+            FixedSubStatBinding wind = FixedSubStatBinding.Random,
+            FixedSubStatBinding poison = FixedSubStatBinding.Random,
+            FixedSubStatBinding dragon = FixedSubStatBinding.Random)
+        {
+            _fireSubStat = fire;
+            _aquaSubStat = aqua;
+            _leafSubStat = leaf;
+            _electricSubStat = electric;
+            _iceSubStat = ice;
+            _windSubStat = wind;
+            _poisonSubStat = poison;
+            _dragonSubStat = dragon;
         }
 #endif
     }

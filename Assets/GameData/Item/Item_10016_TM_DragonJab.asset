@@ -11,5 +11,5 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _description: 対象が「ドラゴンジャブ」を習得する。
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: 186a3d709909a6f4cbd3b0b8060937a6, type: 2}

@@ -15,5 +15,5 @@ MonoBehaviour:
   _passiveId: 45
   _displayName: "\u6BD2\u306E\u9A0E\u58EB"
   _description: "\u81EA\u8EAB\u304C\u5F97\u305FShield\u3068HP\u56DE\u5FA9\u306E{value:sharePercent}%\u3092\u3001\u4ED6\u306E\u5473\u65B9\u306B\u3082\u4E0E\u3048\u308B\u3002"
-  _baseSharePercent: 10
+  _baseSharePercent: 5
   _poisonScalingPercent: 100

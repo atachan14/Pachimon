@@ -15,8 +15,8 @@ namespace Pachimon.Editor.UI
         public static void Setup()
         {
             Set("BurnStatus.asset", "DamageBonusを{value:totalValue}減少させ、自身のTurn終了時に消滅する。");
-            Set("ChillStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは氷で軽減される。");
-            Set("ParalysisStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは電気で軽減される。");
+            Set("ChillStatus.asset", "Speedを{value:speedReduction}減少させ、毎tick Valueが{value:decayPerTick}減少する。付与Valueは氷で軽減される。");
+            Set("ParalysisStatus.asset", "効果時間中、Speedを{value:totalValue}減少させる。付与Valueは電気で軽減される。");
             Set("SlowStatus.asset", "Speedを{value:totalValue}減少させ、毎tick Valueが{value:decayPerTick}減少する。");
             Set("ToxinStatus.asset", "毎tick、軽減前{color:Poison}{value:damagePerTick}{/color}の毒ダメージを与え、Valueを{value:decayPerTick}減少させる。ダメージは現在Valueの{value:damagePerTickRatio}%を蓄積して計算する。");
             Set("FreezeStatus.asset", "効果中はActionGaugeの進行を停止する。炎ダメージ{value:fireDamagePerDecay}につきValueが1減少する。現在Valueは{value:value}。");

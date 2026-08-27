@@ -15,10 +15,12 @@ namespace Pachimon.Skills
         [SerializeField, HideInInspector] private int _fireValueRatio = 100;
         [FormerlySerializedAs("_weather")]
         [SerializeField] private SunnyWeatherAsset _temperatureDefinition;
+        [SerializeField] private RainWeatherAsset _precipitationDefinition;
 
         public int BaseValue => _baseValue;
         public int FireValueRatio => AttributeDamageRules.ScalingRatio;
         public SunnyWeatherAsset TemperatureDefinition => _temperatureDefinition;
+        public RainWeatherAsset PrecipitationDefinition => _precipitationDefinition;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -27,9 +29,9 @@ namespace Pachimon.Skills
             {
                 errors?.Add($"Skill {SkillId}: Sunny Day must be Fire.");
             }
-            if (_temperatureDefinition == null)
+            if (_precipitationDefinition == null)
             {
-                errors?.Add($"Skill {SkillId}: Temperature Definition is required.");
+                errors?.Add($"Skill {SkillId}: Precipitation Definition is required.");
             }
         }
 
@@ -57,6 +59,12 @@ namespace Pachimon.Skills
             _baseValue = baseValue;
             _fireValueRatio = fireValueRatio;
             _temperatureDefinition = temperatureDefinition;
+        }
+
+        public void SetPrecipitationDefinitionForEditor(
+            RainWeatherAsset precipitationDefinition)
+        {
+            _precipitationDefinition = precipitationDefinition;
         }
 #endif
     }

@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Run.RunStartupProfile
   _startingGold: 100
   _startingItems:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: 44254adeb40140449a7a537f5323f7c6, type: 2}
+  - {fileID: 11400000, guid: 44254adeb40140449a7a537f5323f7c6, type: 2}
+  - {fileID: 11400000, guid: 65a1d33bec5441269d83ab0cf11b2b5b, type: 2}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}

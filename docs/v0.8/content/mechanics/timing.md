@@ -96,7 +96,7 @@ Skillを選択してから効果が実行されるまでの時間。単位はtic
 - `先頭`など位置を参照するSkillは、原則として効果解決時点の対象を使用する
 - 将来、選択した個体を発生中も追跡するSkillは、Skill Contextへ対象を保存する
 - CDはSkill選択時に開始する
-- MNを消費するSkillはSkill選択時に消費する
+- MNを消費するSkillは発動時に消費する
 - 発生完了とUnitのTurnが同じtickの場合、発生完了を先に解決する
 - 複数の発生が同じtickに完了する場合、使用者のTie Priority順に解決する
 
@@ -129,7 +129,7 @@ RecoveryWork = BaseRecovery × SkillRecoveryMultiplier
 
 - Skill固有のTiming MultiplierはPhase開始時の作業量へ乗算する
 - 発生・硬直・CDへ個別のMultiplierを渡せる
-- `電光石火`ではWindから同じ軽減Multiplierを計算し、硬直とCDへ適用する
+- `電光石火`ではFireから軽減Multiplierを計算し、発生と硬直へ適用する。CDには適用しない
 - UIや順序判定用の完了tickは、残り作業量と現在Statから予測して切り上げる
 
 ## Event順序
@@ -166,3 +166,12 @@ HP反映後
 7. 完了した発生・Turnを解決する
 
 Field Effectがこのtickに付与したStatusは、次のtickから時間・Value減少の対象になる。
+# Skillアップグレード
+
+- 同じSkillを再取得した場合、新しいSlotは使わず既存Skillの`UpgradeLevel`を1増加させる。
+- `UpgradeLevel`にゲーム上の上限は設けない。
+- 発生と硬直は、それぞれ基礎値に`(2 / 3) ^ UpgradeLevel`を乗算する。
+- MN消費は、基礎値に`(3 / 2) ^ UpgradeLevel`を乗算する。
+- 発生・硬直・MN消費は途中で丸めず、最終的に整数へ変換するときだけ切り上げる。
+- CDとSkillの効果量は変化しない。
+- 6Slotすべて埋まっていても、習得済みSkillのアップグレードは可能。

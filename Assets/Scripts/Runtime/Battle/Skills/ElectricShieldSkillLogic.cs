@@ -26,6 +26,13 @@ namespace Pachimon.Battle
             var counterParalysis = Scale(
                 _skill.BaseCounterParalysis,
                 _skill.CounterParalysisElectricRatio);
+            var counterParalysisDuration = Math.Max(
+                1,
+                SignedStatMath.FloorNonNegative(
+                    context.ScaleFromAttribute(
+                        _skill.BaseCounterParalysisDurationTicks,
+                        PachimonAttribute.Ice,
+                        _skill.CounterParalysisDurationIceRatio)));
             var shield = context.State.SupportEffects.ApplyShield(
                 context.User,
                 context.User,
@@ -36,7 +43,8 @@ namespace Pachimon.Battle
                 BattleStatusFactory.CreateSlow(
                     context.User,
                     selfParalysis,
-                    _skill.ParalysisStatus));
+                    _skill.ParalysisStatus,
+                    _skill.DurationTicks));
             context.State.Statuses.ApplyTransformedStatus(
                 context.User,
                 new BattleStatusInstance(
@@ -46,7 +54,8 @@ namespace Pachimon.Battle
                     counterParalysis,
                     durationTicks: _skill.DurationTicks,
                     runtimeData: new ElectricShieldRuntimeData(
-                        shield.ApplicationOrder),
+                        shield.ApplicationOrder,
+                        counterParalysisDuration),
                     definition: _skill.ShieldStatus));
             context.State.AddLog(
                 $"{context.User.DisplayName}は{shieldValue}のエレキシールドを得た！");

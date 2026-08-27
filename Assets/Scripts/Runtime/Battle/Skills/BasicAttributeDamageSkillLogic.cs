@@ -7,7 +7,7 @@ namespace Pachimon.Battle
 {
     public sealed class BasicAttributeDamageSkillLogic : ISkillLogic
     {
-        public const int DefaultBaseDamage = 200;
+        public const int DefaultBaseDamage = 100;
         private readonly InitialAttributeDamageSkillAsset _skill;
         private readonly PachimonAttribute _attribute;
 
@@ -78,6 +78,44 @@ namespace Pachimon.Battle
                 ?? throw new InvalidOperationException("No living Enemy target was found.");
         }
 
+    }
+
+    public sealed class LeafSlicerSkillLogic : ISkillLogic
+    {
+        private readonly LeafSlicerSkillAsset _skill;
+        private readonly BasicAttributeDamageSkillLogic _damageLogic;
+
+        public LeafSlicerSkillLogic(LeafSlicerSkillAsset skill)
+        {
+            _skill = skill ?? throw new ArgumentNullException(nameof(skill));
+            _damageLogic = new BasicAttributeDamageSkillLogic(
+                skill,
+                PachimonAttribute.Leaf);
+        }
+
+        public SkillResolution Resolve(SkillExecutionContext context)
+        {
+            if (context == null) throw new ArgumentNullException(nameof(context));
+            if (_skill.PollenStatus == null)
+                throw new InvalidOperationException(
+                    "Leaf Slicer requires a Pollen Definition.");
+
+            var resolution = _damageLogic.Resolve(context);
+            var pollenValue = SignedStatMath.FloorNonNegative(
+                context.ScaleFromAttribute(
+                    _skill.PollenBaseValue,
+                    PachimonAttribute.Wind,
+                    _skill.PollenWindRatio));
+            if (pollenValue > 0)
+            {
+                resolution.Effects[0].Hit.ApplyStatus(
+                    BattleStatusFactory.CreatePollen(
+                        context.User,
+                        pollenValue,
+                        _skill.PollenStatus));
+            }
+            return resolution;
+        }
     }
 
     public sealed class PoisonNeedleSkillLogic : ISkillLogic
@@ -170,7 +208,7 @@ namespace Pachimon.Battle
             resolution.Effects[0].Hit.ApplyStatus(
                 BattleStatusFactory.CreateSlow(
                     context.User,
-                    ElectricShockMath.CalculateSlowValue(
+                    ElectricShockMath.CalculateParalysisValue(
                         context.State,
                         context.User,
                         _skill),
@@ -178,47 +216,59 @@ namespace Pachimon.Battle
                     ?? (context.Skill as Pachimon.Skills.PlaceholderSkillAsset)
                         ?.ParalysisStatus
                     ?? throw new InvalidOperationException(
-                        "Electric Shock requires a Paralysis Definition.")));
+                        "Electric Shock requires a Paralysis Definition."),
+                    ElectricShockMath.CalculateParalysisDuration(
+                        context.State,
+                        context.User,
+                        _skill)));
             return resolution;
         }
     }
 
     public static class ElectricShockMath
     {
-        public const int ElectricBaseValue = 50;
-        public const int IceBaseValue = 25;
+        public const int BaseValue = 80;
+        public const int BaseDurationTicks = 50;
 
-        public static int CalculateSlowValue(BattleUnitState user)
+        public static int CalculateParalysisValue(BattleUnitState user)
         {
-            return CalculateSlowValue(state: null, user);
+            return CalculateParalysisValue(state: null, user);
         }
 
-        public static int CalculateSlowValue(
+        public static int CalculateParalysisValue(
             BattleState state,
             BattleUnitState user,
             ElectricShockSkillAsset skill = null)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
 
-            var electric = SignedStatMath.FloorNonNegative(
+            return SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    skill?.ElectricParalysisBaseValue ?? ElectricBaseValue,
+                    skill?.ParalysisBaseValue ?? BaseValue,
                     user.GetBattleStatValue(PachimonStatType.Electric),
                     state?.ResolveAttributeRatio(
                         PachimonAttribute.Electric,
-                        skill?.ElectricParalysisRatio ?? 100m)
-                    ?? skill?.ElectricParalysisRatio
+                        skill?.ParalysisValueRatio ?? 100m)
+                    ?? skill?.ParalysisValueRatio
                     ?? 100m));
-            var ice = SignedStatMath.FloorNonNegative(
+        }
+
+        public static int CalculateParalysisDuration(
+            BattleState state,
+            BattleUnitState user,
+            ElectricShockSkillAsset skill = null)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+
+            return Math.Max(1, SignedStatMath.FloorNonNegative(
                 SignedStatMath.ScaleFromBase(
-                    skill?.IceParalysisBaseValue ?? IceBaseValue,
+                    skill?.ParalysisBaseDurationTicks ?? BaseDurationTicks,
                     user.GetBattleStatValue(PachimonStatType.Ice),
                     state?.ResolveAttributeRatio(
                         PachimonAttribute.Ice,
-                        skill?.IceParalysisRatio ?? 100m)
-                    ?? skill?.IceParalysisRatio
-                    ?? 100m));
-            return checked(electric + ice);
+                        skill?.ParalysisDurationRatio ?? 100m)
+                    ?? skill?.ParalysisDurationRatio
+                    ?? 100m)));
         }
     }
 

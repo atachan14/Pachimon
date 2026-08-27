@@ -17,5 +17,5 @@ MonoBehaviour:
   _icon: {fileID: 0}
   _description: "\u5BFE\u8C61\u306E\u5473\u65B9\u30D1\u30C1\u30E2\u30F3\u304C\u300C\u30C9\u30E9\u30B4\u30F3\u30C7\u30A3\u30D5\u30A7\u30F3\u30B9\u300D\u3092\u7FD2\u5F97\u3059\u308B\u3002"
   _category: 2
-  _basePrice: 5000
+  _basePrice: 1000
   _skill: {fileID: 11400000, guid: 345eec593bb5d8f4eb6c53075b0d75a2, type: 2}

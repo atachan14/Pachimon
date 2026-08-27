@@ -10,7 +10,7 @@ namespace Pachimon.Battle
             if (context == null) throw new ArgumentNullException(nameof(context));
             var target = GetTarget(context);
             var hit = context.BeginAttackHit(target);
-            var trueDamage = GetLowestAttributeValue(context.User);
+            var trueDamage = GetAverageAttributeValue(context.User);
             var targetResult = BattleTrueDamageService.Apply(
                 context.State,
                 context.User,
@@ -50,19 +50,21 @@ namespace Pachimon.Battle
                 ?? throw new InvalidOperationException("No living Enemy target was found.");
         }
 
-        private static int GetLowestAttributeValue(BattleUnitState user)
+        private static int GetAverageAttributeValue(BattleUnitState user)
         {
-            var minimum = int.MaxValue;
+            var total = 0m;
+            var count = 0;
             for (var value = (int)PachimonStatType.Fire;
                  value <= (int)PachimonStatType.Dragon;
                  value++)
             {
-                minimum = Math.Min(
-                    minimum,
-                    user.GetBattleStatValue((PachimonStatType)value));
+                total += user.GetBattleStatValue((PachimonStatType)value);
+                count++;
             }
 
-            return minimum;
+            return count == 0
+                ? 0
+                : SignedStatMath.FloorNonNegative(total / count);
         }
     }
 }

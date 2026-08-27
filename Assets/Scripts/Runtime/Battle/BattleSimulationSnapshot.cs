@@ -65,7 +65,8 @@ namespace Pachimon.Battle
                 CreateSide(source.Player, unitMap),
                 CreateSide(source.Enemy, unitMap),
                 source.PassiveLogicRegistry,
-                publishBattleStarted: false)
+                publishBattleStarted: false,
+                environmentDefinitions: source.Weather.Definitions)
             {
                 CurrentTick = source.CurrentTick,
             };

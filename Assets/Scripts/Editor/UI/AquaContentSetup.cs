@@ -61,7 +61,7 @@ namespace Pachimon.Editor.UI
             waterCutter.ConfigureForEditor(
                 42, "ウォーターカッター", 100, 300, 100,
                 "先頭の敵に、Windに応じた貫通を持つAqua Damageを与える。",
-                100, 100, 20, 100);
+                100, 100, 25);
 
             var muddyWater = ReplaceWith<MuddyWaterSkillAsset>(
                 $"{SkillFolder}/Skill_050.asset");
@@ -210,7 +210,7 @@ namespace Pachimon.Editor.UI
                 null,
                 $"対象の味方パチモンが「{skill.DisplayName}」を習得する。",
                 ItemCategory.SkillMachine,
-                5000);
+                1000);
             item.ConfigureSkillForEditor(skill);
             return item;
         }

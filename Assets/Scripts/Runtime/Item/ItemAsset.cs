@@ -27,16 +27,21 @@ namespace Pachimon.Items
         {
             if (PachimonStatTypeUtility.TryGetAttribute(statType, out _))
             {
-                return 30;
+                return 15;
             }
 
             return statType switch
             {
-                PachimonStatType.MaxHp or PachimonStatType.MaxMn => 50,
+                PachimonStatType.MaxHp or PachimonStatType.MaxMn =>
+                    PachimonStatValueUnits.ToDisplayedAmount(statType, 15),
                 PachimonStatType.Speed
                     or PachimonStatType.Haste
                     or PachimonStatType.DamageBonus
-                    or PachimonStatType.ResistBonus => 10,
+                    or PachimonStatType.ResistBonus
+                    or PachimonStatType.GenerationPower
+                    or PachimonStatType.StatusMastery
+                    or PachimonStatType.SustainPower
+                    or PachimonStatType.StatusResistance => 10,
                 _ => throw new ArgumentOutOfRangeException(nameof(statType)),
             };
         }
@@ -112,6 +117,10 @@ namespace Pachimon.Items
                 PachimonStatType.Haste => "HST",
                 PachimonStatType.DamageBonus => "DB",
                 PachimonStatType.ResistBonus => "RB",
+                PachimonStatType.GenerationPower => "GEN",
+                PachimonStatType.StatusMastery => "SM",
+                PachimonStatType.SustainPower => "SUS",
+                PachimonStatType.StatusResistance => "SR",
                 _ => throw new ArgumentOutOfRangeException(nameof(statType)),
             };
         }

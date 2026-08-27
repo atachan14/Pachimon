@@ -1,9 +1,89 @@
 using System;
+using Pachimon.Map;
 using Pachimon.Reward;
 using Pachimon.Trainer;
 
 namespace Pachimon.Run
 {
+    public static class EnemyTrainerModifierFactory
+    {
+        public static TrainerModifierSet Create(MapNode node)
+        {
+            var modifiers = new TrainerModifierSet();
+            switch (node?.Content)
+            {
+                case BattleNodeContent battle:
+                    ApplyRewardTrainerStatus(modifiers, battle.NodeReward);
+                    break;
+                case GymNodeContent gym
+                    when gym.NodeReward?.BadgeAttribute is PachimonAttribute attribute:
+                    modifiers.AddBadge(attribute);
+                    break;
+                case EliteNodeContent:
+                    foreach (PachimonAttribute eliteAttribute in
+                             Enum.GetValues(typeof(PachimonAttribute)))
+                    {
+                        modifiers.AddBadge(eliteAttribute);
+                    }
+                    break;
+            }
+
+            var profile = node?.Content switch
+            {
+                BattleNodeContent battle => battle.TrainerProfile,
+                GymNodeContent gym => gym.TrainerProfile,
+                EliteNodeContent elite => elite.TrainerProfile,
+                _ => null,
+            };
+            EnemyTrainerScalingService.Apply(
+                modifiers,
+                node?.RowIndex ?? 0,
+                profile);
+            return modifiers;
+        }
+
+        private static void ApplyRewardTrainerStatus(
+            TrainerModifierSet modifiers,
+            NodeReward reward)
+        {
+            if (reward == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < reward.Elements.Count; index++)
+            {
+                var element = reward.Elements[index];
+                if (element == null || element.Kind == RewardElementKind.BonusGold)
+                {
+                    continue;
+                }
+
+                var statType = element.Kind switch
+                {
+                    RewardElementKind.Attribute when element.Attribute.HasValue =>
+                        PachimonStatTypeUtility.FromAttribute(element.Attribute.Value),
+                    RewardElementKind.MaxHp => PachimonStatType.MaxHp,
+                    RewardElementKind.MaxMn => PachimonStatType.MaxMn,
+                    RewardElementKind.Speed => PachimonStatType.Speed,
+                    RewardElementKind.DamageBonus => PachimonStatType.DamageBonus,
+                    RewardElementKind.ResistBonus => PachimonStatType.ResistBonus,
+                    _ => PachimonStatType.Count,
+                };
+                if (statType == PachimonStatType.Count)
+                {
+                    continue;
+                }
+
+                modifiers.AddStat(
+                    statType,
+                    ModValueSettings.RuntimeDefault.GetAmount(
+                        element.Kind,
+                        index == 1));
+            }
+        }
+    }
+
     public static class EnemyTrainerScalingService
     {
         public static void Apply(
@@ -18,7 +98,9 @@ namespace Pachimon.Run
             settings ??= new EnemyTrainerScalingSettings();
             AddToAllStats(
                 modifiers,
-                checked(rowIndex * settings.StatPerRow),
+                checked(
+                    settings.BaseStatAdjustment
+                    + rowIndex * settings.StatPerRow),
                 settings);
 
             if (profile == null)
@@ -75,6 +157,10 @@ namespace Pachimon.Run
             for (var index = 0; index < (int)PachimonStatType.Count; index++)
             {
                 var statType = (PachimonStatType)index;
+                if (!PachimonStatTypeUtility.IsGeneratedStat(statType))
+                {
+                    continue;
+                }
                 modifiers.AddStat(
                     statType,
                     settings.ScaleForStat(statType, amount));

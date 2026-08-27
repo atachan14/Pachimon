@@ -20,8 +20,9 @@ MonoBehaviour:
   _baseRecoveryTicks: 120
   _baseCooldownTicks: 350
   _baseManaCost: 30
-  _description: "\u6575\u306E\u5148\u982D\u3078{icon:Aqua}{color:Aqua}{value:damage}{/color}\u306E\u6C34\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u3002\u30C0\u30E1\u30FC\u30B8\u306F\u73FE\u5728HP
-    {value:currentHp}\u306B\u5FDC\u3058\u3066\u5897\u52A0\u3059\u308B\u3002"
+  _description: "\u6575\u306E\u5148\u982D\u3078{color:Aqua}{value:damage}{/color}\uFF08{value:baseDamage}
+    \xD7\uFF08\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:damageRatio}%\uFF09%
+    + Current HP {value:currentHp} \xF7 {value:hpDivisor}\uFF09\uFF09\u306E{icon:Aqua}{color:Aqua}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
   _baseAquaDamage: 180
   _aquaDamageRatio: 100
   _currentHpDivisor: 2000

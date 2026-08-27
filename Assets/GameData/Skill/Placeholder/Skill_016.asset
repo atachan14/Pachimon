@@ -20,7 +20,7 @@ MonoBehaviour:
   _baseRecoveryTicks: 30
   _baseCooldownTicks: 100
   _baseManaCost: 20
-  _description: "\u6575\u306E\u5148\u982D\u306B{icon:Dragon}{color:Dragon}{value:damage}{/color}\u306E{term:DragonDamage|\u7ADC\u30C0\u30E1\u30FC\u30B8}\u3092\u4E0E\u3048\u3001{term:OneTwo|\u30EF\u30F3\u30FB\u30C4\u30FC}Value\u3092{value:oneTwoValue}\u7372\u5F97\u3059\u308B\u3002"
+  _description: "敵の先頭に{color:Dragon}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Dragon}{value:dragon} × {value:damageRatio}%）%）の{icon:Dragon}{color:Dragon}ダメージ{/color}を与え、{term:OneTwo|ワン・ツー}Valueを{value:oneTwoValue}獲得する。"
   _baseDragonDamage: 50
   _dragonDamageRatio: 100
   _oneTwoValue: 30

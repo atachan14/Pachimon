@@ -11,14 +11,10 @@ namespace Pachimon.Battle
     public sealed class FrozenGroundFieldEffectAsset : BattleFieldEffectAsset
     {
         [SerializeField, Min(0)] private int _iceValueRatio = 100;
-        [SerializeField, Min(1)] private int _thresholdNumerator = 30000;
-        [SerializeField, Min(1)] private int _thresholdOffset = 200;
-        [SerializeField] private FreezeStatusAsset _freezeStatus;
+        [SerializeField, Min(1)] private int _durationDoubleValue = 500;
 
         public int IceValueRatio => _iceValueRatio;
-        public int ThresholdNumerator => _thresholdNumerator;
-        public int ThresholdOffset => _thresholdOffset;
-        public FreezeStatusAsset FreezeStatus => _freezeStatus;
+        public int DurationDoubleValue => _durationDoubleValue;
 
         public int CalculateValue(BattleUnitState source)
         {
@@ -28,17 +24,13 @@ namespace Pachimon.Battle
                 * _iceValueRatio / 100m);
         }
 
-        public int CalculateFreezeThreshold(int fieldValue)
+        public decimal CalculateChillDecayMultiplier(int fieldValue)
         {
             if (fieldValue < 0)
             {
                 throw new ArgumentOutOfRangeException(nameof(fieldValue));
             }
-            return Math.Max(
-                1,
-                SignedStatMath.FloorNonNegative(
-                    _thresholdNumerator
-                    / (decimal)(fieldValue + _thresholdOffset)));
+            return 1m / (1m + fieldValue / (decimal)_durationDoubleValue);
         }
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -48,9 +40,9 @@ namespace Pachimon.Battle
             {
                 errors?.Add("Frozen Ground must use Frozen Ground ID.");
             }
-            if (_freezeStatus == null)
+            if (_durationDoubleValue <= 0)
             {
-                errors?.Add("Frozen Ground requires a Freeze Status.");
+                errors?.Add("Frozen Ground Duration Double Value must be positive.");
             }
         }
 
@@ -59,9 +51,7 @@ namespace Pachimon.Battle
             string displayName,
             string description,
             int iceValueRatio,
-            int thresholdNumerator,
-            int thresholdOffset,
-            FreezeStatusAsset freezeStatus,
+            int durationDoubleValue,
             Sprite icon = null)
         {
             ConfigureDefinitionForEditor(
@@ -70,9 +60,7 @@ namespace Pachimon.Battle
                 description,
                 icon);
             _iceValueRatio = iceValueRatio;
-            _thresholdNumerator = thresholdNumerator;
-            _thresholdOffset = thresholdOffset;
-            _freezeStatus = freezeStatus;
+            _durationDoubleValue = durationDoubleValue;
         }
 #endif
     }

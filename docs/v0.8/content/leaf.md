@@ -1,5 +1,7 @@
 # Leaf Content
 
+> 花粉の共通仕様と付与量は [Pollen](./statuses/pollen.md) を参照。
+
 ## Pachimon
 
 ### ヒナボッコ
@@ -31,7 +33,7 @@
 
 - 追加連鎖数2。
 - 連鎖先へLeafダメージとSlowを与える。
-- 使用時、自身へアドチェインを0.5付与する。
+- 使用時、自身へアドチェインを1付与する。
 - 仮値: Damage 70 / Slow 25 / Slow用Leaf Ratio 100%。DamageはLeafを100%参照する。
 
 #### Passive: 絡まる蔦
@@ -80,9 +82,11 @@
 
 #### Fixed Skill: しびれ粉
 
-- 全敵へ次の合計値の麻痺を与える。
-- `50 x AmplificationMultiplier(Leaf x 100%)`
-- `50 x AmplificationMultiplier(Poison x 100%)`
+- 全敵へ次の麻痺を与える。
+- Duration: `50 x AmplificationMultiplier(Leaf x 100%)`
+- Value:
+  - `60 x AmplificationMultiplier(Electric x 100%)`
+  - `40 x AmplificationMultiplier(Poison x 100%)`
 
 #### Passive: 粉植物
 

@@ -101,9 +101,11 @@ namespace Pachimon.Items
 
             if (item is HealingItemAsset healingItem)
             {
-                var recoveryPercent = generatedData?.PrimaryEffectValue
-                    ?? healingItem.RecoveryPercent;
-                return $"{item.DisplayName}（{recoveryPercent}%）";
+                var recoveryAmount = generatedData?.PrimaryEffectValue
+                    ?? healingItem.RecoveryAmount;
+                return healingItem.DefeatedOnly
+                    ? $"{item.DisplayName}（{recoveryAmount}）"
+                    : $"{item.DisplayName}（+{recoveryAmount}）";
             }
 
             if (item is EngravingItemAsset

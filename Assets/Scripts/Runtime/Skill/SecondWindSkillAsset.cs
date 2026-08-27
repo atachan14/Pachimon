@@ -8,10 +8,12 @@ namespace Pachimon.Skills
     [CreateAssetMenu(fileName = "SecondWindSkill", menuName = "Pachimon/Skills/Second Wind Skill")]
     public sealed class SecondWindSkillAsset : SkillAsset
     {
-        [SerializeField, Min(0)] private int _windShieldRatio = 200;
+        [SerializeField, Min(0)] private int _baseShieldValue = 100;
+        [SerializeField, Min(0)] private int _windShieldRatio = 100;
         [SerializeField, Min(1)] private int _durationTicks = 200;
         [SerializeField] private StillAirStatusAsset _stillAirStatus;
 
+        public int BaseShieldValue => _baseShieldValue;
         public int WindShieldRatio => _windShieldRatio;
         public int DurationTicks => _durationTicks;
         public StillAirStatusAsset StillAirStatus => _stillAirStatus;
@@ -29,12 +31,13 @@ namespace Pachimon.Skills
         public void ConfigureForEditor(
             int skillId, string displayName, int baseRecoveryTicks,
             int baseCooldownTicks, int baseManaCost, string description,
-            int windShieldRatio, int durationTicks,
+            int baseShieldValue, int windShieldRatio, int durationTicks,
             StillAirStatusAsset stillAirStatus)
         {
             base.ConfigureForEditor(skillId, displayName, AllocationType.Wind,
                 true, baseRecoveryTicks, baseCooldownTicks, description,
                 baseManaCost);
+            _baseShieldValue = baseShieldValue;
             _windShieldRatio = windShieldRatio;
             _durationTicks = durationTicks;
             _stillAirStatus = stillAirStatus;

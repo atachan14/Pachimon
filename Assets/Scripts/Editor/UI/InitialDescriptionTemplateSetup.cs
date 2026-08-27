@@ -82,6 +82,7 @@ namespace Pachimon.Editor.UI
             if (skills?.Get(1) is not InitialAttributeDamageSkillAsset
                 || skills.Get(1).Description?.Contains("{value:damage}") != true
                 || skills.Get(1).Description?.Contains("{value:damageFormula}") == true
+                || skills.Get(3)?.Description?.Contains("{value:pollen}") != true
                 || passives?.Get(1) is not OutgoingAttributeDamagePassiveAsset)
             {
                 Setup();
@@ -90,23 +91,37 @@ namespace Pachimon.Editor.UI
 
         private static string CreateSkillTemplate(AllocationType type)
         {
-            var label = GetAttributeLabel(type);
-            var text = "\u6575\u306E\u5148\u982D\u306B"
-                + $"{{icon:{type}}}{{color:{type}}}{{value:damage}}{{/color}}"
-                + $"\u306E{{term:{type}Damage|{label}\u30C0\u30E1\u30FC\u30B8}}"
-                + "\u3092\u4E0E\u3048\u308B\u3002";
+            var damage = "\u6575\u306E\u5148\u982D\u306B"
+                + $"{{color:{type}}}{{value:damage}}{{/color}}"
+                + $"\uFF08{{value:baseDamage}} \u00D7\uFF08100 + {{icon:{type}}}"
+                + "{value:attribute} \u00D7 {value:ratio}%\uFF09%\uFF09\u306E"
+                + $"{{icon:{type}}}{{color:{type}}}\u30C0\u30E1\u30FC\u30B8{{/color}}";
             return type switch
             {
-                AllocationType.Electric => text
-                    + "\u5024{value:statusValue}\u306E"
+                AllocationType.Electric => damage
+                    + "\u3068\u3001{value:statusDuration}tick"
+                    + "\uFF08{value:statusDurationBase} \u00D7\uFF08100 + {icon:Ice}"
+                    + "{value:statusDurationAttribute} \u00D7 {value:statusDurationRatio}%\uFF09%\uFF09\u3001"
+                    + "\u5024{value:statusValue}"
+                    + "\uFF08{value:statusBaseValue} \u00D7\uFF08100 + {icon:Electric}"
+                    + "{value:attribute} \u00D7 {value:statusRatio}%\uFF09%\uFF09\u306E"
                     + "{term:Paralysis|\u9EBB\u75FA}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-                AllocationType.Poison => text
-                    + "\u5024{value:statusValue}\u306E"
+                AllocationType.Poison => damage
+                    + "\u3068\u3001\u5024{value:statusValue}"
+                    + "\uFF08{value:statusBaseValue} \u00D7\uFF08100 + {icon:Poison}"
+                    + "{value:attribute} \u00D7 {value:statusRatio}%\uFF09%\uFF09\u306E"
                     + "{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-                AllocationType.Ice => text
-                    + "\u5024{value:statusValue}\u306E"
-                    + "{term:Chill|\u51B7\u6C17}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
-                _ => text,
+                AllocationType.Leaf => damage
+                    + "\u3068\u3001\u5024{value:pollen}"
+                    + "\uFF08{value:pollenBaseValue} \u00D7\uFF08100 + {icon:Wind}"
+                    + "{value:pollenAttribute} \u00D7 {value:pollenRatio}%\uFF09%\uFF09\u306E"
+                    + "{term:Pollen|\u82B1\u7C89}\u3092\u4ED8\u4E0E\u3059\u308B\u3002",
+                AllocationType.Ice => damage
+                    + "\u3068\u3001{value:statusValue}"
+                    + "\uFF08{value:statusBaseValue} \u00D7\uFF08100 + {icon:Ice}"
+                    + "{value:attribute} \u00D7 {value:statusRatio}%\uFF09%\uFF09\u306E"
+                    + "{term:Chill|\u51B7\u6C17}\u3092\u4E0E\u3048\u308B\u3002",
+                _ => damage + "\u3092\u4E0E\u3048\u308B\u3002",
             };
         }
 
