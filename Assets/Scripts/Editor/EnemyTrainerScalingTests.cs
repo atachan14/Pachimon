@@ -15,9 +15,9 @@ namespace Pachimon.Editor.Tests
 
             EnemyTrainerScalingService.Apply(modifiers, 10, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(840));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(840));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(105));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(320));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(320));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(40));
             Assert.That(modifiers.GetStatAddition(PachimonStatType.Haste), Is.Zero);
             Assert.That(modifiers.GetStatAddition(PachimonStatType.ResistBonus), Is.Zero);
         }
@@ -35,9 +35,9 @@ namespace Pachimon.Editor.Tests
 
             EnemyTrainerScalingService.Apply(modifiers, 5, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(240));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(80));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(-20));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.Zero);
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(50));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(-50));
             Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.Zero);
         }
 
@@ -54,10 +54,10 @@ namespace Pachimon.Editor.Tests
 
             EnemyTrainerScalingService.Apply(modifiers, 40, profile);
 
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(4840));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(4840));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(755));
-            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(455));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxHp), Is.EqualTo(2640));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.MaxMn), Is.EqualTo(2640));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Fire), Is.EqualTo(480));
+            Assert.That(modifiers.GetStatAddition(PachimonStatType.Aqua), Is.EqualTo(180));
             Assert.That(modifiers.GetStatAddition(PachimonStatType.Speed), Is.Zero);
         }
 

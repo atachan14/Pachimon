@@ -18,6 +18,7 @@ namespace Pachimon.Battle
         {
             if (battleEvent is not AttributeDamageAppliedEvent damage
                 || !ReferenceEquals(damage.Source, Owner)
+                || damage.OriginKind != DamageOriginKind.Skill
                 || damage.Attribute == PachimonAttribute.Wind
                 || damage.AppliedDamage + damage.ShieldAbsorbedDamage <= 0
                 || !Owner.IsAlive || _definition.WindGainPerHit <= 0) return;

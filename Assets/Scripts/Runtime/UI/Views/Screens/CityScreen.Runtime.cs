@@ -10,6 +10,39 @@ using UnityEngine.UI;
 
 namespace Pachimon.UI
 {
+    public sealed class CityShopConfiguration
+    {
+        public static CityShopConfiguration City { get; } = new();
+        public static CityShopConfiguration LeagueGate { get; } = new(
+            "LEAGUE GATE",
+            "四天王に挑む！",
+            showInstructor: false,
+            showEquipment: false);
+
+        public CityShopConfiguration(
+            string title = "CITY",
+            string proceedLabel = "進む",
+            bool showPharmacy = true,
+            bool showInstructor = true,
+            bool showEngraving = true,
+            bool showEquipment = true)
+        {
+            Title = title;
+            ProceedLabel = proceedLabel;
+            ShowPharmacy = showPharmacy;
+            ShowInstructor = showInstructor;
+            ShowEngraving = showEngraving;
+            ShowEquipment = showEquipment;
+        }
+
+        public string Title { get; }
+        public string ProceedLabel { get; }
+        public bool ShowPharmacy { get; }
+        public bool ShowInstructor { get; }
+        public bool ShowEngraving { get; }
+        public bool ShowEquipment { get; }
+    }
+
     public sealed class CitySkillOption
     {
         public CitySkillOption(
@@ -35,7 +68,8 @@ namespace Pachimon.UI
             string displayName,
             Sprite frontSprite,
             IEnumerable<CitySkillOption> skills,
-            IEnumerable<EquipmentSlot> occupiedSlots)
+            IEnumerable<EquipmentSlot> occupiedSlots,
+            int engravingCount)
         {
             InstanceId = instanceId;
             DisplayName = displayName;
@@ -43,6 +77,7 @@ namespace Pachimon.UI
             Skills = (skills ?? Array.Empty<CitySkillOption>()).ToArray();
             OccupiedSlots = new HashSet<EquipmentSlot>(
                 occupiedSlots ?? Array.Empty<EquipmentSlot>());
+            EngravingCount = engravingCount;
         }
 
         public string InstanceId { get; }
@@ -51,6 +86,7 @@ namespace Pachimon.UI
         public IReadOnlyList<CitySkillOption> Skills { get; }
         public int SkillCount => Skills.Count;
         public IReadOnlyCollection<EquipmentSlot> OccupiedSlots { get; }
+        public int EngravingCount { get; }
     }
 
     public sealed partial class CityScreen
@@ -72,6 +108,7 @@ namespace Pachimon.UI
         private Action<CitySkillOption> _showSkillDetails;
         private Action<CityStockEntry, string> _equip;
         private Action _proceed;
+        private CityShopConfiguration _configuration = CityShopConfiguration.City;
 
         public void Bind(
             CityNodeContent city,
@@ -86,8 +123,13 @@ namespace Pachimon.UI
             Action<CityStockEntry, string, int> forgetSkill,
             Action<CitySkillOption> showSkillDetails,
             Action<CityStockEntry, string> equip,
-            Action proceed)
+            Action proceed,
+            CityShopConfiguration configuration = null)
         {
+            var nextConfiguration = configuration ?? CityShopConfiguration.City;
+            var stockChanged = _city == null
+                || !ReferenceEquals(_city.StockEntries, city?.StockEntries)
+                || !ReferenceEquals(_configuration, nextConfiguration);
             _city = city;
             _catalog = catalog;
             _runState = runState;
@@ -101,6 +143,9 @@ namespace Pachimon.UI
             _showSkillDetails = showSkillDetails;
             _equip = equip;
             _proceed = proceed;
+            _configuration = nextConfiguration;
+            if (stockChanged)
+                _shopMode = ShopMode.Menu;
             EnsureCityRoot();
             RenderCity();
         }
@@ -121,7 +166,12 @@ namespace Pachimon.UI
 
         private void RenderMenu()
         {
-            var title = CreateText("Title", _cityRoot, "CITY", 34f, FontStyles.Bold);
+            var title = CreateText(
+                "Title",
+                _cityRoot,
+                _configuration.Title,
+                34f,
+                FontStyles.Bold);
             Anchor(title.rectTransform, new Vector2(0.08f, 0.83f), new Vector2(0.92f, 0.96f));
 
             var gridRoot = CreateObject("ShopGrid", _cityRoot);
@@ -132,11 +182,20 @@ namespace Pachimon.UI
             grid.cellSize = new Vector2(260f, 92f);
             grid.spacing = new Vector2(24f, 20f);
             grid.childAlignment = TextAnchor.MiddleCenter;
-            AddShopButton(gridRoot, "薬局", ShopMode.Pharmacy, GameUiPalette.ItemChip);
-            AddShopButton(gridRoot, "技インストラクター", ShopMode.Instructor, GameUiPalette.SkillChip);
-            AddShopButton(gridRoot, "刻印屋", ShopMode.Engraving, GameUiPalette.PassiveChip);
-            AddShopButton(gridRoot, "装備屋", ShopMode.Equipment, GameUiPalette.ButtonNeutral);
-            CreateButton("Proceed", gridRoot, "進む", () => _proceed?.Invoke(), GameUiPalette.ButtonAccent);
+            if (_configuration.ShowPharmacy)
+                AddShopButton(gridRoot, "薬局", ShopMode.Pharmacy, GameUiPalette.ItemChip);
+            if (_configuration.ShowInstructor)
+                AddShopButton(gridRoot, "技インストラクター", ShopMode.Instructor, GameUiPalette.SkillChip);
+            if (_configuration.ShowEngraving)
+                AddShopButton(gridRoot, "刻印屋", ShopMode.Engraving, GameUiPalette.PassiveChip);
+            if (_configuration.ShowEquipment)
+                AddShopButton(gridRoot, "装備屋", ShopMode.Equipment, GameUiPalette.ButtonNeutral);
+            CreateButton(
+                "Proceed",
+                gridRoot,
+                _configuration.ProceedLabel,
+                () => _proceed?.Invoke(),
+                GameUiPalette.ButtonAccent);
 
             var status = CreateText("Status", _cityRoot, _statusMessage ?? string.Empty, 19f, FontStyles.Normal);
             Anchor(status.rectTransform, new Vector2(0.08f, 0.05f), new Vector2(0.92f, 0.18f));
@@ -212,7 +271,10 @@ namespace Pachimon.UI
                         else OpenSelector(
                             "刻印するパチモンを選択",
                             total,
-                            _ => null,
+                            option => option.EngravingCount + chosen.Length
+                                > PachimonInstance.MaxEngravings
+                                ? $"刻印は最大{PachimonInstance.MaxEngravings}個"
+                                : null,
                             id => _applyEngravings?.Invoke(chosen, id));
                     });
                 }
@@ -238,18 +300,48 @@ namespace Pachimon.UI
             horizontal.childForceExpandWidth = true;
             horizontal.childForceExpandHeight = false;
             columns.gameObject.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            foreach (var itemId in new[]
-                     {
-                         ItemIds.Potion,
-                         ItemIds.MnPotion,
-                         ItemIds.ReviveShard,
-                     })
+            var recoveryItems = new HashSet<int>
             {
-                var column = CreateVertical($"Item{itemId}", columns);
-                var heading = CreateText("Heading", column, _catalog.Get(itemId)?.DisplayName ?? "Item", 20f, FontStyles.Bold);
-                heading.gameObject.AddComponent<LayoutElement>().preferredHeight = 38f;
-                foreach (var entry in entries.Where(entry => entry.ItemId == itemId).OrderBy(entry => entry.Price))
-                    AddSelectableRow(column, entry, selected);
+                ItemIds.Potion,
+                ItemIds.MnPotion,
+                ItemIds.ReviveShard,
+                ItemIds.SuperPotion,
+                ItemIds.SuperMnPotion,
+                ItemIds.SuperRecovery,
+                ItemIds.MaxRevive,
+            };
+            RenderPharmacyColumn(
+                columns,
+                "RecoveryItems",
+                "回復薬",
+                entries.Where(entry => recoveryItems.Contains(entry.ItemId)),
+                selected);
+            RenderPharmacyColumn(
+                columns,
+                "SpecialRemedies",
+                "特効薬",
+                Array.Empty<CityStockEntry>(),
+                selected);
+        }
+
+        private void RenderPharmacyColumn(
+            Transform parent,
+            string objectName,
+            string headingText,
+            IEnumerable<CityStockEntry> entries,
+            ISet<CityStockEntry> selected)
+        {
+            var column = CreateVertical(objectName, parent);
+            var heading = CreateText(
+                "Heading",
+                column,
+                headingText,
+                20f,
+                FontStyles.Bold);
+            heading.gameObject.AddComponent<LayoutElement>().preferredHeight = 38f;
+            foreach (var entry in entries.OrderBy(entry => entry.Price))
+            {
+                AddSelectableRow(column, entry, selected);
             }
         }
 

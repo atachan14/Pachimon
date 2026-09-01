@@ -121,7 +121,10 @@ namespace Pachimon.Editor.UI
             var nameCatalog = AssetDatabase.LoadAssetAtPath<TrainerNameCatalog>(NameCatalogPath);
             if (styleCatalog != null && nameCatalog != null)
             {
-                AssignCatalogsToSceneInstaller(styleCatalog, nameCatalog);
+                AssignCatalogsToSceneInstaller(
+                    styleCatalog,
+                    nameCatalog,
+                    warnIfMissing: false);
             }
         }
 
@@ -618,14 +621,19 @@ namespace Pachimon.Editor.UI
 
         private static void AssignCatalogsToSceneInstaller(
             TrainerStyleCatalog styleCatalog,
-            TrainerNameCatalog nameCatalog)
+            TrainerNameCatalog nameCatalog,
+            bool warnIfMissing = true)
         {
             var installer = UnityEngine.Object.FindAnyObjectByType<GameSceneInstaller>(
                 FindObjectsInactive.Include);
             if (installer == null)
             {
-                Debug.LogWarning(
-                    "GameSceneInstaller was not found. Assign Trainer catalogs when GameScene is open.");
+                if (warnIfMissing)
+                {
+                    Debug.LogWarning(
+                        "GameSceneInstaller was not found. Assign Trainer catalogs when GameScene is open.");
+                }
+
                 return;
             }
 

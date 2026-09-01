@@ -83,6 +83,17 @@ namespace Pachimon.Battle
                     target.GetBattleStats());
             }
 
+            if (!target.IsAlive)
+            {
+                return new BattleDamageApplicationResult(
+                    AttributeDamageCalculator.Calculate(damageContext),
+                    finalDamage: 0,
+                    appliedDamage: 0,
+                    shieldAbsorbedDamage: 0,
+                    actualTarget: target,
+                    hit: hit);
+            }
+
             if (source != null && damageContext.ApplyOutgoingModifiers)
             {
                 damageContext = damageContext.WithPenetration(
@@ -189,6 +200,10 @@ namespace Pachimon.Battle
                 .Select(current => current.ApplicationOrder)
                 .ToArray();
             var statusesBeforeDamage = CaptureStatusValues(target);
+            var leakValueBeforeDamage = target.Statuses
+                .Where(status =>
+                    (status.Categories & BattleStatusCategory.Leak) != 0)
+                .Sum(status => checked(status.Value * status.StackCount));
             var shield = target.AbsorbDamage(finalDamage);
             var hpBefore = target.CurrentHp;
             var appliedDamage = target.ApplyDamage(shield.RemainingDamage);
@@ -232,7 +247,9 @@ namespace Pachimon.Battle
                 appliedDamage,
                 shield.AbsorbedDamage,
                 activeShieldOrders);
-            state.Statuses.HandleAttributeDamageApplied(appliedEvent);
+            state.Statuses.HandleAttributeDamageApplied(
+                appliedEvent,
+                leakValueBeforeDamage);
             var damageAppliedEvent = new DamageAppliedEvent(
                 state,
                 source,
@@ -244,7 +261,8 @@ namespace Pachimon.Battle
                 finalDamage,
                 appliedDamage,
                 shield.AbsorbedDamage,
-                statusesBeforeDamage);
+                statusesBeforeDamage,
+                damageContext.Tags);
             state.Events.Publish(damageAppliedEvent);
             state.Statuses.HandleDamageApplied(damageAppliedEvent);
             state.Weather.HandleDamageApplied(damageAppliedEvent);
@@ -363,6 +381,16 @@ namespace Pachimon.Battle
             hit?.Validate(state, source, target);
             target = hit?.Target ?? target;
 
+            if (!target.IsAlive)
+            {
+                return new BattleTrueDamageApplicationResult(
+                    finalDamage: 0,
+                    appliedDamage: 0,
+                    shieldAbsorbedDamage: 0,
+                    actualTarget: target,
+                    hit: hit);
+            }
+
             var wasEvaded = hit?.WasEvaded ?? false;
             if (wasEvaded)
             {
@@ -458,7 +486,8 @@ namespace Pachimon.Battle
                 targetDamage,
                 appliedDamage,
                 shield.AbsorbedDamage,
-                statusesBeforeDamage);
+                statusesBeforeDamage,
+                damageContext.Tags);
             state.Events.Publish(damageAppliedEvent);
             state.Statuses.HandleDamageApplied(damageAppliedEvent);
             state.Weather.HandleDamageApplied(damageAppliedEvent);
@@ -478,7 +507,8 @@ namespace Pachimon.Battle
             BattleUnitState target,
             BattleStatusId statusId,
             PachimonAttribute attribute,
-            decimal baseDamage)
+            decimal baseDamage,
+            DamageTag tags = DamageTag.None)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -487,6 +517,7 @@ namespace Pachimon.Battle
                 throw new ArgumentOutOfRangeException(nameof(baseDamage));
             }
 
+            var targetWasAlive = target.IsAlive;
             var targetStats = target.GetBattleStats();
             var result = BattleAttributeDamageService.Apply(
                 state,
@@ -502,15 +533,19 @@ namespace Pachimon.Battle
                     isAttack: false,
                     applyAttackerAttributeMultiplier: false,
                     applyDamageBonusMultiplier: false,
-                    applyOutgoingModifiers: false));
-            state.Events.Publish(new StatusDamageAppliedEvent(
-                state,
-                target,
-                statusId,
-                attribute,
-                result.FinalDamage,
-                result.AppliedDamage,
-                result.ShieldAbsorbedDamage));
+                    applyOutgoingModifiers: false,
+                    tags: tags));
+            if (targetWasAlive)
+            {
+                state.Events.Publish(new StatusDamageAppliedEvent(
+                    state,
+                    target,
+                    statusId,
+                    attribute,
+                    result.FinalDamage,
+                    result.AppliedDamage,
+                    result.ShieldAbsorbedDamage));
+            }
             return result;
         }
 
@@ -534,11 +569,13 @@ namespace Pachimon.Battle
             BattleUnitState target,
             BattleStatusId statusId,
             PachimonAttribute attribute,
-            int damage)
+            int damage,
+            DamageTag tags = DamageTag.None)
         {
             if (state == null) throw new ArgumentNullException(nameof(state));
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
+            if (!target.IsAlive) return 0;
 
             damage = state.Statuses.ClampIncomingDamage(target, damage);
             var shield = target.AbsorbDamage(damage);
@@ -566,7 +603,8 @@ namespace Pachimon.Battle
                 attribute,
                 damage,
                 appliedDamage,
-                shield.AbsorbedDamage));
+                shield.AbsorbedDamage,
+                tags: tags));
             if (hpBefore > 0 && target.IsDefeated)
             {
                 state.Events.Publish(new UnitDefeatedEvent(

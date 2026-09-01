@@ -22,6 +22,7 @@ namespace Pachimon.Battle
         {
             if (battleEvent is not ToxinAppliedEvent toxinEvent
                 || !ReferenceEquals(toxinEvent.Source, Owner)
+                || (toxinEvent.Tags & StatusApplicationTag.OverTime) != 0
                 || _definition.PoisonPercentPerApplication == 0)
             {
                 return;

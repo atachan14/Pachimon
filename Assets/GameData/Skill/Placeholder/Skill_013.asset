@@ -20,10 +20,10 @@ MonoBehaviour:
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 400
   _baseManaCost: 40
-  _description: "敵の最後尾に{value:stunTicks}tick（{value:baseElectricStun} ×（100 + {icon:Electric}{value:electric} × {value:electricRatio}%）%）の{term:Stun|Stun}を付与する。さらに値{value:toxinValue}（{value:baseToxin} ×（100 + {icon:Poison}{value:poison} × {value:toxinRatio}%）%）の{term:Toxin|毒素}を付与する。"
-  _baseElectricStunTicks: 50
-  _electricStunScalingPercent: 100
+  _description: "\u6575\u306E\u6700\u5F8C\u5C3E\u306B{value:stunTicks}tick\uFF08{value:baseElectricStun}
+    \xD7\uFF08100 + {icon:Electric}{value:electric} \xD7 {value:electricRatio}%\uFF09%\uFF09\u306E{term:Stun|Stun}\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u3055\u3089\u306B\u5024{value:toxinValue}\uFF08{value:baseToxin}
+    \xD7\uFF08100 + {icon:Poison}{value:poison} \xD7 {value:toxinRatio}%\uFF09%\uFF09\u306E{term:Toxin|\u6BD2\u7D20}\u3092\u4ED8\u4E0E\u3059\u308B\u3002"
+  _baseElectricStunTicks: 40
   _baseToxinValue: 100
-  _toxinScalingPercent: 100
   _toxinStatus: {fileID: 11400000, guid: a4dd889716e84954af34c4ef63b04a0a, type: 2}
   _stunStatus: {fileID: 11400000, guid: c611111138a14e8a89d33f1bcc6e01c1, type: 2}

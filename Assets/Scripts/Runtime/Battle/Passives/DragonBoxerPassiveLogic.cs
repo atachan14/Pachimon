@@ -35,6 +35,8 @@ namespace Pachimon.Battle
         private void ApplyDragonBonus(BeforeAttributeDamageEvent damageEvent)
         {
             if (!ReferenceEquals(damageEvent.Source, Owner)
+                || damageEvent.Calculation?.Context.OriginKind
+                    != DamageOriginKind.Skill
                 || damageEvent.Attribute != PachimonAttribute.Dragon
                 || damageEvent.Calculation?.Context.ApplyOutgoingModifiers == false)
             {
@@ -52,6 +54,7 @@ namespace Pachimon.Battle
         private void UpdateStacks(AttributeDamageAppliedEvent damageEvent)
         {
             if (!ReferenceEquals(damageEvent.Source, Owner)
+                || damageEvent.OriginKind != DamageOriginKind.Skill
                 || damageEvent.FinalDamage <= 0)
             {
                 return;

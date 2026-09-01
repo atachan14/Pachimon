@@ -22,6 +22,7 @@ namespace Pachimon.Battle
         {
             if (battleEvent is not AttributeDamageAppliedEvent damage
                 || !Owner.IsAlive
+                || (damage.Tags & DamageTag.DamageOverTime) != 0
                 || damage.AppliedDamage + damage.ShieldAbsorbedDamage <= 0
                 || _definition.StatGainPerDamage <= 0)
             {

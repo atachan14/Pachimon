@@ -24,6 +24,7 @@ namespace Pachimon.Battle
             if (battleEvent is not DamageAppliedEvent damageEvent
                 || damageEvent.Attribute != PachimonAttribute.Ice
                 || damageEvent.ReceivedDamage <= 0
+                || (damageEvent.Tags & DamageTag.DamageOverTime) != 0
                 || !Owner.IsAlive
                 || _definition.IceIncreasePerDamage == 0)
             {

@@ -168,11 +168,6 @@ Battle終了時
 - 再付与時はValueを加算する
 - Valueは1tickにつき1減少し、0で解除する
 
-### 治癒の風
-
-- `StatusId`: `HealingWind`
-- 付与時に確定したWind / Speed Bonusを200tick加算する
-
 ### 無風
 
 - `StatusId`: `StillAir`

@@ -45,6 +45,8 @@ namespace Pachimon.Run
 
     public static class SkillUpgradeMath
     {
+        private const decimal ManaCostMultiplier = 4m / 3m;
+
         public static decimal GetTimingMultiplier(int upgradeLevel)
         {
             ValidateLevel(upgradeLevel);
@@ -70,12 +72,12 @@ namespace Pachimon.Run
             var value = baseValue;
             for (var level = 0; level < upgradeLevel; level++)
             {
-                if (value > int.MaxValue / 1.5m)
+                if (value > int.MaxValue / ManaCostMultiplier)
                 {
                     return int.MaxValue;
                 }
 
-                value *= 1.5m;
+                value *= ManaCostMultiplier;
             }
 
             return value;

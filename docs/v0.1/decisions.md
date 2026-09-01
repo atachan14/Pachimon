@@ -60,6 +60,7 @@
 - Eventは16Nodeとする
 - 残り69NodeをBattleとする
 - Eliteはrow 37-40の4Nodeとする
+- row 41に仮の殿堂入りNodeを1つ配置し、row 40から接続する
 - Start 9体、Battle 207体、Gym 72体、Elite 12体へ300体すべてを割り当てる
 
 ### D-010: Event Nodeを追加

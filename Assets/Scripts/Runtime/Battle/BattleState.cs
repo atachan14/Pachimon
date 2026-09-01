@@ -36,6 +36,7 @@ namespace Pachimon.Battle
             Events = new BattleEventDispatcher();
             Presentation = new BattlePresentationRecorder(this);
             ToxinPresentation = new ToxinPresentationRecorder();
+            FieldPresentation = new BattleFieldPresentationRecorder();
             Timeline = new BattleTimeline(this);
             Statuses = new BattleStatusRuntime(this);
             SupportEffects = new BattleSupportEffectRuntime(this);
@@ -63,6 +64,7 @@ namespace Pachimon.Battle
         public BattleEventDispatcher Events { get; }
         public BattlePresentationRecorder Presentation { get; }
         public ToxinPresentationRecorder ToxinPresentation { get; }
+        public BattleFieldPresentationRecorder FieldPresentation { get; }
         public BattleStatusRuntime Statuses { get; }
         public BattleSupportEffectRuntime SupportEffects { get; }
         public BattleFieldRuntime Fields { get; }

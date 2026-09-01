@@ -79,9 +79,8 @@ BaseDamage
 = 80 × AmplificationMultiplier(Fire × 100%)
 ```
 
-使用するごとに、自分へ[アドチェイン]を1付与する。
-実際の追加連鎖回数には[アドチェイン]の小数部分を切り捨てて反映する。
-`BaseDamage / FireScalingPercent / BaseChainCount / AddChainGainUnits`はSOで調整可能にする。
+使用するごとに、自分の[チェインバーン追加連鎖数]を1増加する。
+`BaseDamage / FireScalingPercent / BaseChainCount / ChainGain`はSOで調整可能にする。
 
 ##### [連鎖]
 本体を含むHit番号を`i = 0..N`、追加連鎖回数を`N`とすると、各Hitへ次の倍率を適用する。
@@ -114,11 +113,10 @@ e1に75%、
 e1に50%、
 e1に25%。
 
-##### [アドチェイン]
-全ての連鎖Skillの追加連鎖回数が、値の整数部分だけ増える。
-連鎖0のSkillにも適用され、1.0以上なら連鎖する。
+##### [チェインバーン追加連鎖数]
+チェインバーンだけの追加連鎖回数を整数で増やす。
 効果時間・消費タイミングはなく、Battle終了まで増え続ける。
-アドチェインの増加はBattle Logへ表示しない。
+増加はBattle Logへ表示しない。
 
 #### Passive
 

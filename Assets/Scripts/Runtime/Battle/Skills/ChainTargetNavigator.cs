@@ -71,7 +71,8 @@ namespace Pachimon.Battle
 
         public static int GetEffectiveAdditionalChainCount(
             BattleUnitState user,
-            int baseChainCount)
+            int baseChainCount,
+            BattleStatusId chainStatusId)
         {
             if (user == null) throw new ArgumentNullException(nameof(user));
             if (baseChainCount < 0)
@@ -79,8 +80,11 @@ namespace Pachimon.Battle
                 throw new ArgumentOutOfRangeException(nameof(baseChainCount));
             }
 
-            var addChain = AddChainRuntime.GetWholeChains(user);
-            return checked(baseChainCount + addChain);
+            return checked(
+                baseChainCount
+                + SkillChainRuntime.GetAdditionalChainCount(
+                    user,
+                    chainStatusId));
         }
 
         private BattleUnitState FindInDirection(
@@ -93,42 +97,46 @@ namespace Pachimon.Battle
         }
     }
 
-    public static class AddChainRuntime
+    public static class SkillChainRuntime
     {
-        public const int UnitsPerChain = 100;
-
-        public static int GetStoredUnits(BattleUnitState unit)
+        public static int GetAdditionalChainCount(
+            BattleUnitState unit,
+            BattleStatusId chainStatusId)
         {
             if (unit == null) throw new ArgumentNullException(nameof(unit));
-            return unit.GetStatus(BattleStatusId.AddChain)?.Value ?? 0;
+            ValidateStatusId(chainStatusId);
+            return unit.GetStatus(chainStatusId)?.Value ?? 0;
         }
 
-        public static int GetWholeChains(BattleUnitState unit)
-        {
-            return GetStoredUnits(unit) / UnitsPerChain;
-        }
-
-        public static void AddUnits(
+        public static void Add(
             BattleUnitState target,
             BattleUnitState source,
-            int units)
+            BattleStatusId chainStatusId,
+            int amount)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             if (source == null) throw new ArgumentNullException(nameof(source));
-            if (units <= 0) throw new ArgumentOutOfRangeException(nameof(units));
+            ValidateStatusId(chainStatusId);
+            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount));
 
-            var totalUnits = checked(GetStoredUnits(target) + units);
+            var total = checked(
+                GetAdditionalChainCount(target, chainStatusId) + amount);
             target.ApplyOrReplaceStatus(new BattleStatusInstance(
-                BattleStatusId.AddChain,
+                chainStatusId,
                 BattleStatusCategory.None,
                 source,
-                totalUnits));
+                total));
         }
 
-        public static string FormatUnits(int units)
+        private static void ValidateStatusId(BattleStatusId statusId)
         {
-            if (units < 0) throw new ArgumentOutOfRangeException(nameof(units));
-            return (units / (decimal)UnitsPerChain).ToString("0.0#");
+            if (statusId is not (
+                BattleStatusId.ChainBurnChain
+                or BattleStatusId.ChainVinesChain
+                or BattleStatusId.CuttingDanceChain))
+            {
+                throw new ArgumentOutOfRangeException(nameof(statusId));
+            }
         }
     }
 }

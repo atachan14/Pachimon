@@ -21,7 +21,9 @@ MonoBehaviour:
   _baseCooldownTicks: 500
   _baseManaCost: 100
   _description: "\u81EA\u9663\u306BValue {color:Fire}{value:value}{/color}\uFF08{value:baseValue}
-    \xD7\uFF08100 + {icon:Fire}{value:fire} \xD7 {value:valueRatio}%\uFF09%\uFF09\u306E{term:FireBarrier|\u708E\u306E\u969C\u58C1}\u3092\u751F\u6210\u3059\u308B\u3002Value\u306F\u6BCEtick 1\u6E1B\u5C11\u3057\u3001\u5473\u65B9\u3078\u306E\u653B\u6483\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u3002\u653B\u6483\u8005\u3078\u88AB\u5F3E\u76F4\u524DValue\u306E{value:burnRatio}%\u306E{term:Burn|\u706B\u50B7}\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u9632\u5FA1Stat\u306F\u708E200\u3001\u6C340\u3001\u305D\u306E\u4ED6\u306E\u5C5E\u6027100\u3001RB 0\u3002"
+    \xD7\uFF08100 + {icon:Fire}{value:fire} \xD7 {value:valueRatio}%\uFF09%\uFF09\u306E{term:FireBarrier|\u708E\u306E\u969C\u58C1}\u3092\u751F\u6210\u3059\u308B\u3002Value\u306F\u6BCEtick
+    1\u6E1B\u5C11\u3057\u3001\u5473\u65B9\u3078\u306E\u653B\u6483\u3092\u80A9\u4EE3\u308F\u308A\u3059\u308B\u3002\u653B\u6483\u8005\u3078\u88AB\u5F3E\u76F4\u524DValue\u306E{value:burnRatio}%\u306E{term:Burn|\u706B\u50B7}\u3092\u4ED8\u4E0E\u3059\u308B\u3002\u9632\u5FA1Stat\u306F\u708E200\u3001\u6C340\u3001\u305D\u306E\u4ED6\u306E\u5C5E\u6027100\u3001RB
+    0\u3002"
   _baseValue: 100
   _fireValueRatio: 100
   _fieldEffect: {fileID: 11400000, guid: 6107e7bad9b745e9b9876721e113bf8c, type: 2}

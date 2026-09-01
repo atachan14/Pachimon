@@ -53,7 +53,7 @@ namespace Pachimon.Battle
 
         private void HandleAppliedDamage(AttributeDamageAppliedEvent damageEvent)
         {
-            if (!ReferenceEquals(damageEvent.Source, Owner)
+            if (!Owner.IsAlive
                 || damageEvent.Attribute != PachimonAttribute.Electric)
             {
                 return;

@@ -171,7 +171,7 @@ Field Effectがこのtickに付与したStatusは、次のtickから時間・Val
 - 同じSkillを再取得した場合、新しいSlotは使わず既存Skillの`UpgradeLevel`を1増加させる。
 - `UpgradeLevel`にゲーム上の上限は設けない。
 - 発生と硬直は、それぞれ基礎値に`(2 / 3) ^ UpgradeLevel`を乗算する。
-- MN消費は、基礎値に`(3 / 2) ^ UpgradeLevel`を乗算する。
+- MN消費は、基礎値に`(11 / 10) ^ UpgradeLevel`を乗算する。
 - 発生・硬直・MN消費は途中で丸めず、最終的に整数へ変換するときだけ切り上げる。
 - CDとSkillの効果量は変化しない。
 - 6Slotすべて埋まっていても、習得済みSkillのアップグレードは可能。

@@ -17,6 +17,10 @@ namespace Pachimon.Editor.UI
         private const string StonePath = DataFolder + "/Item_002_Stone.asset";
         private const string MnPotionPath = DataFolder + "/Item_003_MnPotion.asset";
         private const string ReviveShardPath = DataFolder + "/Item_005_ReviveShard.asset";
+        private const string SuperPotionPath = DataFolder + "/Item_006_SuperPotion.asset";
+        private const string SuperMnPotionPath = DataFolder + "/Item_007_SuperMnPotion.asset";
+        private const string SuperRecoveryPath = DataFolder + "/Item_008_SuperRecovery.asset";
+        private const string MaxRevivePath = DataFolder + "/Item_009_MaxRevive.asset";
         private const string BackfireMachinePath =
             DataFolder + "/Item_10009_TM_Backfire.asset";
         private const string FireArrowMachinePath =
@@ -238,6 +242,47 @@ namespace Pachimon.Editor.UI
                 true);
             EditorUtility.SetDirty(reviveShard);
 
+            var superPotion = ConfigureLeagueRecoveryItem(
+                SuperPotionPath,
+                ItemIds.SuperPotion,
+                "すごいきずぐすり",
+                "対象の最大HPの70%～100%を回復する。",
+                500,
+                RecoveryResourceType.Hp,
+                false,
+                false,
+                potionIcon);
+            var superMnPotion = ConfigureLeagueRecoveryItem(
+                SuperMnPotionPath,
+                ItemIds.SuperMnPotion,
+                "すごいMNポーション",
+                "対象の最大MNの70%～100%を回復する。",
+                500,
+                RecoveryResourceType.Mn,
+                false,
+                false,
+                potionIcon);
+            var superRecovery = ConfigureLeagueRecoveryItem(
+                SuperRecoveryPath,
+                ItemIds.SuperRecovery,
+                "すごい回復薬",
+                "対象の最大HPとMNの70%～100%を回復する。",
+                1500,
+                RecoveryResourceType.HpAndMn,
+                false,
+                false,
+                potionIcon);
+            var maxRevive = ConfigureLeagueRecoveryItem(
+                MaxRevivePath,
+                ItemIds.MaxRevive,
+                "げんきのかたまり",
+                "戦闘不能の対象を復活させ、最大HPとMNの70%～100%を回復する。",
+                2000,
+                RecoveryResourceType.HpAndMn,
+                true,
+                true,
+                potionIcon);
+
             var stone = AssetDatabase.LoadAssetAtPath<DamageItemAsset>(StonePath);
             if (stone == null)
             {
@@ -419,6 +464,10 @@ namespace Pachimon.Editor.UI
                 stone,
                 mnPotion,
                 reviveShard,
+                superPotion,
+                superMnPotion,
+                superRecovery,
+                maxRevive,
                 backfireMachine,
                 fireArrowMachine,
                 combustionMachine,
@@ -493,18 +542,24 @@ namespace Pachimon.Editor.UI
             var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(CatalogPath);
             if (catalog != null)
             {
-                AssignCatalogToSceneInstaller(catalog);
+                AssignCatalogToSceneInstaller(catalog, warnIfMissing: false);
             }
         }
 
-        private static void AssignCatalogToSceneInstaller(ItemCatalog catalog)
+        private static void AssignCatalogToSceneInstaller(
+            ItemCatalog catalog,
+            bool warnIfMissing = true)
         {
             var installer = Object.FindAnyObjectByType<GameSceneInstaller>(
                 FindObjectsInactive.Include);
             if (installer == null)
             {
-                Debug.LogWarning(
-                    "GameSceneInstaller was not found. Assign ItemCatalog with GameScene open.");
+                if (warnIfMissing)
+                {
+                    Debug.LogWarning(
+                        "GameSceneInstaller was not found. Assign ItemCatalog with GameScene open.");
+                }
+
                 return;
             }
 
@@ -622,6 +677,42 @@ namespace Pachimon.Editor.UI
             EditorUtility.SetDirty(item);
             return item;
         }
+
+        private static HealingItemAsset ConfigureLeagueRecoveryItem(
+            string path,
+            int itemId,
+            string displayName,
+            string description,
+            int basePrice,
+            RecoveryResourceType resourceType,
+            bool canRevive,
+            bool defeatedOnly,
+            Sprite icon)
+        {
+            var item = AssetDatabase.LoadAssetAtPath<HealingItemAsset>(path);
+            if (item == null)
+            {
+                item = ScriptableObject.CreateInstance<HealingItemAsset>();
+                AssetDatabase.CreateAsset(item, path);
+            }
+
+            Undo.RecordObject(item, $"Configure {displayName}");
+            item.ConfigureForEditor(
+                itemId,
+                displayName,
+                icon,
+                description,
+                ItemCategory.Pharmacy,
+                basePrice);
+            item.ConfigureHealingForEditor(
+                resourceType,
+                100,
+                canRevive,
+                defeatedOnly,
+                RecoveryValueMode.MaximumPercent);
+            EditorUtility.SetDirty(item);
+            return item;
+        }
     }
 }
 
@@ -633,19 +724,19 @@ namespace Pachimon.Editor.UI
         private const string CatalogPath = "Assets/GameData/Item/ItemCatalog.asset";
         private const int BasePrice = 500;
 
-        private static readonly (Pachimon.Run.PachimonStatType Stat, string Name, int Value)[]
+        private static readonly (Pachimon.Run.PachimonStatType Stat, string Name)[]
             Definitions =
             {
-                (Pachimon.Run.PachimonStatType.MaxHp, "生命の刻印", 180),
-                (Pachimon.Run.PachimonStatType.MaxMn, "活力の刻印", 180),
-                (Pachimon.Run.PachimonStatType.Fire, "炎の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Aqua, "水の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Leaf, "草の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Electric, "電の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Poison, "毒の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Ice, "氷の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Wind, "風の刻印", 30),
-                (Pachimon.Run.PachimonStatType.Dragon, "竜の刻印", 30),
+                (Pachimon.Run.PachimonStatType.MaxHp, "生命の刻印"),
+                (Pachimon.Run.PachimonStatType.MaxMn, "活力の刻印"),
+                (Pachimon.Run.PachimonStatType.Fire, "炎の刻印"),
+                (Pachimon.Run.PachimonStatType.Aqua, "水の刻印"),
+                (Pachimon.Run.PachimonStatType.Leaf, "草の刻印"),
+                (Pachimon.Run.PachimonStatType.Electric, "電の刻印"),
+                (Pachimon.Run.PachimonStatType.Poison, "毒の刻印"),
+                (Pachimon.Run.PachimonStatType.Ice, "氷の刻印"),
+                (Pachimon.Run.PachimonStatType.Wind, "風の刻印"),
+                (Pachimon.Run.PachimonStatType.Dragon, "竜の刻印"),
             };
 
         [UnityEditor.InitializeOnLoadMethod]

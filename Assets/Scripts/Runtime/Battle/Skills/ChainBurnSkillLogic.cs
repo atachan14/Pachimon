@@ -23,7 +23,8 @@ namespace Pachimon.Battle
             var additionalChainCount =
                 ChainTargetNavigator.GetEffectiveAdditionalChainCount(
                     context.User,
-                    _skill.BaseChainCount);
+                    _skill.BaseChainCount,
+                    BattleStatusId.ChainBurnChain);
             var navigator = new ChainTargetNavigator(
                 context.State.GetOpposingSide(context.User.Side));
             var effects = new List<SkillEffectResult>();
@@ -79,10 +80,11 @@ namespace Pachimon.Battle
                     effects.Count - 1));
             }
 
-            AddChainRuntime.AddUnits(
+            SkillChainRuntime.Add(
                 context.User,
                 context.User,
-                _skill.AddChainGainUnits);
+                BattleStatusId.ChainBurnChain,
+                _skill.ChainGain);
             return new SkillResolution(context.User, context.Skill, effects);
         }
 

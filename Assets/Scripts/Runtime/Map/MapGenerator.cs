@@ -75,7 +75,7 @@ namespace Pachimon.Map
 
         private List<List<NodeBuilder>> CreateNodeRows(Random random)
         {
-            var rowCounts = new int[_settings.EliteRowEnd + 1];
+            var rowCounts = new int[_settings.HallOfFameRow + 1];
             rowCounts[0] = 1;
 
             for (var rowIndex = _settings.MainRowStart; rowIndex <= _settings.MainRowEnd; rowIndex++)
@@ -105,6 +105,7 @@ namespace Pachimon.Map
             {
                 rowCounts[rowIndex] = 1;
             }
+            rowCounts[_settings.HallOfFameRow] = 1;
 
             var rows = new List<List<NodeBuilder>>(rowCounts.Length);
             for (var rowIndex = 0; rowIndex < rowCounts.Length; rowIndex++)
@@ -238,14 +239,23 @@ namespace Pachimon.Map
 
             var leagueGate = rows[_settings.LeagueGateRow][0];
             leagueGate.NodeType = NodeType.LeagueGate;
+            var leagueShopSeed = random.Next();
             leagueGate.Content = new LeagueGateNodeContent(
                 _settings.RequiredBadgeCount,
-                LeagueGateFailureMode.SpecialDefeat);
+                LeagueGateFailureMode.SpecialDefeat,
+                leagueShopSeed,
+                new LeagueGateStockGenerator().Generate(
+                    leagueShopSeed,
+                    _itemCatalog));
 
             for (var rowIndex = _settings.EliteRowStart; rowIndex <= _settings.EliteRowEnd; rowIndex++)
             {
                 rows[rowIndex][0].NodeType = NodeType.Elite;
             }
+
+            var hallOfFame = rows[_settings.HallOfFameRow][0];
+            hallOfFame.NodeType = NodeType.HallOfFame;
+            hallOfFame.Content = new HallOfFameNodeContent();
 
             var cityPlacements = new List<CityPlacement>(_settings.CityRows.Length);
             for (var cityIndex = 0; cityIndex < _settings.CityRows.Length; cityIndex++)
@@ -1065,6 +1075,18 @@ namespace Pachimon.Map
             AssertCount(mainNodes, NodeType.RestSpot, _settings.RestSpotNodeCount);
             AssertCount(mainNodes, NodeType.Event, _settings.EventNodeCount);
             AssertCount(mainNodes, NodeType.Battle, battleNodeCount);
+            var hallOfFameRow = map.Rows.SingleOrDefault(
+                row => row.RowIndex == _settings.HallOfFameRow);
+            var hallOfFame = hallOfFameRow?.NodeIds.Count == 1
+                ? map.GetNode(hallOfFameRow.NodeIds[0])
+                : null;
+            if (hallOfFame?.NodeType != NodeType.HallOfFame
+                || hallOfFame.Content is not HallOfFameNodeContent
+                || hallOfFame.NextNodeIds.Count != 0)
+            {
+                throw new MapGenerationException(
+                    $"Row {_settings.HallOfFameRow} must contain one terminal Hall of Fame Node.");
+            }
             ValidateRewardsAndTrainers(map);
 
             if (map.NodeGroups.Count != _settings.CityRows.Length
@@ -1278,7 +1300,7 @@ namespace Pachimon.Map
                 .Single(change => change.StatType == mainStat)
                 .Amount;
             return equipment.Slot == EquipmentSlot.Head
-                ? mainValue / 2
+                ? mainValue / CityStockGenerator.HeadMainEffectMultiplier
                 : mainValue;
         }
 
@@ -1287,11 +1309,14 @@ namespace Pachimon.Map
             EngravingItemAsset engraving,
             IReadOnlyList<CityStockEntry> entries)
         {
+            var mainBaseValue = checked(
+                engraving.BaseEffectValue
+                * CityStockGenerator.EngravingMainEffectUnits);
             var minimumEffect = checked(
-                ((engraving.BaseEffectValue
+                ((mainBaseValue
                     * CityStockGenerator.MinimumEffectPercent) + 99) / 100);
             var maximumEffect = checked(
-                (engraving.BaseEffectValue
+                (mainBaseValue
                     * CityStockGenerator.MaximumEffectPercent) / 100);
             foreach (var entry in entries)
             {
@@ -1313,7 +1338,7 @@ namespace Pachimon.Map
 
             if (entries.Sum(entry => entry.GeneratedData.StatChanges
                     .Single(change => change.Amount > 0).Amount)
-                != engraving.BaseEffectValue * entries.Count)
+                != mainBaseValue * entries.Count)
             {
                 throw new MapGenerationException(
                     $"City group {cityGroupId} Engraving {engraving.ItemId} total is invalid.");
@@ -1340,7 +1365,10 @@ namespace Pachimon.Map
         {
             var mainStat = PachimonStatTypeUtility.FromAttribute(
                 equipment.MainAttribute);
-            var mainUnits = equipment.Slot == EquipmentSlot.Head ? 6 : 3;
+            var mainUnits = equipment.Slot == EquipmentSlot.Head
+                ? CityStockGenerator.EquipmentMainEffectUnits
+                    * CityStockGenerator.HeadMainEffectMultiplier
+                : CityStockGenerator.EquipmentMainEffectUnits;
             var mainBase = checked(StatUnitValue.Get(mainStat) * mainUnits);
             var minimumMain = checked(
                 mainBase * CityStockGenerator.MinimumEquipmentEffectPercent / 100);
@@ -1372,10 +1400,14 @@ namespace Pachimon.Map
                     || main.Amount < minimumMain
                     || main.Amount > maximumMain
                     || additional == null
-                    || additional.Amount != Math.Max(1, main.Amount / 3)
+                    || additional.Amount != Math.Max(
+                        1,
+                        main.Amount
+                            / CityStockGenerator.EquipmentAdditionalEffectDivisor)
                     || (fixedStat != PachimonStatType.Count
                         && (fixedChange == null
-                            || fixedChange.Amount != StatUnitValue.Get(fixedStat) * 4)))
+                            || fixedChange.Amount != StatUnitValue.Get(fixedStat)
+                                * CityStockGenerator.EquipmentFixedSubStatUnits)))
                 {
                     throw new MapGenerationException(
                         $"City group {cityGroupId} Equipment {equipment.ItemId} effects are invalid.");
@@ -1395,9 +1427,7 @@ namespace Pachimon.Map
                 || allEntries.Count(entry => entry.ItemId == ItemIds.MnPotion)
                     != CityStockGenerator.MnPotionTotalCopies
                 || allEntries.Count(entry => entry.ItemId == ItemIds.ReviveShard)
-                    != CityStockGenerator.ReviveShardTotalCopies
-                || allEntries.Count(entry => entry.ItemId == ItemIds.SkillForget)
-                    != CityStockGenerator.SkillForgetTotalCopies)
+                    != CityStockGenerator.ReviveShardTotalCopies)
             {
                 throw new MapGenerationException(
                     "City fixed Item distribution is invalid.");
@@ -1405,10 +1435,13 @@ namespace Pachimon.Map
 
             foreach (var stock in cityStocks)
             {
-                if (!stock.Any(entry => entry.ItemId == ItemIds.SkillForget))
+                if (stock.Count(entry => entry.ItemId == ItemIds.SkillForget)
+                    != CityStockGenerator.SkillForgetCopiesPerCity)
                 {
                     throw new MapGenerationException(
-                        "Each City requires at least one Skill Forget Item.");
+                        $"Each City requires exactly "
+                        + $"{CityStockGenerator.SkillForgetCopiesPerCity} "
+                        + "Skill Forget Items.");
                 }
 
                 var equipmentCount = stock.Count(entry =>

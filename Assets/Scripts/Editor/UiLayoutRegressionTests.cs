@@ -306,6 +306,31 @@ namespace Pachimon.UI.Editor.Tests
             Assert.That(segments[3].RevealFromLineIndex, Is.EqualTo(3));
         }
 
+        [Test]
+        public void DialoguePlan_CountsWrappedLinesAgainstVisibleCapacity()
+        {
+            var page = new DialoguePage(new[]
+            {
+                new DialogueBlock(new[]
+                {
+                    new DialogueLine("A"),
+                    new DialogueLine("Wrapped"),
+                    new DialogueLine("B"),
+                    new DialogueLine("C"),
+                }),
+            });
+
+            var segments = DialoguePlaybackPlan.Create(
+                page,
+                4,
+                line => line.Text == "Wrapped" ? 2 : 1);
+
+            Assert.That(segments.Count, Is.EqualTo(2));
+            Assert.That(segments[0].Text, Is.EqualTo("A\nWrapped\nB"));
+            Assert.That(segments[1].Text, Is.EqualTo("Wrapped\nB\nC"));
+            Assert.That(segments[1].RevealFromLineIndex, Is.EqualTo(2));
+        }
+
         private static RectTransform CreateRect(
             string objectName,
             Transform parent,

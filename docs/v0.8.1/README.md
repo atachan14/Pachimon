@@ -57,6 +57,8 @@ Web Buildの成立をまとめて確認するためのテスト公開版とす�
 - Battle、Reward、RestSpot、Cityを経由できる
 - 技マシーンとMNポーションを購入・使用できる
 - LeagueGateへ到達できる
+- Badge合計8個以上でLeagueGateの薬局・刻印屋・四天王挑戦を利用できる
+- Badge合計8個未満で博士の専用Dialogueから敗北Endingへ分岐する
 - 複数のRun Seedで進行不能や例外が発生しない
 - Development用初期ItemがProduction Profileへ混入しない
 

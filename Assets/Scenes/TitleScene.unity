@@ -164,7 +164,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.UI.TitleSceneInstaller
   _titleRoot: {fileID: 1496272247}
+  _playerNameInput: {fileID: 0}
   _newGameButton: {fileID: 283962175}
+  _trainerNameCatalog: {fileID: 11400000, guid: 6f0cd6872ede46346874c1573c14fe46, type: 2}
 --- !u!1 &283962171
 GameObject:
   m_ObjectHideFlags: 0

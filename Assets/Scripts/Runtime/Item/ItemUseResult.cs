@@ -10,6 +10,7 @@ namespace Pachimon.Items
         NoEffect = 5,
         SkillSlotsFull = 6,
         SkillAlreadyKnown = 7,
+        EngravingSlotsFull = 8,
     }
 
     public readonly struct ItemUseResult

@@ -478,17 +478,29 @@ namespace Pachimon.UI
             {
                 var recoveryAmount = generatedData?.PrimaryEffectValue
                     ?? healingItem.RecoveryAmount;
+                var amountText = healingItem.ValueMode
+                    == RecoveryValueMode.MaximumPercent
+                    ? $"{recoveryAmount}%"
+                    : recoveryAmount.ToString();
+                var resource = healingItem.ResourceType switch
+                {
+                    RecoveryResourceType.Hp => "HP",
+                    RecoveryResourceType.Mn => "MN",
+                    RecoveryResourceType.HpAndMn => "HPとMN",
+                    _ => "HP",
+                };
                 if (healingItem.DefeatedOnly)
                 {
                     description =
-                        $"戦闘不能の味方パチモンを{recoveryAmount}のHPで復活させる。";
+                        $"戦闘不能の味方パチモンを復活させ、最大{resource}の{amountText}を回復する。";
                 }
                 else
                 {
-                    var resource = healingItem.ResourceType == RecoveryResourceType.Hp
-                        ? "最大HP"
-                        : "最大MN";
-                    description = $"{resource}を{recoveryAmount}回復する。";
+                    var maximum = healingItem.ValueMode
+                        == RecoveryValueMode.MaximumPercent
+                        ? "最大"
+                        : string.Empty;
+                    description = $"{maximum}{resource}を{amountText}回復する。";
                 }
             }
             else if (item is SkillMachineItemAsset machine
@@ -521,9 +533,7 @@ namespace Pachimon.UI
                 var effects = generatedData.StatChanges.Select(change =>
                 {
                     var amount = $"{(change.Amount >= 0 ? "+" : string.Empty)}{change.Amount}";
-                    return PachimonSubStatBindings.IsSubStat(change.StatType)
-                        ? $"{EngravingStatName.Get(change.StatType)}対応率 {amount}%"
-                        : $"{EngravingStatName.Get(change.StatType)} {amount}";
+                    return $"{EngravingStatName.Get(change.StatType)} {amount}";
                 });
                 description = $"装備部位：{slot}\n"
                     + string.Join("\n", effects)

@@ -153,7 +153,7 @@ namespace Pachimon.Editor.UI
                 MigrateMissingAllocationTypes(catalog);
                 MigrateGeneratedDisplayNames(catalog);
                 AssetDatabase.SaveAssets();
-                AssignCatalogToSceneInstaller(catalog);
+                AssignCatalogToSceneInstaller(catalog, warnIfMissing: false);
             }
         }
 
@@ -539,12 +539,19 @@ namespace Pachimon.Editor.UI
                 catalog);
         }
 
-        private static void AssignCatalogToSceneInstaller(PachimonCatalog catalog)
+        private static void AssignCatalogToSceneInstaller(
+            PachimonCatalog catalog,
+            bool warnIfMissing = true)
         {
             var installer = Object.FindAnyObjectByType<GameSceneInstaller>(FindObjectsInactive.Include);
             if (installer == null)
             {
-                Debug.LogWarning("GameSceneInstaller was not found. Assign PachimonCatalog with GameScene open.");
+                if (warnIfMissing)
+                {
+                    Debug.LogWarning(
+                        "GameSceneInstaller was not found. Assign PachimonCatalog with GameScene open.");
+                }
+
                 return;
             }
 

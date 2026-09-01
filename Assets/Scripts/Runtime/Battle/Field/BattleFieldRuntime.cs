@@ -1372,7 +1372,8 @@ namespace Pachimon.Battle
                                 effect.Source,
                                 appliedValue,
                                 ((SmogFieldEffectAsset)effect.Definition)
-                                    .ToxinStatus));
+                                    .ToxinStatus),
+                            StatusApplicationTag.OverTime);
                     }
                 }
 
@@ -1383,14 +1384,14 @@ namespace Pachimon.Battle
             }
         }
 
-        private void ApplyPlantDamage(
+        private BattleDamageApplicationResult ApplyPlantDamage(
             BattleFieldEffectInstance plant,
             BattleUnitState target,
             int damage,
             PachimonAttribute attribute)
         {
-            if (damage <= 0 || !target.IsAlive) return;
-            BattleAttributeDamageService.Apply(
+            if (damage <= 0 || !target.IsAlive) return null;
+            return BattleAttributeDamageService.Apply(
                 _state,
                 plant.Source,
                 target,
@@ -1416,6 +1417,13 @@ namespace Pachimon.Battle
             if (target == null) throw new ArgumentNullException(nameof(target));
             var multiplier = 1m + damageBonusPercent / 100m;
             _state.AddLog($"{plant.DisplayName}の攻撃！");
+            var presentationLines = plant.EffectId == BattleFieldEffectId.BeatVine
+                ? new List<string>()
+                : null;
+            var presentationTransitions =
+                plant.EffectId == BattleFieldEffectId.BeatVine
+                    ? new List<BattleResourceTransition>()
+                    : null;
             switch (plant.EffectId)
             {
                 case BattleFieldEffectId.FireVine:
@@ -1431,9 +1439,29 @@ namespace Pachimon.Battle
                     }
                     break;
                 default:
-                    ApplyPlantDamage(plant, target,
+                    var hpBefore = target.CurrentHp;
+                    var damageResult = ApplyPlantDamage(plant, target,
                         SignedStatMath.FloorNonNegative(plant.Value * multiplier),
                         PachimonAttribute.Leaf);
+                    if (presentationLines != null && damageResult != null)
+                    {
+                        var damageText = FormatFieldDamage(
+                            damageResult,
+                            PachimonAttribute.Leaf);
+                        presentationLines.Add(damageText);
+                        _state.AddLog(damageText);
+                        presentationTransitions.Add(new BattleResourceTransition(
+                            target,
+                            hpBefore,
+                            target.CurrentHp,
+                            target.CurrentMn,
+                            target.CurrentMn));
+                        if (hpBefore > 0 && target.IsDefeated)
+                        {
+                            presentationLines.Add(
+                                $"{target.DisplayName}は戦闘不能になった");
+                        }
+                    }
                     if (plant.EffectId == BattleFieldEffectId.BeatVine
                         && target.IsAlive
                         && plant.Definition is BeatVineFieldEffectAsset beatVine)
@@ -1453,10 +1481,57 @@ namespace Pachimon.Battle
                                     beatVine.PollenStatus));
                             _state.AddLog(
                                 $"{target.DisplayName}に花粉を{pollenValue}付与した！");
+                            presentationLines?.Add(
+                                $"{target.DisplayName}に花粉を{pollenValue}付与した！");
                         }
                     }
                     break;
             }
+
+            if (presentationLines != null)
+            {
+                _state.FieldPresentation.Record(
+                    new BattleFieldAttackPresentation(
+                        $"{plant.DisplayName}の攻撃！",
+                        target,
+                        presentationLines,
+                        presentationTransitions));
+            }
+        }
+
+        private static string FormatFieldDamage(
+            BattleDamageApplicationResult result,
+            PachimonAttribute attribute)
+        {
+            if (result.ShieldAbsorbedDamage <= 0)
+            {
+                return BattleDamageLogFormatter.FormatDamage(
+                    result.ActualTarget.DisplayName,
+                    result.AppliedDamage,
+                    attribute,
+                    isTrueDamage: false);
+            }
+
+            if (result.AppliedDamage <= 0)
+            {
+                return BattleDamageLogFormatter.FormatShieldAbsorption(
+                    result.ActualTarget.DisplayName,
+                    result.ShieldAbsorbedDamage,
+                    attribute,
+                    isTrueDamage: false);
+            }
+
+            return BattleDamageLogFormatter.FormatDamage(
+                       result.ActualTarget.DisplayName,
+                       result.AppliedDamage,
+                       attribute,
+                       isTrueDamage: false)
+                   + " "
+                   + BattleDamageLogFormatter.FormatShieldAbsorption(
+                       string.Empty,
+                       result.ShieldAbsorbedDamage,
+                       attribute,
+                       isTrueDamage: false);
         }
 
         private void AttackPlantAndRespond(

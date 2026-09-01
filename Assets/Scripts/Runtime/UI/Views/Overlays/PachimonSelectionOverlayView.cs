@@ -51,7 +51,7 @@ namespace Pachimon.UI
             grid.childAlignment = TextAnchor.MiddleCenter;
 
             var bindings = new List<(Button Button, CityPachimonOption Option, string Reason)>();
-            foreach (var option in options)
+            foreach (var option in options.Reverse())
             {
                 var reason = getUnavailableReason?.Invoke(option);
                 bindings.Add((CreateOption(gridObject.transform, option, reason), option, reason));
@@ -112,7 +112,7 @@ namespace Pachimon.UI
                     new Vector2(0.05f, 0.25f),
                     new Vector2(0.95f, 0.82f),
                     new Vector2(190f, 250f));
-                var bindings = options.Select(option =>
+                var bindings = options.Reverse().Select(option =>
                 {
                     var reason = option.SkillCount == 0
                         ? "忘れられる技がない"

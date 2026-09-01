@@ -54,6 +54,7 @@ namespace Pachimon.UI
                         : 0f;
                     var verticalJitter = node.NodeType != NodeType.Start
                         && node.NodeType != NodeType.Elite
+                        && node.NodeType != NodeType.HallOfFame
                         ? jitter.y * rowSpacing * settings.VerticalJitterRatio
                         : 0f;
                     var edgePadding = settings.HorizontalPadding + (columnSpacing * 0.5f);

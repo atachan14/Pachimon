@@ -8,6 +8,7 @@ namespace Pachimon.Run
     public sealed class PachimonInstance
     {
         public const int MaxSkillSlots = 6;
+        public const int MaxEngravings = 9;
 
         private readonly List<int> _skillIds = new();
         private readonly List<PachimonSkillSlot> _skillSlots = new();
@@ -91,6 +92,11 @@ namespace Pachimon.Run
 
         public IReadOnlyList<AppliedEngraving> Engravings => _engravings;
 
+        public bool CanAddEngravings(int count = 1)
+        {
+            return count >= 0 && _engravings.Count <= MaxEngravings - count;
+        }
+
         public bool CanAddSkill => _skillSlots.Count < MaxSkillSlots;
 
         public bool CanAddSkillId(int skillId)
@@ -165,20 +171,11 @@ namespace Pachimon.Run
 
             foreach (var change in generatedData.StatChanges)
             {
-                if (PachimonSubStatBindings.IsSubStat(change.StatType))
-                {
-                    SubStatBindings.AddDerivationRatio(
-                        change.StatType,
-                        change.Amount);
-                }
-                else
-                {
-                    AddPermanentStatModifier(
-                        change.StatType,
-                        change.Amount,
-                        sourceId,
-                        item.DisplayName);
-                }
+                AddPermanentStatModifier(
+                    change.StatType,
+                    change.Amount,
+                    sourceId,
+                    item.DisplayName);
             }
 
             _equipment.Add(
@@ -214,6 +211,11 @@ namespace Pachimon.Run
             string displayName,
             GeneratedItemData generatedData)
         {
+            if (!CanAddEngravings())
+            {
+                throw new InvalidOperationException(
+                    $"A Pachimon cannot hold more than {MaxEngravings} Engravings.");
+            }
             if (itemId <= 0) throw new ArgumentOutOfRangeException(nameof(itemId));
             if (string.IsNullOrWhiteSpace(displayName))
             {

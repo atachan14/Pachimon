@@ -212,6 +212,7 @@ namespace Pachimon.UI
                 NodeType.LeagueGate => "L",
                 NodeType.Elite => "E",
                 NodeType.Ghost => "Gh",
+                NodeType.HallOfFame => "H",
                 _ => "-",
             };
         }
@@ -229,6 +230,7 @@ namespace Pachimon.UI
                 NodeType.LeagueGate => new Color(0.21f, 0.23f, 0.22f, 1f),
                 NodeType.Elite => new Color(0.52f, 0.10f, 0.12f, 1f),
                 NodeType.Ghost => new Color(0.40f, 0.45f, 0.50f, 1f),
+                NodeType.HallOfFame => new Color(0.90f, 0.68f, 0.18f, 1f),
                 _ => Color.gray,
             };
         }

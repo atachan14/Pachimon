@@ -25,8 +25,3 @@ MonoBehaviour:
     \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u3001Speed\u3092{value:speedBonus}\uFF08{value:baseSpeedBonus}
     \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u5897\u52A0\u3055\u305B\u308B\u3002"
   _baseHealing: 50
-  _baseWindBonus: 50
-  _baseSpeedBonus: 50
-  _windRatio: 100
-  _durationTicks: 200
-  _statusDefinition: {fileID: 11400000, guid: 43ab3c4ea696496083142f9215e94de1, type: 2}

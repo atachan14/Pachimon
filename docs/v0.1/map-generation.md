@@ -15,9 +15,10 @@
 | row 3-35 | AdventureZone | Battle / Gym / RestSpot / City / Event |
 | row 36 | LeagueGateZone | 四天王挑戦判定 |
 | row 37-40 | EliteZone | 四天王Node |
+| row 41 | HallOfFameZone | 殿堂入りNode（仮実装） |
 | row 41+ | GhostNode群 | NormalAreaへ後から追加するGhostNode |
 
-NormalAreaはrow 0からrow 40までとする。GhostNode群は別Areaとして保持せず、NormalAreaの後ろへNodeを追加する。
+NormalAreaはrow 0からrow 41までとする。GhostNode群は別Areaとして保持せず、NormalAreaの後ろへNodeを追加する。
 
 ## 生成タイミング
 

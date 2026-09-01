@@ -653,6 +653,21 @@ namespace Pachimon.Editor.Tests
                 Is.EqualTo(120));
 
             state.Statuses.ApplyStatus(
+                enemies.GetUnitAt(0),
+                BattleStatusFactory.CreateToxin(
+                    source,
+                    100,
+                    ToxinStatus),
+                StatusApplicationTag.OverTime);
+
+            Assert.That(
+                source.GetStatus(BattleStatusId.ToxinGrowth).StackCount,
+                Is.EqualTo(2));
+            Assert.That(
+                source.GetBattleStatValue(PachimonStatType.Poison),
+                Is.EqualTo(120));
+
+            state.Statuses.ApplyStatus(
                 source,
                 BattleStatusFactory.CreateToxin(
                     enemies.GetUnitAt(0),
@@ -705,7 +720,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void BurningMan_GainsFireFromEveryAppliedDamageKind()
+        public void BurningMan_GainsFireFromNonDotDamageOnly()
         {
             var definition = CreateBurningManPassive();
             var catalog = ScriptableObject.CreateInstance<PassiveCatalog>();
@@ -776,6 +791,16 @@ namespace Pachimon.Editor.Tests
                 owner,
                 BattleStatusId.Toxin,
                 PachimonAttribute.Poison,
+                10,
+                DamageTag.DamageOverTime);
+            Assert.That(owner.GetBattleStatValue(PachimonStatType.Fire),
+                Is.EqualTo(160));
+
+            BattleStatusDamageService.Apply(
+                state,
+                owner,
+                BattleStatusId.Leak,
+                PachimonAttribute.Electric,
                 10);
             Assert.That(owner.GetBattleStatValue(PachimonStatType.Fire),
                 Is.EqualTo(180));
@@ -1036,7 +1061,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void ToxinTransfer_UsesDifferentFrontmostTargetsWhenValuesTie()
+        public void ToxinTransfer_DistributesToBothOtherTargetsWhenValuesTie()
         {
             var skill = CreateToxinTransferSkill();
             var source = CreateBattleUnitWithStats(
@@ -1068,10 +1093,67 @@ namespace Pachimon.Editor.Tests
                 Is.EqualTo(50));
             Assert.That(
                 enemies.GetUnitAt(1).GetStatus(BattleStatusId.Toxin).Value,
-                Is.EqualTo(500));
+                Is.EqualTo(220));
             Assert.That(
                 enemies.GetUnitAt(2).GetStatus(BattleStatusId.Toxin).Value,
-                Is.EqualTo(100));
+                Is.EqualTo(220));
+        }
+
+        [Test]
+        public void ToxinTransfer_WithTwoLivingEnemies_AppliesAllToOtherTarget()
+        {
+            var skill = CreateToxinTransferSkill();
+            var source = CreateBattleUnitWithStats(
+                "player_1",
+                BattleSide.Player,
+                0,
+                2000,
+                skill.SkillId,
+                (PachimonStatType.Poison, 100));
+            var enemies = CreateTestSide(BattleSide.Enemy);
+            enemies.GetUnitAt(2).ApplyDamage(2000);
+            var state = new BattleState(
+                123,
+                CreateTestSide(BattleSide.Player, source),
+                enemies);
+            foreach (var enemy in enemies.GetAllLiving())
+            {
+                state.Statuses.ApplyStatus(
+                    enemy,
+                    BattleStatusFactory.CreateToxin(source, 100, ToxinStatus));
+            }
+
+            BattleSkillResolver.Resolve(
+                state,
+                source,
+                skill,
+                new ToxinTransferSkillLogic(skill));
+
+            Assert.That(
+                enemies.GetUnitAt(0).GetStatus(BattleStatusId.Toxin).Value,
+                Is.EqualTo(50));
+            Assert.That(
+                enemies.GetUnitAt(1).GetStatus(BattleStatusId.Toxin).Value,
+                Is.EqualTo(590));
+        }
+
+        [TestCase(0, 120)]
+        [TestCase(100, 140)]
+        public void ToxinTransfer_ApplicationPercentUsesScaledPoisonBonus(
+            int poison,
+            int expectedPercent)
+        {
+            var skill = CreateToxinTransferSkill();
+            try
+            {
+                Assert.That(
+                    ToxinTransferMath.CalculateApplicationPercent(skill, poison),
+                    Is.EqualTo(expectedPercent));
+            }
+            finally
+            {
+                Object.DestroyImmediate(skill);
+            }
         }
 
         [Test]
@@ -1104,7 +1186,7 @@ namespace Pachimon.Editor.Tests
 
             Assert.That(
                 target.GetStatus(BattleStatusId.Toxin).Value,
-                Is.EqualTo(450));
+                Is.EqualTo(290));
         }
 
         [Test]
@@ -2543,6 +2625,127 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
+        public void RecoveryItems_IgnoreSustainPowerDuringBattle()
+        {
+            var potion = ScriptableObject.CreateInstance<HealingItemAsset>();
+            try
+            {
+                potion.ConfigureHealingForEditor(
+                    RecoveryResourceType.Hp,
+                    100,
+                    false);
+                var target = CreateBattleUnitWithStats(
+                    "recovery_item_target",
+                    BattleSide.Player,
+                    0,
+                    2000,
+                    1,
+                    (PachimonStatType.Wind, 100));
+                var state = new BattleState(
+                    123,
+                    CreateTestSide(BattleSide.Player, target),
+                    CreateTestSide(BattleSide.Enemy));
+                target.ApplyDamage(500);
+                var context = ItemUseContext.ForBattle(
+                    target,
+                    ItemTargetAffiliation.Ally,
+                    battleState: state);
+
+                var restored = new HealingItemLogic().Apply(potion, context);
+
+                Assert.That(
+                    target.GetBattleStatValue(PachimonStatType.SustainPower),
+                    Is.EqualTo(100));
+                Assert.That(restored, Is.EqualTo(100));
+                Assert.That(target.CurrentHp, Is.EqualTo(1600));
+            }
+            finally
+            {
+                Object.DestroyImmediate(potion);
+            }
+        }
+
+        [Test]
+        public void PercentageRecoveryItem_RestoresHpAndMnFromEachMaximum()
+        {
+            var item = ScriptableObject.CreateInstance<HealingItemAsset>();
+            try
+            {
+                item.ConfigureHealingForEditor(
+                    RecoveryResourceType.HpAndMn,
+                    100,
+                    false,
+                    valueMode: RecoveryValueMode.MaximumPercent);
+                var target = new PachimonInstance(
+                    "percentage_recovery_target",
+                    1,
+                    AllocationType.Aqua,
+                    1,
+                    1,
+                    CreateStats(
+                        (PachimonStatType.MaxHp, 1000),
+                        (PachimonStatType.MaxMn, 800)));
+                target.SetCurrentHp(100);
+                target.SetCurrentMn(100);
+                var context = ItemUseContext.ForRun(
+                    target,
+                    1000,
+                    800,
+                    ItemTargetAffiliation.Ally);
+                var instance = new ItemInstance(
+                    "percentage_recovery_item",
+                    new GeneratedItemData(ItemIds.SuperRecovery, 75));
+
+                var restored = new HealingItemLogic().Apply(
+                    item,
+                    instance,
+                    context);
+
+                Assert.That(restored, Is.EqualTo(1350));
+                Assert.That(target.CurrentHp, Is.EqualTo(850));
+                Assert.That(target.CurrentMn, Is.EqualTo(700));
+            }
+            finally
+            {
+                Object.DestroyImmediate(item);
+            }
+        }
+
+        [Test]
+        public void LeagueGateStock_ContainsRecoveryAndThreeEngravingsPerStat()
+        {
+            var catalog = AssetDatabase.LoadAssetAtPath<ItemCatalog>(
+                "Assets/GameData/Item/ItemCatalog.asset");
+
+            var stock = new LeagueGateStockGenerator().Generate(123, catalog);
+
+            Assert.That(stock.Count(entry => entry.ItemId == ItemIds.SuperPotion),
+                Is.EqualTo(LeagueGateStockGenerator.RecoveryCopiesPerItem));
+            Assert.That(stock.Count(entry => entry.ItemId == ItemIds.SuperMnPotion),
+                Is.EqualTo(LeagueGateStockGenerator.RecoveryCopiesPerItem));
+            Assert.That(stock.Count(entry => entry.ItemId == ItemIds.SuperRecovery),
+                Is.EqualTo(LeagueGateStockGenerator.RecoveryCopiesPerItem));
+            Assert.That(stock.Count(entry => entry.ItemId == ItemIds.MaxRevive),
+                Is.EqualTo(LeagueGateStockGenerator.RecoveryCopiesPerItem));
+            Assert.That(
+                stock.Where(entry => entry.ItemId is >= ItemIds.SuperPotion
+                        and <= ItemIds.MaxRevive)
+                    .All(entry => entry.GeneratedData.PrimaryEffectValue
+                        is >= LeagueGateStockGenerator.MinimumRecoveryPercent
+                        and <= LeagueGateStockGenerator.MaximumRecoveryPercent),
+                Is.True);
+            foreach (var stat in Enumerable.Range(0, (int)PachimonStatType.Count)
+                         .Select(index => (PachimonStatType)index)
+                         .Where(PachimonStatTypeUtility.IsGeneratedStat))
+            {
+                Assert.That(
+                    stock.Count(entry => entry.GeneratedData.StatChanges.Any(
+                        change => change.StatType == stat && change.Amount > 0)),
+                    Is.EqualTo(LeagueGateStockGenerator.EngravingCopiesPerStat));
+            }
+        }
+
+        [Test]
         public void RecoveryItems_UseGeneratedRecoveryAmount()
         {
             var potion = ScriptableObject.CreateInstance<HealingItemAsset>();
@@ -2784,10 +2987,13 @@ namespace Pachimon.Editor.Tests
                     Is.EqualTo(CityStockGenerator.ReviveShardTotalCopies));
                 Assert.That(
                     allEntries.Count(entry => entry.ItemId == ItemIds.SkillForget),
-                    Is.EqualTo(CityStockGenerator.SkillForgetTotalCopies));
+                    Is.EqualTo(
+                        requests.Length
+                        * CityStockGenerator.SkillForgetCopiesPerCity));
                 Assert.That(
-                    stocks.Values.All(stock => stock.Any(
-                        entry => entry.ItemId == ItemIds.SkillForget)),
+                    stocks.Values.All(stock => stock.Count(
+                        entry => entry.ItemId == ItemIds.SkillForget)
+                        == CityStockGenerator.SkillForgetCopiesPerCity),
                     Is.True);
                 Assert.That(
                     stocks.Values.All(stock =>
@@ -2832,7 +3038,10 @@ namespace Pachimon.Editor.Tests
                         Assert.That(
                             cityEntries.Sum(entry => entry.GeneratedData.StatChanges
                                 .Single(change => change.Amount > 0).Amount),
-                            Is.EqualTo(engraving.BaseEffectValue * cityEntries.Length));
+                            Is.EqualTo(
+                                engraving.BaseEffectValue
+                                * CityStockGenerator.EngravingMainEffectUnits
+                                * cityEntries.Length));
                         Assert.That(
                             cityEntries.All(entry =>
                             {
@@ -2943,7 +3152,9 @@ namespace Pachimon.Editor.Tests
             var value = entry.GeneratedData.StatChanges
                 .Single(change => change.StatType == mainStat)
                 .Amount;
-            return equipment.Slot == EquipmentSlot.Head ? value / 2 : value;
+            return equipment.Slot == EquipmentSlot.Head
+                ? value / CityStockGenerator.HeadMainEffectMultiplier
+                : value;
         }
 
         [Test]
@@ -3021,10 +3232,10 @@ namespace Pachimon.Editor.Tests
                 Is.EqualTo(400m / 9m));
             Assert.That(
                 SkillUpgradeMath.ScaleManaCost(20m, 1),
-                Is.EqualTo(30m));
+                Is.EqualTo(80m / 3m));
             Assert.That(
                 SkillUpgradeMath.ScaleManaCost(20m, 2),
-                Is.EqualTo(45m));
+                Is.EqualTo(320m / 9m));
         }
 
         [Test]
@@ -3116,6 +3327,44 @@ namespace Pachimon.Editor.Tests
                 Object.DestroyImmediate(engraving);
                 Object.DestroyImmediate(catalog);
             }
+        }
+
+        [Test]
+        public void PachimonInstance_EngravingCapacityIsNine()
+        {
+            var target = new PachimonInstance(
+                "engraving_capacity_target",
+                1,
+                AllocationType.Fire,
+                1,
+                1,
+                CreateStats((PachimonStatType.MaxHp, 1000)));
+            var generatedData = new GeneratedItemData(
+                ItemIds.FirstEngraving,
+                statChanges: new[]
+                {
+                    new GeneratedStatChange(PachimonStatType.Fire, 30),
+                    new GeneratedStatChange(PachimonStatType.Aqua, -15),
+                });
+
+            for (var index = 0; index < PachimonInstance.MaxEngravings; index++)
+            {
+                Assert.That(target.CanAddEngravings(), Is.True);
+                target.RecordAppliedEngraving(
+                    ItemIds.FirstEngraving,
+                    $"Engraving {index + 1}",
+                    generatedData);
+            }
+
+            Assert.That(target.Engravings.Count,
+                Is.EqualTo(PachimonInstance.MaxEngravings));
+            Assert.That(target.CanAddEngravings(), Is.False);
+            Assert.That(target.CanAddEngravings(2), Is.False);
+            Assert.Throws<System.InvalidOperationException>(() =>
+                target.RecordAppliedEngraving(
+                    ItemIds.FirstEngraving,
+                    "Engraving 10",
+                    generatedData));
         }
 
         [Test]
@@ -3282,7 +3531,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void Equipment_SubStatChangeIncreasesBindingRatio()
+        public void Equipment_SubStatChangeAddsFixedStatWithoutChangingBindingRatio()
         {
             var equipment = ScriptableObject.CreateInstance<EquipmentItemAsset>();
             try
@@ -3323,10 +3572,10 @@ namespace Pachimon.Editor.Tests
                     target.SubStatBindings);
                 Assert.That(
                     target.SubStatBindings.GetDerivationRatio(PachimonStatType.Speed),
-                    Is.EqualTo(90));
+                    Is.EqualTo(50));
                 Assert.That(stats.GetValue(PachimonStatType.Electric), Is.EqualTo(100));
                 Assert.That(stats.GetValue(PachimonStatType.Speed), Is.EqualTo(90));
-                Assert.That(target.PermanentStatModifiers.Count, Is.EqualTo(2));
+                Assert.That(target.PermanentStatModifiers.Count, Is.EqualTo(3));
             }
             finally
             {
@@ -3595,6 +3844,103 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
+        public void Leak_TriggersWhenElectricDamageDefeatsItsHolder()
+        {
+            var skill = CreateBasicElectricSkill();
+            var source = CreateBattleUnitWithStats(
+                "player_1", BattleSide.Player, 0, 2000, skill.SkillId);
+            var holder = CreateBattleUnitWithStats(
+                "leak_holder", BattleSide.Enemy, 0, 100, 1);
+            var second = CreateBattleUnitWithStats(
+                "enemy_2", BattleSide.Enemy, 1, 2000, 1);
+            var third = CreateBattleUnitWithStats(
+                "enemy_3", BattleSide.Enemy, 2, 2000, 1);
+            var state = new BattleState(
+                123,
+                CreateTestSide(BattleSide.Player, source),
+                new BattleSideState(
+                    BattleSide.Enemy,
+                    new[] { holder, second, third }));
+            state.Statuses.ApplyStatus(
+                holder,
+                new BattleStatusInstance(
+                    BattleStatusId.Leak,
+                    BattleStatusCategory.Leak,
+                    source,
+                    value: 20));
+
+            BattleAttributeDamageService.Apply(
+                state,
+                source,
+                holder,
+                new DamageContext(
+                    DamageOriginKind.Skill,
+                    skill.SkillId,
+                    100,
+                    source.GetBattleStats(),
+                    holder.GetBattleStats(),
+                    PachimonAttribute.Electric,
+                    isAttack: true,
+                    applyAttackerAttributeMultiplier: false,
+                    applyDamageBonusMultiplier: false,
+                    applyOutgoingModifiers: false));
+
+            Assert.That(holder.IsDefeated, Is.True);
+            Assert.That(second.CurrentHp, Is.EqualTo(1980));
+            Assert.That(third.CurrentHp, Is.EqualTo(1980));
+            Assert.That(
+                state.LogEntries.Last(),
+                Is.EqualTo($"{holder.DisplayName}は漏電している！"));
+        }
+
+        [Test]
+        public void DefeatedTarget_RejectsLaterDamageAndStatusFromSameHit()
+        {
+            var skill = CreateBasicElectricSkill();
+            var source = CreateBattleUnitWithStats(
+                "player_1", BattleSide.Player, 0, 2000, skill.SkillId);
+            var target = CreateBattleUnitWithStats(
+                "enemy_1", BattleSide.Enemy, 0, 100, 1);
+            var state = new BattleState(
+                123,
+                CreateTestSide(BattleSide.Player, source),
+                CreateTestSide(BattleSide.Enemy, target));
+            var hit = new SkillExecutionContext(state, source, skill)
+                .BeginAttackHit(target);
+            var damageContext = new DamageContext(
+                DamageOriginKind.Skill,
+                skill.SkillId,
+                100,
+                source.GetBattleStats(),
+                target.GetBattleStats(),
+                PachimonAttribute.Electric,
+                isAttack: true,
+                applyAttackerAttributeMultiplier: false,
+                applyDamageBonusMultiplier: false,
+                applyOutgoingModifiers: false);
+
+            BattleAttributeDamageService.Apply(
+                state, source, target, damageContext, hit);
+            var skippedDamage = BattleAttributeDamageService.Apply(
+                state, source, target, damageContext, hit);
+            var statusApplied = hit.ApplyStatus(
+                BattleStatusFactory.CreateSlow(
+                    source,
+                    100,
+                    ParalysisStatus));
+            var presentation = state.Presentation.Complete();
+
+            Assert.That(target.IsDefeated, Is.True);
+            Assert.That(skippedDamage.AppliedDamage, Is.Zero);
+            Assert.That(statusApplied, Is.False);
+            Assert.That(target.Statuses, Is.Empty);
+            Assert.That(
+                presentation.Steps.Count(step =>
+                    step.Kind == BattlePresentationStepKind.DamageApplied),
+                Is.EqualTo(1));
+        }
+
+        [Test]
         public void StoredCharge_ConsumesBeforeDamageAndRegainsAfterDamage()
         {
             var definition = CreateStoredChargePassive();
@@ -3693,6 +4039,35 @@ namespace Pachimon.Editor.Tests
 
             Assert.That(
                 source.GetStatus(BattleStatusId.StoredCharge).StackCount,
+                Is.EqualTo(1));
+        }
+
+        [Test]
+        public void StoredCharge_GainsAStackFromSourceLessElectricStatusDamage()
+        {
+            var definition = CreateStoredChargePassive();
+            var catalog = ScriptableObject.CreateInstance<PassiveCatalog>();
+            catalog.SetPassivesForEditor(new PassiveAsset[] { definition });
+            var owner = CreateBattleUnitWithPassive(
+                "player_1",
+                BattleSide.Player,
+                0,
+                definition.PassiveId);
+            var state = new BattleState(
+                123,
+                CreateTestSide(BattleSide.Player, owner),
+                CreateTestSide(BattleSide.Enemy),
+                new PassiveLogicRegistry(catalog));
+
+            BattleStatusDamageService.ApplyAttribute(
+                state,
+                state.Enemy.GetUnitAt(0),
+                BattleStatusId.Leak,
+                PachimonAttribute.Electric,
+                baseDamage: 100m);
+
+            Assert.That(
+                owner.GetStatus(BattleStatusId.StoredCharge)?.StackCount,
                 Is.EqualTo(1));
         }
 
@@ -4144,7 +4519,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void ChainBurn_GainsOneAddChainAndUsesItOnTheNextCast()
+        public void ChainBurn_GainsItsOwnChainAndUsesItOnTheNextCast()
         {
             var skill = CreateChainBurnSkill();
             var user = CreateBattleUnitWithPassive(
@@ -4173,30 +4548,55 @@ namespace Pachimon.Editor.Tests
                     .Select(step => step.BlockIndex),
                 Is.EqualTo(new[] { 0, 1 }));
             Assert.That(
-                state.LogEntries.Any(entry => entry.Contains("アドチェイン")),
+                state.LogEntries.Any(entry => entry.Contains("追加連鎖数")),
                 Is.False);
             Assert.That(enemies.GetUnitAt(0).CurrentHp, Is.EqualTo(1920));
             Assert.That(enemies.GetUnitAt(1).CurrentHp, Is.EqualTo(1960));
             Assert.That(
-                user.GetStatus(BattleStatusId.AddChain)?.Value,
-                Is.EqualTo(100));
-            Assert.That(AddChainRuntime.GetWholeChains(user), Is.EqualTo(1));
+                user.GetStatus(BattleStatusId.ChainBurnChain)?.Value,
+                Is.EqualTo(1));
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.ChainBurnChain), Is.EqualTo(1));
 
             BattleSkillResolver.Resolve(state, user, skill, logic);
             Assert.That(
-                user.GetStatus(BattleStatusId.AddChain)?.Value,
-                Is.EqualTo(200));
-            Assert.That(AddChainRuntime.GetWholeChains(user), Is.EqualTo(2));
+                user.GetStatus(BattleStatusId.ChainBurnChain)?.Value,
+                Is.EqualTo(2));
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.ChainBurnChain), Is.EqualTo(2));
 
             var third = BattleSkillResolver.Resolve(state, user, skill, logic);
             Assert.That(third.Effects.Count, Is.EqualTo(4));
             Assert.That(
-                user.GetStatus(BattleStatusId.AddChain)?.Value,
-                Is.EqualTo(300));
-            Assert.That(AddChainRuntime.GetWholeChains(user), Is.EqualTo(3));
+                user.GetStatus(BattleStatusId.ChainBurnChain)?.Value,
+                Is.EqualTo(3));
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.ChainBurnChain), Is.EqualTo(3));
             Assert.That(enemies.GetUnitAt(0).CurrentHp, Is.EqualTo(1760));
             Assert.That(enemies.GetUnitAt(1).CurrentHp, Is.EqualTo(1827));
             Assert.That(enemies.GetUnitAt(2).CurrentHp, Is.EqualTo(1934));
+        }
+
+        [Test]
+        public void SkillChainRuntime_KeepsEachSkillChainIndependent()
+        {
+            var user = CreateBattleUnitWithPassive(
+                "chain_owner",
+                BattleSide.Player,
+                0,
+                passiveId: 2);
+
+            SkillChainRuntime.Add(user, user,
+                BattleStatusId.ChainBurnChain, 2);
+            SkillChainRuntime.Add(user, user,
+                BattleStatusId.ChainVinesChain, 1);
+
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.ChainBurnChain), Is.EqualTo(2));
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.ChainVinesChain), Is.EqualTo(1));
+            Assert.That(SkillChainRuntime.GetAdditionalChainCount(
+                user, BattleStatusId.CuttingDanceChain), Is.Zero);
         }
 
         [Test]
@@ -4226,7 +4626,8 @@ namespace Pachimon.Editor.Tests
                 user.GetBattleStatValue(PachimonStatType.DamageBonus),
                 Is.EqualTo(10));
 
-            AddChainRuntime.AddUnits(user, user, 200);
+            SkillChainRuntime.Add(user, user,
+                BattleStatusId.ChainBurnChain, 2);
             BattleSkillResolver.Resolve(state, user, skill, logic);
 
             Assert.That(
@@ -5433,7 +5834,7 @@ namespace Pachimon.Editor.Tests
                 baseDamage: 80,
                 fireScalingPercent: 100,
                 baseChainCount: 1,
-                addChainGainUnits: 100);
+                chainGain: 1);
             return skill;
         }
 
@@ -5677,7 +6078,9 @@ namespace Pachimon.Editor.Tests
                 removalPercent: 50,
                 baseToxinValue: 150,
                 poisonScalingPercent: 100,
-                applicationPercent: 200,
+                baseApplicationPercent: 100,
+                scaledApplicationBasePercent: 20,
+                applicationPoisonScalingPercent: 100,
                 toxinStatus: ToxinStatus);
             return skill;
         }
@@ -5906,7 +6309,7 @@ namespace Pachimon.Editor.Tests
         }
 
         [Test]
-        public void IceGrowthPassive_GainsIceFromAttackAndStatusDamage()
+        public void IceGrowthPassive_GainsIceFromNonDotDamageOnly()
         {
             var passive = ScriptableObject
                 .CreateInstance<IceGrowthOnDamagePassiveAsset>();
@@ -5945,6 +6348,17 @@ namespace Pachimon.Editor.Tests
                 BattleStatusId.Chill,
                 PachimonAttribute.Ice,
                 baseDamage: 100m);
+            Assert.That(
+                owner.GetBattleStatValue(PachimonStatType.Ice),
+                Is.EqualTo(120));
+
+            BattleStatusDamageService.ApplyAttribute(
+                state,
+                target,
+                BattleStatusId.Chill,
+                PachimonAttribute.Ice,
+                baseDamage: 100m,
+                tags: DamageTag.DamageOverTime);
             Assert.That(
                 owner.GetBattleStatValue(PachimonStatType.Ice),
                 Is.EqualTo(120));
@@ -6327,8 +6741,24 @@ namespace Pachimon.Editor.Tests
                 ApplyUnscaledAttributeDamage(
                     state, source, target, PachimonAttribute.Fire);
 
+                var passiveDamage = BattleAttributeDamageService.Apply(
+                    state,
+                    source,
+                    target,
+                    new DamageContext(
+                        DamageOriginKind.Passive,
+                        passive.PassiveId,
+                        100,
+                        source.StartingStats,
+                        target.StartingStats,
+                        PachimonAttribute.Dragon,
+                        isAttack: false,
+                        applyAttackerAttributeMultiplier: false,
+                        applyDamageBonusMultiplier: false));
+
                 Assert.That(first.FinalDamage, Is.EqualTo(100));
                 Assert.That(second.FinalDamage, Is.EqualTo(110));
+                Assert.That(passiveDamage.FinalDamage, Is.EqualTo(100));
                 Assert.That(
                     source.GetStatus(BattleStatusId.DragonBoxer)?.StackCount,
                     Is.EqualTo(10));
@@ -6475,7 +6905,6 @@ namespace Pachimon.Editor.Tests
         [Test]
         public void HealingWind_TargetsAllyWithLowestHpPercentage()
         {
-            var status = ScriptableObject.CreateInstance<HealingWindStatusAsset>();
             var skill = ScriptableObject.CreateInstance<HealingWindSkillAsset>();
             try
             {
@@ -6486,12 +6915,7 @@ namespace Pachimon.Editor.Tests
                     300,
                     80,
                     string.Empty,
-                    100,
-                    50,
-                    50,
-                    100,
-                    200,
-                    status);
+                    100);
 
                 var user = CreateBattleUnitWithMaxHp(
                     "healer", BattleSide.Player, 0, 1000, 1000, 31,
@@ -6514,7 +6938,7 @@ namespace Pachimon.Editor.Tests
                 Assert.That(lowerAbsoluteHp.CurrentHp, Is.EqualTo(300));
                 Assert.That(
                     lowerPercentage.GetStatus(BattleStatusId.HealingWind),
-                    Is.Not.Null);
+                    Is.Null);
                 Assert.That(
                     lowerAbsoluteHp.GetStatus(BattleStatusId.HealingWind),
                     Is.Null);
@@ -6522,7 +6946,6 @@ namespace Pachimon.Editor.Tests
             finally
             {
                 Object.DestroyImmediate(skill);
-                Object.DestroyImmediate(status);
             }
         }
 
@@ -7609,6 +8032,21 @@ namespace Pachimon.Editor.Tests
                     enemyTarget,
                     PachimonAttribute.Leaf);
 
+                BattleStatusDamageService.ApplyAttribute(
+                    state,
+                    enemyTarget,
+                    BattleStatusId.Burn,
+                    PachimonAttribute.Fire,
+                    baseDamage: 100m,
+                    tags: DamageTag.DamageOverTime);
+                BattleStatusDamageService.ApplyAttribute(
+                    state,
+                    enemyTarget,
+                    BattleStatusId.Pollen,
+                    PachimonAttribute.Leaf,
+                    baseDamage: 100m,
+                    tags: DamageTag.DamageOverTime);
+
                 Assert.That(
                     owner.GetBattleStatValue(PachimonStatType.Leaf),
                     Is.EqualTo(5));
@@ -8207,7 +8645,7 @@ namespace Pachimon.Editor.Tests
                 passive.ConfigureForEditor(55, "Wind Rider", string.Empty,
                     20, growth);
                 skill.ConfigureForEditor(55, "Cutting Dance", 100, 300, 100,
-                    string.Empty, 100, 100, 20, 100, 2, 100, erosion);
+                    string.Empty, 100, 100, 20, 100, 2, 1, erosion);
                 catalog.SetPassivesForEditor(new PassiveAsset[] { passive });
                 var owner = CreateBattleUnitWithPassive(
                     "cutting_dance_owner", BattleSide.Player, 0, 55,
@@ -8232,8 +8670,27 @@ namespace Pachimon.Editor.Tests
                     .GetStatus(BattleStatusId.WindErosion)?.Value, Is.EqualTo(13));
                 Assert.That(owner.GetBattleStatValue(PachimonStatType.Speed),
                     Is.EqualTo(60));
-                Assert.That(owner.GetStatus(BattleStatusId.AddChain)?.Value,
-                    Is.EqualTo(100));
+
+                BattleAttributeDamageService.Apply(
+                    state,
+                    owner,
+                    enemies.GetUnitAt(0),
+                    new DamageContext(
+                        DamageOriginKind.Field,
+                        (int)BattleFieldEffectId.BeatVine,
+                        100,
+                        owner.StartingStats,
+                        enemies.GetUnitAt(0).StartingStats,
+                        PachimonAttribute.Wind,
+                        isAttack: false,
+                        applyAttackerAttributeMultiplier: false,
+                        applyDamageBonusMultiplier: false,
+                        applyOutgoingModifiers: false));
+                Assert.That(owner.GetBattleStatValue(PachimonStatType.Speed),
+                    Is.EqualTo(60));
+                Assert.That(owner.GetStatus(
+                    BattleStatusId.CuttingDanceChain)?.Value,
+                    Is.EqualTo(1));
             }
             finally
             {
@@ -8297,6 +8754,24 @@ namespace Pachimon.Editor.Tests
                 Assert.That(target.CurrentHp, Is.EqualTo(1585));
                 Assert.That(owner.GetBattleStatValue(PachimonStatType.Wind),
                     Is.EqualTo(130));
+                Assert.That(owner.GetStatus(BattleStatusId.WindMagicianGrowth)
+                    ?.StackCount, Is.EqualTo(3));
+
+                BattleAttributeDamageService.Apply(
+                    state,
+                    owner,
+                    target,
+                    new DamageContext(
+                        DamageOriginKind.Field,
+                        (int)BattleFieldEffectId.FireVine,
+                        100,
+                        owner.StartingStats,
+                        target.StartingStats,
+                        PachimonAttribute.Fire,
+                        isAttack: false,
+                        applyAttackerAttributeMultiplier: false,
+                        applyDamageBonusMultiplier: false,
+                        applyOutgoingModifiers: false));
                 Assert.That(owner.GetStatus(BattleStatusId.WindMagicianGrowth)
                     ?.StackCount, Is.EqualTo(3));
             }

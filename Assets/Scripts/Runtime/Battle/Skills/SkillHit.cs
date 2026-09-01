@@ -56,7 +56,8 @@ namespace Pachimon.Battle
         public bool WasEvaded => Outcome == SkillHitOutcome.Evaded;
         public bool WasBlocked => Outcome == SkillHitOutcome.Blocked;
         internal bool DamageWasResolved => _damageWasResolved;
-        internal bool CanApplyStatus => !WasEvaded
+        internal bool CanApplyStatus => Target.IsAlive
+            && !WasEvaded
             && (!WasBlocked || _damageReachedTarget);
         public int WeaknessValue => CaptureWeaknessValue();
 

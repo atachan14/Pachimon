@@ -8,6 +8,13 @@ namespace Pachimon.Items
     {
         Hp = 0,
         Mn = 1,
+        HpAndMn = 2,
+    }
+
+    public enum RecoveryValueMode
+    {
+        Fixed = 0,
+        MaximumPercent = 1,
     }
 
     [CreateAssetMenu(
@@ -20,11 +27,13 @@ namespace Pachimon.Items
         [SerializeField, Min(1)] private int _recoveryAmount = 500;
         [SerializeField] private bool _canRevive;
         [SerializeField] private bool _defeatedOnly;
+        [SerializeField] private RecoveryValueMode _valueMode;
 
         public RecoveryResourceType ResourceType => _resourceType;
         public int RecoveryAmount => _recoveryAmount;
         public bool CanRevive => _canRevive;
         public bool DefeatedOnly => _defeatedOnly;
+        public RecoveryValueMode ValueMode => _valueMode;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -35,7 +44,7 @@ namespace Pachimon.Items
             }
 
             if (_defeatedOnly
-                && (_resourceType != RecoveryResourceType.Hp || !_canRevive))
+                && (_resourceType == RecoveryResourceType.Mn || !_canRevive))
             {
                 errors.Add(
                     $"{name}: Defeated-only recovery must restore HP and allow revival.");
@@ -47,12 +56,14 @@ namespace Pachimon.Items
             RecoveryResourceType resourceType,
             int recoveryAmount,
             bool canRevive,
-            bool defeatedOnly = false)
+            bool defeatedOnly = false,
+            RecoveryValueMode valueMode = RecoveryValueMode.Fixed)
         {
             _resourceType = resourceType;
             _recoveryAmount = recoveryAmount;
             _canRevive = canRevive;
             _defeatedOnly = defeatedOnly;
+            _valueMode = valueMode;
         }
 #endif
     }

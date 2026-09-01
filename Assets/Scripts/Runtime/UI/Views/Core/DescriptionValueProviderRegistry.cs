@@ -310,8 +310,7 @@ namespace Pachimon.UI
                             chainFire,
                             chainBurn.FireScalingPercent)))
                     .Set("hitCount", chainBurn.BaseChainCount + 1)
-                    .Set("addChain", AddChainRuntime.FormatUnits(
-                        chainBurn.AddChainGainUnits))
+                    .Set("chainGain", chainBurn.ChainGain)
                     .Set("baseDamage", chainBurn.BaseDamage)
                     .Set("fire", chainFire)
                     .Set("damageRatio", chainBurn.FireScalingPercent);
@@ -348,8 +347,7 @@ namespace Pachimon.UI
                             vinesLeaf,
                             chainVines.SlowLeafRatio)))
                     .Set("hitCount", chainVines.BaseChainCount + 1)
-                    .Set("addChain", AddChainRuntime.FormatUnits(
-                        chainVines.AddChainGainUnits))
+                    .Set("chainGain", chainVines.ChainGain)
                     .Set("baseDamage", chainVines.BaseLeafDamage)
                     .Set("baseSlow", chainVines.BaseSlow)
                     .Set("leaf", vinesLeaf)
@@ -558,13 +556,22 @@ namespace Pachimon.UI
                         toxinTransfer,
                         transferPoison);
                 }
+                var applicationPercent =
+                    ToxinTransferMath.CalculateApplicationPercent(
+                        toxinTransfer,
+                        transferPoison);
                 context.Set("removalPercent", toxinTransfer.RemovalPercent)
                     .Set("baseToxin", baseToxin)
                     .Set("rawBaseToxin", toxinTransfer.BaseToxinValue)
                     .Set("poison", transferPoison)
                     .Set("toxinRatio", toxinTransfer.PoisonScalingPercent)
-                    .Set("applicationPercent",
-                        toxinTransfer.ApplicationPercent);
+                    .Set("applicationPercent", applicationPercent)
+                    .Set("baseApplicationPercent",
+                        toxinTransfer.BaseApplicationPercent)
+                    .Set("scaledApplicationBasePercent",
+                        toxinTransfer.ScaledApplicationBasePercent)
+                    .Set("applicationPoisonRatio",
+                        toxinTransfer.ApplicationPoisonScalingPercent);
                 return true;
             }
 
@@ -591,18 +598,7 @@ namespace Pachimon.UI
                         healingWind.BaseHealing,
                         healingWindStat,
                         healingWind.WindRatio))
-                    .Set("windBonus", Scale(
-                        healingWind.BaseWindBonus,
-                        healingWindStat,
-                        healingWind.WindRatio))
-                    .Set("speedBonus", Scale(
-                        healingWind.BaseSpeedBonus,
-                        healingWindStat,
-                        healingWind.WindRatio))
-                    .Set("duration", healingWind.DurationTicks)
                     .Set("baseHealing", healingWind.BaseHealing)
-                    .Set("baseWindBonus", healingWind.BaseWindBonus)
-                    .Set("baseSpeedBonus", healingWind.BaseSpeedBonus)
                     .Set("wind", healingWindStat)
                     .Set("windRatio", healingWind.WindRatio);
                 return true;
@@ -1014,8 +1010,7 @@ namespace Pachimon.UI
                         danceWind,
                         cuttingDance.ErosionWindRatio))
                     .Set("hitCount", cuttingDance.BaseChainCount + 1)
-                    .Set("addChain", AddChainRuntime.FormatUnits(
-                        cuttingDance.AddChainGainUnits))
+                    .Set("chainGain", cuttingDance.ChainGain)
                     .Set("baseDamage", cuttingDance.BaseWindDamage)
                     .Set("baseErosion", cuttingDance.BaseErosion)
                     .Set("wind", danceWind)

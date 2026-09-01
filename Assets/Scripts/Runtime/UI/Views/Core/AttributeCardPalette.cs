@@ -93,17 +93,18 @@ namespace Pachimon.UI
                 BattleStatusId.Toxin or BattleStatusId.ToxinGrowth
                     or BattleStatusId.PoisonMagicianGrowth =>
                     new[] { PachimonAttribute.Poison },
-                BattleStatusId.FireGrowth or BattleStatusId.AddChain
+                BattleStatusId.FireGrowth or BattleStatusId.ChainBurnChain
                     or BattleStatusId.Burn =>
                     new[] { PachimonAttribute.Fire },
                 BattleStatusId.LaunchCeremony =>
                     new[] { PachimonAttribute.Aqua },
-                BattleStatusId.LeafGrowth =>
+                BattleStatusId.LeafGrowth or BattleStatusId.ChainVinesChain =>
                     new[] { PachimonAttribute.Leaf },
                 BattleStatusId.Flying or BattleStatusId.WindErosion
                     or BattleStatusId.HealingWind or BattleStatusId.StillAir
                     or BattleStatusId.WindRiderGrowth
-                    or BattleStatusId.WindMagicianGrowth =>
+                    or BattleStatusId.WindMagicianGrowth
+                    or BattleStatusId.CuttingDanceChain =>
                     new[] { PachimonAttribute.Wind },
                 BattleStatusId.OneTwo or BattleStatusId.DragonBoxer
                     or BattleStatusId.Footwork or BattleStatusId.SweetScience

@@ -194,6 +194,8 @@ namespace Pachimon.Battle
         }
 
         public DamageCalculationResult Calculation { get; }
+        public DamageOriginKind OriginKind => Calculation.Context.OriginKind;
+        public DamageTag Tags => Calculation.Context.Tags;
         public PachimonAttribute Attribute => Calculation.Context.Attribute;
         public decimal PreDefenseDamage { get; }
         public int FinalDamage { get; }
@@ -362,7 +364,8 @@ namespace Pachimon.Battle
             int finalDamage,
             int appliedDamage,
             int shieldAbsorbedDamage,
-            IReadOnlyDictionary<BattleStatusId, int> statusesBeforeDamage = null)
+            IReadOnlyDictionary<BattleStatusId, int> statusesBeforeDamage = null,
+            DamageTag tags = DamageTag.None)
             : base(state, source, target)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
@@ -381,6 +384,7 @@ namespace Pachimon.Battle
             FinalDamage = finalDamage;
             AppliedDamage = appliedDamage;
             ShieldAbsorbedDamage = shieldAbsorbedDamage;
+            Tags = tags;
             StatusesBeforeDamage = statusesBeforeDamage
                 ?? new Dictionary<BattleStatusId, int>();
         }
@@ -393,6 +397,7 @@ namespace Pachimon.Battle
         public int AppliedDamage { get; }
         public int ShieldAbsorbedDamage { get; }
         public int ReceivedDamage => checked(AppliedDamage + ShieldAbsorbedDamage);
+        public DamageTag Tags { get; }
         public IReadOnlyDictionary<BattleStatusId, int> StatusesBeforeDamage { get; }
 
         public int GetStatusValueBeforeDamage(BattleStatusId statusId)
@@ -403,13 +408,21 @@ namespace Pachimon.Battle
         }
     }
 
+    [Flags]
+    public enum StatusApplicationTag
+    {
+        None = 0,
+        OverTime = 1 << 0,
+    }
+
     public sealed class ToxinAppliedEvent : BattleEvent
     {
         public ToxinAppliedEvent(
             BattleState state,
             BattleUnitState source,
             BattleUnitState target,
-            int appliedValue)
+            int appliedValue,
+            StatusApplicationTag tags = StatusApplicationTag.None)
             : base(state, source, target)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
@@ -420,9 +433,11 @@ namespace Pachimon.Battle
             }
 
             AppliedValue = appliedValue;
+            Tags = tags;
         }
 
         public int AppliedValue { get; }
+        public StatusApplicationTag Tags { get; }
     }
 
     public sealed class StatusValueAppliedEvent : BattleEvent

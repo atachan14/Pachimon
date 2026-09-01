@@ -33,9 +33,15 @@ namespace Pachimon.Items
                 return ItemUseFailureReason.InvalidTarget;
             }
 
-            var isFull = healingItem.ResourceType == RecoveryResourceType.Hp
-                ? context.CurrentHp >= context.EffectiveMaxHp
-                : context.CurrentMn >= context.EffectiveMaxMn;
+            var hpFull = context.CurrentHp >= context.EffectiveMaxHp;
+            var mnFull = context.CurrentMn >= context.EffectiveMaxMn;
+            var isFull = healingItem.ResourceType switch
+            {
+                RecoveryResourceType.Hp => hpFull,
+                RecoveryResourceType.Mn => mnFull,
+                RecoveryResourceType.HpAndMn => hpFull && mnFull,
+                _ => throw new ArgumentOutOfRangeException(),
+            };
             return isFull
                 ? ItemUseFailureReason.NoEffect
                 : ItemUseFailureReason.None;
@@ -53,16 +59,40 @@ namespace Pachimon.Items
                     nameof(item));
             }
 
-            var recoveryAmount = itemInstance?.GeneratedData.PrimaryEffectValue
+            var recoveryValue = itemInstance?.GeneratedData.PrimaryEffectValue
                 ?? healingItem.RecoveryAmount;
-            return healingItem.ResourceType == RecoveryResourceType.Hp
-                ? context.RestoreHp(recoveryAmount)
-                : context.RestoreMn(recoveryAmount);
+            var hpAmount = GetRecoveryAmount(
+                healingItem,
+                recoveryValue,
+                context.EffectiveMaxHp);
+            var mnAmount = GetRecoveryAmount(
+                healingItem,
+                recoveryValue,
+                context.EffectiveMaxMn);
+            return healingItem.ResourceType switch
+            {
+                RecoveryResourceType.Hp => context.RestoreHp(hpAmount),
+                RecoveryResourceType.Mn => context.RestoreMn(mnAmount),
+                RecoveryResourceType.HpAndMn => checked(
+                    context.RestoreHp(hpAmount)
+                    + context.RestoreMn(mnAmount)),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
         }
 
         public int Apply(ItemAsset item, ItemUseContext context)
         {
             return Apply(item, null, context);
+        }
+
+        private static int GetRecoveryAmount(
+            HealingItemAsset item,
+            int recoveryValue,
+            int maximumValue)
+        {
+            return item.ValueMode == RecoveryValueMode.MaximumPercent
+                ? Math.Max(1, checked(maximumValue * recoveryValue) / 100)
+                : recoveryValue;
         }
 
     }

@@ -139,26 +139,69 @@ namespace Pachimon.UI
 
             var step = _flowController.Advance();
             var toxinTransitions = _currentState.ToxinPresentation.Drain();
+            var fieldPresentations = _currentState.FieldPresentation.Drain();
             if (toxinTransitions.Count > 0)
             {
                 if (BattleMainView == null)
                 {
-                    _stateChanged?.Invoke(_currentState);
-                    HandleFlowStep(step);
+                    PresentFieldAttacks(fieldPresentations, () =>
+                    {
+                        _stateChanged?.Invoke(_currentState);
+                        HandleFlowStep(step);
+                    });
                     return;
                 }
 
                 BattleMainView.PlayToxinDamage(
                     toxinTransitions,
-                    () =>
+                    () => PresentFieldAttacks(fieldPresentations, () =>
                     {
                         _stateChanged?.Invoke(_currentState);
                         HandleFlowStep(step);
-                    });
+                    }));
                 return;
             }
 
-            HandleFlowStep(step);
+            PresentFieldAttacks(fieldPresentations, () =>
+            {
+                if (fieldPresentations.Count > 0)
+                {
+                    _stateChanged?.Invoke(_currentState);
+                }
+
+                HandleFlowStep(step);
+            });
+        }
+
+        private void PresentFieldAttacks(
+            IReadOnlyList<BattleFieldAttackPresentation> presentations,
+            Action completed)
+        {
+            if (presentations == null || presentations.Count == 0)
+            {
+                completed?.Invoke();
+                return;
+            }
+
+            var blocks = presentations.Select(presentation =>
+            {
+                var lines = new List<DialogueLine>
+                {
+                    new(
+                        presentation.Heading,
+                        () => BeginBattleDialogueBlock(
+                            presentation.FocusUnit,
+                            presentation.Transitions)),
+                };
+                lines.AddRange(presentation.Lines.Select(text =>
+                    new DialogueLine(
+                        text,
+                        () => FocusBattleUnit(presentation.FocusUnit))));
+                return new DialogueBlock(lines);
+            });
+            _logWindowView.PlayDialoguePage(
+                new DialoguePage(blocks),
+                completed);
         }
 
         private void HandleFlowStep(BattleFlowStep step)

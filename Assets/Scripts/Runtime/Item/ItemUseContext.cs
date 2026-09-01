@@ -142,7 +142,8 @@ namespace Pachimon.Items
                     BattleState.SupportEffects.RestoreHp(
                         BattleTarget,
                         BattleTarget,
-                        amount);
+                        amount,
+                        applySustainPower: false);
                 }
                 else
                 {

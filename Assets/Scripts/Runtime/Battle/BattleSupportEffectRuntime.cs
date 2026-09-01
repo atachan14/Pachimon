@@ -72,7 +72,8 @@ namespace Pachimon.Battle
             BattleUnitState source,
             BattleUnitState target,
             int requestedValue,
-            bool isSharedEffect = false)
+            bool isSharedEffect = false,
+            bool applySustainPower = true)
         {
             ValidateUnit(target, nameof(target));
             if (source != null) ValidateUnit(source, nameof(source));
@@ -85,7 +86,9 @@ namespace Pachimon.Battle
                 _state,
                 source,
                 target,
-                ApplySustainPower(source, requestedValue));
+                applySustainPower
+                    ? ApplySustainPower(source, requestedValue)
+                    : requestedValue);
             var restoredValue = target.RestoreHp(
                 Pachimon.Run.SignedStatMath.FloorNonNegative(modifiedValue));
             if (restoredValue > 0)

@@ -23,6 +23,7 @@ namespace Pachimon.Run
             CityScreen cityScreen,
             RestSpotScreen restSpotScreen,
             LeagueGateScreen leagueGateScreen,
+            HallOfFameScreen hallOfFameScreen,
             PachimonCatalog pachimonCatalog,
             SkillCatalog skillCatalog,
             PassiveCatalog passiveCatalog,
@@ -76,7 +77,8 @@ namespace Pachimon.Run
                 battleScreen,
                 cityScreen,
                 restSpotScreen,
-                leagueGateScreen);
+                leagueGateScreen,
+                hallOfFameScreen);
 
             var context = new RunContext(
                 pachimonPool,

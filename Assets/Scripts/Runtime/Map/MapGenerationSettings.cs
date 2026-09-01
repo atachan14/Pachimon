@@ -14,6 +14,8 @@ namespace Pachimon.Map
 
         public int EliteRowEnd { get; } = 40;
 
+        public int HallOfFameRow { get; } = 41;
+
         public int BaseNodesPerRow { get; } = 3;
 
         public int MaxNodesPerRow { get; } = 6;

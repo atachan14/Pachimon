@@ -51,6 +51,7 @@ StunTicks
 
 - Status: `Implemented`
 - 名前:毒素適応（仮）
+- `StatusApplicationTag.OverTime`を持つ、時間経過による毒素付与では発動しない
 - 効果:自身が毒素を付与するたびに、Battle中の自身のPoisonを10%増加する。
 - Skill・フィールド生成物など付与手段を問わず、毒素を実際に付与した回数だけ発動する
 - 複数の対象へ同時に付与した場合は、付与に成功した対象数だけ発動する
@@ -177,24 +178,27 @@ ApplicationWork += TickAmount
 - 名前:毒渡し
 - 効果:
 [一番多く毒が付与されている敵]の毒を50%取り除く。
-[一番少なく毒が付与されている敵]に次の毒素を与える。
+[除去対象を除く生存敵（最大2体）]に次の毒素を均等に分配して与える。
 
 ```text
-付与Value
-= floor((除去Value + 150 × AmplificationMultiplier(Poison)) × 200%)
+付与倍率
+= 100% + 20% × AmplificationMultiplier(Poison)
+
+付与Value合計
+= floor((除去Value + 150 × AmplificationMultiplier(Poison)) × 付与倍率)
 ```
 
 - 敵全員の毒素が0の場合は除去・倍化を行わず、先頭へ`150 × AmplificationMultiplier(Poison)`の毒素を与える
 
 補足：
 1. 敵が1人だった場合は、同じ対象から除去後、同じ対象へ上記の付与Valueを与える。
-2. [一番少なく毒が付与されている敵]を選択するタイミングは、毒を取り除く前。（最初に[一番多く毒が付与されている敵]と[一番少なく毒が付与されている敵]を確定する。）
+2. 生存敵が3体なら、除去対象以外の2体へ付与Value合計を50%ずつ分配する。
 3. 最大対象はValue降順、同値なら前方優先で決定する。
-4. 最小対象は最大対象以外からValue昇順、同値なら前方優先で決定する。
-5. 生存している敵が1体の場合のみ、最大対象と最小対象は同じ対象になる。
+4. 生存敵が2体なら、除去対象以外の1体へ付与Value合計の100%を付与する。
+5. 生存敵が1体なら、除去した同じ対象へ付与Value合計の100%を付与する。
 6. 毒素を持たない敵はValue 0として扱う。
-7. 除去量と付与量はそれぞれ切り捨てる。
-8. `RemovalPercent = 50 / BaseToxinValue = 150 / PoisonScalingPercent = 100 / ApplicationPercent = 200`をSOで調整可能にする。
+7. 除去量と付与量はそれぞれ切り捨てる。均等分配の余りは前方の対象へ1ずつ加える。
+8. `RemovalPercent = 50 / BaseToxinValue = 150 / PoisonScalingPercent = 100 / BaseApplicationPercent = 100 / ScaledApplicationBasePercent = 20 / ApplicationPoisonScalingPercent = 100`をSOで調整可能にする。
 
 #### Passive
 

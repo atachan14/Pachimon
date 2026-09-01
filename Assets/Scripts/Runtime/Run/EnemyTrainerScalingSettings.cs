@@ -5,8 +5,8 @@ namespace Pachimon.Run
     public sealed class EnemyTrainerScalingSettings
     {
         public EnemyTrainerScalingSettings(
-            int baseStatAdjustment = -45,
-            int statPerRow = 15,
+            int baseStatAdjustment = -40,
+            int statPerRow = 8,
             int resourceMultiplier = PachimonStatValueUnits.ResourceDisplayMultiplier,
             int gymFavoredAttributeBonus = 50,
             int gymWeakAttributePenalty = -50,

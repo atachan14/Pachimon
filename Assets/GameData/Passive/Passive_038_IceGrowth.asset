@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.IceGrowthOnDamagePassiveAsset
   _passiveId: 38
   _displayName: "\u6C37005"
-  _description: "氷ダメージが発生するたび、Battle中の{icon:Ice}氷が{value:iceIncrease}増加する。"
+  _description: "継続ダメージを除き、氷ダメージが発生するたびBattle中の{icon:Ice}氷が{value:iceIncrease}増加する。"
   _iceIncreasePerDamage: 10

@@ -52,7 +52,7 @@ ScriptableObjectは共有される不変の定義として扱う。所持者、�
 
 `毒の騎士`は`ShieldAppliedEvent / HpRestoredEvent`を購読する。共有効果には`isSharedEffect`を付与し、複数の所持者がいる場合も共有から共有が連鎖しないようにする。Battle中のShield付与・HP回復は原則として`BattleSupportEffectRuntime`を経由させる。
 
-`燃える男`は属性・True・Statusを統合した`DamageAppliedEvent`を購読する。実際のHP DamageとShield吸収Damageの合計が1以上で、かつ所持者が生存している場合にBattle中のFire加算Statusを1Stack追加する。
+`燃える男`は属性・True・Statusを統合した`DamageAppliedEvent`を購読する。実際のHP DamageとShield吸収Damageの合計が1以上で、`DamageOverTime`タグを持たず、かつ所持者が生存している場合にBattle中のFire加算Statusを1Stack追加する。毒素のtick Damageは対象外だが、漏電・自傷・Passive追撃・Field攻撃は対象とする。
 
 ## 追加手順
 

@@ -47,8 +47,8 @@ namespace Pachimon.Editor.UI
             var dance = ReplaceWith<CuttingDanceSkillAsset>(
                 $"{SkillFolder}/Skill_055.asset");
             dance.ConfigureForEditor(55, "\u304D\u308A\u304D\u308A\u821E\u3044", 100, 300, 100,
-                "\u9023\u9396\u3057\u306A\u304C\u3089\u98A8\u30C0\u30E1\u30FC\u30B8\u3068\u98A8\u5316\u3092\u4E0E\u3048\u3001\u30A2\u30C9\u30C1\u30A7\u30A4\u30F3\u3092\u5F97\u308B\u3002",
-                100, 100, 20, 100, 2, 100, erosion);
+                "連鎖しながら風ダメージと風化を与え、きりきり舞いの追加連鎖数を得る。",
+                100, 100, 20, 100, 2, 1, erosion);
             var kachofugetsu = ReplaceWith<KachofugetsuSkillAsset>(
                 $"{SkillFolder}/Skill_063.asset");
             kachofugetsu.ConfigureForEditor(63, "\u82B1\u9CE5\u98A8\u6708", 100, 300, 150,

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Pachimon.Reward;
 using Pachimon.Run;
@@ -10,15 +11,21 @@ namespace Pachimon.Battle
     {
         public ToxinTransferTargets(
             BattleUnitState source,
-            BattleUnitState destination)
+            IReadOnlyList<BattleUnitState> destinations)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
-            Destination = destination
-                ?? throw new ArgumentNullException(nameof(destination));
+            Destinations = destinations
+                ?? throw new ArgumentNullException(nameof(destinations));
+            if (Destinations.Count == 0)
+            {
+                throw new ArgumentException(
+                    "At least one destination is required.",
+                    nameof(destinations));
+            }
         }
 
         public BattleUnitState Source { get; }
-        public BattleUnitState Destination { get; }
+        public IReadOnlyList<BattleUnitState> Destinations { get; }
     }
 
     public static class ToxinTransferMath
@@ -38,6 +45,21 @@ namespace Pachimon.Battle
         {
             return SignedStatMath.FloorNonNegative(
                 (removedValue + baseValue) * applicationPercent / 100m);
+        }
+
+        public static int CalculateApplicationPercent(
+            ToxinTransferSkillAsset skill,
+            decimal poison,
+            decimal? poisonScalingPercent = null)
+        {
+            if (skill == null) throw new ArgumentNullException(nameof(skill));
+            return SignedStatMath.FloorNonNegative(
+                skill.BaseApplicationPercent
+                + SignedStatMath.ScaleFromBase(
+                    skill.ScaledApplicationBasePercent,
+                    poison,
+                    poisonScalingPercent
+                    ?? skill.ApplicationPoisonScalingPercent));
         }
 
         public static int CalculateBaseValue(
@@ -97,10 +119,16 @@ namespace Pachimon.Battle
                 targets.Source,
                 BattleStatusId.Toxin,
                 requestedRemoval);
+            var applicationPercent = ToxinTransferMath.CalculateApplicationPercent(
+                _skill,
+                context.GetAttributeValue(PachimonAttribute.Poison),
+                context.GetAttributeRatio(
+                    PachimonAttribute.Poison,
+                    _skill.ApplicationPoisonScalingPercent));
             var applied = ToxinTransferMath.CalculateApplication(
                 removed,
                 baseValue,
-                _skill.ApplicationPercent);
+                applicationPercent);
 
             if (removed > 0)
             {
@@ -110,13 +138,29 @@ namespace Pachimon.Battle
 
             if (applied > 0)
             {
-                ApplyToxin(context, targets.Destination, applied);
+                ApplyDistributedToxin(context, targets.Destinations, applied);
             }
 
             return new SkillResolution(
                 context.User,
                 context.Skill,
                 Array.Empty<SkillEffectResult>());
+        }
+
+        private void ApplyDistributedToxin(
+            SkillExecutionContext context,
+            IReadOnlyList<BattleUnitState> targets,
+            int totalValue)
+        {
+            var valuePerTarget = totalValue / targets.Count;
+            var remainder = totalValue % targets.Count;
+            for (var index = 0; index < targets.Count; index++)
+            {
+                ApplyToxin(
+                    context,
+                    targets[index],
+                    valuePerTarget + (index < remainder ? 1 : 0));
+            }
         }
 
         private void ApplyToxin(
@@ -150,14 +194,14 @@ namespace Pachimon.Battle
                 .OrderByDescending(GetToxinValue)
                 .ThenBy(unit => unit.SlotIndex)
                 .First();
-            var destination = living.Length == 1
-                ? source
+            var destinations = living.Length == 1
+                ? new[] { source }
                 : living
                     .Where(unit => !ReferenceEquals(unit, source))
-                    .OrderBy(GetToxinValue)
-                    .ThenBy(unit => unit.SlotIndex)
-                    .First();
-            return new ToxinTransferTargets(source, destination);
+                    .OrderBy(unit => unit.SlotIndex)
+                    .Take(2)
+                    .ToArray();
+            return new ToxinTransferTargets(source, destinations);
         }
 
         private static int GetToxinValue(BattleUnitState unit)

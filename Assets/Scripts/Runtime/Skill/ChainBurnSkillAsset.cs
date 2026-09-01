@@ -14,12 +14,13 @@ namespace Pachimon.Skills
         [SerializeField, Min(0)] private int _baseDamage = 80;
         [SerializeField, HideInInspector] private int _fireScalingPercent = 100;
         [SerializeField, Min(0)] private int _baseChainCount = 1;
-        [SerializeField, Min(1)] private int _addChainGainUnits = 100;
+        [FormerlySerializedAs("_addChainGainUnits")]
+        [SerializeField, Min(1)] private int _chainGain = 1;
 
         public int BaseDamage => _baseDamage;
         public int FireScalingPercent => AttributeDamageRules.ScalingRatio;
         public int BaseChainCount => _baseChainCount;
-        public int AddChainGainUnits => _addChainGainUnits;
+        public int ChainGain => _chainGain;
 
         public override void CollectValidationErrors(ICollection<string> errors)
         {
@@ -28,10 +29,9 @@ namespace Pachimon.Skills
             {
                 errors.Add($"Skill {SkillId}: Chain Burn must be Fire.");
             }
-            if (_addChainGainUnits <= 0)
+            if (_chainGain <= 0)
             {
-                errors.Add(
-                    $"Skill {SkillId}: Add Chain gain units must be positive.");
+                errors.Add($"Skill {SkillId}: Chain gain must be positive.");
             }
         }
 
@@ -46,7 +46,7 @@ namespace Pachimon.Skills
             int baseDamage,
             int fireScalingPercent,
             int baseChainCount,
-            int addChainGainUnits)
+            int chainGain)
         {
             base.ConfigureForEditor(
                 skillId,
@@ -60,7 +60,7 @@ namespace Pachimon.Skills
             _baseDamage = baseDamage;
             _fireScalingPercent = fireScalingPercent;
             _baseChainCount = baseChainCount;
-            _addChainGainUnits = addChainGainUnits;
+            _chainGain = chainGain;
         }
 #endif
     }

@@ -422,4 +422,51 @@ namespace Pachimon.Battle
             return transitions;
         }
     }
+
+    public sealed class BattleFieldAttackPresentation
+    {
+        public BattleFieldAttackPresentation(
+            string heading,
+            BattleUnitState focusUnit,
+            IEnumerable<string> lines,
+            IEnumerable<BattleResourceTransition> transitions)
+        {
+            Heading = heading ?? string.Empty;
+            FocusUnit = focusUnit;
+            Lines = lines?.Where(line => !string.IsNullOrWhiteSpace(line)).ToArray()
+                ?? Array.Empty<string>();
+            Transitions = transitions?.Where(value => value != null).ToArray()
+                ?? Array.Empty<BattleResourceTransition>();
+        }
+
+        public string Heading { get; }
+        public BattleUnitState FocusUnit { get; }
+        public IReadOnlyList<string> Lines { get; }
+        public IReadOnlyList<BattleResourceTransition> Transitions { get; }
+    }
+
+    public sealed class BattleFieldPresentationRecorder
+    {
+        private readonly List<BattleFieldAttackPresentation> _pending = new();
+
+        public void Record(BattleFieldAttackPresentation presentation)
+        {
+            if (presentation != null)
+            {
+                _pending.Add(presentation);
+            }
+        }
+
+        public IReadOnlyList<BattleFieldAttackPresentation> Drain()
+        {
+            if (_pending.Count == 0)
+            {
+                return Array.Empty<BattleFieldAttackPresentation>();
+            }
+
+            var presentations = _pending.ToArray();
+            _pending.Clear();
+            return presentations;
+        }
+    }
 }

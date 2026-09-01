@@ -233,10 +233,9 @@ namespace Pachimon.UI
                         AllocationType.Fire,
                         baseDamage)
                     + "、以降は連鎖順に減衰する。"
-                    + "使用するたびにアドチェインが"
-                    + AddChainRuntime.FormatUnits(
-                        chainBurn.AddChainGainUnits)
-                    + "増加する。整数部分が追加連鎖回数になる。";
+                    + "使用するたびにチェインバーンの追加連鎖数が"
+                    + chainBurn.ChainGain
+                    + "増加する。";
             }
 
             if (skill is AquaShockSkillAsset aquaShock
@@ -322,20 +321,25 @@ namespace Pachimon.UI
             if (skill is ToxinTransferSkillAsset toxinTransfer)
             {
                 var baseToxin = toxinTransfer.BaseToxinValue;
+                var transferPoison = 0;
                 if (owner?.IsRevealed == true
                     && owner.TryGetStat(
                         PachimonDisplayStat.Poison,
-                        out var transferPoison))
+                        out transferPoison))
                 {
                     baseToxin = ToxinTransferMath.CalculateBaseValue(
                         toxinTransfer,
                         transferPoison);
                 }
+                var applicationPercent =
+                    ToxinTransferMath.CalculateApplicationPercent(
+                        toxinTransfer,
+                        transferPoison);
                 return "最も毒素が多い敵から"
                     + $"{toxinTransfer.RemovalPercent}%を取り除き、"
-                    + "その対象を除く毒素が最も少ない敵へ"
+                    + "その対象を除く生存敵へ均等に"
                     + $"（除去量＋基礎{baseToxin}）の"
-                    + $"{toxinTransfer.ApplicationPercent}%を付与する。"
+                    + $"{applicationPercent}%を分配して付与する。"
                     + "敵全員の毒素が0なら、先頭へ基礎値だけを付与する。";
             }
 
@@ -476,10 +480,7 @@ namespace Pachimon.UI
                             wind,
                             healingWind.WindRatio));
                     return "HP割合が最も低い味方のHPを"
-                        + $"{Scale(healingWind.BaseHealing)}回復し、"
-                        + $"{healingWind.DurationTicks}tickの間Windを"
-                        + $"{Scale(healingWind.BaseWindBonus)}、Speedを"
-                        + $"{Scale(healingWind.BaseSpeedBonus)}増加させる。";
+                        + $"{Scale(healingWind.BaseHealing)}回復する。";
                 }
 
                 if (skill is SecondWindSkillAsset secondWind)

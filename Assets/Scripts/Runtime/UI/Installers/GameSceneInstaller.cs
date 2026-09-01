@@ -61,6 +61,17 @@ namespace Pachimon.UI
             InitializeSceneHierarchy();
         }
 
+        private void Update()
+        {
+            if (_headerView == null || CurrentRunContext == null)
+            {
+                return;
+            }
+
+            _headerView.SetItemButtonInteractable(
+                CurrentRunContext.MapRunController.CanOpenItemPanel);
+        }
+
         private bool CanUseSceneReferences()
         {
             return _gameRootView != null
@@ -75,6 +86,7 @@ namespace Pachimon.UI
                 && _cityScreen != null
                 && _restSpotScreen != null
                 && _leagueGateScreen != null
+                && _hallOfFameScreen != null
                 && _pachimonCatalog != null
                 && _skillCatalog != null
                 && _passiveCatalog != null
@@ -167,7 +179,13 @@ namespace Pachimon.UI
             else
             {
                 _headerView.ItemButton.onClick.RemoveAllListeners();
-                _headerView.ItemButton.onClick.AddListener(_gameRootView.ToggleItemPanel);
+                _headerView.ItemButton.onClick.AddListener(() =>
+                {
+                    if (CurrentRunContext?.MapRunController.CanOpenItemPanel == true)
+                    {
+                        _gameRootView.ToggleItemPanel();
+                    }
+                });
             }
 
             if (_headerView.SettingsButton == null)
@@ -205,6 +223,7 @@ namespace Pachimon.UI
                 _cityScreen,
                 _restSpotScreen,
                 _leagueGateScreen,
+                _hallOfFameScreen,
                 _pachimonCatalog,
                 _skillCatalog,
                 _passiveCatalog,
@@ -317,6 +336,7 @@ namespace Pachimon.UI
             if (_cityScreen == null) missing.Add(nameof(_cityScreen));
             if (_restSpotScreen == null) missing.Add(nameof(_restSpotScreen));
             if (_leagueGateScreen == null) missing.Add(nameof(_leagueGateScreen));
+            if (_hallOfFameScreen == null) missing.Add(nameof(_hallOfFameScreen));
             if (_pachimonCatalog == null) missing.Add(nameof(_pachimonCatalog));
             if (_skillCatalog == null) missing.Add(nameof(_skillCatalog));
             if (_passiveCatalog == null) missing.Add(nameof(_passiveCatalog));

@@ -9,6 +9,10 @@ namespace Pachimon.Items
         public const int MnPotion = 3;
         public const int SkillForget = 4;
         public const int ReviveShard = 5;
+        public const int SuperPotion = 6;
+        public const int SuperMnPotion = 7;
+        public const int SuperRecovery = 8;
+        public const int MaxRevive = 9;
         public const int FirstEngraving = 100;
         public const int LastEngraving = 113;
         public const int FirstEquipment = 200;

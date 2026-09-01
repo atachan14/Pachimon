@@ -36,13 +36,13 @@
 #### Passive
 
 - 名前:ドラゴンボクサー
-- 効果:竜属性ダメージを与えるたびに10スタックを獲得する。
-スタック毎に竜属性ダメージに+1%のボーナスを得る。
-竜属性以外のダメージを与えるとスタックを半分失う。
+- 効果:自身のSkillで竜属性ダメージを与えるたびに10スタックを獲得する。
+スタック毎に自身のSkillによる竜属性ダメージに+1%のボーナスを得る。
+- 自身のSkillで竜属性以外のダメージを与えるとスタックを半分失う。
 
 - 仮値: 竜Damage成立ごとに`10`Stack、1Stackごとに竜Damage`+1%`
 - Stack半減は切り捨てる
-- `AttributeDamageAppliedEvent`で成立した追加Damageも増減対象とする
+- `AttributeDamageAppliedEvent`のうち`OriginKind = Skill`だけを増減対象とする
 - True Damage / Status Damageは増減対象外とする
 
 ### ヒラリュウ

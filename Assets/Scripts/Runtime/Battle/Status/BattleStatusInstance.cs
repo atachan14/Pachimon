@@ -18,7 +18,7 @@ namespace Pachimon.Battle
         Toxin = 108,
         ToxinGrowth = 109,
         FireGrowth = 110,
-        AddChain = 111,
+        ChainBurnChain = 111,
         Burn = 112,
         ComboMasterBonus = 113,
         IceGrowth = 114,
@@ -50,6 +50,8 @@ namespace Pachimon.Battle
         WindGod = 140,
         DragonInstall = 141,
         Pollen = 142,
+        ChainVinesChain = 143,
+        CuttingDanceChain = 144,
     }
 
     [Flags]
@@ -194,8 +196,9 @@ namespace Pachimon.Battle
             BattleStatusId.Pollen => $"{Definition?.DisplayName ?? "花粉"} {Value}",
             BattleStatusId.FireGrowth =>
                 $"燃える男 Fire +{Value * StackCount}",
-            BattleStatusId.AddChain =>
-                $"アドチェイン {AddChainRuntime.FormatUnits(Value)}",
+            BattleStatusId.ChainBurnChain => $"チェインバーン +{Value}",
+            BattleStatusId.ChainVinesChain => $"連鎖する蔦 +{Value}",
+            BattleStatusId.CuttingDanceChain => $"きりきり舞い +{Value}",
             BattleStatusId.Burn => $"{Definition?.DisplayName ?? "火傷"} {Value}",
             BattleStatusId.ComboMasterBonus =>
                 $"コンボマスター DB +{Value * StackCount}",

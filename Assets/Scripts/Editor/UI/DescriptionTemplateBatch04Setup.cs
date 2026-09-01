@@ -52,6 +52,8 @@ namespace Pachimon.Editor.UI
             var passives = AssetDatabase.LoadAssetAtPath<PassiveCatalog>(PassiveCatalogPath);
             if (skills?.Get(25)?.Description?.Contains("{value:baseValue}") != true
                 || skills?.Get(27)?.Description?.Contains("{value:pollen}") != true
+                || skills?.Get(29)?.Description?.Contains(
+                    "{value:baseApplicationPercent}") != true
                 || passives?.Get(25)?.Description?.Contains(
                     "{value:increasePercent}") != true)
             {
@@ -95,9 +97,12 @@ namespace Pachimon.Editor.UI
                 + "発生と硬直を{icon:Fire}炎の{value:fireTimingRatio}%参照して短縮する。"
                 + "現在の硬直は{value:recovery}tick、CDは{value:cooldown}tick。",
             29 => "最も{term:Toxin|毒素}が多い敵から{value:removalPercent}%を取り除き、"
-                + "別の最少対象へ（除去量＋{color:Poison}{value:baseToxin}{/color}（"
+                + "その対象を除く生存敵へ（除去量＋{color:Poison}{value:baseToxin}{/color}（"
                 + "{value:rawBaseToxin} ×（100 + {icon:Poison}{value:poison} × "
-                + "{value:toxinRatio}%）%））の{value:applicationPercent}%を付与する。"
+                + "{value:toxinRatio}%）%））の{value:applicationPercent}%（"
+                + "{value:baseApplicationPercent}% + {value:scaledApplicationBasePercent}% ×（100 + "
+                + "{icon:Poison}{value:poison} × {value:applicationPoisonRatio}%）%）を、"
+                + "最大2体へ均等に分配して付与する。"
                 + "敵全員が毒素0なら、先頭へ同じ基礎毒素を付与する。",
             30 => "Battle中の{term:Temperature|気温}を恒久的に"
                 + "{color:Ice}{value:temperatureReduction}{/color}（{value:baseValue} ×（100 + "

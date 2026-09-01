@@ -103,9 +103,12 @@ namespace Pachimon.Items
             {
                 var recoveryAmount = generatedData?.PrimaryEffectValue
                     ?? healingItem.RecoveryAmount;
+                var suffix = healingItem.ValueMode == RecoveryValueMode.MaximumPercent
+                    ? $"{recoveryAmount}%"
+                    : recoveryAmount.ToString();
                 return healingItem.DefeatedOnly
-                    ? $"{item.DisplayName}（{recoveryAmount}）"
-                    : $"{item.DisplayName}（+{recoveryAmount}）";
+                    ? $"{item.DisplayName}（{suffix}）"
+                    : $"{item.DisplayName}（+{suffix}）";
             }
 
             if (item is EngravingItemAsset

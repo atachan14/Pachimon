@@ -14,7 +14,7 @@ namespace Pachimon.Reward
         [SerializeField, Min(0)] private int _speedAmount = 20;
         [SerializeField, Min(0)] private int _damageBonusAmount = 20;
         [SerializeField, Min(0)] private int _resistBonusAmount = 20;
-        [SerializeField, Min(0)] private int _bonusGoldAmount = 4000;
+        [SerializeField, Min(0)] private int _bonusGoldAmount = 3000;
         [SerializeField, Range(0, 100)] private int _secondSlotPercent = 50;
 
         private static ModValueSettings _runtimeDefault;

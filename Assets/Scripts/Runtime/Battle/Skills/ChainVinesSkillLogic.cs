@@ -20,7 +20,10 @@ namespace Pachimon.Battle
 
             context.Targets.GetAllEnemies();
             context.UseContinuousPresentationBlocks();
-            var chainCount = ChainTargetNavigator.GetEffectiveAdditionalChainCount(context.User, _skill.BaseChainCount);
+            var chainCount = ChainTargetNavigator.GetEffectiveAdditionalChainCount(
+                context.User,
+                _skill.BaseChainCount,
+                BattleStatusId.ChainVinesChain);
             var navigator = new ChainTargetNavigator(context.State.GetOpposingSide(context.User.Side));
             var effects = new List<SkillEffectResult>();
             for (var hit = 0; hit <= chainCount; hit++)
@@ -65,7 +68,8 @@ namespace Pachimon.Battle
             {
                 context.State.Events.Publish(new ChainResolvedEvent(context.State, context.User, _skill, effects.Count - 1));
             }
-            AddChainRuntime.AddUnits(context.User, context.User, _skill.AddChainGainUnits);
+            SkillChainRuntime.Add(context.User, context.User,
+                BattleStatusId.ChainVinesChain, _skill.ChainGain);
             return new SkillResolution(context.User, _skill, effects);
         }
     }

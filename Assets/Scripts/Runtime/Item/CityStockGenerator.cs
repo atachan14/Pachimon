@@ -33,14 +33,20 @@ namespace Pachimon.Items
         public const int MaximumEffectPercent = 130;
         public const int PotionTotalCopies = 40;
         public const int MnPotionTotalCopies = 40;
-        public const int ReviveShardTotalCopies = 40;
-        public const int SkillForgetTotalCopies = 16;
+        public const int ReviveShardTotalCopies = 16;
+        public const int SkillForgetCopiesPerCity = 2;
         public const int MachineCopiesPerPoolPerCity = 1;
         public const int EngravingCopiesPerStat = 32;
+        public const int EngravingMainEffectUnits = 2;
+        public const int EngravingDownsideEffectUnits = 1;
         public const int EquipmentCopiesPerDefinition = 2;
         public const int EquipmentPerCity = 6;
         public const int MinimumEquipmentEffectPercent = 80;
         public const int MaximumEquipmentEffectPercent = 120;
+        public const int EquipmentMainEffectUnits = 2;
+        public const int HeadMainEffectMultiplier = 2;
+        public const int EquipmentAdditionalEffectDivisor = 2;
+        public const int EquipmentFixedSubStatUnits = 4;
 
         public IReadOnlyDictionary<string, IReadOnlyList<CityStockEntry>> Generate(
             IReadOnlyList<CityStockRequest> requests,
@@ -115,12 +121,11 @@ namespace Pachimon.Items
                 requests,
                 assignedItems,
                 random);
-            DistributeRandomCopies(
+            DistributeFixedCopiesPerCity(
                 skillForget,
-                SkillForgetTotalCopies,
+                SkillForgetCopiesPerCity,
                 requests,
-                assignedItems,
-                random);
+                assignedItems);
             DistributeEvenly(neutralMachines, requests, assignedItems, random);
             DistributeEvenly(attributeMachines, requests, assignedItems, random);
             foreach (var engraving in engravings)
@@ -289,6 +294,26 @@ namespace Pachimon.Items
             }
         }
 
+        private static void DistributeFixedCopiesPerCity(
+            ItemAsset item,
+            int copiesPerCity,
+            IEnumerable<CityStockRequest> requests,
+            IReadOnlyDictionary<string, List<ItemAsset>> assignedItems)
+        {
+            if (copiesPerCity < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(copiesPerCity));
+            }
+
+            foreach (var request in requests)
+            {
+                for (var copyIndex = 0; copyIndex < copiesPerCity; copyIndex++)
+                {
+                    assignedItems[request.CityGroupId].Add(item);
+                }
+            }
+        }
+
         private static void DistributeEvenly(
             IReadOnlyCollection<SkillMachineItemAsset> machines,
             IReadOnlyList<CityStockRequest> requests,
@@ -388,7 +413,8 @@ namespace Pachimon.Items
                 .OrderBy(draft => draft.Price)
                 .ToArray();
             var equipmentBase = checked(
-                StatUnitValue.Get(PachimonStatType.Fire) * 3);
+                StatUnitValue.Get(PachimonStatType.Fire)
+                * EquipmentMainEffectUnits);
             var equipmentValues = Enumerable.Range(0, equipmentDrafts.Length)
                 .Select(_ => random.Next(
                     checked(equipmentBase * MinimumEquipmentEffectPercent / 100),
@@ -403,7 +429,7 @@ namespace Pachimon.Items
                     equipment.MainAttribute);
                 var rankedValue = equipmentValues[index];
                 var mainValue = equipment.Slot == EquipmentSlot.Head
-                    ? checked(rankedValue * 2)
+                    ? checked(rankedValue * HeadMainEffectMultiplier)
                     : rankedValue;
                 var additionalAttributes = Enum
                     .GetValues(typeof(PachimonAttribute))
@@ -415,19 +441,23 @@ namespace Pachimon.Items
                 var changes = new List<GeneratedStatChange>
                 {
                     new(mainStat, mainValue),
-                    new(additionalStat, Math.Max(1, mainValue / 3)),
+                    new(
+                        additionalStat,
+                        Math.Max(1, mainValue / EquipmentAdditionalEffectDivisor)),
                 };
                 if (equipment.Slot == EquipmentSlot.Body)
                 {
                     changes.Add(new GeneratedStatChange(
                         PachimonStatType.Haste,
-                        checked(StatUnitValue.Get(PachimonStatType.Haste) * 4)));
+                        checked(StatUnitValue.Get(PachimonStatType.Haste)
+                            * EquipmentFixedSubStatUnits)));
                 }
                 else if (equipment.Slot == EquipmentSlot.Feet)
                 {
                     changes.Add(new GeneratedStatChange(
                         PachimonStatType.Speed,
-                        checked(StatUnitValue.Get(PachimonStatType.Speed) * 4)));
+                        checked(StatUnitValue.Get(PachimonStatType.Speed)
+                            * EquipmentFixedSubStatUnits)));
                 }
 
                 draft.StatChanges = changes;
@@ -445,9 +475,11 @@ namespace Pachimon.Items
                          .GroupBy(draft => draft.Item.ItemId))
             {
                 var engraving = (EngravingItemAsset)group.First().Item;
+                var mainBaseValue = checked(
+                    engraving.BaseEffectValue * EngravingMainEffectUnits);
                 var values = CreateBalancedEffectValues(
                     group.Count(),
-                    engraving.BaseEffectValue,
+                    mainBaseValue,
                     random);
                 var orderedDrafts = group.OrderBy(draft => draft.Price).ToArray();
                 Array.Sort(values);
@@ -464,8 +496,8 @@ namespace Pachimon.Items
                         (int)Math.Floor(
                             downside.BaseEffectValue
                             * (decimal)mainValue
-                            / engraving.BaseEffectValue
-                            / 2m));
+                            / mainBaseValue
+                            * EngravingDownsideEffectUnits));
                     orderedDrafts[index].StatChanges = new[]
                     {
                         new GeneratedStatChange(engraving.TargetStat, mainValue),

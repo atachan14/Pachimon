@@ -693,7 +693,7 @@ namespace Pachimon.UI
                 && generatedData.StatChanges.Count >= 2)
             {
                 return $"{item.DisplayName}（"
-                    + $"{string.Join("/", generatedData.StatChanges.Select(change => FormatStatChange(change, true)))}）";
+                    + $"{string.Join("/", generatedData.StatChanges.Select(change => FormatStatChange(change)))}）";
             }
 
             if (item is not EngravingItemAsset

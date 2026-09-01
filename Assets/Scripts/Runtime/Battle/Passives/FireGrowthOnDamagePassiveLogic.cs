@@ -23,6 +23,7 @@ namespace Pachimon.Battle
             if (battleEvent is not DamageAppliedEvent damageEvent
                 || !ReferenceEquals(damageEvent.Target, Owner)
                 || damageEvent.ReceivedDamage <= 0
+                || (damageEvent.Tags & DamageTag.DamageOverTime) != 0
                 || !Owner.IsAlive
                 || _definition.FireIncreasePerDamage == 0)
             {

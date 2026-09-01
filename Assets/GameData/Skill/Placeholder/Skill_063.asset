@@ -25,11 +25,11 @@ MonoBehaviour:
     \xD7\uFF08100 + {icon:Aqua}{value:aqua} \xD7 {value:aquaRatio}%\uFF09%\uFF09\u306E{icon:Aqua}{color:Aqua}\u30C0\u30E1\u30FC\u30B8{/color}\u3001{color:Leaf}{value:leafDamage}{/color}\uFF08{value:baseLeafDamage}
     \xD7\uFF08100 + {icon:Leaf}{value:leaf} \xD7 {value:leafRatio}%\uFF09%\uFF09\u306E{icon:Leaf}{color:Leaf}\u30C0\u30E1\u30FC\u30B8{/color}\u3001{color:Wind}{value:windDamage}{/color}\uFF08{value:baseWindDamage}
     \xD7\uFF08100 + {icon:Wind}{value:wind} \xD7 {value:windRatio}%\uFF09%\uFF09\u306E{icon:Wind}{color:Wind}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002"
-  _baseFireDamage: 65
+  _baseFireDamage: 60
   _fireDamageRatio: 100
-  _baseAquaDamage: 65
+  _baseAquaDamage: 60
   _aquaDamageRatio: 100
-  _baseLeafDamage: 65
+  _baseLeafDamage: 60
   _leafDamageRatio: 100
-  _baseWindDamage: 65
+  _baseWindDamage: 60
   _windDamageRatio: 100

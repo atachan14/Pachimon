@@ -16,6 +16,7 @@ namespace Pachimon.UI
             new Color32(0xD7, 0x35, 0x2A, 0xFF);
 
         [SerializeField] private TMP_Text _itemCountText;
+        [SerializeField] private TMP_Text _badgeCountText;
         private Image _goldIcon;
 
         [field: SerializeField] public TMP_Text GoldText { get; private set; }
@@ -43,8 +44,23 @@ namespace Pachimon.UI
             _goldIcon = GetComponentsInChildren<Image>(true)
                 .FirstOrDefault(image => image.name == "GoldIcon");
             ApplyPalette();
+            EnsureBadgeCountText();
             ConfigureItemCountText();
             LogMissingReferences();
+        }
+
+        public void SetRunSummary(int gold, int badgeCount)
+        {
+            if (GoldText != null)
+            {
+                GoldText.text = gold.ToString();
+            }
+
+            EnsureBadgeCountText();
+            if (_badgeCountText != null)
+            {
+                _badgeCountText.text = $"Badge:{Math.Max(0, badgeCount)}個";
+            }
         }
 
         private void OnDestroy()
@@ -69,6 +85,16 @@ namespace Pachimon.UI
             }
 
             RefreshItemCount();
+        }
+
+        public void SetItemButtonInteractable(bool interactable)
+        {
+            if (ItemButton == null || ItemButton.interactable == interactable)
+            {
+                return;
+            }
+
+            ItemButton.interactable = interactable;
         }
 
         public void ConfigureCompactPaneButtons(
@@ -201,6 +227,35 @@ namespace Pachimon.UI
             _itemCountText.margin = Vector4.zero;
             _itemCountText.ForceMeshUpdate();
             EnsureItemCountBadge(_itemCountText.rectTransform);
+        }
+
+        private void EnsureBadgeCountText()
+        {
+            if (_badgeCountText == null)
+            {
+                _badgeCountText = GetComponentsInChildren<TMP_Text>(true)
+                    .FirstOrDefault(text => text.name == "BadgeCountText");
+            }
+            if (_badgeCountText == null && GoldText != null)
+            {
+                _badgeCountText = Instantiate(GoldText, GoldText.transform.parent, false);
+                _badgeCountText.name = "BadgeCountText";
+                _badgeCountText.transform.SetSiblingIndex(
+                    GoldText.transform.GetSiblingIndex() + 1);
+            }
+            if (_badgeCountText == null)
+            {
+                return;
+            }
+
+            _badgeCountText.gameObject.SetActive(true);
+            _badgeCountText.raycastTarget = false;
+            _badgeCountText.textWrappingMode = TextWrappingModes.NoWrap;
+            _badgeCountText.overflowMode = TextOverflowModes.Overflow;
+            _badgeCountText.alignment = TextAlignmentOptions.MidlineLeft;
+            var layout = _badgeCountText.GetComponent<LayoutElement>()
+                ?? _badgeCountText.gameObject.AddComponent<LayoutElement>();
+            layout.preferredWidth = 180f;
         }
 
         private RectTransform EnsureItemCountBadge(RectTransform textRect)

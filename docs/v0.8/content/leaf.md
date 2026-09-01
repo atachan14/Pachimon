@@ -33,7 +33,7 @@
 
 - 追加連鎖数2。
 - 連鎖先へLeafダメージとSlowを与える。
-- 使用時、自身へアドチェインを1付与する。
+- 使用時、自身の連鎖する蔦追加連鎖数を1増加する。他の連鎖Skillには影響しない。
 - 仮値: Damage 70 / Slow 25 / Slow用Leaf Ratio 100%。DamageはLeafを100%参照する。
 
 #### Passive: 絡まる蔦
@@ -153,4 +153,5 @@
 - 所有者が生存している間、全陣営で発生したダメージを監視する。
 - 炎ダメージがHPかShieldへ1以上反映されるたびに、所有者のLeafがBattle中恒久で5増加する。
 - 草ダメージがHPかShieldへ1以上反映されるたびに、所有者のFireがBattle中恒久で5増加する。
+- `DamageOverTime`タグを持つ継続Damageでは発動しない。
 - 攻撃・状態・Fieldなど、Damage Originは問わない。

@@ -189,6 +189,7 @@ Stunとしても扱う。Stunと同等の効果だが、炎属性ダメージを
 - 仮表示名: `氷005`（Passive ID `38`。正式名決定後にSOだけ変更する）
 - 効果:氷ダメージが発生するたびに、自身の氷を10増加させる。
 - 攻撃・状態を問わず、HPまたはShieldへ1以上のIce Damageが入るたびに発動する
+- `DamageOverTime`タグを持つ継続Damageでは発動しない
 - 自身以外が発生させたIce Damageでも発動する
 - 所持者が生存している間だけ発動する
 - 1回あたりの増加値は`IceGrowthOnDamagePassiveAsset`から調整可能にする

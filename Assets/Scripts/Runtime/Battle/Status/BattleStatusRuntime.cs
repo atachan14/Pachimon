@@ -48,13 +48,15 @@ namespace Pachimon.Battle
 
         public void ApplyStatus(
             BattleUnitState target,
-            BattleStatusInstance status)
+            BattleStatusInstance status,
+            StatusApplicationTag tags = StatusApplicationTag.None)
         {
             ApplyStatusCore(
                 target,
                 status,
                 reduceIncomingValue: true,
-                logAttackApplication: false);
+                logAttackApplication: false,
+                tags);
         }
 
         public void ApplyAttackStatus(
@@ -79,7 +81,8 @@ namespace Pachimon.Battle
                 target,
                 status,
                 reduceIncomingValue: true,
-                logAttackApplication: true);
+                logAttackApplication: true,
+                StatusApplicationTag.None);
         }
 
         public void HandleAttackReceived(AttackReceivedEvent attackEvent)
@@ -131,7 +134,7 @@ namespace Pachimon.Battle
                     "SkillHit belongs to another Battle.",
                     nameof(hit));
             }
-            if (hit.WasEvaded)
+            if (!hit.Target.IsAlive || hit.WasEvaded)
                 return false;
             if (!hit.DamageWasResolved)
             {
@@ -156,7 +159,8 @@ namespace Pachimon.Battle
                 hit.Target,
                 status,
                 reduceIncomingValue: true,
-                logAttackApplication: true);
+                logAttackApplication: true,
+                StatusApplicationTag.None);
             return true;
         }
 
@@ -168,17 +172,23 @@ namespace Pachimon.Battle
                 target,
                 status,
                 reduceIncomingValue: false,
-                logAttackApplication: false);
+                logAttackApplication: false,
+                StatusApplicationTag.None);
         }
 
         private void ApplyStatusCore(
             BattleUnitState target,
             BattleStatusInstance status,
             bool reduceIncomingValue,
-            bool logAttackApplication)
+            bool logAttackApplication,
+            StatusApplicationTag tags)
         {
             ValidateTarget(target);
             if (status == null) throw new ArgumentNullException(nameof(status));
+            if (!target.IsAlive)
+            {
+                return;
+            }
             var requestedValue = status.Value;
             if (reduceIncomingValue)
             {
@@ -211,7 +221,7 @@ namespace Pachimon.Battle
                     target.AddStatusInstance(status);
                 }
 
-                PublishToxinAppliedEvents(target, applications);
+                PublishToxinAppliedEvents(target, applications, tags);
             }
             else if ((status.Categories & BattleStatusCategory.Slow) != 0)
             {
@@ -526,7 +536,8 @@ namespace Pachimon.Battle
 
         private void PublishToxinAppliedEvents(
             BattleUnitState target,
-            IEnumerable<ToxinApplicationRecord> applications)
+            IEnumerable<ToxinApplicationRecord> applications,
+            StatusApplicationTag tags)
         {
             foreach (var application in applications)
             {
@@ -542,7 +553,8 @@ namespace Pachimon.Battle
                     _state,
                     source,
                     target,
-                    application.AppliedValue));
+                    application.AppliedValue,
+                    tags));
             }
         }
 
@@ -800,7 +812,8 @@ namespace Pachimon.Battle
                     target,
                     BattleStatusId.Toxin,
                     PachimonAttribute.Poison,
-                    tick.Damage);
+                    tick.Damage,
+                    DamageTag.DamageOverTime);
             }
         }
 
@@ -862,7 +875,8 @@ namespace Pachimon.Battle
         }
 
         public void HandleAttributeDamageApplied(
-            AttributeDamageAppliedEvent damageEvent)
+            AttributeDamageAppliedEvent damageEvent,
+            int leakValueBeforeDamage)
         {
             if (damageEvent == null)
             {
@@ -883,22 +897,20 @@ namespace Pachimon.Battle
                 return;
             }
 
-            var leaks = damageEvent.Target.Statuses
+            var remainingLeaks = damageEvent.Target.Statuses
                 .Where(status =>
                     (status.Categories & BattleStatusCategory.Leak) != 0)
                 .ToArray();
-            var totalValue = leaks.Sum(leak =>
-                checked(leak.Value * leak.StackCount));
-            foreach (var leak in leaks)
+            foreach (var leak in remainingLeaks)
             {
                 damageEvent.Target.TryRemoveStatusInstance(leak);
             }
-            if (totalValue <= 0)
+            if (leakValueBeforeDamage <= 0)
             {
                 return;
             }
 
-            ResolveLeak(damageEvent, totalValue);
+            ResolveLeak(damageEvent, leakValueBeforeDamage);
         }
 
         private static void AdvanceFrozenBreak(

@@ -5,6 +5,7 @@ using Pachimon.Reward;
 using Pachimon.Run;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Pachimon.UI
@@ -305,6 +306,11 @@ namespace Pachimon.UI
                 card.transform.parent.GetComponent<Image>().color = color;
                 card.color = AttributeCardPalette.GetReadableTextColor(color);
                 card.text = $"{GetAttributeLabel(badge.Attribute)}  x{badge.Count}";
+                var tooltipTarget = card.transform.parent
+                    .GetComponent<TrainerBadgeTooltipTarget>()
+                    ?? card.transform.parent.gameObject
+                        .AddComponent<TrainerBadgeTooltipTarget>();
+                tooltipTarget.Configure(badge.Attribute, badge.Count);
             }
 
             _badgeGrid.GetComponent<ResponsiveGridLayout>()?.RefreshLayout();
@@ -837,6 +843,60 @@ namespace Pachimon.UI
         private static string FormatSigned(int value)
         {
             return value > 0 ? $"+{value}" : value.ToString();
+        }
+
+        private sealed class TrainerBadgeTooltipTarget : MonoBehaviour,
+            IPointerEnterHandler,
+            IPointerMoveHandler,
+            IPointerExitHandler
+        {
+            private PachimonAttribute _attribute;
+            private int _count;
+            private PachimonStatTooltipView _tooltip;
+
+            public void Configure(PachimonAttribute attribute, int count)
+            {
+                _attribute = attribute;
+                _count = Mathf.Max(0, count);
+            }
+
+            public void OnPointerEnter(PointerEventData eventData)
+            {
+                if (_count <= 0)
+                {
+                    return;
+                }
+
+                _tooltip = PachimonStatTooltipView.GetOrCreate(this);
+                _tooltip?.Show(this, CreateDescription(), eventData.position);
+            }
+
+            public void OnPointerMove(PointerEventData eventData)
+            {
+                _tooltip?.Move(this, eventData.position);
+            }
+
+            public void OnPointerExit(PointerEventData eventData)
+            {
+                _tooltip?.Hide(this);
+            }
+
+            private void OnDisable()
+            {
+                _tooltip?.Hide(this);
+            }
+
+            private string CreateDescription()
+            {
+                var bonusPercent = checked(
+                    _count * TrainerModifierSet.BadgeBonusPercentPerBadge);
+                var statType = PachimonStatTypeUtility.FromAttribute(_attribute);
+                var icon = TryGetDisplayStat(statType, out var displayStat)
+                    ? AttributeRichText.GetIcon(displayStat)
+                    : string.Empty;
+                return $"{icon}"
+                    + $"{GetAttributeLabel(_attribute)}を{bonusPercent}%増加する。";
+            }
         }
 
     }

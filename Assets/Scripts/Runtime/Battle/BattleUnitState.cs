@@ -500,8 +500,11 @@ namespace Pachimon.Battle
         public int RestoreHp(int amount)
         {
             if (amount < 0) throw new ArgumentOutOfRangeException(nameof(amount));
+            var wasDefeated = CurrentHp <= 0;
             var restoredHp = Math.Min(MaxHp - CurrentHp, amount);
             CurrentHp += restoredHp;
+            if (wasDefeated && restoredHp > 0)
+                Timing.MarkReady();
             return restoredHp;
         }
 

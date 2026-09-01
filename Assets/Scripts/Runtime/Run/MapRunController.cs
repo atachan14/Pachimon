@@ -25,6 +25,7 @@ namespace Pachimon.Run
         private readonly CityScreen _cityScreen;
         private readonly RestSpotScreen _restSpotScreen;
         private readonly LeagueGateScreen _leagueGateScreen;
+        private readonly HallOfFameScreen _hallOfFameScreen;
         private bool _canMoveToNextNode;
         private string _pendingNodeId;
         private string _startNodeId;
@@ -49,7 +50,8 @@ namespace Pachimon.Run
             BattleScreen battleScreen,
             CityScreen cityScreen,
             RestSpotScreen restSpotScreen,
-            LeagueGateScreen leagueGateScreen)
+            LeagueGateScreen leagueGateScreen,
+            HallOfFameScreen hallOfFameScreen)
         {
             _gameRootView = gameRootView;
             _headerView = headerView;
@@ -62,6 +64,7 @@ namespace Pachimon.Run
             _cityScreen = cityScreen;
             _restSpotScreen = restSpotScreen;
             _leagueGateScreen = leagueGateScreen;
+            _hallOfFameScreen = hallOfFameScreen;
 
             if (_mapOverlayView != null)
             {
@@ -73,6 +76,8 @@ namespace Pachimon.Run
         public RunContext Context { get; private set; }
 
         public long? ActiveBattleTick => _activeBattleState?.CurrentTick;
+        public bool CanOpenItemPanel =>
+            _activeBattleState == null || _battleScreen?.CanUseItems == true;
 
         public void StartRun(RunContext context)
         {
@@ -521,6 +526,7 @@ namespace Pachimon.Run
                 return false;
             }
 
+            _gameRootView?.CloseItemPanel();
             Context.RunState.CurrentNodeId = targetNodeId;
             _canMoveToNextNode = false;
             _pendingNodeId = null;
@@ -963,11 +969,9 @@ namespace Pachimon.Run
 
         private void ApplyHeaderState()
         {
-            if (_headerView.GoldText != null)
-            {
-                _headerView.GoldText.text = Context.RunState.Gold.ToString();
-            }
-
+            _headerView?.SetRunSummary(
+                Context.RunState.Gold,
+                Context.RunState.BadgeCount);
         }
 
         private void ApplyMapOverlayState()
@@ -1024,6 +1028,10 @@ namespace Pachimon.Run
                     _mainPaneView.Show(_battleScreen);
                     ApplyEliteNode(currentNode);
                     break;
+                case NodeType.HallOfFame:
+                    _mainPaneView.Show(_hallOfFameScreen);
+                    ApplyHallOfFameNode(currentNode);
+                    break;
                 default:
                     _mainPaneView.Show(_startScreen);
                     ApplyFallbackNode(currentNode);
@@ -1043,6 +1051,7 @@ namespace Pachimon.Run
                 NodeType.LeagueGate => "リーグゲート",
                 NodeType.Elite => "四天王",
                 NodeType.Ghost => "ゴースト",
+                NodeType.HallOfFame => "殿堂入り",
                 _ => node.NodeType.ToString(),
             };
         }
@@ -1081,6 +1090,9 @@ namespace Pachimon.Run
                     break;
                 case LeagueGateNodeContent leagueGate:
                     builder.Append("必要Badge数: ").AppendLine(leagueGate.RequiredBadgeCount.ToString());
+                    break;
+                case HallOfFameNodeContent:
+                    builder.AppendLine("殿堂入り（仮実装）");
                     break;
                 default:
                     builder.AppendLine("詳細は未実装");
@@ -1320,6 +1332,11 @@ namespace Pachimon.Run
         private void ShowCurrentCityShop(string statusMessage = null)
         {
             var currentNode = GetCurrentNode();
+            if (currentNode?.Content is LeagueGateNodeContent leagueGate)
+            {
+                ShowCurrentLeagueGateShop(leagueGate, statusMessage);
+                return;
+            }
             if (currentNode?.Content is not CityNodeContent content)
             {
                 return;
@@ -1383,7 +1400,8 @@ namespace Pachimon.Run
                         definition?.DisplayName ?? $"Pachimon {instance.SpeciesId}",
                         definition?.FrontSprite,
                         skills,
-                        instance.Equipment.Keys);
+                        instance.Equipment.Keys,
+                        instance.Engravings.Count);
                 })
                 .ToArray();
         }
@@ -1447,6 +1465,13 @@ namespace Pachimon.Run
             if (target == null)
             {
                 ShowCurrentCityShop("対象のパチモンが見つかりません。");
+                return;
+            }
+
+            if (!target.CanAddEngravings(entries.Count))
+            {
+                ShowCurrentCityShop(
+                    $"刻印は1体につき最大{PachimonInstance.MaxEngravings}個です。");
                 return;
             }
 
@@ -1564,13 +1589,13 @@ namespace Pachimon.Run
         {
             totalPrice = 0;
             error = null;
-            var currentNode = GetCurrentNode();
-            if (currentNode?.Content is not CityNodeContent city
+            var availableStock = GetCurrentShopStockEntries();
+            if (availableStock == null
                 || entries == null
                 || entries.Count == 0
                 || entries.Any(entry => entry == null
                     || entry.IsPurchased
-                    || !city.StockEntries.Contains(entry)))
+                    || !availableStock.Contains(entry)))
             {
                 error = "商品が見つからないか、すでに売り切れです。";
                 return false;
@@ -1583,6 +1608,16 @@ namespace Pachimon.Run
                 return false;
             }
             return true;
+        }
+
+        private IReadOnlyList<CityStockEntry> GetCurrentShopStockEntries()
+        {
+            return GetCurrentNode()?.Content switch
+            {
+                CityNodeContent city => city.StockEntries,
+                LeagueGateNodeContent leagueGate => leagueGate.StockEntries,
+                _ => null,
+            };
         }
 
         private void CommitCityStock(
@@ -1669,6 +1704,25 @@ namespace Pachimon.Run
                 content.EnemyPachimonInstanceIds,
                 content.TrainerProfile,
                 null);
+        }
+
+        private void ApplyHallOfFameNode(MapNode node)
+        {
+            if (node.Content is not HallOfFameNodeContent)
+            {
+                return;
+            }
+
+            _mainPaneView.LogWindowView?.SetLogText(
+                "殿堂入り演出後、チャンピオンズロードに進む（未実装）");
+            _mainPaneView.LogWindowView?.ClearOptions();
+            _hallOfFameScreen?.Present(ReturnToTitleFromHallOfFame);
+        }
+
+        private void ReturnToTitleFromHallOfFame()
+        {
+            Context.RunState.IsRunFinished = true;
+            _gameRootView?.FadeToTitleScene();
         }
 
         private void StartBattle(
@@ -2077,9 +2131,81 @@ namespace Pachimon.Run
                 return;
             }
 
-            _mainPaneView.LogWindowView?.SetLogText(
-                $"League Gate\n必要 badge 数: {content.RequiredBadgeCount}\n未達時: {content.FailureMode}");
-            _mainPaneView.LogWindowView?.ShowSingleOption("挑戦する", CompleteCurrentNode);
+            if (Context.RunState.BadgeCount >= content.RequiredBadgeCount)
+            {
+                _leagueGateScreen?.HideProfessor();
+                _mainPaneView.Show(_cityScreen);
+                ShowCurrentLeagueGateShop(content);
+                return;
+            }
+
+            _mainPaneView.Show(_leagueGateScreen);
+            _leagueGateScreen?.ShowProfessor();
+            _rightPaneView?.ClearNodeSelection();
+            _mainPaneView.LogWindowView?.ClearOptions();
+            _mainPaneView.LogWindowView?.PlayDialoguePage(
+                new DialoguePage(new[]
+                {
+                    new DialogueBlock(new[]
+                    {
+                        new DialogueLine(
+                            $"集めたバッジの数は・・・\n・・・{Context.RunState.BadgeCount}個じゃな。"),
+                    }),
+                    new DialogueBlock(new[]
+                    {
+                        new DialogueLine("もう、家に帰りなさい。"),
+                    }),
+                    new DialogueBlock(new[]
+                    {
+                        new DialogueLine(
+                            $"{Context.RunState.PlayerName}は目の前が真っ暗になった"),
+                    }),
+                }),
+                CompleteLeagueGateDefeat);
+        }
+
+        private void ShowCurrentLeagueGateShop(
+            LeagueGateNodeContent content,
+            string statusMessage = null)
+        {
+            if (content == null) return;
+
+            var shopContent = new CityNodeContent(
+                "league_gate",
+                content.ShopSeed,
+                content.StockEntries);
+            var message = "リーグゲートへようこそ。\n準備を整えて四天王に挑んでください。";
+            if (!string.IsNullOrWhiteSpace(statusMessage))
+                message += $"\n\n{statusMessage}";
+            _mainPaneView.LogWindowView?.SetLogText(message);
+            _mainPaneView.LogWindowView?.ClearOptions();
+            _cityScreen?.Bind(
+                shopContent,
+                Context.ItemCatalog,
+                Context.RunState,
+                BuildCityPachimonOptions(),
+                statusMessage,
+                ShowCityItemDetails,
+                TryPurchaseCityItems,
+                TryApplyCityEngravings,
+                TryTeachCitySkill,
+                TryForgetCitySkill,
+                ShowCitySkillDetails,
+                TryEquipCityItem,
+                CompleteCurrentNode,
+                CityShopConfiguration.LeagueGate);
+            _rightPaneView?.ShowCityShop(
+                shopContent,
+                Context.ItemCatalog,
+                Context.RunState,
+                ShowCityItemDetails);
+        }
+
+        private void CompleteLeagueGateDefeat()
+        {
+            Context.RunState.IsRunFinished = true;
+            _mainPaneView.LogWindowView?.ClearOptions();
+            _gameRootView?.FadeToTitleScene();
         }
 
         private void ApplyFallbackNode(MapNode node)

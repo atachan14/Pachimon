@@ -4,6 +4,13 @@ using Pachimon.Run;
 
 namespace Pachimon.Battle
 {
+    [Flags]
+    public enum DamageTag
+    {
+        None = 0,
+        DamageOverTime = 1 << 0,
+    }
+
     public enum DamageOriginKind
     {
         Skill = 0,
@@ -110,7 +117,8 @@ namespace Pachimon.Battle
             DamagePenetration penetration = default,
             bool applyDamageBonusMultiplier = true,
             bool applyOutgoingModifiers = true,
-            decimal? attackerAttributeValue = null)
+            decimal? attackerAttributeValue = null,
+            DamageTag tags = DamageTag.None)
         {
             if (originId <= 0) throw new ArgumentOutOfRangeException(nameof(originId));
             if (baseDamage < 0m) throw new ArgumentOutOfRangeException(nameof(baseDamage));
@@ -129,6 +137,7 @@ namespace Pachimon.Battle
             ApplyDamageBonusMultiplier = applyDamageBonusMultiplier;
             ApplyOutgoingModifiers = applyOutgoingModifiers;
             AttackerAttributeValue = attackerAttributeValue;
+            Tags = tags;
         }
 
         public DamageOriginKind OriginKind { get; }
@@ -143,6 +152,7 @@ namespace Pachimon.Battle
         public bool ApplyDamageBonusMultiplier { get; }
         public bool ApplyOutgoingModifiers { get; }
         public decimal? AttackerAttributeValue { get; }
+        public DamageTag Tags { get; }
 
         public DamageContext WithPenetration(DamagePenetration penetration)
         {
@@ -158,7 +168,8 @@ namespace Pachimon.Battle
                 penetration,
                 ApplyDamageBonusMultiplier,
                 ApplyOutgoingModifiers,
-                AttackerAttributeValue);
+                AttackerAttributeValue,
+                Tags);
         }
 
         public DamageContext WithDefenderStats(
@@ -176,7 +187,8 @@ namespace Pachimon.Battle
                 Penetration,
                 ApplyDamageBonusMultiplier,
                 ApplyOutgoingModifiers,
-                AttackerAttributeValue);
+                AttackerAttributeValue,
+                Tags);
         }
 
         public DamageContext WithAttackerAttributeValue(decimal value)
@@ -193,7 +205,8 @@ namespace Pachimon.Battle
                 Penetration,
                 ApplyDamageBonusMultiplier,
                 ApplyOutgoingModifiers,
-                value);
+                value,
+                Tags);
         }
     }
 
@@ -203,7 +216,8 @@ namespace Pachimon.Battle
             DamageOriginKind originKind,
             int originId,
             int damage,
-            bool isAttack)
+            bool isAttack,
+            DamageTag tags = DamageTag.None)
         {
             if (originId <= 0) throw new ArgumentOutOfRangeException(nameof(originId));
             if (damage < 0) throw new ArgumentOutOfRangeException(nameof(damage));
@@ -212,11 +226,13 @@ namespace Pachimon.Battle
             OriginId = originId;
             Damage = damage;
             IsAttack = isAttack;
+            Tags = tags;
         }
 
         public DamageOriginKind OriginKind { get; }
         public int OriginId { get; }
         public int Damage { get; }
         public bool IsAttack { get; }
+        public DamageTag Tags { get; }
     }
 }

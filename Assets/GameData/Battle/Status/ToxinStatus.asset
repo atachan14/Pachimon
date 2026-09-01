@@ -16,5 +16,5 @@ MonoBehaviour:
   _displayName: "\u6BD2\u7D20"
   _description: "\u6BCEtick\u3001\u8EFD\u6E1B\u524D{color:Poison}{value:damagePerTick}{/color}\u306E\u6BD2\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u3001Value\u3092{value:decayPerTick}\u6E1B\u5C11\u3055\u305B\u308B\u3002\u30C0\u30E1\u30FC\u30B8\u306F\u73FE\u5728Value\u306E{value:damagePerTickRatio}%\u3092\u84C4\u7A4D\u3057\u3066\u8A08\u7B97\u3059\u308B\u3002"
   _icon: {fileID: 0}
-  _damagePerTickRatio: 4
+  _damagePerTickRatio: 2
   _decayPerTick: 1

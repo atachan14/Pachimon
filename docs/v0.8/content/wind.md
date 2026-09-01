@@ -80,7 +80,7 @@ Valueはtickごとに減少し、0になると破棄される。
 - Status: `Implemented`
 - Species ID: `31`
 - モチーフ: そよ風の角とたてがみを持つ鹿
-- 狙い: 治癒の風と味方Wind強化を、穏やかな支援役として表現する
+- 狙い: 治癒の風による回復を、穏やかな支援役として表現する
 
 #### Fixed Skill
 
@@ -90,9 +90,8 @@ Valueはtickごとに減少し、0になると破棄される。
 - 硬直: `100`
 - CD: `300`
 - MN: `100`
-- 効果:[HP割合が最も低い味方]のHPを 100 * 風参照 回復し、風（50 * 風参照）とSpeed（50 * 風参照）を増加させる。
+- 効果:[HP割合が最も低い味方]のHPを 100 * 風参照 回復する。
 - HP割合が低い順で選び、同率なら前方を優先する
-- Wind / Speed増加の効果時間は200tick
 
 #### Passive
 
@@ -193,14 +192,14 @@ Windダメージ = floor(100 × AmplificationMultiplier(Wind × 100%) × ChainRa
 風化Value = floor(20 × AmplificationMultiplier(Wind × 100%) × ChainRatio)
 ```
 
-- 使用後にアドチェインを`1`獲得する
-- Base値・Ratio・連鎖数・アドチェイン獲得量は`CuttingDanceSkillAsset`から調整可能
+- 使用後にきりきり舞い追加連鎖数を`1`獲得する。他の連鎖Skillには影響しない
+- Base値・Ratio・連鎖数・追加連鎖数の獲得量は`CuttingDanceSkillAsset`から調整可能
 
 #### Passive:風乗り
 
 - Implementation: `Implemented`
 - Passive ID: `55`
-- 自身がWindダメージを1以上与えるたびにSpeedを増加する
+- 自身のSkillでWindダメージを1以上与えるたびにSpeedを増加する
 - 仮値: 1 Hitにつき`20`
 - Battle中恒久で、複数回発動時は加算する
 - 増加量は`WindRiderPassiveAsset`から調整可能
@@ -232,7 +231,7 @@ Windダメージ = floor(50 × AmplificationMultiplier(Wind × 100%))
 
 - Implementation: `Implemented`
 - Passive ID: `63`
-- 自身がWind以外の属性ダメージを1以上与えるたびにWindを`10`増加する
+- 自身のSkillでWind以外の属性ダメージを1以上与えるたびにWindを`10`増加する
 - 複合Skillでは、条件を満たした属性成分ごとに発動する
 - Battle中恒久で、複数回発動時は加算する
 - 増加量は`WindMagicianPassiveAsset`から調整可能

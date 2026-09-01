@@ -51,8 +51,6 @@ namespace Pachimon.Editor.UI
             "Assets/GameData/Battle/Status/FlyingStatus.asset";
         private const string WindErosionStatusPath =
             "Assets/GameData/Battle/Status/WindErosionStatus.asset";
-        private const string HealingWindStatusPath =
-            "Assets/GameData/Battle/Status/HealingWindStatus.asset";
         private const string StillAirStatusPath =
             "Assets/GameData/Battle/Status/StillAirStatus.asset";
         private const string OneTwoStatusPath =
@@ -124,8 +122,6 @@ namespace Pachimon.Editor.UI
                 FlyingStatusPath);
             var windErosionStatus = AssetDatabase
                 .LoadAssetAtPath<WindErosionStatusAsset>(WindErosionStatusPath);
-            var healingWindStatus = AssetDatabase
-                .LoadAssetAtPath<HealingWindStatusAsset>(HealingWindStatusPath);
             var stillAirStatus = AssetDatabase.LoadAssetAtPath<StillAirStatusAsset>(
                 StillAirStatusPath);
             var oneTwoStatus = AssetDatabase.LoadAssetAtPath<OneTwoStatusAsset>(
@@ -145,7 +141,6 @@ namespace Pachimon.Editor.UI
                 || plasmaEnvironment == null
                 || flyingStatus == null
                 || windErosionStatus == null
-                || healingWindStatus == null
                 || stillAirStatus == null
                 || oneTwoStatus == null)
             {
@@ -240,11 +235,11 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "先頭から後方へ往復するFire連鎖攻撃。"
-                            + "使うたびにアドチェインが1増加する。",
+                            + "使うたびにチェインバーンの追加連鎖数が1増加する。",
                         baseDamage: 80,
                         fireScalingPercent: 100,
                         baseChainCount: 1,
-                        addChainGainUnits: 100);
+                        chainGain: 1);
                     EditorUtility.SetDirty(chainBurn);
                 }
                 else if (skill is FireBarrierSkillAsset fireBarrier)
@@ -463,8 +458,8 @@ namespace Pachimon.Editor.UI
                     Undo.RecordObject(healingWind, "Update Healing Wind Skill");
                     healingWind.ConfigureForEditor(
                         31, "治癒の風", 100, 300, 100,
-                        "HP割合が最も低い味方を回復し、WindとSpeedを増加させる。",
-                        50, 50, 50, 100, 200, healingWindStatus);
+                        "HP割合が最も低い味方を回復する。",
+                        50);
                     EditorUtility.SetDirty(healingWind);
                 }
                 else if (skill is SecondWindSkillAsset secondWind)
@@ -626,11 +621,13 @@ namespace Pachimon.Editor.UI
                         baseManaCost: 100,
                         description:
                             "最も毒素が多い敵から50%を取り除き、"
-                            + "別の最少対象へ基礎値との合計の200%を付与する。",
+                            + "残りの敵へ基礎値との合計を分配する。",
                         removalPercent: 50,
                         baseToxinValue: 150,
                         poisonScalingPercent: 100,
-                        applicationPercent: 200,
+                        baseApplicationPercent: 100,
+                        scaledApplicationBasePercent: 20,
+                        applicationPoisonScalingPercent: 100,
                         toxinStatus: toxinStatus);
                     EditorUtility.SetDirty(toxinTransfer);
                 }
@@ -776,7 +773,7 @@ namespace Pachimon.Editor.UI
             var catalog = AssetDatabase.LoadAssetAtPath<SkillCatalog>(CatalogPath);
             if (catalog != null)
             {
-                AssignCatalogToSceneInstaller(catalog);
+                AssignCatalogToSceneInstaller(catalog, warnIfMissing: false);
             }
         }
 
@@ -876,12 +873,19 @@ namespace Pachimon.Editor.UI
             Debug.LogError("SkillCatalog validation failed:\n" + string.Join("\n", errors), catalog);
         }
 
-        private static void AssignCatalogToSceneInstaller(SkillCatalog catalog)
+        private static void AssignCatalogToSceneInstaller(
+            SkillCatalog catalog,
+            bool warnIfMissing = true)
         {
             var installer = Object.FindAnyObjectByType<GameSceneInstaller>(FindObjectsInactive.Include);
             if (installer == null)
             {
-                Debug.LogWarning("GameSceneInstaller was not found. Assign SkillCatalog with GameScene open.");
+                if (warnIfMissing)
+                {
+                    Debug.LogWarning(
+                        "GameSceneInstaller was not found. Assign SkillCatalog with GameScene open.");
+                }
+
                 return;
             }
 

@@ -60,6 +60,11 @@ namespace Pachimon.Items
                 return ItemUseFailureReason.InvalidTarget;
             }
 
+            if (!context.RunTarget.CanAddEngravings())
+            {
+                return ItemUseFailureReason.EngravingSlotsFull;
+            }
+
             return itemInstance.GeneratedData.StatChanges.Any(
                 change => change.Amount > 0)
                 && itemInstance.GeneratedData.StatChanges.Any(

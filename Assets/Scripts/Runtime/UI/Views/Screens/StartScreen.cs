@@ -13,9 +13,11 @@ namespace Pachimon.UI
 {
     public sealed class StartScreen : NodeScreen
     {
+        private const string DefaultProfessorResourcePath = "Professor/professor";
+
 #if UNITY_EDITOR
         private const string DefaultProfessorSpritePath =
-            "Assets/Art/Characters/Professor/professor.png";
+            "Assets/Resources/Professor/professor.png";
 #endif
 
         [Header("Presentation")]
@@ -33,6 +35,7 @@ namespace Pachimon.UI
         private CanvasGroup _professorCanvasGroup;
         private Coroutine _panRoutine;
         private Coroutine _confirmationRoutine;
+        private Coroutine _deferredLayoutRoutine;
         private bool _showingCandidates;
         private bool _showingConfirmation;
         private readonly HashSet<string> _confirmationSelectedIds = new();
@@ -61,6 +64,12 @@ namespace Pachimon.UI
 
         private void OnDisable()
         {
+            if (_deferredLayoutRoutine != null)
+            {
+                StopCoroutine(_deferredLayoutRoutine);
+                _deferredLayoutRoutine = null;
+            }
+
             if (_panRoutine != null)
             {
                 StopCoroutine(_panRoutine);
@@ -185,6 +194,33 @@ namespace Pachimon.UI
             CreatePresentationHierarchy();
             RefreshPresentationLayout();
             ApplyPresentationImmediately(false);
+            QueueDeferredLayoutRefresh();
+        }
+
+        private void QueueDeferredLayoutRefresh()
+        {
+            if (!isActiveAndEnabled)
+            {
+                return;
+            }
+
+            if (_deferredLayoutRoutine != null)
+            {
+                StopCoroutine(_deferredLayoutRoutine);
+            }
+
+            _deferredLayoutRoutine = StartCoroutine(RefreshLayoutAfterCanvasUpdate());
+        }
+
+        private IEnumerator RefreshLayoutAfterCanvasUpdate()
+        {
+            // Web builds can initialize this screen before the root Canvas has its final size.
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            RefreshPresentationLayout();
+            ApplyPresentationImmediately(_showingCandidates);
+            RefreshCandidateLayout();
+            _deferredLayoutRoutine = null;
         }
 
         private void EnsurePresentationMask()
@@ -250,6 +286,11 @@ namespace Pachimon.UI
 
         private Sprite ResolveProfessorSprite()
         {
+            if (_professorSprite == null)
+            {
+                _professorSprite = Resources.Load<Sprite>(DefaultProfessorResourcePath);
+            }
+
 #if UNITY_EDITOR
             if (_professorSprite == null)
             {

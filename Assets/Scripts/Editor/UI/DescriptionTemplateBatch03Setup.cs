@@ -78,7 +78,7 @@ namespace Pachimon.Editor.UI
                 + "{color:Fire}{value:damage}{/color}（{value:baseDamage} ×（100 + "
                 + "{icon:Fire}{value:fire} × {value:damageRatio}%）%）の"
                 + "{icon:Fire}{color:Fire}ダメージ{/color}を与える。以降は連鎖順に減衰する。"
-                + "使用ごとに{term:AddChain|アドチェイン}を{value:addChain}獲得する。",
+                + "使用ごとにチェインバーンの追加連鎖数が{value:chainGain}増加する。",
             18 => "値{color:Aqua}{value:rainValue}{/color}（{value:baseValue} + "
                 + "{icon:Aqua}{value:aqua} × {value:aquaRatio}%）の{term:Rain|雨}を発生させる。",
             19 => "先頭から後方へ{value:hitCount}回連鎖し、初撃で"
@@ -86,8 +86,8 @@ namespace Pachimon.Editor.UI
                 + "{icon:Leaf}{value:leaf} × {value:damageRatio}%）%）の"
                 + "{icon:Leaf}{color:Leaf}ダメージ{/color}と、値{value:slow}（{value:baseSlow} ×（100 + "
                 + "{icon:Leaf}{value:leaf} × {value:slowRatio}%）%）の{term:Slow|Slow}を与える。"
-                + "以降は連鎖順に減衰する。使用ごとに{term:AddChain|アドチェイン}を"
-                + "{value:addChain}獲得する。",
+                + "以降は連鎖順に減衰する。使用ごとに連鎖する蔦の追加連鎖数が"
+                + "{value:chainGain}増加する。",
             20 => "敵の先頭に{color:Electric}{value:damage}{/color}（{value:baseDamage} ×（100 + "
                 + "{icon:Electric}{value:electric} × {value:electricRatio}%）% ×（100 + "
                 + "{icon:Fire}{value:fire} × {value:fireRatio}%）%）の"

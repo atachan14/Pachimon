@@ -11,5 +11,6 @@ namespace Pachimon.Map
         LeagueGate = 6,
         Elite = 7,
         Ghost = 8,
+        HallOfFame = 9,
     }
 }

@@ -75,6 +75,10 @@ namespace Pachimon.Map
         public TrainerProfile TrainerProfile { get; }
     }
 
+    public sealed class HallOfFameNodeContent : NodeContent
+    {
+    }
+
     public sealed class RestSpotNodeContent : NodeContent
     {
         public RestSpotNodeContent(int healPercent)
@@ -121,14 +125,23 @@ namespace Pachimon.Map
 
     public sealed class LeagueGateNodeContent : NodeContent
     {
-        public LeagueGateNodeContent(int requiredBadgeCount, LeagueGateFailureMode failureMode)
+        public LeagueGateNodeContent(
+            int requiredBadgeCount,
+            LeagueGateFailureMode failureMode,
+            int shopSeed,
+            IReadOnlyList<CityStockEntry> stockEntries)
         {
             RequiredBadgeCount = requiredBadgeCount;
             FailureMode = failureMode;
+            ShopSeed = shopSeed;
+            StockEntries = stockEntries ?? throw new System.ArgumentNullException(
+                nameof(stockEntries));
         }
 
         public int RequiredBadgeCount { get; }
 
         public LeagueGateFailureMode FailureMode { get; }
+        public int ShopSeed { get; }
+        public IReadOnlyList<CityStockEntry> StockEntries { get; }
     }
 }

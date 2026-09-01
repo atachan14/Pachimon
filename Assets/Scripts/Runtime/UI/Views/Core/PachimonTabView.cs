@@ -470,7 +470,7 @@ namespace Pachimon.UI
                 else
                 {
                     chip.Bind($"{GetEquipmentSlotLabel(slot)}：{equipped.DisplayName}\n"
-                        + FormatStatChanges(equipped.GeneratedData, true));
+                        + FormatStatChanges(equipped.GeneratedData, false));
                     ApplyGeneratedEffectColor(chip, equipped.GeneratedData);
                 }
             }

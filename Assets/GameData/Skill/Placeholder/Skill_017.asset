@@ -20,9 +20,8 @@ MonoBehaviour:
   _baseRecoveryTicks: 120
   _baseCooldownTicks: 300
   _baseManaCost: 40
-  _description: "\u5148\u982D\u304B\u3089\u5F8C\u65B9\u3078{value:hitCount}\u56DE\u9023\u9396\u3057\u3001\u521D\u6483\u3067{color:Fire}{value:damage}{/color}\uFF08{value:baseDamage}
-    \xD7\uFF08100 + {icon:Fire}{value:fire} \xD7 {value:damageRatio}%\uFF09%\uFF09\u306E{icon:Fire}{color:Fire}\u30C0\u30E1\u30FC\u30B8{/color}\u3092\u4E0E\u3048\u308B\u3002\u4EE5\u964D\u306F\u9023\u9396\u9806\u306B\u6E1B\u8870\u3059\u308B\u3002\u4F7F\u7528\u3054\u3068\u306B{term:AddChain|\u30A2\u30C9\u30C1\u30A7\u30A4\u30F3}\u3092{value:addChain}\u7372\u5F97\u3059\u308B\u3002"
-  _baseDamage: 150
+  _description: "先頭から後方へ{value:hitCount}回連鎖し、初撃で{color:Fire}{value:damage}{/color}（{value:baseDamage} ×（100 + {icon:Fire}{value:fire} × {value:damageRatio}%）%）の{icon:Fire}{color:Fire}ダメージ{/color}を与える。以降は連鎖順に減衰する。使用ごとにチェインバーンの追加連鎖数が{value:chainGain}増加する。"
+  _baseDamage: 140
   _fireScalingPercent: 100
   _baseChainCount: 1
-  _addChainGainUnits: 100
+  _chainGain: 1

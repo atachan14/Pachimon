@@ -51,7 +51,13 @@ namespace Pachimon.UI
         private readonly Queue<DialoguePlaybackSegment> _dialogueSegments = new();
         private readonly List<DialogueLineCue> _dialogueLineCues = new();
         private Action _dialogueCompleted;
+        private Func<bool> _inputBlockedProvider;
         private int _nextDialogueLineCue;
+
+        public void SetInputBlockedProvider(Func<bool> inputBlockedProvider)
+        {
+            _inputBlockedProvider = inputBlockedProvider;
+        }
 
         private void OnRectTransformDimensionsChange()
         {
@@ -509,6 +515,11 @@ namespace Pachimon.UI
 
         private void InvokeAdvanceAction()
         {
+            if (IsInputBlocked())
+            {
+                return;
+            }
+
             if (TryCompleteTextReveal())
             {
                 return;
@@ -521,12 +532,22 @@ namespace Pachimon.UI
 
         private void InvokeOptionAction(UnityAction action)
         {
+            if (IsInputBlocked())
+            {
+                return;
+            }
+
             if (TryCompleteTextReveal())
             {
                 return;
             }
 
             action?.Invoke();
+        }
+
+        private bool IsInputBlocked()
+        {
+            return _inputBlockedProvider?.Invoke() == true;
         }
 
         private void HideAdvancePrompt()
@@ -604,6 +625,14 @@ namespace Pachimon.UI
             return true;
         }
 
+        private void InvokeTextRevealAction()
+        {
+            if (!IsInputBlocked())
+            {
+                CompleteTextReveal();
+            }
+        }
+
         private void CompleteTextReveal()
         {
             _isRevealingText = false;
@@ -625,12 +654,31 @@ namespace Pachimon.UI
 
         private void BuildDialogueSegments(DialoguePage page)
         {
+            EnsureLogLayout();
+            Canvas.ForceUpdateCanvases();
+            if (_contentRoot != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_contentRoot);
+            }
+
             foreach (var segment in DialoguePlaybackPlan.Create(
                 page,
-                _dialogueVisibleLineCount))
+                _dialogueVisibleLineCount,
+                GetDialogueLineVisibleRowCount))
             {
                 _dialogueSegments.Enqueue(segment);
             }
+        }
+
+        private int GetDialogueLineVisibleRowCount(DialogueLine line)
+        {
+            if (TextLogText == null || line == null)
+            {
+                return 1;
+            }
+
+            var textInfo = TextLogText.GetTextInfo(line.Text ?? string.Empty);
+            return Mathf.Max(1, textInfo?.lineCount ?? 1);
         }
 
         private void ShowNextDialogueSegment()
@@ -755,7 +803,7 @@ namespace Pachimon.UI
             image.raycastTarget = true;
             var button = overlayObject.GetComponent<Button>();
             button.transition = Selectable.Transition.None;
-            button.onClick.AddListener(CompleteTextReveal);
+            button.onClick.AddListener(InvokeTextRevealAction);
             overlayObject.SetActive(false);
         }
 

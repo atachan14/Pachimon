@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Pachimon.Battle;
 using Pachimon.Data;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Pachimon.Skills
 {
@@ -13,13 +14,20 @@ namespace Pachimon.Skills
         [SerializeField, Range(0, 100)] private int _removalPercent = 50;
         [SerializeField, Min(0)] private int _baseToxinValue = 150;
         [SerializeField, HideInInspector] private int _poisonScalingPercent = 100;
-        [SerializeField, Min(0)] private int _applicationPercent = 200;
+        [FormerlySerializedAs("_applicationPercent")]
+        [SerializeField, Min(0)] private int _baseApplicationPercent = 100;
+        [SerializeField, Min(0)] private int _scaledApplicationBasePercent = 20;
+        [SerializeField, HideInInspector]
+        private int _applicationPoisonScalingPercent = 100;
         [SerializeField] private ToxinStatusAsset _toxinStatus;
 
         public int RemovalPercent => _removalPercent;
         public int BaseToxinValue => _baseToxinValue;
         public int PoisonScalingPercent => AttributeDamageRules.ScalingRatio;
-        public int ApplicationPercent => _applicationPercent;
+        public int BaseApplicationPercent => _baseApplicationPercent;
+        public int ScaledApplicationBasePercent => _scaledApplicationBasePercent;
+        public int ApplicationPoisonScalingPercent =>
+            AttributeDamageRules.ScalingRatio;
         public ToxinStatusAsset ToxinStatus => _toxinStatus;
 
         public override void CollectValidationErrors(ICollection<string> errors)
@@ -46,7 +54,9 @@ namespace Pachimon.Skills
             int removalPercent,
             int baseToxinValue,
             int poisonScalingPercent,
-            int applicationPercent,
+            int baseApplicationPercent,
+            int scaledApplicationBasePercent,
+            int applicationPoisonScalingPercent,
             ToxinStatusAsset toxinStatus)
         {
             base.ConfigureForEditor(
@@ -61,7 +71,9 @@ namespace Pachimon.Skills
             _removalPercent = removalPercent;
             _baseToxinValue = baseToxinValue;
             _poisonScalingPercent = poisonScalingPercent;
-            _applicationPercent = applicationPercent;
+            _baseApplicationPercent = baseApplicationPercent;
+            _scaledApplicationBasePercent = scaledApplicationBasePercent;
+            _applicationPoisonScalingPercent = applicationPoisonScalingPercent;
             _toxinStatus = toxinStatus;
         }
 #endif

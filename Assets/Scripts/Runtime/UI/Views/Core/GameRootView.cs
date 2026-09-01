@@ -220,6 +220,16 @@ namespace Pachimon.UI
                 _contentDetailFactory.CreateItem(item, generatedData));
         }
 
+        public void CloseItemPanel()
+        {
+            ItemPanelView?.Close();
+            if (_contentDetailOverlayView != null
+                && _contentDetailOverlayView.ShownKind == ContentDetailKind.Item)
+            {
+                _contentDetailOverlayView.Close();
+            }
+        }
+
         public void ShowAbilityDetails(
             PachimonAbilityPreview ability,
             PachimonPreviewContent owner)
@@ -499,6 +509,8 @@ namespace Pachimon.UI
             ItemPanelView = ItemPanelView.CreateRuntime(_itemPanelViewport);
             ItemPanelView.DetailsRequested += HandleItemDetailsRequested;
             ItemPanelView.Close();
+            MainPaneView?.LogWindowView?.SetInputBlockedProvider(
+                () => ItemPanelView != null && ItemPanelView.IsOpen);
             _settingsOverlayViewport = CreateLayer(
                 "SettingsOverlayViewport",
                 _overlayLayer);
