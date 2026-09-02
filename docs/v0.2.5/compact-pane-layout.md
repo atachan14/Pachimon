@@ -19,6 +19,15 @@ Body
 
 Paneは複製せず、LayoutMode切替時に同じLeftPane / RightPaneをContentとDrawerの間で移動する。
 
+## 表示モード方針
+
+- 新規環境の初期選択は画面サイズにかかわらずCompactとする
+- Compact / Expandedの選択は設定Overlayから変更し、`PlayerPrefs`へ保存する
+- 画面サイズ判定とプレイヤーの選択は別々に保持する
+- Compact選択時は、画面が広くてもCompactを維持する
+- Expanded選択時に画面幅が不足した場合は、Compactへ一時的にフォールバックする
+- 画面幅が再び条件を満たした場合は、保存済みのExpandedへ自動復帰する
+
 ## Expanded
 
 - 既存の`HorizontalLayoutGroup`を使う
@@ -28,8 +37,8 @@ Paneは複製せず、LayoutMode切替時に同じLeftPane / RightPaneをContent
 
 ## Compact
 
-- 画面が縦長の場合はCanvasScaler後の論理幅にかかわらずCompactを使用する
-- 横長でも論理幅がBreakpoint未満の場合はCompactを使用する
+- 新規環境では標準表示としてCompactを使用する
+- Expanded選択中でも、縦長または論理幅がBreakpoint未満の場合はCompactを使用する
 - MainPaneはContent内で常に画面幅100%を使う
 - Left / Right DrawerはMainPaneより前面へ表示する
 - DrawerViewportへ`RectMask2D`を設定する

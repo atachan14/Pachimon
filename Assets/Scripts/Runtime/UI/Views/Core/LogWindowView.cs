@@ -9,13 +9,16 @@ namespace Pachimon.UI
 {
     public sealed class LogWindowView : MonoBehaviour
     {
-        private const float OptionButtonWidth = 180f;
-        private const float OptionButtonMinWidth = 120f;
-        private const float OptionButtonHeight = 44f;
+        private const float OptionButtonWidth = 210f;
+        private const float OptionButtonMinWidth = 150f;
+        private const float OptionButtonHeight = 60f;
+        private const float OptionHorizontalPadding = 28f;
+        private const float OptionVerticalPadding = 10f;
+        private const float OptionSpacing = 18f;
+        private const float OptionFontScale = 0.82f;
         private const float SkillButtonHeight = 48f;
         private const int TotalLayoutRows = 4;
         private const float MinimumTextLineHeightMultiplier = 1.4f;
-        private const float OptionFontScale = 0.72f;
         private const float MinimumLogFontSize = 12f;
         private const float MinimumOptionFontSize = 10f;
         private const float TextHorizontalPadding = 14f;
@@ -53,6 +56,13 @@ namespace Pachimon.UI
         private Action _dialogueCompleted;
         private Func<bool> _inputBlockedProvider;
         private int _nextDialogueLineCue;
+        public void ApplyUiScale(float scale)
+        {
+            // Log typography is derived from its four-row layout, so applying the
+            // global Compact multiplier here would make options larger than dialog text.
+            RefreshOptionTypography();
+            RequestLayoutRefresh();
+        }
 
         public void SetInputBlockedProvider(Func<bool> inputBlockedProvider)
         {
@@ -347,10 +357,6 @@ namespace Pachimon.UI
             }
 
             var layoutElement = buttonObject.GetComponent<LayoutElement>();
-            layoutElement.minWidth = isEmphasized ? 220f : OptionButtonMinWidth;
-            layoutElement.minHeight = isEmphasized ? 62f : OptionButtonHeight;
-            layoutElement.preferredWidth = isEmphasized ? 260f : OptionButtonWidth;
-            layoutElement.preferredHeight = isEmphasized ? 62f : OptionButtonHeight;
             layoutElement.flexibleWidth = 0f;
             layoutElement.flexibleHeight = 0f;
 
@@ -386,13 +392,19 @@ namespace Pachimon.UI
             labelText.canvasRenderer.SetAlpha(1f);
             labelText.textWrappingMode = TextWrappingModes.NoWrap;
             labelText.overflowMode = TextOverflowModes.Overflow;
+            labelText.margin = new Vector4(
+                OptionHorizontalPadding,
+                OptionVerticalPadding,
+                OptionHorizontalPadding,
+                OptionVerticalPadding);
             labelText.text = label;
 
             var labelRect = labelText.rectTransform;
             labelRect.anchorMin = Vector2.zero;
             labelRect.anchorMax = Vector2.one;
-            labelRect.offsetMin = new Vector2(10f, 0f);
-            labelRect.offsetMax = new Vector2(-10f, 0f);
+            labelRect.offsetMin = Vector2.zero;
+            labelRect.offsetMax = Vector2.zero;
+            ApplyOptionButtonSize(layoutElement, labelText, isEmphasized);
         }
 
         private void CreateStruggleOverlay(LogWindowOption option)
@@ -838,7 +850,7 @@ namespace Pachimon.UI
             _runtimeOptionContainer.offsetMax = new Vector2(-8f, -6f);
 
             var layout = containerObject.GetComponent<HorizontalLayoutGroup>();
-            layout.spacing = 10f;
+            layout.spacing = OptionSpacing;
             layout.childAlignment = TextAnchor.MiddleCenter;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
@@ -966,8 +978,8 @@ namespace Pachimon.UI
                 }
 
                 var buttonLayout = label.transform.parent.GetComponent<LayoutElement>();
-                var isEmphasized = buttonLayout != null
-                    && buttonLayout.preferredHeight > OptionButtonHeight;
+                var isEmphasized = label.transform.parent.parent != null
+                    && label.transform.parent.parent.name == "StruggleOverlay";
                 var fontSize = isEmphasized
                     ? optionFontSize * 1.15f
                     : optionFontSize;
@@ -975,7 +987,42 @@ namespace Pachimon.UI
                 var typography = label.GetComponent<ResponsiveTypographySize>()
                     ?? label.gameObject.AddComponent<ResponsiveTypographySize>();
                 typography.SetLayoutControlledFontSize(label, fontSize);
+                ApplyOptionButtonSize(buttonLayout, label, isEmphasized);
             }
+        }
+
+        private void ApplyOptionButtonSize(
+            LayoutElement layoutElement,
+            TMP_Text label,
+            bool isEmphasized)
+        {
+            if (layoutElement == null)
+            {
+                return;
+            }
+
+            var preferredTextWidth = label != null
+                ? label.GetPreferredValues(label.text).x
+                : OptionButtonMinWidth;
+            var contentWidth = preferredTextWidth + (OptionHorizontalPadding * 2f);
+            var normalPreferredWidth = Mathf.Max(OptionButtonWidth, contentWidth);
+            var effectiveFontSize = label != null
+                ? label.fontSize
+                : Mathf.Max(
+                    MinimumOptionFontSize,
+                    _fixedLogFontSize * OptionFontScale);
+            var normalHeight = Mathf.Max(
+                OptionButtonHeight,
+                (effectiveFontSize * MinimumTextLineHeightMultiplier)
+                    + (OptionVerticalPadding * 2f));
+            layoutElement.minWidth = isEmphasized
+                ? 220f
+                : OptionButtonMinWidth;
+            layoutElement.minHeight = isEmphasized ? 62f : normalHeight;
+            layoutElement.preferredWidth = isEmphasized
+                ? 260f
+                : normalPreferredWidth;
+            layoutElement.preferredHeight = isEmphasized ? 62f : normalHeight;
         }
 
         private void UpdateTextPreferredHeight(string text)

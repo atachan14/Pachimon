@@ -26,6 +26,25 @@ namespace Pachimon.UI
 
         public PachimonDisplayStat Stat => _stat;
 
+        public void ApplyUiScale(float scale)
+        {
+            var resolvedScale = Mathf.Max(1f, scale);
+            var iconRoot = transform.Find("Icon") as RectTransform;
+            var iconLayout = iconRoot?.GetComponent<LayoutElement>();
+            if (iconLayout != null)
+            {
+                iconLayout.minWidth = 84f * resolvedScale;
+                iconLayout.preferredWidth = 84f * resolvedScale;
+                iconLayout.flexibleWidth = 0f;
+            }
+
+            if (_subStatBadge != null)
+            {
+                ((RectTransform)_subStatBadge.transform).sizeDelta =
+                    new Vector2(40f, 40f) * resolvedScale;
+            }
+        }
+
         public void Configure(
             PachimonDisplayStat stat,
             TMP_Text valueText,

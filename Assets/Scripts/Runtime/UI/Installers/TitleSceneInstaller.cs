@@ -9,6 +9,7 @@ namespace Pachimon.UI
 {
     public sealed class TitleSceneInstaller : MonoBehaviour
     {
+        private const float CompactLayoutWidth = 600f;
         private static readonly Color TextColor = Color.black;
         private static readonly Color DisabledTextColor = Color.black;
 
@@ -19,15 +20,25 @@ namespace Pachimon.UI
         [SerializeField] private TrainerNameCatalog _trainerNameCatalog;
 
         private string _suggestedPlayerName = NewGameRequest.GuestPlayerName;
+        private RectTransform _menuDialogRect;
+        private RectTransform _nameInputDialogRect;
+        private RectTransform _nameLabelRect;
         private Image _nameInputBorder;
+        private Vector2 _lastRootSize = new(float.MinValue, float.MinValue);
 
         private void Awake()
         {
             EnsureWhiteBackground();
             EnsureMenuDialog();
             EnsurePlayerNameInput();
+            RefreshResponsiveLayout();
             ValidateReferences();
             WireButtons();
+        }
+
+        private void LateUpdate()
+        {
+            RefreshResponsiveLayout();
         }
 
         private void EnsurePlayerNameInput()
@@ -93,6 +104,7 @@ namespace Pachimon.UI
             var border = CreateImageObject("NameInputDialog", _titleRoot.transform, Color.black);
             _nameInputBorder = border;
             var borderRect = border.rectTransform;
+            _nameInputDialogRect = borderRect;
             borderRect.anchorMin = new Vector2(0.5f, 0f);
             borderRect.anchorMax = new Vector2(0.5f, 0f);
             borderRect.pivot = new Vector2(0.5f, 0f);
@@ -101,6 +113,7 @@ namespace Pachimon.UI
 
             var nameLabel = CreateText("NameLabel", (RectTransform)_titleRoot.transform, "お名前：", 22f);
             var nameLabelRect = (RectTransform)nameLabel.transform;
+            _nameLabelRect = nameLabelRect;
             nameLabelRect.anchorMin = new Vector2(0.5f, 0f);
             nameLabelRect.anchorMax = new Vector2(0.5f, 0f);
             nameLabelRect.pivot = new Vector2(1f, 0.5f);
@@ -189,6 +202,7 @@ namespace Pachimon.UI
 
             var border = CreateImageObject("MenuDialog", _titleRoot.transform, Color.black);
             var borderRect = border.rectTransform;
+            _menuDialogRect = borderRect;
             borderRect.anchorMin = new Vector2(0f, 1f);
             borderRect.anchorMax = new Vector2(0f, 1f);
             borderRect.pivot = new Vector2(0f, 1f);
@@ -201,6 +215,88 @@ namespace Pachimon.UI
             ConfigureMenuButton(_newGameButton, panel.rectTransform, "はじめから", 0, true);
             CreateMenuButton(panel.rectTransform, "つづきから", 1);
             CreateMenuButton(panel.rectTransform, "設定", 2);
+        }
+
+        private void RefreshResponsiveLayout()
+        {
+            if (_titleRoot == null
+                || _titleRoot.transform is not RectTransform rootRect
+                || _menuDialogRect == null
+                || _nameInputDialogRect == null
+                || _nameLabelRect == null)
+            {
+                return;
+            }
+
+            var rootSize = rootRect.rect.size;
+            if ((rootSize - _lastRootSize).sqrMagnitude < 0.01f)
+            {
+                return;
+            }
+
+            _lastRootSize = rootSize;
+            if (rootSize.x < CompactLayoutWidth)
+            {
+                ApplyCompactLayout(rootSize.x);
+                return;
+            }
+
+            ApplyExpandedLayout();
+        }
+
+        private void ApplyCompactLayout(float rootWidth)
+        {
+            _menuDialogRect.anchorMin = new Vector2(0.5f, 0.5f);
+            _menuDialogRect.anchorMax = new Vector2(0.5f, 0.5f);
+            _menuDialogRect.pivot = new Vector2(0.5f, 0.5f);
+            _menuDialogRect.anchoredPosition = Vector2.zero;
+            _menuDialogRect.sizeDelta = new Vector2(
+                Mathf.Min(300f, Mathf.Max(0f, rootWidth - 32f)),
+                190f);
+
+            var groupWidth = Mathf.Max(0f, rootWidth - 24f);
+            var labelWidth = Mathf.Clamp(groupWidth * 0.28f, 84f, 104f);
+            const float gap = 8f;
+            var inputWidth = Mathf.Max(0f, groupWidth - labelWidth - gap);
+            const float inputHeight = 60f;
+            const float bottomMargin = 24f;
+
+            _nameInputDialogRect.anchorMin = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.anchorMax = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.pivot = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.anchoredPosition = new Vector2(
+                (labelWidth + gap) * 0.5f,
+                bottomMargin);
+            _nameInputDialogRect.sizeDelta = new Vector2(inputWidth, inputHeight);
+
+            _nameLabelRect.anchorMin = new Vector2(0.5f, 0f);
+            _nameLabelRect.anchorMax = new Vector2(0.5f, 0f);
+            _nameLabelRect.pivot = new Vector2(1f, 0.5f);
+            _nameLabelRect.anchoredPosition = new Vector2(
+                (labelWidth - gap - inputWidth) * 0.5f,
+                bottomMargin + (inputHeight * 0.5f));
+            _nameLabelRect.sizeDelta = new Vector2(labelWidth, inputHeight);
+        }
+
+        private void ApplyExpandedLayout()
+        {
+            _menuDialogRect.anchorMin = new Vector2(0f, 1f);
+            _menuDialogRect.anchorMax = new Vector2(0f, 1f);
+            _menuDialogRect.pivot = new Vector2(0f, 1f);
+            _menuDialogRect.anchoredPosition = new Vector2(32f, -32f);
+            _menuDialogRect.sizeDelta = new Vector2(300f, 190f);
+
+            _nameInputDialogRect.anchorMin = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.anchorMax = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.pivot = new Vector2(0.5f, 0f);
+            _nameInputDialogRect.anchoredPosition = new Vector2(0f, 52f);
+            _nameInputDialogRect.sizeDelta = new Vector2(328f, 64f);
+
+            _nameLabelRect.anchorMin = new Vector2(0.5f, 0f);
+            _nameLabelRect.anchorMax = new Vector2(0.5f, 0f);
+            _nameLabelRect.pivot = new Vector2(1f, 0.5f);
+            _nameLabelRect.anchoredPosition = new Vector2(-176f, 84f);
+            _nameLabelRect.sizeDelta = new Vector2(120f, 64f);
         }
 
         private static void CreateMenuButton(RectTransform parent, string label, int row)

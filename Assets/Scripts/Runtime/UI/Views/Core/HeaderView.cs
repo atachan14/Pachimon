@@ -10,6 +10,9 @@ namespace Pachimon.UI
 {
     public sealed class HeaderView : MonoBehaviour
     {
+        private const string BadgeIconResourcePath = "UI/Badge";
+        private const string LeftPaneIconResourcePath = "UI/LeftPane";
+        private const string RightPaneIconResourcePath = "UI/RightPane";
         private ItemInventory _itemInventory;
 
         private static readonly Color ItemCountColor =
@@ -18,13 +21,15 @@ namespace Pachimon.UI
         [SerializeField] private TMP_Text _itemCountText;
         [SerializeField] private TMP_Text _badgeCountText;
         private Image _goldIcon;
+        private Image _badgeIcon;
+        private Transform _badgeArea;
 
         [field: SerializeField] public TMP_Text GoldText { get; private set; }
         [field: SerializeField] public Button MapButton { get; private set; }
         [field: SerializeField] public Button ItemButton { get; private set; }
         [field: SerializeField] public Button SettingsButton { get; private set; }
-        public Button PartyPaneButton { get; private set; }
-        public Button InfoPaneButton { get; private set; }
+        [field: SerializeField] public Button LeftPaneButton { get; private set; }
+        [field: SerializeField] public Button RightPaneButton { get; private set; }
         public Sprite GoldIconSprite => _goldIcon != null ? _goldIcon.sprite : null;
 
         public void Initialize(
@@ -44,7 +49,7 @@ namespace Pachimon.UI
             _goldIcon = GetComponentsInChildren<Image>(true)
                 .FirstOrDefault(image => image.name == "GoldIcon");
             ApplyPalette();
-            EnsureBadgeCountText();
+            EnsureBadgeCountDisplay();
             ConfigureItemCountText();
             LogMissingReferences();
         }
@@ -54,12 +59,17 @@ namespace Pachimon.UI
             if (GoldText != null)
             {
                 GoldText.text = gold.ToString();
+                LayoutRebuilder.MarkLayoutForRebuild(GoldText.rectTransform);
+                if (GoldText.transform.parent is RectTransform goldArea)
+                {
+                    LayoutRebuilder.MarkLayoutForRebuild(goldArea);
+                }
             }
 
-            EnsureBadgeCountText();
+            EnsureBadgeCountDisplay();
             if (_badgeCountText != null)
             {
-                _badgeCountText.text = $"Badge:{Math.Max(0, badgeCount)}個";
+                _badgeCountText.text = $"{Math.Max(0, badgeCount)}\u500b";
             }
         }
 
@@ -98,37 +108,76 @@ namespace Pachimon.UI
         }
 
         public void ConfigureCompactPaneButtons(
-            Action onPartyClicked,
-            Action onInfoClicked)
+            Action onLeftClicked,
+            Action onRightClicked)
         {
-            PartyPaneButton ??= CreateCompactPaneButton("PartyPaneButton", "PARTY");
-            InfoPaneButton ??= CreateCompactPaneButton("InfoPaneButton", "INFO");
+            var goldArea = GoldText != null ? GoldText.transform.parent : null;
+            var leftParent = goldArea != null ? goldArea.parent : transform;
+            var rightParent = SettingsButton != null
+                ? SettingsButton.transform.parent
+                : transform;
 
-            ConfigureButton(PartyPaneButton, onPartyClicked);
-            ConfigureButton(InfoPaneButton, onInfoClicked);
+            LeftPaneButton ??= CreateCompactPaneButton(
+                "LeftPaneButton",
+                LeftPaneIconResourcePath,
+                leftParent);
+            RightPaneButton ??= CreateCompactPaneButton(
+                "RightPaneButton",
+                RightPaneIconResourcePath,
+                rightParent);
 
-            if (MapButton != null)
+            ConfigureButton(LeftPaneButton, onLeftClicked);
+            ConfigureButton(RightPaneButton, onRightClicked);
+
+            if (goldArea != null
+                && LeftPaneButton.transform.parent == goldArea.parent)
             {
-                PartyPaneButton.transform.SetSiblingIndex(MapButton.transform.GetSiblingIndex());
-                InfoPaneButton.transform.SetSiblingIndex(MapButton.transform.GetSiblingIndex() + 1);
+                LeftPaneButton.transform.SetAsFirstSibling();
+                goldArea.SetSiblingIndex(1);
+            }
+            if (SettingsButton != null)
+            {
+                RightPaneButton.transform.SetAsLastSibling();
             }
         }
 
         public void SetCompactPaneButtonsVisible(bool visible)
         {
-            if (PartyPaneButton != null) PartyPaneButton.gameObject.SetActive(visible);
-            if (InfoPaneButton != null) InfoPaneButton.gameObject.SetActive(visible);
+            if (LeftPaneButton != null) LeftPaneButton.gameObject.SetActive(visible);
+            if (RightPaneButton != null) RightPaneButton.gameObject.SetActive(visible);
         }
 
         public void SetCompactPaneSelection(CompactPane pane)
         {
-            SetPaneButtonColor(PartyPaneButton, pane == CompactPane.Left);
-            SetPaneButtonColor(InfoPaneButton, pane == CompactPane.Right);
+            SetPaneButtonColor(LeftPaneButton, pane == CompactPane.Left);
+            SetPaneButtonColor(RightPaneButton, pane == CompactPane.Right);
         }
 
-        private Button CreateCompactPaneButton(string objectName, string label)
+        public void ApplyLayoutMode(LayoutMode _)
         {
-            var parent = MapButton != null ? MapButton.transform.parent : transform;
+            EnsureBadgeCountDisplay();
+            PreserveLayoutControlledFontSize(GoldText);
+            PreserveLayoutControlledFontSize(_badgeCountText);
+            PreserveLayoutControlledFontSize(_itemCountText);
+        }
+
+        private static void PreserveLayoutControlledFontSize(TMP_Text text)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            var typography = text.GetComponent<ResponsiveTypographySize>()
+                ?? text.gameObject.AddComponent<ResponsiveTypographySize>();
+            typography.SetLayoutControlledFontSize(text, text.fontSize);
+        }
+
+        private Button CreateCompactPaneButton(
+            string objectName,
+            string iconResourcePath,
+            Transform parent)
+        {
             var buttonObject = new GameObject(
                 objectName,
                 typeof(RectTransform),
@@ -140,34 +189,37 @@ namespace Pachimon.UI
             buttonObject.transform.SetParent(parent, false);
 
             var image = buttonObject.GetComponent<Image>();
-            image.color = new Color(1f, 1f, 1f, 0.72f);
+            image.color = Color.clear;
             var button = buttonObject.GetComponent<Button>();
             button.targetGraphic = image;
 
             var layout = buttonObject.GetComponent<LayoutElement>();
             layout.preferredWidth = 72f;
 
-            var textObject = new GameObject(
-                "Label",
+            var iconObject = new GameObject(
+                "Icon",
                 typeof(RectTransform),
                 typeof(CanvasRenderer),
-                typeof(TextMeshProUGUI));
-            textObject.layer = gameObject.layer;
-            textObject.transform.SetParent(buttonObject.transform, false);
-            var textRect = textObject.GetComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
+                typeof(Image));
+            iconObject.layer = gameObject.layer;
+            iconObject.transform.SetParent(buttonObject.transform, false);
+            var iconRect = iconObject.GetComponent<RectTransform>();
+            iconRect.anchorMin = Vector2.zero;
+            iconRect.anchorMax = Vector2.one;
+            iconRect.offsetMin = new Vector2(6f, 6f);
+            iconRect.offsetMax = new Vector2(-6f, -6f);
 
-            var text = textObject.GetComponent<TextMeshProUGUI>();
-            text.text = label;
-            text.fontSize = 15f;
-            text.fontStyle = FontStyles.Bold;
-            text.alignment = TextAlignmentOptions.Center;
-            text.color = GameUiPalette.HeaderText;
-            text.raycastTarget = false;
-            text.textWrappingMode = TextWrappingModes.NoWrap;
+            var icon = iconObject.GetComponent<Image>();
+            icon.sprite = Resources.Load<Sprite>(iconResourcePath);
+            icon.color = Color.white;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            if (icon.sprite == null)
+            {
+                Debug.LogWarning(
+                    $"Compact Pane icon was not found at Resources/{iconResourcePath}.",
+                    this);
+            }
 
             return button;
         }
@@ -191,8 +243,8 @@ namespace Pachimon.UI
             if (button != null && button.targetGraphic is Image image)
             {
                 image.color = selected
-                    ? new Color(0.72f, 0.86f, 0.82f, 1f)
-                    : new Color(1f, 1f, 1f, 0.72f);
+                    ? new Color(0.72f, 0.86f, 0.82f, 0.65f)
+                    : Color.clear;
             }
         }
 
@@ -229,19 +281,48 @@ namespace Pachimon.UI
             EnsureItemCountBadge(_itemCountText.rectTransform);
         }
 
-        private void EnsureBadgeCountText()
+        private void EnsureBadgeCountDisplay()
         {
+            _badgeArea ??= GetComponentsInChildren<Transform>(true)
+                .FirstOrDefault(child => child.name == "BadgeArea");
+            if (_badgeArea != null)
+            {
+                _badgeArea.gameObject.SetActive(true);
+            }
+
+            _badgeIcon ??= GetComponentsInChildren<Image>(true)
+                .FirstOrDefault(image => image.name == "BadgeIcon");
+            if (_badgeIcon != null)
+            {
+                _badgeIcon.sprite ??= Resources.Load<Sprite>(BadgeIconResourcePath);
+                _badgeIcon.preserveAspect = true;
+                _badgeIcon.raycastTarget = false;
+                if (!_badgeIcon.TryGetComponent<LayoutElement>(out _))
+                {
+                    var iconLayout = _badgeIcon.gameObject.AddComponent<LayoutElement>();
+                    iconLayout.preferredWidth = 80f;
+                    iconLayout.flexibleWidth = 0f;
+                }
+            }
+
             if (_badgeCountText == null)
             {
                 _badgeCountText = GetComponentsInChildren<TMP_Text>(true)
-                    .FirstOrDefault(text => text.name == "BadgeCountText");
+                    .FirstOrDefault(text =>
+                        text.name is "BadgeCountText" or "BadgeText");
             }
             if (_badgeCountText == null && GoldText != null)
             {
-                _badgeCountText = Instantiate(GoldText, GoldText.transform.parent, false);
+                var parent = _badgeArea != null
+                    ? _badgeArea
+                    : GoldText.transform.parent;
+                _badgeCountText = Instantiate(GoldText, parent, false);
                 _badgeCountText.name = "BadgeCountText";
-                _badgeCountText.transform.SetSiblingIndex(
-                    GoldText.transform.GetSiblingIndex() + 1);
+                if (_badgeIcon != null)
+                {
+                    _badgeCountText.transform.SetSiblingIndex(
+                        _badgeIcon.transform.GetSiblingIndex() + 1);
+                }
             }
             if (_badgeCountText == null)
             {
@@ -253,9 +334,12 @@ namespace Pachimon.UI
             _badgeCountText.textWrappingMode = TextWrappingModes.NoWrap;
             _badgeCountText.overflowMode = TextOverflowModes.Overflow;
             _badgeCountText.alignment = TextAlignmentOptions.MidlineLeft;
-            var layout = _badgeCountText.GetComponent<LayoutElement>()
-                ?? _badgeCountText.gameObject.AddComponent<LayoutElement>();
-            layout.preferredWidth = 180f;
+            if (!_badgeCountText.TryGetComponent<LayoutElement>(out _))
+            {
+                var layout = _badgeCountText.gameObject.AddComponent<LayoutElement>();
+                layout.preferredWidth = 72f;
+                layout.flexibleWidth = 0f;
+            }
         }
 
         private RectTransform EnsureItemCountBadge(RectTransform textRect)

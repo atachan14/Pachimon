@@ -14,6 +14,8 @@ namespace Pachimon.UI
 {
     public sealed class GameRootView : MonoBehaviour
     {
+        private const string LayoutPreferenceKey = "Pachimon.LayoutMode";
+
         [field: SerializeField] public HeaderView HeaderView { get; private set; }
         [field: SerializeField] public LeftPaneView LeftPaneView { get; private set; }
         [field: SerializeField] public MainPaneView MainPaneView { get; private set; }
@@ -27,8 +29,11 @@ namespace Pachimon.UI
         [SerializeField, Min(0f)] private float _drawerTransitionDuration = 0.25f;
         [SerializeField, Min(0f)] private float _sceneFadeDuration = 0.75f;
         [SerializeField, Min(1f)] private float _compactTextScale = 1.5f;
+        [SerializeField, Range(0.1f, 1f)]
+        private float _compactMaxWidthToHeight = 2f / 3f;
         [SerializeField, Min(0.05f)] private float _typographyScanInterval = 0.25f;
 
+        private RectTransform _rootRect;
         private RectTransform _headerRect;
         private RectTransform _contentRect;
         private RectTransform _bodyRect;
@@ -60,9 +65,14 @@ namespace Pachimon.UI
         private float _rightDrawerProgress;
         private float _compactBreakpoint;
         private float _nextTypographyScanTime;
+        private float _currentUiScale = 1f;
+        private Vector2 _lastRootViewportSize = new(float.NaN, float.NaN);
         private bool _isInitialized;
 
         public CompactPane CurrentCompactPane => _compactPane;
+        public LayoutMode PreferredLayoutMode { get; private set; }
+            = LayoutMode.Compact;
+        public float CurrentUiScale => _currentUiScale;
 
         public void BindErrorDiagnostics(
             System.Func<RuntimeErrorDiagnosticContext> contextProvider)
@@ -88,6 +98,7 @@ namespace Pachimon.UI
             MainPaneView = mainPaneView;
             RightPaneView = rightPaneView;
             MapOverlayView = mapOverlayView;
+            _rootRect = transform as RectTransform;
             _headerRect = headerRect;
             _contentRect = contentRect;
             _bodyRect = contentRect != null ? contentRect.parent as RectTransform : null;
@@ -95,12 +106,13 @@ namespace Pachimon.UI
             _mainPaneRect = mainPaneRect;
             _rightPaneRect = rightPaneRect;
             _compactBreakpoint = compactBreakpoint;
+            PreferredLayoutMode = LoadPreferredLayoutMode();
 
             LogMissingRuntimeReferences();
             InitializeResponsiveHierarchy();
             WireResponsiveEvents();
             _isInitialized = true;
-            ApplyLayoutMode(GetRecommendedLayoutMode());
+            ApplyLayoutMode(GetEffectiveLayoutMode());
         }
 
         private void Update()
@@ -110,10 +122,15 @@ namespace Pachimon.UI
                 return;
             }
 
-            var recommendedMode = GetRecommendedLayoutMode();
-            if (recommendedMode != LayoutMode)
+            var effectiveMode = GetEffectiveLayoutMode();
+            if (effectiveMode != LayoutMode)
             {
-                ApplyLayoutMode(recommendedMode);
+                ApplyLayoutMode(effectiveMode);
+            }
+            else if (ApplyRootWidthConstraint(LayoutMode, false))
+            {
+                Canvas.ForceUpdateCanvases();
+                _responsiveGeometry?.Invalidate();
             }
 
             if (Time.unscaledTime >= _nextTypographyScanTime)
@@ -390,15 +407,44 @@ namespace Pachimon.UI
                 return LayoutMode.Compact;
             }
 
-            var width = _bodyRect != null && _bodyRect.rect.width > 0f
-                ? _bodyRect.rect.width
+            var viewport = _rootRect != null
+                ? _rootRect.parent as RectTransform
+                : null;
+            var width = viewport != null && viewport.rect.width > 0f
+                ? viewport.rect.width
                 : Screen.width;
             return width < _compactBreakpoint ? LayoutMode.Compact : LayoutMode.Expanded;
+        }
+
+        public void SetPreferredLayoutMode(LayoutMode layoutMode)
+        {
+            PreferredLayoutMode = layoutMode;
+            PlayerPrefs.SetInt(LayoutPreferenceKey, (int)layoutMode);
+            PlayerPrefs.Save();
+            ApplyLayoutMode(GetEffectiveLayoutMode());
+        }
+
+        private LayoutMode GetEffectiveLayoutMode()
+        {
+            return LayoutModePolicy.Resolve(
+                PreferredLayoutMode,
+                GetRecommendedLayoutMode() == LayoutMode.Expanded);
+        }
+
+        private static LayoutMode LoadPreferredLayoutMode()
+        {
+            var stored = PlayerPrefs.GetInt(
+                LayoutPreferenceKey,
+                (int)LayoutMode.Compact);
+            return System.Enum.IsDefined(typeof(LayoutMode), stored)
+                ? (LayoutMode)stored
+                : LayoutMode.Compact;
         }
 
         public void ApplyLayoutMode(LayoutMode layoutMode)
         {
             LayoutMode = layoutMode;
+            ApplyRootWidthConstraint(layoutMode, true);
 
             if (_mainPaneRect == null
                 || _leftPaneRect == null
@@ -429,19 +475,78 @@ namespace Pachimon.UI
 
             if (_headerRect != null)
             {
+                const float headerHeight = 100f;
                 _headerRect.sizeDelta = new Vector2(
                     0f,
-                    layoutMode == LayoutMode.Compact ? 110f : 96f);
+                    headerHeight);
+
+                var headerLayout = _headerRect.GetComponent<LayoutElement>();
+                if (headerLayout != null)
+                {
+                    headerLayout.minHeight = headerHeight;
+                    headerLayout.preferredHeight = headerHeight;
+                    headerLayout.flexibleHeight = 0f;
+                }
             }
 
             HeaderView?.SetCompactPaneButtonsVisible(layoutMode == LayoutMode.Compact);
             HeaderView?.SetCompactPaneSelection(_compactPane);
+            HeaderView?.ApplyLayoutMode(layoutMode);
             RightPaneView?.ApplyLayoutMode(layoutMode);
             ItemPanelView?.ApplyLayoutMode(layoutMode);
             RefreshTypographyScale();
             Canvas.ForceUpdateCanvases();
             _responsiveGeometry?.Invalidate();
             _responsiveGeometry?.RefreshIfChanged(LayoutMode);
+            SettingsOverlayView?.SetLayoutModes(
+                PreferredLayoutMode,
+                LayoutMode);
+        }
+
+        private bool ApplyRootWidthConstraint(
+            LayoutMode layoutMode,
+            bool force)
+        {
+            if (_rootRect == null
+                || _rootRect.parent is not RectTransform viewport)
+            {
+                return false;
+            }
+
+            var viewportSize = viewport.rect.size;
+            if (viewportSize.x <= 0f || viewportSize.y <= 0f)
+            {
+                return false;
+            }
+
+            if (!force
+                && (viewportSize - _lastRootViewportSize).sqrMagnitude < 0.01f)
+            {
+                return false;
+            }
+
+            _lastRootViewportSize = viewportSize;
+            var maxCompactWidth = viewportSize.y * _compactMaxWidthToHeight;
+            var shouldConstrain = layoutMode == LayoutMode.Compact
+                && viewportSize.x > maxCompactWidth;
+
+            _rootRect.pivot = new Vector2(0.5f, 0.5f);
+            _rootRect.anchoredPosition = Vector2.zero;
+            if (shouldConstrain)
+            {
+                _rootRect.anchorMin = new Vector2(0.5f, 0f);
+                _rootRect.anchorMax = new Vector2(0.5f, 1f);
+                _rootRect.sizeDelta = new Vector2(maxCompactWidth, 0f);
+            }
+            else
+            {
+                _rootRect.anchorMin = Vector2.zero;
+                _rootRect.anchorMax = Vector2.one;
+                _rootRect.sizeDelta = Vector2.zero;
+            }
+
+            LayoutRebuilder.MarkLayoutForRebuild(_rootRect);
+            return true;
         }
 
         private void RefreshTypographyScale()
@@ -449,7 +554,8 @@ namespace Pachimon.UI
             _typographyTexts.Clear();
             GetComponentsInChildren(true, _typographyTexts);
 
-            var scale = LayoutMode == LayoutMode.Compact ? _compactTextScale : 1f;
+            var scale = GetResponsiveUiScale();
+            _currentUiScale = scale;
             foreach (var text in _typographyTexts)
             {
                 if (text == null)
@@ -464,6 +570,57 @@ namespace Pachimon.UI
                 }
 
                 typographySize.Apply(text, scale);
+            }
+
+            MainPaneView?.LogWindowView?.ApplyUiScale(scale);
+            RightPaneView?.NodeSelectionWindow?.ApplyUiScale(scale);
+            ApplyPachimonTabScale(_leftPaneRect, scale);
+            ApplyPachimonTabScale(_rightPaneRect, scale);
+            ApplyTrainerTabScale(_leftPaneRect, scale);
+            ApplyTrainerTabScale(_rightPaneRect, scale);
+        }
+
+        private float GetResponsiveUiScale()
+        {
+            if (LayoutMode != LayoutMode.Compact)
+            {
+                return 1f;
+            }
+
+            var smallScreenBoost = Mathf.Clamp(
+                600f / Mathf.Max(1f, Screen.width),
+                1f,
+                1.5f);
+            return _compactTextScale * smallScreenBoost;
+        }
+
+        private static void ApplyPachimonTabScale(
+            RectTransform pane,
+            float scale)
+        {
+            if (pane == null)
+            {
+                return;
+            }
+
+            foreach (var tab in pane.GetComponentsInChildren<PachimonTabView>(true))
+            {
+                tab?.ApplyUiScale(scale);
+            }
+        }
+
+        private static void ApplyTrainerTabScale(
+            RectTransform pane,
+            float scale)
+        {
+            if (pane == null)
+            {
+                return;
+            }
+
+            foreach (var tab in pane.GetComponentsInChildren<TrainerTabView>(true))
+            {
+                tab?.ApplyUiScale(scale);
             }
         }
 
@@ -516,6 +673,10 @@ namespace Pachimon.UI
                 _overlayLayer);
             SettingsOverlayView =
                 SettingsOverlayView.CreateRuntime(_settingsOverlayViewport);
+            SettingsOverlayView.ConfigureLayoutMode(SetPreferredLayoutMode);
+            SettingsOverlayView.SetLayoutModes(
+                PreferredLayoutMode,
+                GetEffectiveLayoutMode());
             SettingsOverlayView.Close();
             _contentDetailViewport = CreateLayer(
                 "ContentDetailViewport",
@@ -805,11 +966,11 @@ namespace Pachimon.UI
                 _contentDetailFactory.CreateStatus(status));
         }
 
-        private void HandleRightPaneContentShown()
+        private void HandleRightPaneContentShown(bool requestCompactPane)
         {
             WireAbilityDetailTabs();
             RefreshTypographyScale();
-            if (LayoutMode == LayoutMode.Compact)
+            if (requestCompactPane && LayoutMode == LayoutMode.Compact)
             {
                 ShowCompactPane(CompactPane.Right);
             }

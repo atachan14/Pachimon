@@ -11,6 +11,7 @@ namespace Pachimon.UI
 {
     public sealed class NodeSelectionWindowView : MonoBehaviour
     {
+        private const float FooterHeight = 64f;
         [SerializeField] private BattleNodeWindowView _battleWindow;
         [SerializeField] private SimpleNodeWindowView _simpleWindow;
         [SerializeField] private GameObject _footer;
@@ -124,6 +125,19 @@ namespace Pachimon.UI
         {
             _layoutMode = layoutMode;
             _startCandidateWindow?.ApplyLayoutMode(layoutMode);
+        }
+
+        public void ApplyUiScale(float scale)
+        {
+            var resolvedScale = Mathf.Max(1f, scale);
+            var footerLayout = _footer != null
+                ? _footer.GetComponent<LayoutElement>()
+                : null;
+            if (footerLayout != null)
+            {
+                footerLayout.minHeight = FooterHeight * resolvedScale;
+                footerLayout.preferredHeight = FooterHeight * resolvedScale;
+            }
         }
 
         private void SetWindow(MonoBehaviour activeWindow)

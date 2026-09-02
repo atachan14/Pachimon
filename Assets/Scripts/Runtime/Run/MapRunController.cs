@@ -124,6 +124,10 @@ namespace Pachimon.Run
             }
 
             FocusBattlePaneUnit(_activeBattleState.Player.GetUnitAt(slotIndex));
+            if (_gameRootView?.LayoutMode == LayoutMode.Compact)
+            {
+                _gameRootView.ShowCompactPane(CompactPane.Left);
+            }
         }
 
         public void FocusEnemyBattleUnit(int slotIndex)
@@ -136,6 +140,10 @@ namespace Pachimon.Run
             }
 
             FocusBattlePaneUnit(_activeBattleState.Enemy.GetUnitAt(slotIndex));
+            if (_gameRootView?.LayoutMode == LayoutMode.Compact)
+            {
+                _gameRootView.ShowCompactPane(CompactPane.Right);
+            }
         }
 
         public bool TrySetInitialParty(IEnumerable<string> pachimonIds)
@@ -533,6 +541,10 @@ namespace Pachimon.Run
             ApplyHeaderState();
             ApplyMapOverlayState();
             _mapOverlayView?.Close();
+            if (_gameRootView?.LayoutMode == LayoutMode.Compact)
+            {
+                _gameRootView.ShowCompactPane(CompactPane.Main);
+            }
             ShowCurrentNode();
             return true;
         }

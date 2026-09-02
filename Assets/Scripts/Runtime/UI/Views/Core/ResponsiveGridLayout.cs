@@ -13,12 +13,25 @@ namespace Pachimon.UI
 
         private GridLayoutGroup _grid;
         private LayoutElement _layoutElement;
+        private float _displayScale = 1f;
 
         public void Configure(int fixedColumnCount, float minimumCellWidth, float cellHeight)
         {
             _fixedColumnCount = fixedColumnCount;
             _minimumCellWidth = minimumCellWidth;
             _cellHeight = cellHeight;
+            RefreshLayout();
+        }
+
+        public void SetDisplayScale(float displayScale)
+        {
+            var resolvedScale = Mathf.Max(1f, displayScale);
+            if (Mathf.Approximately(_displayScale, resolvedScale))
+            {
+                return;
+            }
+
+            _displayScale = resolvedScale;
             RefreshLayout();
         }
 
@@ -45,7 +58,8 @@ namespace Pachimon.UI
                 (availableWidth - (_grid.spacing.x * (columns - 1))) / columns);
             _grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             _grid.constraintCount = columns;
-            _grid.cellSize = new Vector2(cellWidth, _cellHeight);
+            var scaledCellHeight = _cellHeight * _displayScale;
+            _grid.cellSize = new Vector2(cellWidth, scaledCellHeight);
 
             var activeChildren = 0;
             foreach (Transform child in transform)
@@ -55,7 +69,7 @@ namespace Pachimon.UI
 
             var rows = Mathf.CeilToInt(activeChildren / (float)columns);
             var preferredHeight = _grid.padding.vertical
-                + (rows * _cellHeight)
+                + (rows * scaledCellHeight)
                 + (Mathf.Max(0, rows - 1) * _grid.spacing.y);
             if (!Mathf.Approximately(_layoutElement.preferredHeight, preferredHeight))
             {

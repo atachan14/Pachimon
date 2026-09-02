@@ -195,6 +195,22 @@ namespace Pachimon.UI
 
     public sealed class PachimonTabView : MonoBehaviour
     {
+        private const float ResourceGaugeHeight = 34f;
+        private const float SectionTitleHeight = 28f;
+        private const float PachimonTextScale = 1.2f;
+        private const float GraphicAreaHeight = 300f;
+        private const float GraphicSize = 280f;
+        private const float CompactGraphicScale = 2f;
+        private const float NameHpSpacing = 10f;
+        private static readonly string[] ScaledSectionNames =
+        {
+            "StatusSection",
+            "SkillSection",
+            "PassiveSection",
+            "EquipmentSection",
+            "EngravingSection",
+        };
+
         public const int SkillSlotCount = PachimonInstance.MaxSkillSlots;
 
         private static readonly Color HealthyHpColor =
@@ -258,6 +274,144 @@ namespace Pachimon.UI
         public event Action<PachimonAbilityPreview, PachimonPreviewContent>
             AbilityDetailsRequested;
         public event Action<PachimonStatusPreview> StatusDetailsRequested;
+
+        public void ApplyUiScale(float scale)
+        {
+            var resolvedScale = Mathf.Max(1f, scale);
+            var contentScale = resolvedScale > 1f
+                ? resolvedScale * PachimonTextScale
+                : 1f;
+            var compactGraphicScale = resolvedScale > 1f
+                ? CompactGraphicScale
+                : 1f;
+            ApplyGraphicScale(compactGraphicScale);
+            ApplyNameHpSpacing(resolvedScale > 1f ? NameHpSpacing : 0f);
+            ApplyPreferredHeight(_hpText, ResourceGaugeHeight * contentScale);
+            ApplyPreferredHeight(_mnText, ResourceGaugeHeight * contentScale);
+
+            foreach (var text in GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text == null)
+                {
+                    continue;
+                }
+
+                var typography = text.GetComponent<ResponsiveTypographySize>()
+                    ?? text.gameObject.AddComponent<ResponsiveTypographySize>();
+                typography.Apply(text, contentScale);
+            }
+
+            foreach (var grid in GetComponentsInChildren<ResponsiveGridLayout>(true))
+            {
+                grid?.SetDisplayScale(contentScale);
+            }
+
+            foreach (var slot in _statSlots)
+            {
+                slot?.ApplyUiScale(resolvedScale);
+            }
+
+            foreach (var sectionName in ScaledSectionNames)
+            {
+                var section = FindDescendant(transform, sectionName);
+                var title = section?.Find("Title")?.GetComponent<TMP_Text>();
+                if (title == null)
+                {
+                    continue;
+                }
+
+                ApplyPreferredHeight(
+                    title,
+                    Mathf.Max(SectionTitleHeight * contentScale, title.fontSize * 1.35f));
+            }
+        }
+
+        private void ApplyGraphicScale(float scale)
+        {
+            if (_frontGraphic == null)
+            {
+                return;
+            }
+
+            var graphicRect = _frontGraphic.rectTransform;
+            var graphicArea = graphicRect.parent as RectTransform;
+            if (graphicArea != null)
+            {
+                var layout = graphicArea.GetComponent<LayoutElement>()
+                    ?? graphicArea.gameObject.AddComponent<LayoutElement>();
+                layout.minHeight = GraphicAreaHeight * scale;
+                layout.preferredHeight = GraphicAreaHeight * scale;
+            }
+
+            graphicRect.sizeDelta = new Vector2(
+                GraphicSize * scale,
+                GraphicSize * scale);
+        }
+
+        private void ApplyNameHpSpacing(float height)
+        {
+            if (_nameText == null || _nameText.transform.parent == null)
+            {
+                return;
+            }
+
+            var content = _nameText.transform.parent;
+            var spacer = content.Find("NameHpSpacer");
+            if (spacer == null)
+            {
+                var spacerObject = new GameObject(
+                    "NameHpSpacer",
+                    typeof(RectTransform),
+                    typeof(LayoutElement));
+                spacerObject.layer = gameObject.layer;
+                spacerObject.transform.SetParent(content, false);
+                spacerObject.transform.SetSiblingIndex(
+                    _nameText.transform.GetSiblingIndex() + 1);
+                spacer = spacerObject.transform;
+            }
+
+            var layout = spacer.GetComponent<LayoutElement>();
+            layout.minHeight = height;
+            layout.preferredHeight = height;
+            layout.flexibleHeight = 0f;
+        }
+
+        private static void ApplyPreferredHeight(TMP_Text text, float height)
+        {
+            if (text == null)
+            {
+                return;
+            }
+
+            var layout = text.GetComponent<LayoutElement>()
+                ?? text.gameObject.AddComponent<LayoutElement>();
+            layout.minHeight = height;
+            layout.preferredHeight = height;
+        }
+
+        private static Transform FindDescendant(Transform root, string objectName)
+        {
+            if (root == null)
+            {
+                return null;
+            }
+
+            foreach (Transform child in root)
+            {
+                if (child.name == objectName)
+                {
+                    return child;
+                }
+
+                var match = FindDescendant(child, objectName);
+                if (match != null)
+                {
+                    return match;
+                }
+            }
+
+            return null;
+        }
 
         private void LateUpdate()
         {
@@ -439,6 +593,8 @@ namespace Pachimon.UI
 
             RebuildEquipmentChips(revealed, preview.Equipment);
             RebuildEngravingChips(revealed, preview.Engravings);
+            var gameRoot = GetComponentInParent<GameRootView>();
+            ApplyUiScale(gameRoot != null ? gameRoot.CurrentUiScale : 1f);
         }
 
         private void RebuildEquipmentChips(
@@ -692,6 +848,9 @@ namespace Pachimon.UI
             titleText.color = GameUiPalette.PrimaryText;
             titleText.alignment = TextAlignmentOptions.MidlineLeft;
             titleText.raycastTarget = false;
+            var titleTypography = titleText.GetComponent<ResponsiveTypographySize>()
+                ?? titleText.gameObject.AddComponent<ResponsiveTypographySize>();
+            titleTypography.SetBaseFontSize(titleText, 18f);
             var titleLayout = titleObject.GetComponent<LayoutElement>()
                 ?? titleObject.AddComponent<LayoutElement>();
             titleLayout.preferredHeight = 28f;
@@ -739,7 +898,7 @@ namespace Pachimon.UI
                 grid = slot.transform.parent.GetComponent<ResponsiveGridLayout>();
                 if (grid != null)
                 {
-                    grid.Configure(2, 120f, 38f);
+                    grid.Configure(2, 120f, 42f);
                 }
                 break;
             }

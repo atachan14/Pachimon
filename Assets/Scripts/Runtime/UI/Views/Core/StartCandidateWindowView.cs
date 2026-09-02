@@ -10,7 +10,6 @@ namespace Pachimon.UI
     {
         private const float CandidateTabHeight = 52f;
         private const float WindowPadding = 8f;
-        private const float TabContentSpacing = 8f;
         private const float GridSpacing = 6f;
         private const int GridColumns = 3;
         private const int GridRows = 3;
@@ -84,10 +83,9 @@ namespace Pachimon.UI
             }
         }
 
-        public void ApplyLayoutMode(LayoutMode layoutMode)
+        public void ApplyLayoutMode(LayoutMode _)
         {
-            var isCompact = layoutMode == LayoutMode.Compact;
-            _tabArea?.gameObject.SetActive(isCompact);
+            _tabArea?.gameObject.SetActive(false);
 
             var detailRect = _detailView != null
                 ? _detailView.transform as RectTransform
@@ -100,16 +98,7 @@ namespace Pachimon.UI
             detailRect.anchorMin = Vector2.zero;
             detailRect.anchorMax = Vector2.one;
             detailRect.offsetMin = new Vector2(WindowPadding, WindowPadding);
-            detailRect.offsetMax = new Vector2(
-                -WindowPadding,
-                isCompact
-                    ? -(WindowPadding + CandidateGridHeight + TabContentSpacing)
-                    : -WindowPadding);
-
-            if (isCompact)
-            {
-                RefreshGridCellSize();
-            }
+            detailRect.offsetMax = new Vector2(-WindowPadding, -WindowPadding);
         }
 
         public void Bind(

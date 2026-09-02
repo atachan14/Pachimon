@@ -12,7 +12,7 @@ namespace Pachimon.UI
         [field: SerializeField]
         public NodeSelectionWindowView NodeSelectionWindow { get; private set; }
 
-        public event Action ContentShown;
+        public event Action<bool> ContentShown;
         public event Action ContentCleared;
         public event Action MainPaneRequested;
 
@@ -34,7 +34,7 @@ namespace Pachimon.UI
                 true,
                 onConfirm,
                 onCancel);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowBattleNodePreview(
@@ -47,7 +47,7 @@ namespace Pachimon.UI
                 false,
                 null,
                 null);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowBattleStatus(
@@ -60,7 +60,7 @@ namespace Pachimon.UI
                 false,
                 null,
                 null);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(false);
         }
 
         public void ShowStartCandidateSelection(
@@ -80,7 +80,7 @@ namespace Pachimon.UI
                 confirmLabel,
                 onConfirm,
                 onCancel);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowSimpleNodeSelection(
@@ -90,13 +90,13 @@ namespace Pachimon.UI
             Action onCancel)
         {
             NodeSelectionWindow?.ShowSimple(title, details, true, onConfirm, onCancel);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowSimpleNodePreview(string title, string details)
         {
             NodeSelectionWindow?.ShowSimple(title, details, false, null, null);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowCityNodeSelection(
@@ -117,7 +117,7 @@ namespace Pachimon.UI
                 null,
                 onConfirm,
                 onCancel);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowCityNodePreview(
@@ -136,7 +136,7 @@ namespace Pachimon.UI
                 null,
                 null,
                 null);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ShowCityShop(
@@ -155,7 +155,7 @@ namespace Pachimon.UI
                 null,
                 null,
                 null);
-            ContentShown?.Invoke();
+            ContentShown?.Invoke(true);
         }
 
         public void ClearNodeSelection()

@@ -94,6 +94,9 @@ namespace Pachimon.UI
 
     public sealed class TrainerTabView : MonoBehaviour
     {
+        private const float GraphicAreaHeight = 300f;
+        private const float CompactGraphicScale = 2f;
+
         private static readonly PachimonStatType[] StatDisplayOrder =
         {
             PachimonStatType.MaxHp,
@@ -194,6 +197,28 @@ namespace Pachimon.UI
                 content.GoldIcon,
                 content.Gold,
                 content.HasReward);
+            var gameRoot = GetComponentInParent<GameRootView>();
+            ApplyUiScale(gameRoot != null ? gameRoot.CurrentUiScale : 1f);
+        }
+
+        public void ApplyUiScale(float scale)
+        {
+            if (_graphic == null)
+            {
+                return;
+            }
+
+            var graphicArea = _graphic.rectTransform.parent as RectTransform;
+            if (graphicArea == null)
+            {
+                return;
+            }
+
+            var layout = graphicArea.GetComponent<LayoutElement>()
+                ?? graphicArea.gameObject.AddComponent<LayoutElement>();
+            var graphicScale = scale > 1f ? CompactGraphicScale : 1f;
+            layout.minHeight = GraphicAreaHeight * graphicScale;
+            layout.preferredHeight = GraphicAreaHeight * graphicScale;
         }
 
         private void EnsureRuntimeSections()

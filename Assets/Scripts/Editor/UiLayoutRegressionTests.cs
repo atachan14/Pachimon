@@ -8,15 +8,39 @@ namespace Pachimon.UI.Editor.Tests
 {
     public sealed class UiLayoutRegressionTests
     {
+        [TestCase(LayoutMode.Compact, true, LayoutMode.Compact)]
+        [TestCase(LayoutMode.Compact, false, LayoutMode.Compact)]
+        [TestCase(LayoutMode.Expanded, true, LayoutMode.Expanded)]
+        [TestCase(LayoutMode.Expanded, false, LayoutMode.Compact)]
+        public void LayoutModePolicy_ResolvesPreferenceAndScreenSupport(
+            LayoutMode preferredMode,
+            bool expandedLayoutSupported,
+            LayoutMode expectedMode)
+        {
+            Assert.That(
+                LayoutModePolicy.Resolve(
+                    preferredMode,
+                    expandedLayoutSupported),
+                Is.EqualTo(expectedMode));
+        }
+
         [Test]
         public void GameRoot_LayoutModeRoundTripPreservesPaneNavigation()
         {
-            var root = CreateRect("GameRoot", null, new Vector2(1200f, 800f));
+            var viewport = CreateRect(
+                "Viewport",
+                null,
+                new Vector2(1200f, 800f));
+            var root = CreateRect(
+                "GameRoot",
+                viewport,
+                new Vector2(1200f, 800f));
             root.gameObject.SetActive(false);
             try
             {
                 var gameRoot = root.gameObject.AddComponent<GameRootView>();
                 var headerRect = CreateRect("Header", root, new Vector2(1200f, 96f));
+                var headerLayout = headerRect.gameObject.AddComponent<LayoutElement>();
                 var header = headerRect.gameObject.AddComponent<HeaderView>();
                 header.Initialize(
                     CreateText("GoldText", headerRect),
@@ -53,6 +77,29 @@ namespace Pachimon.UI.Editor.Tests
                     1100f);
 
                 gameRoot.ApplyLayoutMode(LayoutMode.Compact);
+                Assert.That(
+                    root.rect.width,
+                    Is.EqualTo(800f * 2f / 3f).Within(0.01f));
+                Assert.That(headerLayout.minHeight, Is.EqualTo(100f));
+                Assert.That(headerLayout.preferredHeight, Is.EqualTo(100f));
+
+                right.ShowBattleStatus(
+                    default,
+                    System.Array.Empty<PachimonPreviewContent>());
+                Assert.That(
+                    gameRoot.CurrentCompactPane,
+                    Is.EqualTo(CompactPane.Main),
+                    "Battle status refreshes must not open the RightPane.");
+
+                right.ShowBattleNodePreview(
+                    default,
+                    System.Array.Empty<PachimonPreviewContent>());
+                Assert.That(
+                    gameRoot.CurrentCompactPane,
+                    Is.EqualTo(CompactPane.Right),
+                    "Explicit node previews should open the RightPane.");
+
+                gameRoot.ShowCompactPane(CompactPane.Main, false);
                 gameRoot.ShowCompactPane(CompactPane.Left, false);
                 Assert.That(gameRoot.CurrentCompactPane, Is.EqualTo(CompactPane.Left));
                 Assert.That(leftRect.parent.name, Is.EqualTo("LeftDrawerViewport"));
@@ -62,6 +109,9 @@ namespace Pachimon.UI.Editor.Tests
                 Assert.That(rightRect.parent.name, Is.EqualTo("RightDrawerViewport"));
 
                 gameRoot.ApplyLayoutMode(LayoutMode.Expanded);
+                Assert.That(root.rect.width, Is.EqualTo(1200f).Within(0.01f));
+                Assert.That(headerLayout.minHeight, Is.EqualTo(100f));
+                Assert.That(headerLayout.preferredHeight, Is.EqualTo(100f));
                 Assert.That(leftRect.parent, Is.SameAs(content));
                 Assert.That(mainRect.parent, Is.SameAs(content));
                 Assert.That(rightRect.parent, Is.SameAs(content));
@@ -75,7 +125,7 @@ namespace Pachimon.UI.Editor.Tests
             }
             finally
             {
-                Object.DestroyImmediate(root.gameObject);
+                Object.DestroyImmediate(viewport.gameObject);
             }
         }
 

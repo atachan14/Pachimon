@@ -4,8 +4,9 @@
 
 ## 現在地
 
-- `v0.7 City`まで実装・確認済み
-- 現在は`v0.8 Content`を進めながら、`v0.8.1 Playtest Build`の公開を目指す
+- `v0.8.1 Playtest Build`をitch.ioへ公開済み
+- 現在は`v0.8.2 Compact First`として、Compactを初見向けの標準UIへ仕上げる
+- StartNodeを1体選択へ変更し、進行中にPartyを増やす案は詳細検討中
 
 ## Milestones
 
@@ -21,6 +22,7 @@
 | v0.7 | City | ShopなどCity内の処理 |
 | v0.8 | Content | Skill / Passive / Item追加と、それに必要な仕組み |
 | v0.8.1 | Playtest Build | 64Species、row敵強化、City追加商品、Expanded通し確認、itch.io限定Web公開 |
+| v0.8.2 | Compact First | Compactを標準表示化、全主要フローのCompact対応、Expandedを任意モード化 |
 | v0.9 | NormalArea | NormalAreaを通して遊べる状態とバランス調整 |
 | v1.0 | GhostArea | GhostNode群の生成、進行、完走 |
 | v1.1 | Save / Load | Runの保存と再開 |

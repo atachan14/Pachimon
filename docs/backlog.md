@@ -34,6 +34,13 @@
 
 - dotnet/msbuild
 
+- コンパクトビュー
+
+- コンパクトでのNode選択時、RightPaneを自動で閉じるようにする！
+つまり自動でMainPaneにする！
+- コンパクトでのBattle時、Dialogが流れるたびにRightPaneが開くようになってる？
+基本、RightPaneは開かないようにする！
+一方で、プレイヤーがMainPane上の各Pachimonのグラフィックをクリックしたときには、対称Paneを開く！
 
 
 - 発生時に効果発動する系
