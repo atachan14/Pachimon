@@ -57,10 +57,12 @@ namespace Pachimon.Run
             var party = runState.PlayerPachimonIds
                 .Select(pachimonPool.Get)
                 .ToArray();
-            if (party.Length != RunState.PartySize || party.Any(instance => instance == null))
+            if (party.Length < 1
+                || party.Length > RunState.MaxPartySize
+                || party.Any(instance => instance == null))
             {
                 throw new InvalidOperationException(
-                    $"RestSpot requires a {RunState.PartySize}-Pachimon Player party.");
+                    $"RestSpot requires between 1 and {RunState.MaxPartySize} Player Pachimon.");
             }
 
             var recoveredCount = 0;

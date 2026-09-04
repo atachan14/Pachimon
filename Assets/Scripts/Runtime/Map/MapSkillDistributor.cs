@@ -89,12 +89,17 @@ namespace Pachimon.Map
                          || node.NodeType == NodeType.Elite))
             {
                 var allocationType = GetLeagueAllocationType(node);
+                var count = GetMatchingSkillCount(node);
+                if (count == 0)
+                {
+                    continue;
+                }
+
                 var candidates = mapAssignableSkills
-                    .Where(skill => skill.AllocationType == allocationType)
+                    .Where(skill => skill.AllocationType == allocationType
+                        && skill.MinimumPartySize
+                            <= PartyProgressionRules.GetPartySizeForRow(node.RowIndex))
                     .ToArray();
-                var count = node.NodeType == NodeType.Gym
-                    ? _settings.GymMatchingSkillCount
-                    : _settings.EliteMatchingSkillCount;
 
                 foreach (var instanceId in GetAssignedInstanceIds(node))
                 {
@@ -148,15 +153,34 @@ namespace Pachimon.Map
             foreach (var node in nodes)
             {
                 var count = GetAssignedRandomSkillCount(node);
+                var partySize = PartyProgressionRules.GetPartySizeForRow(node.RowIndex);
+                var eligibleCandidates = candidates
+                    .Where(skill => skill.MinimumPartySize <= partySize)
+                    .ToArray();
                 foreach (var instanceId in GetAssignedInstanceIds(node))
                 {
                     var instance = GetRequiredInstance(pachimonPool, instanceId, node.NodeId);
+                    if (partySize == 1)
+                    {
+                        AssignLeastUsedSkills(
+                            instance,
+                            eligibleCandidates
+                                .Where(skill => skill.AllocationType
+                                    == instance.AllocationType)
+                                .ToArray(),
+                            count,
+                            usageCounts,
+                            random,
+                            node.NodeId);
+                        continue;
+                    }
+
                     if (node.NodeType is not (NodeType.Gym or NodeType.Elite)
                         && count >= 2)
                     {
                         AssignLeastUsedSkills(
                             instance,
-                            candidates
+                            eligibleCandidates
                                 .Where(skill => skill.AllocationType
                                     == instance.AllocationType)
                                 .ToArray(),
@@ -166,7 +190,7 @@ namespace Pachimon.Map
                             node.NodeId);
                         AssignLeastUsedSkills(
                             instance,
-                            candidates
+                            eligibleCandidates
                                 .Where(skill => skill.AllocationType
                                     != instance.AllocationType)
                                 .ToArray(),
@@ -176,7 +200,7 @@ namespace Pachimon.Map
                             node.NodeId);
                         AssignLeastUsedSkills(
                             instance,
-                            candidates,
+                            eligibleCandidates,
                             count - 2,
                             usageCounts,
                             random,
@@ -184,7 +208,13 @@ namespace Pachimon.Map
                         continue;
                     }
 
-                    AssignLeastUsedSkills(instance, candidates, count, usageCounts, random, node.NodeId);
+                    AssignLeastUsedSkills(
+                        instance,
+                        eligibleCandidates,
+                        count,
+                        usageCounts,
+                        random,
+                        node.NodeId);
                 }
             }
         }
@@ -225,6 +255,11 @@ namespace Pachimon.Map
 
         private int GetRandomSkillCount(int rowIndex)
         {
+            if (rowIndex <= PartyProgressionRules.FirstExpansionAfterRow)
+            {
+                return 1;
+            }
+
             if (rowIndex >= _settings.LateRandomSkillStartRow)
             {
                 return _settings.LateRandomSkillCount;
@@ -237,12 +272,7 @@ namespace Pachimon.Map
 
         private int GetAssignedRandomSkillCount(MapNode node)
         {
-            var matchingCount = node.NodeType switch
-            {
-                NodeType.Gym => _settings.GymMatchingSkillCount,
-                NodeType.Elite => _settings.EliteMatchingSkillCount,
-                _ => 0,
-            };
+            var matchingCount = GetMatchingSkillCount(node);
             var remainingSlots = Math.Max(
                 0,
                 PachimonInstance.MaxSkillSlots - 1 - matchingCount);
@@ -255,12 +285,7 @@ namespace Pachimon.Map
         {
             foreach (var node in nodes)
             {
-                var matchingCount = node.NodeType switch
-                {
-                    NodeType.Gym => _settings.GymMatchingSkillCount,
-                    NodeType.Elite => _settings.EliteMatchingSkillCount,
-                    _ => 0,
-                };
+                var matchingCount = GetMatchingSkillCount(node);
                 var randomSkillCount = GetAssignedRandomSkillCount(node);
                 var expectedSkillCount = 1 + matchingCount + randomSkillCount;
                 var matchingType = matchingCount > 0
@@ -281,7 +306,10 @@ namespace Pachimon.Map
                     foreach (var skillId in instance.SkillIds)
                     {
                         var skill = _skillCatalog.Get(skillId);
-                        if (skill == null || !skill.IsMapAssignable)
+                        if (skill == null
+                            || !skill.IsMapAssignable
+                            || skill.MinimumPartySize
+                                > PartyProgressionRules.GetPartySizeForRow(node.RowIndex))
                         {
                             throw new MapGenerationException(
                                 $"{instance.InstanceId} has invalid Map-assigned Skill {skillId}.");
@@ -296,6 +324,13 @@ namespace Pachimon.Map
                         var otherTypeSkillCount = instance.SkillIds.Count(skillId =>
                             _skillCatalog.Get(skillId)?.AllocationType
                             != instance.AllocationType);
+                        if (PartyProgressionRules.GetPartySizeForRow(node.RowIndex) == 1
+                            && ownTypeSkillCount < 2)
+                        {
+                            throw new MapGenerationException(
+                                $"{instance.InstanceId} at node {node.NodeId} requires "
+                                + "one matching additional Skill during the solo stage.");
+                        }
                         if (randomSkillCount >= 2
                             && (ownTypeSkillCount < 2 || otherTypeSkillCount < 1))
                         {
@@ -316,6 +351,21 @@ namespace Pachimon.Map
                     }
                 }
             }
+        }
+
+        private int GetMatchingSkillCount(MapNode node)
+        {
+            if (PartyProgressionRules.GetPartySizeForRow(node.RowIndex) == 1)
+            {
+                return 0;
+            }
+
+            return node.NodeType switch
+            {
+                NodeType.Gym => _settings.GymMatchingSkillCount,
+                NodeType.Elite => _settings.EliteMatchingSkillCount,
+                _ => 0,
+            };
         }
 
         private AllocationType GetLeagueAllocationType(MapNode node)
@@ -360,6 +410,9 @@ namespace Pachimon.Map
                 BattleNodeContent battle => battle.EnemyPachimonInstanceIds,
                 GymNodeContent gym => gym.EnemyPachimonInstanceIds,
                 EliteNodeContent elite => elite.EnemyPachimonInstanceIds,
+                PartyEncounterNodeContent encounter =>
+                    encounter.EnemyPachimonInstanceIds
+                        .Concat(encounter.CandidatePachimonInstanceIds),
                 _ => Array.Empty<string>(),
             };
         }

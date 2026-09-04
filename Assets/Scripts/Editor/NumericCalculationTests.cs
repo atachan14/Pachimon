@@ -938,7 +938,7 @@ namespace Pachimon.Editor.Tests
             Assert.That(state.EvaluateOutcome(),
                 Is.EqualTo(BattleOutcome.PlayerDefeat));
             Assert.That(state.ToxinPresentation.Drain().Count,
-                Is.EqualTo(BattleSideState.PartySize));
+                Is.EqualTo(BattleSideState.MaxPartySize));
         }
 
         [Test]
@@ -3372,7 +3372,7 @@ namespace Pachimon.Editor.Tests
         {
             var runState = new RunState(1, "test");
             var pool = new RunPachimonPool();
-            var partyIds = new string[RunState.PartySize];
+            var partyIds = new string[RunState.MaxPartySize];
             for (var index = 0; index < partyIds.Length; index++)
             {
                 var instanceId = $"reward_target_{index}";
@@ -3385,7 +3385,9 @@ namespace Pachimon.Editor.Tests
                     1,
                     CreateStats()));
             }
-            Assert.That(runState.TrySetInitialParty(partyIds), Is.True);
+            Assert.That(runState.TrySetInitialParty(new[] { partyIds[0] }), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[1]), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[2]), Is.True);
 
             var session = new BattleRewardSession(
                 runState,
@@ -3406,7 +3408,7 @@ namespace Pachimon.Editor.Tests
         {
             var runState = new RunState(1, "test");
             var pool = new RunPachimonPool();
-            var partyIds = new string[RunState.PartySize];
+            var partyIds = new string[RunState.MaxPartySize];
             for (var index = 0; index < partyIds.Length; index++)
             {
                 var instanceId = $"item_reward_target_{index}";
@@ -3419,7 +3421,9 @@ namespace Pachimon.Editor.Tests
                     1,
                     CreateStats()));
             }
-            Assert.That(runState.TrySetInitialParty(partyIds), Is.True);
+            Assert.That(runState.TrySetInitialParty(new[] { partyIds[0] }), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[1]), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[2]), Is.True);
 
             var session = new BattleRewardSession(
                 runState,
@@ -3453,7 +3457,7 @@ namespace Pachimon.Editor.Tests
             }
 
             var pool = new RunPachimonPool();
-            var partyIds = new string[RunState.PartySize];
+            var partyIds = new string[RunState.MaxPartySize];
             for (var index = 0; index < partyIds.Length; index++)
             {
                 var instanceId = $"full_bag_reward_target_{index}";
@@ -3466,7 +3470,9 @@ namespace Pachimon.Editor.Tests
                     1,
                     CreateStats()));
             }
-            Assert.That(runState.TrySetInitialParty(partyIds), Is.True);
+            Assert.That(runState.TrySetInitialParty(new[] { partyIds[0] }), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[1]), Is.True);
+            Assert.That(runState.TryAddPartyMember(partyIds[2]), Is.True);
 
             var session = new BattleRewardSession(
                 runState,

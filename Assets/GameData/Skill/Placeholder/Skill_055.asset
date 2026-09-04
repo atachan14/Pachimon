@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: "\u304D\u308A\u304D\u308A\u821E\u3044"
   _allocationType: 7
   _isMapAssignable: 1
+  _minimumPartySize: 2
   _baseStartupTicks: 100
   _baseRecoveryTicks: 120
   _baseCooldownTicks: 300

@@ -56,10 +56,14 @@ namespace Pachimon.UI
         private Action _dialogueCompleted;
         private Func<bool> _inputBlockedProvider;
         private int _nextDialogueLineCue;
+        private bool _usesCompactLayout;
+
         public void ApplyUiScale(float scale)
         {
             // Log typography is derived from its four-row layout, so applying the
             // global Compact multiplier here would make options larger than dialog text.
+            _usesCompactLayout = scale > 1.01f;
+            ConfigureSkillGridGeometry();
             RefreshOptionTypography();
             RequestLayoutRefresh();
         }
@@ -158,6 +162,9 @@ namespace Pachimon.UI
         {
             HideAdvancePrompt();
             _skillOptionOutlines.Clear();
+            // Destroy is deferred until the end of the frame. Clear the cached
+            // component now so the next non-Skill option cannot touch it.
+            _runtimeSkillGrid = null;
             if (SelectGridRoot == null)
             {
                 return;
@@ -240,17 +247,14 @@ namespace Pachimon.UI
             gridObject.layer = SelectGridRoot.gameObject.layer;
             var gridRect = gridObject.GetComponent<RectTransform>();
             gridRect.SetParent(_runtimeOptionContainer, false);
-            Stretch(gridRect, new Vector2(8f, 6f), new Vector2(-8f, -6f));
 
             var grid = gridObject.GetComponent<GridLayoutGroup>();
             _runtimeSkillGrid = grid;
-            grid.padding = new RectOffset(6, 6, 6, 6);
-            grid.spacing = new Vector2(8f, 8f);
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 3;
             grid.childAlignment = TextAnchor.UpperCenter;
-            var availableWidth = Mathf.Max(420f, SelectGridRoot.rect.width - 44f);
-            grid.cellSize = new Vector2((availableWidth - 16f) / 3f, SkillButtonHeight);
+            grid.cellSize = new Vector2(1f, SkillButtonHeight);
+            ConfigureSkillGridGeometry();
 
             if (skills != null)
             {
@@ -263,7 +267,8 @@ namespace Pachimon.UI
                         option.Label,
                         option.Action,
                         option.IsInteractable,
-                        false);
+                        false,
+                        true);
                     var buttonObject = gridRect
                         .GetChild(gridRect.childCount - 1)?.gameObject;
                     var skillColors = option.IsInteractable
@@ -318,6 +323,7 @@ namespace Pachimon.UI
                 label,
                 action,
                 true,
+                false,
                 false);
         }
 
@@ -327,7 +333,8 @@ namespace Pachimon.UI
             string label,
             UnityAction action,
             bool isInteractable,
-            bool isEmphasized)
+            bool isEmphasized,
+            bool isSkillGridOption)
         {
             if (parent == null)
             {
@@ -373,7 +380,7 @@ namespace Pachimon.UI
             labelText.alignment = TextAlignmentOptions.Center;
             var optionFontSize = Mathf.Max(
                 MinimumOptionFontSize,
-                _fixedLogFontSize * OptionFontScale);
+                _fixedLogFontSize * GetOptionFontScale(isSkillGridOption));
             labelText.fontSize = isEmphasized
                 ? optionFontSize * 1.15f
                 : optionFontSize;
@@ -426,6 +433,7 @@ namespace Pachimon.UI
                 0,
                 option.Label,
                 option.Action,
+                true,
                 true,
                 true);
             RegisterSkillSelectionOutline(
@@ -964,9 +972,6 @@ namespace Pachimon.UI
                 return;
             }
 
-            var optionFontSize = Mathf.Max(
-                MinimumOptionFontSize,
-                _fixedLogFontSize * OptionFontScale);
             var labels = _runtimeOptionContainer.GetComponentsInChildren<TMP_Text>(true);
             foreach (var label in labels)
             {
@@ -980,6 +985,11 @@ namespace Pachimon.UI
                 var buttonLayout = label.transform.parent.GetComponent<LayoutElement>();
                 var isEmphasized = label.transform.parent.parent != null
                     && label.transform.parent.parent.name == "StruggleOverlay";
+                var isSkillGridOption = _runtimeSkillGrid != null
+                    && label.transform.parent.parent == _runtimeSkillGrid.transform;
+                var optionFontSize = Mathf.Max(
+                    MinimumOptionFontSize,
+                    _fixedLogFontSize * GetOptionFontScale(isSkillGridOption));
                 var fontSize = isEmphasized
                     ? optionFontSize * 1.15f
                     : optionFontSize;
@@ -1078,7 +1088,8 @@ namespace Pachimon.UI
 
             if (_runtimeSkillGrid != null && _visibleOptionRows > 0)
             {
-                const float nestedVerticalInset = 24f;
+                UpdateSkillGridCellWidth();
+                var nestedVerticalInset = _usesCompactLayout ? 8f : 24f;
                 var cellHeight = Mathf.Max(
                     1f,
                     (optionHeight
@@ -1089,6 +1100,61 @@ namespace Pachimon.UI
                     _runtimeSkillGrid.cellSize.x,
                     Mathf.Min(SkillButtonHeight, cellHeight));
             }
+        }
+
+        private float GetOptionFontScale(bool isSkillGridOption)
+        {
+            return isSkillGridOption && _usesCompactLayout
+                ? 0.68f
+                : OptionFontScale;
+        }
+
+        private void ConfigureSkillGridGeometry()
+        {
+            if (_runtimeSkillGrid == null)
+            {
+                return;
+            }
+
+            var rect = _runtimeSkillGrid.transform as RectTransform;
+            var horizontalInset = _usesCompactLayout ? 2f : 8f;
+            var verticalInset = _usesCompactLayout ? 2f : 6f;
+            Stretch(
+                rect,
+                new Vector2(horizontalInset, verticalInset),
+                new Vector2(-horizontalInset, -verticalInset));
+            var padding = _usesCompactLayout ? 2 : 6;
+            _runtimeSkillGrid.padding = new RectOffset(
+                padding,
+                padding,
+                padding,
+                padding);
+            _runtimeSkillGrid.spacing = _usesCompactLayout
+                ? new Vector2(5f, 5f)
+                : new Vector2(8f, 8f);
+            UpdateSkillGridCellWidth();
+        }
+
+        private void UpdateSkillGridCellWidth()
+        {
+            if (_runtimeSkillGrid == null || SelectGridRoot == null)
+            {
+                return;
+            }
+
+            var gridRect = _runtimeSkillGrid.transform as RectTransform;
+            var outerInset = _usesCompactLayout ? 4f : 16f;
+            var width = gridRect != null && gridRect.rect.width > 1f
+                ? gridRect.rect.width
+                : Mathf.Max(1f, SelectGridRoot.rect.width - outerInset);
+            var availableWidth = Mathf.Max(
+                1f,
+                width
+                    - _runtimeSkillGrid.padding.horizontal
+                    - (_runtimeSkillGrid.spacing.x * 2f));
+            _runtimeSkillGrid.cellSize = new Vector2(
+                availableWidth / 3f,
+                _runtimeSkillGrid.cellSize.y);
         }
 
         private int CalculateVisibleTextRows()

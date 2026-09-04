@@ -769,9 +769,12 @@ namespace Pachimon.UI
 
             var width = Mathf.Max(1f, _candidatePanel.rect.width - _candidateGrid.padding.horizontal);
             var height = Mathf.Max(1f, _candidatePanel.rect.height - _candidateGrid.padding.vertical);
+            var columnCount = Mathf.Clamp(_candidateCards.Count, 1, 3);
+            var rowCount = Mathf.Max(1, Mathf.CeilToInt(_candidateCards.Count / (float)columnCount));
+            _candidateGrid.constraintCount = columnCount;
             _candidateGrid.cellSize = new Vector2(
-                Mathf.Max(1f, (width - (_candidateGrid.spacing.x * 2f)) / 3f),
-                Mathf.Max(1f, (height - (_candidateGrid.spacing.y * 2f)) / 3f));
+                Mathf.Max(1f, (width - (_candidateGrid.spacing.x * (columnCount - 1))) / columnCount),
+                Mathf.Max(1f, (height - (_candidateGrid.spacing.y * (rowCount - 1))) / rowCount));
         }
     }
 }

@@ -94,9 +94,6 @@ namespace Pachimon.UI
 
     public sealed class TrainerTabView : MonoBehaviour
     {
-        private const float GraphicAreaHeight = 300f;
-        private const float CompactGraphicScale = 2f;
-
         private static readonly PachimonStatType[] StatDisplayOrder =
         {
             PachimonStatType.MaxHp,
@@ -133,6 +130,8 @@ namespace Pachimon.UI
         private GameObject _goldSummaryLine;
         private Image _goldSummaryIcon;
         private TMP_Text _goldSummaryValue;
+        private ResponsiveUiLayout _responsiveLayout;
+        private bool _hasResponsiveLayout;
         public RectTransform GraphicRect => _graphic?.rectTransform;
 
         private readonly struct RewardElementBinding
@@ -197,12 +196,18 @@ namespace Pachimon.UI
                 content.GoldIcon,
                 content.Gold,
                 content.HasReward);
-            var gameRoot = GetComponentInParent<GameRootView>();
-            ApplyUiScale(gameRoot != null ? gameRoot.CurrentUiScale : 1f);
+            if (_hasResponsiveLayout)
+            {
+                ApplyResponsiveLayout(_responsiveLayout);
+            }
         }
 
-        public void ApplyUiScale(float scale)
+        public void ApplyResponsiveLayout(ResponsiveUiLayout responsiveLayout)
         {
+            _responsiveLayout = responsiveLayout;
+            _hasResponsiveLayout = true;
+            EnsureRuntimeSections();
+            ApplyContentLayout(responsiveLayout);
             if (_graphic == null)
             {
                 return;
@@ -216,9 +221,259 @@ namespace Pachimon.UI
 
             var layout = graphicArea.GetComponent<LayoutElement>()
                 ?? graphicArea.gameObject.AddComponent<LayoutElement>();
-            var graphicScale = scale > 1f ? CompactGraphicScale : 1f;
-            layout.minHeight = GraphicAreaHeight * graphicScale;
-            layout.preferredHeight = GraphicAreaHeight * graphicScale;
+            layout.minHeight = responsiveLayout.GraphicAreaHeight;
+            layout.preferredHeight = responsiveLayout.GraphicAreaHeight;
+
+            // TrainerGraphic is a stretch-anchored child, unlike the centered
+            // Pachimon graphic. Giving it a positive sizeDelta expands it past
+            // GraphicArea, so keep it stretched and express the target size as
+            // an inset instead.
+            var graphicRect = _graphic.rectTransform;
+            var inset = Mathf.Max(
+                0f,
+                (responsiveLayout.GraphicAreaHeight
+                    - responsiveLayout.GraphicSize) * 0.5f);
+            graphicRect.anchorMin = Vector2.zero;
+            graphicRect.anchorMax = Vector2.one;
+            graphicRect.pivot = new Vector2(0.5f, 0.5f);
+            graphicRect.anchoredPosition = Vector2.zero;
+            graphicRect.offsetMin = new Vector2(inset, inset);
+            graphicRect.offsetMax = new Vector2(-inset, -inset);
+        }
+
+        private void ApplyContentLayout(ResponsiveUiLayout layout)
+        {
+            var scale = layout.ContentScale;
+            var content = transform.Find("Viewport/Content") as RectTransform;
+            if (content != null
+                && content.TryGetComponent<VerticalLayoutGroup>(out var contentLayout))
+            {
+                contentLayout.spacing = 8f * scale;
+                contentLayout.padding = new RectOffset(
+                    contentLayout.padding.left,
+                    contentLayout.padding.right,
+                    contentLayout.padding.top,
+                    Mathf.RoundToInt(8f * scale));
+            }
+
+            SetPreferredHeight(_displayName?.gameObject, 40f * scale);
+            SetPreferredHeight(_rowText?.gameObject, 28f * scale);
+
+            foreach (var text in GetComponentsInChildren<TMP_Text>(true))
+            {
+                if (text == null)
+                {
+                    continue;
+                }
+
+                var typography = text.GetComponent<ResponsiveTypographySize>()
+                    ?? text.gameObject.AddComponent<ResponsiveTypographySize>();
+                typography.Apply(text, scale);
+            }
+
+            ScaleGrid(_statusGrid, scale, 7f);
+            ScaleGrid(_badgeGrid, scale, 6f);
+            ScaleStatCards(scale);
+            ApplySectionLayout(
+                _statusSection,
+                _statusGrid,
+                scale,
+                false,
+                layout.SectionTitleHeight);
+            ApplySectionLayout(
+                _badgeSection,
+                _badgeGrid,
+                scale,
+                true,
+                layout.SectionTitleHeight);
+            ApplyRewardSummaryLayout(scale, layout.SectionTitleHeight);
+        }
+
+        private void ScaleStatCards(float scale)
+        {
+            foreach (var valueText in _statTexts.Values)
+            {
+                var card = valueText != null ? valueText.transform.parent : null;
+                if (card == null)
+                {
+                    continue;
+                }
+
+                if (card.TryGetComponent<HorizontalLayoutGroup>(out var row))
+                {
+                    row.padding = new RectOffset(
+                        Mathf.RoundToInt(4f * scale),
+                        Mathf.RoundToInt(8f * scale),
+                        Mathf.RoundToInt(4f * scale),
+                        Mathf.RoundToInt(4f * scale));
+                    row.spacing = 6f * scale;
+                }
+
+                var icon = card.Find("Icon");
+                var iconLayout = icon != null
+                    ? icon.GetComponent<LayoutElement>()
+                    : null;
+                if (iconLayout != null)
+                {
+                    iconLayout.minWidth = 48f * scale;
+                    iconLayout.preferredWidth = 48f * scale;
+                }
+            }
+        }
+
+        private static void ScaleGrid(
+            RectTransform gridRect,
+            float scale,
+            float baseSpacing)
+        {
+            if (gridRect == null)
+            {
+                return;
+            }
+
+            if (gridRect.TryGetComponent<GridLayoutGroup>(out var grid))
+            {
+                grid.spacing = Vector2.one * baseSpacing * scale;
+            }
+
+            gridRect.GetComponent<ResponsiveGridLayout>()?.SetDisplayScale(scale);
+        }
+
+        private static void ApplySectionLayout(
+            GameObject section,
+            RectTransform grid,
+            float scale,
+            bool hasTitle,
+            float titleHeight)
+        {
+            if (section == null || grid == null)
+            {
+                return;
+            }
+
+            var edgePadding = 8f * scale;
+            var topInset = hasTitle ? titleHeight + edgePadding : edgePadding;
+            grid.offsetMin = new Vector2(edgePadding, edgePadding);
+            grid.offsetMax = new Vector2(-edgePadding, -topInset);
+
+            if (hasTitle)
+            {
+                ApplySectionTitleLayout(section.transform, scale, titleHeight);
+            }
+
+            var gridHeight = grid.GetComponent<LayoutElement>()?.preferredHeight ?? 0f;
+            SetPreferredHeight(section, gridHeight + topInset + edgePadding);
+        }
+
+        private static void ApplySectionTitleLayout(
+            Transform section,
+            float scale,
+            float titleHeight)
+        {
+            var title = section?.Find("Title")?.GetComponent<TMP_Text>();
+            if (title == null)
+            {
+                return;
+            }
+
+            var horizontalPadding = 10f * scale;
+            var topPadding = 4f * scale;
+            title.rectTransform.offsetMin = new Vector2(
+                horizontalPadding,
+                -titleHeight - topPadding);
+            title.rectTransform.offsetMax = new Vector2(
+                -horizontalPadding,
+                -topPadding);
+        }
+
+        private void ApplyRewardSummaryLayout(float scale, float titleHeight)
+        {
+            if (_rewardSummarySection == null || _rewardSummaryLines == null)
+            {
+                return;
+            }
+
+            ApplySectionTitleLayout(
+                _rewardSummarySection.transform,
+                scale,
+                titleHeight);
+            var edgePadding = 8f * scale;
+            _rewardSummaryLines.offsetMin = new Vector2(12f * scale, edgePadding);
+            _rewardSummaryLines.offsetMax = new Vector2(
+                -12f * scale,
+                -titleHeight - edgePadding);
+            if (_rewardSummaryLines.TryGetComponent<VerticalLayoutGroup>(out var lines))
+            {
+                lines.spacing = 4f * scale;
+            }
+
+            ScaleRewardLine(_rewardElementsLine, 30f, 12f, scale);
+            ScaleRewardLine(_goldSummaryLine, 26f, 6f, scale);
+            if (_goldSummaryIcon != null)
+            {
+                var iconLayout = _goldSummaryIcon.GetComponent<LayoutElement>();
+                if (iconLayout != null)
+                {
+                    iconLayout.minWidth = 26f * scale;
+                    iconLayout.preferredWidth = 26f * scale;
+                }
+            }
+
+            SetPreferredHeight(_goldSummaryValue?.gameObject, 26f * scale);
+            foreach (var reward in _rewardElements)
+            {
+                if (reward.Root != null
+                    && reward.Root.TryGetComponent<HorizontalLayoutGroup>(out var row))
+                {
+                    row.spacing = 5f * scale;
+                }
+
+                var labelWidth = reward.Label != null
+                    && reward.Label.text.EndsWith("Badge", StringComparison.Ordinal)
+                        ? 104f
+                        : 48f;
+                reward.LabelLayout.minWidth = labelWidth * scale;
+                reward.LabelLayout.preferredWidth = labelWidth * scale;
+                var amountLayout = reward.Amount?.GetComponent<LayoutElement>();
+                if (amountLayout != null)
+                {
+                    amountLayout.minWidth = 46f * scale;
+                    amountLayout.preferredWidth = 46f * scale;
+                }
+            }
+
+            var lineCount = 0;
+            if (_rewardElementsLine != null && _rewardElementsLine.activeSelf)
+            {
+                lineCount++;
+            }
+
+            if (_goldSummaryLine != null && _goldSummaryLine.activeSelf)
+            {
+                lineCount++;
+            }
+
+            SetPreferredHeight(
+                _rewardSummarySection,
+                titleHeight + (16f * scale) + (Mathf.Max(1, lineCount) * 30f * scale));
+        }
+
+        private static void ScaleRewardLine(
+            GameObject line,
+            float baseHeight,
+            float baseSpacing,
+            float scale)
+        {
+            if (line == null)
+            {
+                return;
+            }
+
+            SetPreferredHeight(line, baseHeight * scale);
+            if (line.TryGetComponent<HorizontalLayoutGroup>(out var row))
+            {
+                row.spacing = baseSpacing * scale;
+            }
         }
 
         private void EnsureRuntimeSections()
@@ -260,8 +515,8 @@ namespace Pachimon.UI
             statusBackground.color = GameUiPalette.Transparent;
             statusBackground.raycastTarget = false;
             _statusGrid = CreateGrid(_statusSection.transform, "TrainerStatusGrid", 4, 38f);
-            _statusGrid.offsetMin = Vector2.zero;
-            _statusGrid.offsetMax = Vector2.zero;
+            _statusGrid.offsetMin = new Vector2(8f, 8f);
+            _statusGrid.offsetMax = new Vector2(-8f, -8f);
             _statusGrid.GetComponent<GridLayoutGroup>().spacing = new Vector2(7f, 7f);
             foreach (var statType in StatDisplayOrder)
             {

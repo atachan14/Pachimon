@@ -11,6 +11,7 @@ namespace Pachimon.Skills
         [SerializeField] private string _displayName;
         [SerializeField] private AllocationType _allocationType;
         [SerializeField] private bool _isMapAssignable;
+        [SerializeField, Range(1, 3)] private int _minimumPartySize = 1;
         [SerializeField, Min(0)] private int _baseStartupTicks;
         [SerializeField, Min(0)] private int _baseRecoveryTicks;
         [SerializeField, Min(0)] private int _baseCooldownTicks;
@@ -21,6 +22,7 @@ namespace Pachimon.Skills
         public string DisplayName => _displayName;
         public AllocationType AllocationType => _allocationType;
         public bool IsMapAssignable => _isMapAssignable;
+        public int MinimumPartySize => Mathf.Clamp(_minimumPartySize, 1, 3);
         public int BaseStartupTicks => _baseStartupTicks;
         public int BaseRecoveryTicks => _baseRecoveryTicks;
         public int BaseCooldownTicks => _baseCooldownTicks;
@@ -41,6 +43,13 @@ namespace Pachimon.Skills
             if (_isMapAssignable && _allocationType == AllocationType.Unassigned)
             {
                 errors.Add($"Skill {_skillId}: Map-assignable Skill requires an Allocation Type.");
+            }
+
+            // Existing Assets without this newly added field deserialize as 0,
+            // which is intentionally treated as the backward-compatible default of 1.
+            if (_minimumPartySize < 0 || _minimumPartySize > 3)
+            {
+                errors.Add($"Skill {_skillId}: Minimum Party Size must be between 1 and 3.");
             }
 
             if (BaseStartupTicks < 0)
@@ -68,6 +77,11 @@ namespace Pachimon.Skills
         public void SetDescriptionTemplateForEditor(string descriptionTemplate)
         {
             _description = descriptionTemplate ?? string.Empty;
+        }
+
+        public void SetMinimumPartySizeForEditor(int minimumPartySize)
+        {
+            _minimumPartySize = Mathf.Clamp(minimumPartySize, 1, 3);
         }
 
         protected void SetBaseStartupTicksForEditor(int baseStartupTicks)

@@ -12,6 +12,8 @@ namespace Pachimon.UI
             RunMap runMap,
             int runSeed,
             Vector2 viewportSize,
+            LayoutMode layoutMode,
+            float screenAspectRatio,
             MapLayoutSettings settings)
         {
             if (runMap == null)
@@ -26,15 +28,39 @@ namespace Pachimon.UI
 
             var safeWidth = Mathf.Max(1f, viewportSize.x);
             var safeHeight = Mathf.Max(1f, viewportSize.y);
-            var rowSpacing = safeHeight / settings.VisibleRowCount;
-            var usableWidth = Mathf.Max(1f, safeWidth - (settings.HorizontalPadding * 2f));
-            var columnSpacing = usableWidth / settings.MaxColumnCount;
+            var nodeSize = settings.GetNodeSize(
+                layoutMode,
+                safeWidth,
+                screenAspectRatio);
+            var usesPortraitCompactSpacing = layoutMode == LayoutMode.Compact
+                && screenAspectRatio < 1f;
+            var rowSpacing = usesPortraitCompactSpacing
+                ? settings.CompactRowSpacing
+                : safeHeight / settings.VisibleRowCount;
+            var verticalPadding = Mathf.Max(
+                settings.VerticalPadding,
+                (nodeSize * 0.6f) + settings.NodeEdgeGap);
+            var edgePadding = Mathf.Min(
+                settings.HorizontalPadding + (nodeSize * 0.57f),
+                safeWidth * 0.5f);
+            var usableWidth = Mathf.Max(0f, safeWidth - (edgePadding * 2f));
+            var columnSpacing = usableWidth / Mathf.Max(1, settings.MaxColumnCount - 1);
             var positions = new Dictionary<string, Vector2>(runMap.Nodes.Count);
-            var maximumRowIndex = 0;
+            var encounterRows = runMap.Nodes.Values
+                .Where(node => node.NodeType == NodeType.PartyEncounter)
+                .Select(node => Mathf.FloorToInt(node.DisplayRowPosition))
+                .Distinct()
+                .OrderBy(row => row)
+                .ToArray();
+            var maximumDisplayRow = 0f;
 
             foreach (var row in runMap.Rows)
             {
-                maximumRowIndex = Mathf.Max(maximumRowIndex, row.RowIndex);
+                var displayRow = GetRegularDisplayRow(
+                    row.RowIndex,
+                    encounterRows,
+                    settings.PartyEncounterGapRows);
+                maximumDisplayRow = Mathf.Max(maximumDisplayRow, displayRow);
                 var nodeCount = row.NodeIds.Count;
 
                 for (var index = 0; index < nodeCount; index++)
@@ -47,7 +73,7 @@ namespace Pachimon.UI
 
                     var centeredColumn = node.ColumnIndex - ((nodeCount - 1f) * 0.5f);
                     var baseX = (safeWidth * 0.5f) + (centeredColumn * columnSpacing);
-                    var baseY = settings.VerticalPadding + (node.RowIndex * rowSpacing);
+                    var baseY = verticalPadding + (displayRow * rowSpacing);
                     var jitter = GetDeterministicJitter(runSeed, node.NodeId);
                     var horizontalJitter = nodeCount > 1
                         ? jitter.x * columnSpacing * settings.HorizontalJitterRatio
@@ -57,11 +83,22 @@ namespace Pachimon.UI
                         && node.NodeType != NodeType.HallOfFame
                         ? jitter.y * rowSpacing * settings.VerticalJitterRatio
                         : 0f;
-                    var edgePadding = settings.HorizontalPadding + (columnSpacing * 0.5f);
                     var x = Mathf.Clamp(baseX + horizontalJitter, edgePadding, safeWidth - edgePadding);
 
                     positions[node.NodeId] = new Vector2(x, baseY + verticalJitter);
                 }
+            }
+
+            foreach (var node in runMap.Nodes.Values.Where(node => !positions.ContainsKey(node.NodeId)))
+            {
+                var displayRow = GetEncounterDisplayRow(
+                    node.DisplayRowPosition,
+                    encounterRows,
+                    settings.PartyEncounterGapRows);
+                maximumDisplayRow = Mathf.Max(maximumDisplayRow, displayRow);
+                positions[node.NodeId] = new Vector2(
+                    safeWidth - edgePadding,
+                    verticalPadding + (displayRow * rowSpacing));
             }
 
             ApplyNodeGroupLayout(
@@ -70,16 +107,39 @@ namespace Pachimon.UI
                 safeWidth,
                 rowSpacing,
                 columnSpacing,
+                verticalPadding,
+                encounterRows,
                 settings,
                 positions);
 
-            var contentHeight = settings.VerticalPadding * 2f
-                + ((maximumRowIndex + 1) * rowSpacing);
+            var contentHeight = verticalPadding * 2f
+                + (maximumDisplayRow * rowSpacing);
             return new MapLayout(
                 new Vector2(safeWidth, contentHeight),
                 rowSpacing,
                 columnSpacing,
+                nodeSize,
                 positions);
+        }
+
+        private static float GetRegularDisplayRow(
+            int rowIndex,
+            IReadOnlyList<int> encounterRows,
+            float gapRows)
+        {
+            return rowIndex + (encounterRows.Count(row => row < rowIndex) * gapRows);
+        }
+
+        private static float GetEncounterDisplayRow(
+            float originalDisplayRow,
+            IReadOnlyList<int> encounterRows,
+            float gapRows)
+        {
+            var precedingRow = Mathf.FloorToInt(originalDisplayRow);
+            var earlierEncounterCount = encounterRows.Count(row => row < precedingRow);
+            return originalDisplayRow
+                + (earlierEncounterCount * gapRows)
+                + (gapRows * 0.5f);
         }
 
         private static void ApplyNodeGroupLayout(
@@ -88,6 +148,8 @@ namespace Pachimon.UI
             float safeWidth,
             float rowSpacing,
             float columnSpacing,
+            float verticalPadding,
+            IReadOnlyList<int> encounterRows,
             MapLayoutSettings settings,
             IDictionary<string, Vector2> positions)
         {
@@ -121,8 +183,11 @@ namespace Pachimon.UI
                         + (jitter.x * columnSpacing * settings.HorizontalJitterRatio),
                     edgePadding,
                     safeWidth - edgePadding);
-                var y = settings.VerticalPadding
-                    + (members[0].RowIndex * rowSpacing)
+                var y = verticalPadding
+                    + (GetRegularDisplayRow(
+                        members[0].RowIndex,
+                        encounterRows,
+                        settings.PartyEncounterGapRows) * rowSpacing)
                     + (jitter.y * rowSpacing * settings.VerticalJitterRatio);
 
                 positions[members[0].NodeId] = new Vector2(centerX - halfPortSpacing, y);

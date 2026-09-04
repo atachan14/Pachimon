@@ -16,6 +16,7 @@ namespace Pachimon.UI
         private readonly List<UnityAction> _tabActions = new();
         private readonly List<PaneTabNavigationView> _pageNavigations = new();
         private readonly List<ScrollEdgeIndicator> _scrollIndicators = new();
+        private readonly List<int> _availableTabIndices = new();
         private bool _reverseVisualOrder;
 
         public PachimonTabView PachimonTabTemplate =>
@@ -47,6 +48,7 @@ namespace Pachimon.UI
             _pachimonTabs = pachimonTabs;
             ApplyFlexibleTabWidths();
             WireTabListeners();
+            RefreshAvailableTabIndices(_pachimonTabs?.Length ?? 0);
             ShowTab(0);
             EnsurePageNavigation();
         }
@@ -72,18 +74,42 @@ namespace Pachimon.UI
                 WireTabListeners();
             }
 
+            var previewCount = pachimonPreviews?.Count ?? 0;
             _trainerTab?.Bind(trainerPreview);
             for (var index = 0; index < _pachimonTabs.Length; index++)
             {
-                var preview = index < pachimonPreviews.Count
+                var preview = index < previewCount
                     ? pachimonPreviews[index]
                     : PachimonPreviewContent.Hidden;
                 _pachimonTabs[index]?.Bind(preview);
-                SetPachimonTabLabel(index, preview, index < pachimonPreviews.Count);
+                SetPachimonTabLabel(index, preview, index < previewCount);
             }
 
+            RefreshAvailableTabIndices(previewCount);
             ShowTab(0);
             EnsurePageNavigation();
+        }
+
+        private void RefreshAvailableTabIndices(int pachimonCount)
+        {
+            _availableTabIndices.Clear();
+            if (_tabPanels.Length > 0 && _tabPanels[0] != null)
+            {
+                _availableTabIndices.Add(0);
+            }
+
+            var availablePachimonCount = Mathf.Min(
+                Mathf.Max(0, pachimonCount),
+                _pachimonTabs?.Length ?? 0,
+                Mathf.Max(0, _tabPanels.Length - 1));
+            for (var index = 0; index < availablePachimonCount; index++)
+            {
+                var tabIndex = index + 1;
+                if (_pachimonTabs[index] != null && _tabPanels[tabIndex] != null)
+                {
+                    _availableTabIndices.Add(tabIndex);
+                }
+            }
         }
 
         private void SetPachimonTabLabel(
@@ -98,6 +124,7 @@ namespace Pachimon.UI
             }
 
             var label = _tabButtons[buttonIndex].GetComponentInChildren<TMP_Text>(true);
+            _tabButtons[buttonIndex].gameObject.SetActive(hasPachimon);
             if (label == null) return;
 
             label.text = !hasPachimon
@@ -156,7 +183,13 @@ namespace Pachimon.UI
 
         public void ShowTab(int selectedIndex)
         {
-            selectedIndex = Mathf.Clamp(selectedIndex, 0, Mathf.Max(0, _tabPanels.Length - 1));
+            if (!_availableTabIndices.Contains(selectedIndex))
+            {
+                selectedIndex = _availableTabIndices.Count > 0
+                    ? _availableTabIndices[0]
+                    : 0;
+            }
+
             SelectedTabIndex = selectedIndex;
             for (var index = 0; index < _tabPanels.Length; index++)
             {
@@ -165,7 +198,12 @@ namespace Pachimon.UI
 
             for (var index = 0; index < _tabButtons.Length; index++)
             {
-                if (_tabButtons[index] != null) _tabButtons[index].interactable = index != selectedIndex;
+                if (_tabButtons[index] != null)
+                {
+                    _tabButtons[index].interactable =
+                        _availableTabIndices.Contains(index)
+                        && index != selectedIndex;
+                }
             }
 
             RefreshPageNavigation();
@@ -201,13 +239,15 @@ namespace Pachimon.UI
         {
             for (var index = 0; index < _pageNavigations.Count; index++)
             {
-                var capturedIndex = index;
-                var tabCount = _tabPanels.Length;
-                UnityAction showPrevious = tabCount > 1
-                    ? () => ShowTab((capturedIndex - 1 + tabCount) % tabCount)
+                var availablePosition = _availableTabIndices.IndexOf(index);
+                var tabCount = _availableTabIndices.Count;
+                UnityAction showPrevious = tabCount > 1 && availablePosition >= 0
+                    ? () => ShowTab(_availableTabIndices[
+                        (availablePosition - 1 + tabCount) % tabCount])
                     : null;
-                UnityAction showNext = tabCount > 1
-                    ? () => ShowTab((capturedIndex + 1) % tabCount)
+                UnityAction showNext = tabCount > 1 && availablePosition >= 0
+                    ? () => ShowTab(_availableTabIndices[
+                        (availablePosition + 1) % tabCount])
                     : null;
                 _pageNavigations[index]?.Bind(
                     _reverseVisualOrder ? showNext : showPrevious,

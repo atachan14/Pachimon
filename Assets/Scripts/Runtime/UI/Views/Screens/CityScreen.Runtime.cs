@@ -109,6 +109,27 @@ namespace Pachimon.UI
         private Action<CityStockEntry, string> _equip;
         private Action _proceed;
         private CityShopConfiguration _configuration = CityShopConfiguration.City;
+        private LayoutMode _layoutMode = LayoutMode.Expanded;
+        private float _layoutScale = 1f;
+
+        public void ApplyResponsiveLayout(ResponsiveUiLayout layout)
+        {
+            var nextScale = layout.LayoutMode == LayoutMode.Compact
+                ? Mathf.Clamp(layout.TypographyScale, 1f, 1.6f)
+                : 1f;
+            if (_layoutMode == layout.LayoutMode
+                && Mathf.Approximately(_layoutScale, nextScale))
+            {
+                return;
+            }
+
+            _layoutMode = layout.LayoutMode;
+            _layoutScale = nextScale;
+            if (_cityRoot != null)
+            {
+                RenderCity();
+            }
+        }
 
         public void Bind(
             CityNodeContent city,
@@ -179,9 +200,12 @@ namespace Pachimon.UI
             var grid = gridRoot.gameObject.AddComponent<GridLayoutGroup>();
             grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
             grid.constraintCount = 2;
-            grid.cellSize = new Vector2(260f, 92f);
-            grid.spacing = new Vector2(24f, 20f);
+            grid.cellSize = new Vector2(260f, Scale(92f));
+            grid.spacing = new Vector2(24f, Scale(20f));
             grid.childAlignment = TextAnchor.MiddleCenter;
+            var responsiveGrid = gridRoot.gameObject.AddComponent<ResponsiveGridLayout>();
+            responsiveGrid.Configure(2, 160f, 92f);
+            responsiveGrid.SetDisplayScale(_layoutScale);
             if (_configuration.ShowPharmacy)
                 AddShopButton(gridRoot, "薬局", ShopMode.Pharmacy, GameUiPalette.ItemChip);
             if (_configuration.ShowInstructor)
@@ -294,7 +318,7 @@ namespace Pachimon.UI
         {
             var columns = CreateObject("Columns", content);
             var horizontal = columns.gameObject.AddComponent<HorizontalLayoutGroup>();
-            horizontal.spacing = 14f;
+            horizontal.spacing = Scale(14f);
             horizontal.childControlWidth = true;
             horizontal.childControlHeight = true;
             horizontal.childForceExpandWidth = true;
@@ -338,7 +362,7 @@ namespace Pachimon.UI
                 headingText,
                 20f,
                 FontStyles.Bold);
-            heading.gameObject.AddComponent<LayoutElement>().preferredHeight = 38f;
+            heading.gameObject.AddComponent<LayoutElement>().preferredHeight = Scale(38f);
             foreach (var entry in entries.OrderBy(entry => entry.Price))
             {
                 AddSelectableRow(column, entry, selected);
@@ -373,7 +397,7 @@ namespace Pachimon.UI
             });
             var size = toggleRoot.gameObject.AddComponent<LayoutElement>();
             size.preferredWidth = 34f;
-            size.preferredHeight = 34f;
+            size.preferredHeight = Scale(34f);
         }
 
         private void RenderTargeted(RectTransform content, IEnumerable<CityStockEntry> entries)
@@ -387,7 +411,8 @@ namespace Pachimon.UI
                     entry.IsPurchased ? "売り切れ" : "パチモンを選択",
                     null,
                     entry.IsPurchased ? GameUiPalette.MissingGraphic : GameUiPalette.ButtonAccent);
-                action.gameObject.AddComponent<LayoutElement>().preferredWidth = 175f;
+                action.gameObject.AddComponent<LayoutElement>().preferredWidth =
+                    _layoutMode == LayoutMode.Compact ? 150f : 175f;
                 action.interactable = !entry.IsPurchased && _runState.Gold >= entry.Price;
                 if (!entry.IsPurchased && _runState.Gold < entry.Price)
                 {
@@ -483,14 +508,14 @@ namespace Pachimon.UI
                 ? GameUiPalette.MissingGraphic
                 : accent;
             var layout = row.gameObject.AddComponent<HorizontalLayoutGroup>();
-            layout.padding = new RectOffset(8, 8, 5, 5);
+            layout.padding = new RectOffset(8, 8, ScaleToInt(5f), ScaleToInt(5f));
             layout.spacing = 8f;
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = false;
             layout.childForceExpandHeight = true;
             row.gameObject.AddComponent<LayoutElement>().preferredHeight =
-                item is SkillMachineItemAsset ? 180f : 54f;
+                Scale(item is SkillMachineItemAsset ? 180f : 54f);
             var details = CreateButton(
                 "Details",
                 row,
@@ -532,7 +557,7 @@ namespace Pachimon.UI
         {
             var root = CreateObject(name, parent);
             var layout = root.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 5f;
+            layout.spacing = Scale(5f);
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
@@ -541,7 +566,7 @@ namespace Pachimon.UI
             return root;
         }
 
-        private static ScrollRect CreateScroll(Transform parent, out RectTransform content)
+        private ScrollRect CreateScroll(Transform parent, out RectTransform content)
         {
             var root = CreateObject("Scroll", parent);
             var scroll = root.gameObject.AddComponent<ScrollRect>();
@@ -556,7 +581,7 @@ namespace Pachimon.UI
             content.pivot = new Vector2(0.5f, 1f);
             content.sizeDelta = Vector2.zero;
             var layout = content.gameObject.AddComponent<VerticalLayoutGroup>();
-            layout.spacing = 6f;
+            layout.spacing = Scale(6f);
             layout.childControlWidth = true;
             layout.childControlHeight = true;
             layout.childForceExpandWidth = true;
@@ -629,5 +654,9 @@ namespace Pachimon.UI
             rect.offsetMin = Vector2.one * inset;
             rect.offsetMax = Vector2.one * -inset;
         }
+
+        private float Scale(float value) => value * _layoutScale;
+
+        private int ScaleToInt(float value) => Mathf.RoundToInt(Scale(value));
     }
 }

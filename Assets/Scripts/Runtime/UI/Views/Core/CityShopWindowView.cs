@@ -40,6 +40,8 @@ namespace Pachimon.UI
         private ItemCatalog _boundCatalog;
         private bool _boundPurchaseEnabled;
         private bool _initialized;
+        private LayoutMode _layoutMode = LayoutMode.Expanded;
+        private float _uiScale = 1f;
 
         private sealed class StockRowBinding
         {
@@ -93,6 +95,24 @@ namespace Pachimon.UI
             var view = rootObject.GetComponent<CityShopWindowView>();
             view.EnsureInitialized();
             return view;
+        }
+
+        public void ApplyLayoutMode(LayoutMode layoutMode)
+        {
+            _layoutMode = layoutMode;
+            ApplyResponsiveSpacing();
+        }
+
+        public void ApplyUiScale(float scale)
+        {
+            _uiScale = _layoutMode == LayoutMode.Compact
+                ? Mathf.Clamp(scale, 1f, 1.6f)
+                : 1f;
+            ApplyResponsiveSpacing();
+            foreach (var size in GetComponentsInChildren<ResponsiveLayoutElementSize>(true))
+            {
+                size.SetDisplayScale(_uiScale);
+            }
         }
 
         public void Bind(
@@ -614,7 +634,7 @@ namespace Pachimon.UI
                 purchaseLabel);
         }
 
-        private static void BindStockRow(
+        private void BindStockRow(
             StockRowBinding binding,
             CityStockEntry entry,
             ItemAsset item,
@@ -946,13 +966,39 @@ namespace Pachimon.UI
             return text;
         }
 
-        private static void SetLayoutHeight(GameObject target, float height)
+        private void SetLayoutHeight(GameObject target, float height)
         {
             var layout = target.GetComponent<LayoutElement>()
                 ?? target.AddComponent<LayoutElement>();
-            layout.minHeight = height;
-            layout.preferredHeight = height;
             layout.flexibleHeight = 0f;
+            var responsive = target.GetComponent<ResponsiveLayoutElementSize>()
+                ?? target.AddComponent<ResponsiveLayoutElementSize>();
+            responsive.Configure(height, height);
+            responsive.SetDisplayScale(_uiScale);
+        }
+
+        private void ApplyResponsiveSpacing()
+        {
+            var scale = _layoutMode == LayoutMode.Compact ? _uiScale : 1f;
+            var rootLayout = GetComponent<VerticalLayoutGroup>();
+            if (rootLayout != null)
+            {
+                var padding = Mathf.RoundToInt(10f * scale);
+                rootLayout.padding = new RectOffset(
+                    padding,
+                    padding,
+                    padding,
+                    padding);
+                rootLayout.spacing = 8f * scale;
+            }
+
+            var contentLayout = _contentRoot != null
+                ? _contentRoot.GetComponent<VerticalLayoutGroup>()
+                : null;
+            if (contentLayout != null)
+            {
+                contentLayout.spacing = 8f * scale;
+            }
         }
 
         private static void Stretch(RectTransform rect)

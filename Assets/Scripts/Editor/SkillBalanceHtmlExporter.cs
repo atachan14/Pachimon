@@ -341,7 +341,7 @@ namespace Pachimon.Editor.Balance
         {
             return new BattleSideState(
                 side,
-                Enumerable.Range(0, BattleSideState.PartySize)
+                Enumerable.Range(0, BattleSideState.MaxPartySize)
                     .Select(index => new BattleUnitState(
                         $"balance_{side}_{index}",
                         index + 1,

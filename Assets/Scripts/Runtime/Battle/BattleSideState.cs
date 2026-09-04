@@ -6,7 +6,7 @@ namespace Pachimon.Battle
 {
     public sealed class BattleSideState
     {
-        public const int PartySize = 3;
+        public const int MaxPartySize = 3;
 
         private readonly BattleUnitState[] _units;
 
@@ -15,10 +15,10 @@ namespace Pachimon.Battle
             Side = side;
             var suppliedUnits = units?.ToArray()
                 ?? throw new ArgumentNullException(nameof(units));
-            if (suppliedUnits.Length != PartySize)
+            if (suppliedUnits.Length < 1 || suppliedUnits.Length > MaxPartySize)
             {
                 throw new ArgumentException(
-                    $"A Battle Side requires exactly {PartySize} units.",
+                    $"A Battle Side requires between 1 and {MaxPartySize} units.",
                     nameof(units));
             }
 
@@ -31,11 +31,11 @@ namespace Pachimon.Battle
 
             _units = suppliedUnits.OrderBy(unit => unit.SlotIndex).ToArray();
             if (_units.Any(unit => unit.Side != side)
-                || _units.Select(unit => unit.SlotIndex).Distinct().Count() != PartySize
+                || _units.Select(unit => unit.SlotIndex).Distinct().Count() != _units.Length
                 || _units.Where((unit, index) => unit.SlotIndex != index).Any())
             {
                 throw new ArgumentException(
-                    "Battle Units must match the Side and occupy slots 0, 1, and 2.",
+                    "Battle Units must match the Side and occupy contiguous slots from 0.",
                     nameof(units));
             }
         }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,10 +15,13 @@ namespace Pachimon.UI
     [RequireComponent(typeof(CanvasGroup))]
     public sealed class MapOverlayView : MonoBehaviour
     {
+        private const string LayoutSettingsResourcePath = "UI/MapLayoutSettings";
+
         [field: SerializeField] public TMP_Text TitleText { get; private set; }
         [field: SerializeField] public TMP_Text BodyText { get; private set; }
 
         [SerializeField, Min(0f)] private float _transitionDuration = 0.25f;
+        [SerializeField, Min(0f)] private float _partyEncounterApproachDuration = 2f;
         [SerializeField] private ScrollRect _mapScrollRect;
         [SerializeField] private RectTransform _scrollViewport;
         [SerializeField] private RectTransform _mapContent;
@@ -29,6 +33,7 @@ namespace Pachimon.UI
         [SerializeField] private TrainerMapIconSet _trainerMapIconSet;
         [SerializeField] private TrainerMapIconCatalog _trainerMapIconCatalog;
         [SerializeField] private MapLayoutSettings _layoutSettings = new();
+        [SerializeField] private MapLayoutSettingsAsset _layoutSettingsAsset;
 
         private RectTransform _panelRect;
         private RectTransform _viewportRect;
@@ -43,11 +48,32 @@ namespace Pachimon.UI
         private RunMap _builtMap;
         private readonly Dictionary<string, MapNodeView> _nodeViews = new();
         private readonly Dictionary<string, CityMapNodeView> _cityViews = new();
+        private readonly Dictionary<string, Vector2> _partyEncounterOffsets = new();
         private readonly HashSet<string> _groupedNodeIds = new();
         private readonly List<EdgeBinding> _edgeViews = new();
+        private readonly List<PartyBoundaryGuide> _partyBoundaryGuides = new();
         private readonly HashSet<string> _selectableNodeIds = new();
         private string _selectedNodeId;
+        private string _currentPartyEncounterNodeId;
         private ScrollEdgeIndicator _scrollIndicator;
+        private LayoutMode _layoutMode = LayoutMode.Compact;
+        private Coroutine _partyApproachRoutine;
+
+        private MapLayoutSettings ActiveLayoutSettings
+        {
+            get
+            {
+                if (_layoutSettingsAsset == null)
+                {
+                    _layoutSettingsAsset = Resources.Load<MapLayoutSettingsAsset>(
+                        LayoutSettingsResourcePath);
+                }
+
+                return _layoutSettingsAsset != null
+                    ? _layoutSettingsAsset.Settings
+                    : _layoutSettings ??= new MapLayoutSettings();
+            }
+        }
 
         public bool IsOpen => _isOpen;
         public RectTransform EdgeLayer => _edgeLayer;
@@ -55,8 +81,21 @@ namespace Pachimon.UI
         public MapLayout CurrentLayout => _mapLayout;
 
         public event Action<string> NodeSelected;
+        public event Action<string> PartyCandidatesSelected;
         public event Action Opening;
         public event Action Closed;
+
+        public void ApplyLayoutMode(LayoutMode layoutMode)
+        {
+            if (_layoutMode == layoutMode)
+            {
+                return;
+            }
+
+            _layoutMode = layoutMode;
+            RefreshMapLayout();
+            ApplyMapLayout();
+        }
 
         private void OnEnable()
         {
@@ -66,6 +105,11 @@ namespace Pachimon.UI
         private void OnDisable()
         {
             _slideTransition?.Cancel();
+            if (_partyApproachRoutine != null)
+            {
+                StopCoroutine(_partyApproachRoutine);
+                _partyApproachRoutine = null;
+            }
         }
 
         private void OnRectTransformDimensionsChange()
@@ -146,6 +190,11 @@ namespace Pachimon.UI
             IEnumerable<string> selectableNodeIds = null,
             TrainerStyleCatalog trainerStyleCatalog = null)
         {
+            if (!ReferenceEquals(_runMap, runMap))
+            {
+                _partyEncounterOffsets.Clear();
+            }
+
             _runMap = runMap;
             _runState = runState;
             _trainerStyleCatalog = trainerStyleCatalog;
@@ -244,6 +293,45 @@ namespace Pachimon.UI
             RefreshNodeState();
         }
 
+        public void SetCurrentPartyEncounterMarker(string encounterNodeId)
+        {
+            _currentPartyEncounterNodeId = encounterNodeId;
+            RefreshNodeState();
+        }
+
+        public bool PlayPartyEncounterApproach(
+            string encounterNodeId,
+            string sourceNodeId,
+            string targetNodeId,
+            Action onCompleted)
+        {
+            if (!_isOpen
+                || !gameObject.activeInHierarchy
+                || _mapLayout == null
+                || !_nodeViews.TryGetValue(encounterNodeId, out var encounterView)
+                || encounterView == null
+                || !_mapLayout.TryGetNodePosition(encounterNodeId, out var encounterPosition)
+                || !_mapLayout.TryGetNodePosition(sourceNodeId, out var sourcePosition)
+                || !_mapLayout.TryGetNodePosition(targetNodeId, out var targetPosition))
+            {
+                return false;
+            }
+
+            if (_partyApproachRoutine != null)
+            {
+                StopCoroutine(_partyApproachRoutine);
+            }
+
+            var destination = Vector2.Lerp(sourcePosition, targetPosition, 0.5f);
+            var targetOffset = destination - encounterPosition;
+            _partyApproachRoutine = StartCoroutine(AnimatePartyEncounterApproach(
+                encounterNodeId,
+                encounterView,
+                targetOffset,
+                onCompleted));
+            return true;
+        }
+
         private bool EnsureInitialized()
         {
             if (_isInitialized)
@@ -298,8 +386,6 @@ namespace Pachimon.UI
                 return;
             }
 
-            _layoutSettings ??= new MapLayoutSettings();
-
             var viewportSize = _scrollViewport.rect.size;
             if (viewportSize.x <= 0f || viewportSize.y <= 0f)
             {
@@ -310,7 +396,9 @@ namespace Pachimon.UI
                 _runMap,
                 _runState?.RunSeed ?? 0,
                 viewportSize,
-                _layoutSettings);
+                _layoutMode,
+                Screen.width / Mathf.Max(1f, Screen.height),
+                ActiveLayoutSettings);
             _mapContent.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, _mapLayout.ContentSize.x);
             _mapContent.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, _mapLayout.ContentSize.y);
         }
@@ -387,6 +475,8 @@ namespace Pachimon.UI
                 _nodeViews.Add(node.NodeId, nodeView);
             }
 
+            BuildPartyBoundaryGuides();
+
             _builtMap = _runMap;
             Debug.Log(
                 $"Map view built: {_nodeViews.Count} nodes + {_cityViews.Count} cities "
@@ -437,10 +527,16 @@ namespace Pachimon.UI
                 }
             }
 
+            foreach (var guide in _partyBoundaryGuides)
+            {
+                guide.Destroy();
+            }
+
             _nodeViews.Clear();
             _cityViews.Clear();
             _groupedNodeIds.Clear();
             _edgeViews.Clear();
+            _partyBoundaryGuides.Clear();
             _builtMap = null;
         }
 
@@ -459,9 +555,20 @@ namespace Pachimon.UI
                 }
 
                 var nodeRect = (RectTransform)pair.Value.transform;
+                pair.Value.SetTrainerApproachOffset(
+                    _partyEncounterOffsets.TryGetValue(pair.Key, out var encounterOffset)
+                        ? encounterOffset
+                        : Vector2.zero);
+                pair.Value.ApplyNodeSize(_mapLayout.NodeSize);
                 nodeRect.anchorMin = Vector2.zero;
                 nodeRect.anchorMax = Vector2.zero;
                 nodeRect.anchoredPosition = position;
+                nodeRect.SetSizeWithCurrentAnchors(
+                    RectTransform.Axis.Horizontal,
+                    _mapLayout.NodeSize);
+                nodeRect.SetSizeWithCurrentAnchors(
+                    RectTransform.Axis.Vertical,
+                    _mapLayout.NodeSize);
             }
 
             foreach (var pair in _cityViews)
@@ -480,7 +587,13 @@ namespace Pachimon.UI
                 cityRect.anchoredPosition = (leftPosition + rightPosition) * 0.5f;
                 cityRect.SetSizeWithCurrentAnchors(
                     RectTransform.Axis.Horizontal,
-                    Mathf.Clamp(_mapLayout.ColumnSpacing * 1.15f, 72f, 128f));
+                    Mathf.Clamp(
+                        _mapLayout.ColumnSpacing * 1.15f,
+                        _mapLayout.NodeSize * 1.5f,
+                        _mapLayout.NodeSize * 2f));
+                cityRect.SetSizeWithCurrentAnchors(
+                    RectTransform.Axis.Vertical,
+                    _mapLayout.NodeSize);
             }
 
             foreach (var edgeBinding in _edgeViews)
@@ -491,6 +604,8 @@ namespace Pachimon.UI
                     edgeBinding.View.Bind(from, to, false, false);
                 }
             }
+
+            ApplyPartyBoundaryGuideLayout();
         }
 
         private void RefreshNodeState()
@@ -508,15 +623,28 @@ namespace Pachimon.UI
                     continue;
                 }
 
+                var professorOffset = 0f;
+                if (node.NodeType == NodeType.PartyEncounter
+                    && _mapLayout.TryGetNodePosition(node.NodeId, out var encounterPosition))
+                {
+                    professorOffset = ActiveLayoutSettings.HorizontalPadding
+                        + (_mapLayout.NodeSize * 0.5f)
+                        - encounterPosition.x;
+                }
+
+                var isCurrent = node.NodeId == _runState.CurrentNodeId
+                    || node.NodeId == _currentPartyEncounterNodeId;
                 pair.Value.Bind(
                     node,
-                    node.NodeId == _runState.CurrentNodeId,
+                    isCurrent,
                     _runState.ResolvedNodeIds.Contains(node.NodeId),
                     _selectableNodeIds.Contains(node.NodeId),
                     node.NodeId == _selectedNodeId,
                     GetTrainerIconSet(node),
                     GetTrainerColors(node),
-                    NotifyNodeSelected);
+                    NotifyNodeSelected,
+                    NotifyPartyCandidatesSelected,
+                    professorOffset);
             }
 
             foreach (var pair in _cityViews)
@@ -577,6 +705,15 @@ namespace Pachimon.UI
                         && TrainerColorSchemeResolver.TryFromTheme(style.Theme, out var colors)
                             ? colors
                             : null;
+                case PartyEncounterNodeContent encounter:
+                    var encounterStyle = _trainerStyleCatalog?.Get(
+                        encounter.TrainerProfile.StyleId);
+                    return encounterStyle != null
+                        && TrainerColorSchemeResolver.TryFromTheme(
+                            encounterStyle.Theme,
+                            out var encounterColors)
+                            ? encounterColors
+                            : null;
                 default:
                     return null;
             }
@@ -589,6 +726,7 @@ namespace Pachimon.UI
                 GymNodeContent => TrainerRole.GymLeader,
                 EliteNodeContent => TrainerRole.Elite,
                 BattleNodeContent => TrainerRole.Normal,
+                PartyEncounterNodeContent => TrainerRole.Normal,
                 _ => TrainerRole.Normal,
             };
             return _trainerMapIconCatalog?.Get(role) ?? _trainerMapIconSet;
@@ -616,6 +754,11 @@ namespace Pachimon.UI
             NodeSelected?.Invoke(nodeId);
         }
 
+        private void NotifyPartyCandidatesSelected(string nodeId)
+        {
+            PartyCandidatesSelected?.Invoke(nodeId);
+        }
+
         private void FocusCurrentNode()
         {
             if (_mapScrollRect == null
@@ -633,10 +776,99 @@ namespace Pachimon.UI
                 return;
             }
 
-            var desiredViewportY = _scrollViewport.rect.height * _layoutSettings.CurrentNodeViewportRatio;
+            var desiredViewportY = _scrollViewport.rect.height
+                * ActiveLayoutSettings.CurrentNodeViewportRatio;
             var offsetFromBottom = Mathf.Clamp(nodePosition.y - desiredViewportY, 0f, scrollableHeight);
             _mapScrollRect.StopMovement();
             _mapScrollRect.verticalNormalizedPosition = offsetFromBottom / scrollableHeight;
+        }
+
+        private void BuildPartyBoundaryGuides()
+        {
+            if (_edgeLayer == null || _runMap == null)
+            {
+                return;
+            }
+
+            foreach (var encounter in _runMap.Nodes.Values
+                         .Where(node => node.NodeType == NodeType.PartyEncounter))
+            {
+                var segments = new List<Image>();
+                for (var index = 0; index < 18; index++)
+                {
+                    var segmentObject = new GameObject(
+                        $"Boundary_{encounter.NodeId}_{index:00}",
+                        typeof(RectTransform),
+                        typeof(CanvasRenderer),
+                        typeof(Image));
+                    segmentObject.layer = gameObject.layer;
+                    var rect = segmentObject.GetComponent<RectTransform>();
+                    rect.SetParent(_edgeLayer, false);
+                    rect.anchorMin = rect.anchorMax = Vector2.zero;
+                    rect.pivot = new Vector2(0.5f, 0.5f);
+                    var image = segmentObject.GetComponent<Image>();
+                    image.color = new Color(0.20f, 0.24f, 0.23f, 0.55f);
+                    image.raycastTarget = false;
+                    segments.Add(image);
+                }
+
+                _partyBoundaryGuides.Add(new PartyBoundaryGuide(
+                    encounter.NodeId,
+                    segments));
+            }
+        }
+
+        private void ApplyPartyBoundaryGuideLayout()
+        {
+            if (_mapLayout == null)
+            {
+                return;
+            }
+
+            var left = ActiveLayoutSettings.HorizontalPadding + (_mapLayout.NodeSize * 0.5f);
+            var right = _mapLayout.ContentSize.x - left;
+            foreach (var guide in _partyBoundaryGuides)
+            {
+                if (!_mapLayout.TryGetNodePosition(guide.EncounterNodeId, out var encounterPosition))
+                {
+                    continue;
+                }
+
+                var slotWidth = Mathf.Max(1f, (right - left) / guide.Segments.Count);
+                for (var index = 0; index < guide.Segments.Count; index++)
+                {
+                    var rect = (RectTransform)guide.Segments[index].transform;
+                    rect.anchoredPosition = new Vector2(
+                        left + ((index + 0.5f) * slotWidth),
+                        encounterPosition.y);
+                    rect.sizeDelta = new Vector2(slotWidth * 0.55f, 3f);
+                }
+            }
+        }
+
+        private IEnumerator AnimatePartyEncounterApproach(
+            string encounterNodeId,
+            MapNodeView encounterView,
+            Vector2 targetOffset,
+            Action onCompleted)
+        {
+            var duration = Mathf.Max(0.01f, _partyEncounterApproachDuration);
+            var elapsed = 0f;
+            encounterView.SetTrainerApproachOffset(Vector2.zero);
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                var progress = Mathf.Clamp01(elapsed / duration);
+                progress = 1f - Mathf.Pow(1f - progress, 3f);
+                encounterView.SetTrainerApproachOffset(
+                    Vector2.LerpUnclamped(Vector2.zero, targetOffset, progress));
+                yield return null;
+            }
+
+            encounterView.SetTrainerApproachOffset(targetOffset);
+            _partyEncounterOffsets[encounterNodeId] = targetOffset;
+            _partyApproachRoutine = null;
+            onCompleted?.Invoke();
         }
 
         private sealed class EdgeBinding
@@ -651,6 +883,29 @@ namespace Pachimon.UI
             public string SourceNodeId { get; }
             public string TargetNodeId { get; }
             public MapEdgeView View { get; }
+        }
+
+        private sealed class PartyBoundaryGuide
+        {
+            public PartyBoundaryGuide(string encounterNodeId, List<Image> segments)
+            {
+                EncounterNodeId = encounterNodeId;
+                Segments = segments;
+            }
+
+            public string EncounterNodeId { get; }
+            public List<Image> Segments { get; }
+
+            public void Destroy()
+            {
+                foreach (var segment in Segments)
+                {
+                    if (segment != null)
+                    {
+                        UnityEngine.Object.Destroy(segment.gameObject);
+                    }
+                }
+            }
         }
     }
 }

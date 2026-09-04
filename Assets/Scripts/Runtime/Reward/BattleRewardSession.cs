@@ -46,10 +46,11 @@ namespace Pachimon.Reward
                 .Select(GetRequiredPachimon)
                 .ToArray();
 
-            if (_playerParty.Length != RunState.PartySize)
+            if (_playerParty.Length < 1
+                || _playerParty.Length > RunState.MaxPartySize)
             {
                 throw new InvalidOperationException(
-                    $"Battle Reward requires a {RunState.PartySize}-Pachimon Player party.");
+                    $"Battle Reward requires between 1 and {RunState.MaxPartySize} Player Pachimon.");
             }
         }
 

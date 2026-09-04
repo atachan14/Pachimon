@@ -15,6 +15,8 @@ namespace Pachimon.UI
     public sealed class GameRootView : MonoBehaviour
     {
         private const string LayoutPreferenceKey = "Pachimon.LayoutMode";
+        private const string ResponsiveUiMetricsResourcePath =
+            "UI/ResponsiveUiMetrics";
 
         [field: SerializeField] public HeaderView HeaderView { get; private set; }
         [field: SerializeField] public LeftPaneView LeftPaneView { get; private set; }
@@ -28,9 +30,7 @@ namespace Pachimon.UI
 
         [SerializeField, Min(0f)] private float _drawerTransitionDuration = 0.25f;
         [SerializeField, Min(0f)] private float _sceneFadeDuration = 0.75f;
-        [SerializeField, Min(1f)] private float _compactTextScale = 1.5f;
-        [SerializeField, Range(0.1f, 1f)]
-        private float _compactMaxWidthToHeight = 2f / 3f;
+        [SerializeField] private ResponsiveUiMetrics _responsiveUiMetrics;
         [SerializeField, Min(0.05f)] private float _typographyScanInterval = 0.25f;
 
         private RectTransform _rootRect;
@@ -68,6 +68,23 @@ namespace Pachimon.UI
         private float _currentUiScale = 1f;
         private Vector2 _lastRootViewportSize = new(float.NaN, float.NaN);
         private bool _isInitialized;
+
+        private ResponsiveUiMetrics UiMetrics
+        {
+            get
+            {
+                if (_responsiveUiMetrics != null)
+                {
+                    return _responsiveUiMetrics;
+                }
+
+                _responsiveUiMetrics = Resources.Load<ResponsiveUiMetrics>(
+                    ResponsiveUiMetricsResourcePath);
+                return _responsiveUiMetrics != null
+                    ? _responsiveUiMetrics
+                    : _responsiveUiMetrics = ResponsiveUiMetrics.CreateRuntimeDefaults();
+            }
+        }
 
         public CompactPane CurrentCompactPane => _compactPane;
         public LayoutMode PreferredLayoutMode { get; private set; }
@@ -131,6 +148,7 @@ namespace Pachimon.UI
             {
                 Canvas.ForceUpdateCanvases();
                 _responsiveGeometry?.Invalidate();
+                RefreshTypographyScale();
             }
 
             if (Time.unscaledTime >= _nextTypographyScanTime)
@@ -494,6 +512,8 @@ namespace Pachimon.UI
             HeaderView?.ApplyLayoutMode(layoutMode);
             RightPaneView?.ApplyLayoutMode(layoutMode);
             ItemPanelView?.ApplyLayoutMode(layoutMode);
+            MapOverlayView?.ApplyLayoutMode(layoutMode);
+            Canvas.ForceUpdateCanvases();
             RefreshTypographyScale();
             Canvas.ForceUpdateCanvases();
             _responsiveGeometry?.Invalidate();
@@ -526,7 +546,7 @@ namespace Pachimon.UI
             }
 
             _lastRootViewportSize = viewportSize;
-            var maxCompactWidth = viewportSize.y * _compactMaxWidthToHeight;
+            var maxCompactWidth = viewportSize.y * UiMetrics.CompactMaxWidthToHeight;
             var shouldConstrain = layoutMode == LayoutMode.Compact
                 && viewportSize.x > maxCompactWidth;
 
@@ -551,10 +571,24 @@ namespace Pachimon.UI
 
         private void RefreshTypographyScale()
         {
+            var mainLayout = ResolveResponsiveLayout(_mainPaneRect);
+            if (MainPaneView != null)
+            {
+                foreach (var city in MainPaneView.GetComponentsInChildren<CityScreen>(true))
+                {
+                    city?.ApplyResponsiveLayout(mainLayout);
+                }
+
+                foreach (var reward in MainPaneView.GetComponentsInChildren<RewardOverlayView>(true))
+                {
+                    reward?.ApplyResponsiveLayout(mainLayout);
+                }
+            }
+
             _typographyTexts.Clear();
             GetComponentsInChildren(true, _typographyTexts);
 
-            var scale = GetResponsiveUiScale();
+            var scale = mainLayout.TypographyScale;
             _currentUiScale = scale;
             foreach (var text in _typographyTexts)
             {
@@ -574,53 +608,46 @@ namespace Pachimon.UI
 
             MainPaneView?.LogWindowView?.ApplyUiScale(scale);
             RightPaneView?.NodeSelectionWindow?.ApplyUiScale(scale);
-            ApplyPachimonTabScale(_leftPaneRect, scale);
-            ApplyPachimonTabScale(_rightPaneRect, scale);
-            ApplyTrainerTabScale(_leftPaneRect, scale);
-            ApplyTrainerTabScale(_rightPaneRect, scale);
+            ApplyPachimonTabLayout(_leftPaneRect);
+            ApplyPachimonTabLayout(_rightPaneRect);
+            ApplyTrainerTabLayout(_leftPaneRect);
+            ApplyTrainerTabLayout(_rightPaneRect);
         }
 
-        private float GetResponsiveUiScale()
+        private ResponsiveUiLayout ResolveResponsiveLayout(RectTransform pane)
         {
-            if (LayoutMode != LayoutMode.Compact)
-            {
-                return 1f;
-            }
-
-            var smallScreenBoost = Mathf.Clamp(
-                600f / Mathf.Max(1f, Screen.width),
-                1f,
-                1.5f);
-            return _compactTextScale * smallScreenBoost;
+            var paneSize = pane != null ? pane.rect.size : Vector2.zero;
+            var rootSize = _rootRect != null ? _rootRect.rect.size : Vector2.zero;
+            var width = paneSize.x > 0f ? paneSize.x : rootSize.x;
+            var height = paneSize.y > 0f ? paneSize.y : rootSize.y;
+            return UiMetrics.Resolve(LayoutMode, width, height);
         }
 
-        private static void ApplyPachimonTabScale(
-            RectTransform pane,
-            float scale)
+        private void ApplyPachimonTabLayout(RectTransform pane)
         {
             if (pane == null)
             {
                 return;
             }
 
+            var layout = ResolveResponsiveLayout(pane);
             foreach (var tab in pane.GetComponentsInChildren<PachimonTabView>(true))
             {
-                tab?.ApplyUiScale(scale);
+                tab?.ApplyResponsiveLayout(layout);
             }
         }
 
-        private static void ApplyTrainerTabScale(
-            RectTransform pane,
-            float scale)
+        private void ApplyTrainerTabLayout(RectTransform pane)
         {
             if (pane == null)
             {
                 return;
             }
 
+            var layout = ResolveResponsiveLayout(pane);
             foreach (var tab in pane.GetComponentsInChildren<TrainerTabView>(true))
             {
-                tab?.ApplyUiScale(scale);
+                tab?.ApplyResponsiveLayout(layout);
             }
         }
 

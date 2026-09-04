@@ -128,12 +128,13 @@ namespace Pachimon.Battle
         {
             if (instanceIds == null) throw new ArgumentNullException(parameterName);
             var ids = instanceIds.ToArray();
-            if (ids.Length != BattleSideState.PartySize
+            if (ids.Length < 1
+                || ids.Length > BattleSideState.MaxPartySize
                 || ids.Any(string.IsNullOrWhiteSpace)
-                || ids.Distinct(StringComparer.Ordinal).Count() != BattleSideState.PartySize)
+                || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
             {
                 throw new ArgumentException(
-                    $"A Battle party requires {BattleSideState.PartySize} unique Instance IDs.",
+                    $"A Battle party requires between 1 and {BattleSideState.MaxPartySize} unique Instance IDs.",
                     parameterName);
             }
 

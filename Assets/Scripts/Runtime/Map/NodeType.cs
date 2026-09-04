@@ -12,5 +12,6 @@ namespace Pachimon.Map
         Elite = 7,
         Ghost = 8,
         HallOfFame = 9,
+        PartyEncounter = 10,
     }
 }

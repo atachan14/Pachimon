@@ -15,5 +15,6 @@ MonoBehaviour:
   _passiveId: 63
   _displayName: "\u98A8\u306E\u9B54\u8853\u5E2B"
   _description: "\u81EA\u8EAB\u306ESkill\u3067\u98A8\u4EE5\u5916\u306E\u5C5E\u6027\u30C0\u30E1\u30FC\u30B8\u3092\u4E0E\u3048\u308B\u305F\u3073\u3001Battle\u4E2D\u306E{icon:Wind}\u98A8\u304C{value:windGain}\u5897\u52A0\u3059\u308B\u3002"
+  _minimumPartySize: 1
   _windGainPerHit: 10
   _growthStatus: {fileID: 11400000, guid: 503605032ca895a41a093c6dc280ea70, type: 2}

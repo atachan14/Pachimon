@@ -26,6 +26,13 @@ namespace Pachimon.UI
 
         private string _nodeId;
         private Action<string> _onSelected;
+        private Button _partyCandidateButton;
+        private Image _partyCandidateGraphic;
+        private Action<string> _onPartyCandidatesSelected;
+        private float _nodeVisualScale = 1f;
+        private Vector2 _trainerBasePosition;
+        private bool _trainerBasePositionCaptured;
+        private Vector2[] _trainerSelectionFrameBasePositions;
 
         public string NodeId => _nodeId;
 
@@ -34,6 +41,11 @@ namespace Pachimon.UI
             if (_button != null)
             {
                 _button.onClick.RemoveListener(NotifySelected);
+            }
+
+            if (_partyCandidateButton != null)
+            {
+                _partyCandidateButton.onClick.RemoveListener(NotifyPartyCandidatesSelected);
             }
         }
 
@@ -55,7 +67,9 @@ namespace Pachimon.UI
             _button = button;
             _outline = outline;
             _trainerIcon = trainerIcon;
+            CaptureTrainerBasePosition();
             _trainerSelectionFrame = trainerSelectionFrame;
+            CaptureTrainerSelectionFrameBasePositions();
             _gymRoleFrame = gymRoleFrame;
             _symbolRing = symbolRing;
             _symbolOutline = symbolOutline;
@@ -71,10 +85,13 @@ namespace Pachimon.UI
             bool isSelected,
             TrainerMapIconSet trainerIconSet,
             TrainerColorScheme? trainerColors,
-            Action<string> onSelected)
+            Action<string> onSelected,
+            Action<string> onPartyCandidatesSelected = null,
+            float partyCandidateHorizontalOffset = 0f)
         {
             _nodeId = node.NodeId;
             _onSelected = onSelected;
+            _onPartyCandidatesSelected = onPartyCandidatesSelected;
 
             var showTrainerIcon = _trainerIcon != null
                 && trainerIconSet != null
@@ -86,9 +103,13 @@ namespace Pachimon.UI
             if (_trainerIcon != null)
             {
                 _trainerIcon.gameObject.SetActive(showTrainerIcon);
-                _trainerIcon.transform.localScale = node.NodeType == NodeType.Gym
-                    ? Vector3.one * 1.05f
-                    : Vector3.one;
+                var trainerScale = node.NodeType == NodeType.Gym ? 1.05f : 1f;
+                if (node.NodeType == NodeType.PartyEncounter
+                    && (isCurrent || isSelected))
+                {
+                    trainerScale *= 1.14f;
+                }
+                _trainerIcon.transform.localScale = Vector3.one * trainerScale;
                 if (showTrainerIcon)
                 {
                     _trainerIcon.Render(trainerIconSet, trainerColors.Value);
@@ -125,7 +146,7 @@ namespace Pachimon.UI
                 _label.color = showSymbolIcon
                     ? GetNodeTypeColor(node.NodeType)
                     : new Color(1f, 0.96f, 0.84f, 1f);
-                _label.fontSize = showSymbolIcon ? 28f : 22f;
+                _label.fontSize = (showSymbolIcon ? 28f : 22f) * _nodeVisualScale;
             }
 
             if (_background != null)
@@ -182,7 +203,14 @@ namespace Pachimon.UI
                 }
             }
 
-            transform.localScale = isCurrent || isSelected ? Vector3.one * 1.14f : Vector3.one;
+            ConfigurePartyCandidateButton(
+                node.NodeType == NodeType.PartyEncounter,
+                partyCandidateHorizontalOffset);
+
+            transform.localScale = node.NodeType != NodeType.PartyEncounter
+                && (isCurrent || isSelected)
+                    ? Vector3.one * 1.14f
+                    : Vector3.one;
 
             if (_button == null)
             {
@@ -194,9 +222,135 @@ namespace Pachimon.UI
             _button.interactable = true;
         }
 
+        public void ApplyNodeSize(float nodeSize)
+        {
+            _nodeVisualScale = Mathf.Max(1f, nodeSize / 56f);
+            if (_partyCandidateButton != null)
+            {
+                ((RectTransform)_partyCandidateButton.transform).sizeDelta =
+                    new Vector2(64f, 76f) * _nodeVisualScale;
+            }
+        }
+
+        public void SetTrainerApproachOffset(Vector2 offset)
+        {
+            CaptureTrainerBasePosition();
+            CaptureTrainerSelectionFrameBasePositions();
+            if (_trainerIcon?.transform is RectTransform trainerRect)
+            {
+                trainerRect.anchoredPosition = _trainerBasePosition + offset;
+            }
+
+            if (_trainerSelectionFrame == null
+                || _trainerSelectionFrameBasePositions == null)
+            {
+                return;
+            }
+
+            for (var index = 0; index < _trainerSelectionFrame.Length; index++)
+            {
+                if (_trainerSelectionFrame[index]?.transform is RectTransform frameRect)
+                {
+                    frameRect.anchoredPosition =
+                        _trainerSelectionFrameBasePositions[index] + offset;
+                }
+            }
+        }
+
+        private void CaptureTrainerBasePosition()
+        {
+            if (_trainerBasePositionCaptured
+                || _trainerIcon?.transform is not RectTransform trainerRect)
+            {
+                return;
+            }
+
+            _trainerBasePosition = trainerRect.anchoredPosition;
+            _trainerBasePositionCaptured = true;
+        }
+
+        private void CaptureTrainerSelectionFrameBasePositions()
+        {
+            if (_trainerSelectionFrameBasePositions != null
+                || _trainerSelectionFrame == null)
+            {
+                return;
+            }
+
+            _trainerSelectionFrameBasePositions = new Vector2[_trainerSelectionFrame.Length];
+            for (var index = 0; index < _trainerSelectionFrame.Length; index++)
+            {
+                if (_trainerSelectionFrame[index]?.transform is RectTransform frameRect)
+                {
+                    _trainerSelectionFrameBasePositions[index] = frameRect.anchoredPosition;
+                }
+            }
+        }
+
         private void NotifySelected()
         {
             _onSelected?.Invoke(_nodeId);
+        }
+
+        private void NotifyPartyCandidatesSelected()
+        {
+            _onPartyCandidatesSelected?.Invoke(_nodeId);
+        }
+
+        private void ConfigurePartyCandidateButton(bool isVisible, float horizontalOffset)
+        {
+            if (!isVisible)
+            {
+                _partyCandidateButton?.gameObject.SetActive(false);
+                return;
+            }
+
+            EnsurePartyCandidateButton();
+            if (_partyCandidateButton == null)
+            {
+                return;
+            }
+
+            _partyCandidateButton.gameObject.SetActive(true);
+            ((RectTransform)_partyCandidateButton.transform).anchoredPosition =
+                new Vector2(horizontalOffset, 0f);
+            _partyCandidateButton.onClick.RemoveListener(NotifyPartyCandidatesSelected);
+            _partyCandidateButton.onClick.AddListener(NotifyPartyCandidatesSelected);
+        }
+
+        private void EnsurePartyCandidateButton()
+        {
+            if (_partyCandidateButton != null)
+            {
+                return;
+            }
+
+            var buttonObject = new GameObject(
+                "PartyCandidateProfessor",
+                typeof(RectTransform),
+                typeof(CanvasRenderer),
+                typeof(Image),
+                typeof(Button),
+                typeof(Outline));
+            buttonObject.layer = gameObject.layer;
+            var rect = buttonObject.GetComponent<RectTransform>();
+            rect.SetParent(transform, false);
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = new Vector2(64f, 76f);
+            rect.sizeDelta *= _nodeVisualScale;
+
+            _partyCandidateGraphic = buttonObject.GetComponent<Image>();
+            _partyCandidateGraphic.sprite = Resources.Load<Sprite>("Professor/professor");
+            _partyCandidateGraphic.preserveAspect = true;
+            _partyCandidateGraphic.color = Color.white;
+
+            var outline = buttonObject.GetComponent<Outline>();
+            outline.effectColor = new Color(0.14f, 0.18f, 0.17f, 0.9f);
+            outline.effectDistance = new Vector2(2f, -2f);
+
+            _partyCandidateButton = buttonObject.GetComponent<Button>();
+            _partyCandidateButton.targetGraphic = _partyCandidateGraphic;
         }
 
         private static string GetNodeLabel(NodeType nodeType)
@@ -213,6 +367,7 @@ namespace Pachimon.UI
                 NodeType.Elite => "E",
                 NodeType.Ghost => "Gh",
                 NodeType.HallOfFame => "H",
+                NodeType.PartyEncounter => "P",
                 _ => "-",
             };
         }
@@ -231,6 +386,7 @@ namespace Pachimon.UI
                 NodeType.Elite => new Color(0.52f, 0.10f, 0.12f, 1f),
                 NodeType.Ghost => new Color(0.40f, 0.45f, 0.50f, 1f),
                 NodeType.HallOfFame => new Color(0.90f, 0.68f, 0.18f, 1f),
+                NodeType.PartyEncounter => new Color(0.86f, 0.32f, 0.28f, 1f),
                 _ => Color.gray,
             };
         }

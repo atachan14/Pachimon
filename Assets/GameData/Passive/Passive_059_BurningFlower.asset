@@ -15,6 +15,7 @@ MonoBehaviour:
   _passiveId: 59
   _displayName: "\u71C3\u3048\u308B\u82B1"
   _description: "\u5168\u9663\u55B6\u3067\u708E\u30C0\u30E1\u30FC\u30B8\u304C\u767A\u751F\u3059\u308B\u305F\u3073Battle\u4E2D\u306E{icon:Leaf}\u8349\u304C{value:statGain}\u3001\u8349\u30C0\u30E1\u30FC\u30B8\u304C\u767A\u751F\u3059\u308B\u305F\u3073{icon:Fire}\u708E\u304C{value:statGain}\u5897\u52A0\u3059\u308B\u3002"
+  _minimumPartySize: 1
   _statGainPerDamage: 5
   _leafGrowthStatus: {fileID: 11400000, guid: 53544b26b38d1de41b8f8e764aeef0fe, type: 2}
   _fireGrowthStatus: {fileID: 11400000, guid: 9dafd23d24c2bdf45b82d89849da367b, type: 2}

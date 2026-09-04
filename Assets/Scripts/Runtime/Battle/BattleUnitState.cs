@@ -110,7 +110,7 @@ namespace Pachimon.Battle
                 throw new ArgumentOutOfRangeException(nameof(speciesId));
             }
 
-            if (slotIndex < 0 || slotIndex >= BattleSideState.PartySize)
+            if (slotIndex < 0 || slotIndex >= BattleSideState.MaxPartySize)
             {
                 throw new ArgumentOutOfRangeException(nameof(slotIndex));
             }

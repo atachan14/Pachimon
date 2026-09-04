@@ -15,4 +15,5 @@ MonoBehaviour:
   _passiveId: 61
   _displayName: "\u30E9\u30B9\u30C8\u30BF\u30C3\u30C1"
   _description: "\u81EA\u8EAB\u306ESkill\u30C0\u30E1\u30FC\u30B8\u5F8C\u3001\u5BFE\u8C61HP\u304C{icon:Poison}\u6BD2\u306E{value:executionRatio}%\u4EE5\u4E0B\u306A\u3089\u6226\u95D8\u4E0D\u80FD\u306B\u3059\u308B\u3002\u73FE\u5728\u306E\u6761\u4EF6\u306F\u6700\u5927HP\u306E{value:executionPercent}%\u3002"
+  _minimumPartySize: 1
   _poisonExecutionRatio: 3

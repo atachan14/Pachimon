@@ -51,7 +51,14 @@ namespace Pachimon.UI
             TrainerPreviewContent trainerPreview,
             IReadOnlyList<PachimonPreviewContent> pachimonPreviews)
         {
-            PartyWindow?.Bind(trainerPreview, pachimonPreviews);
+            if (PartyWindow == null)
+            {
+                return;
+            }
+
+            var selectedTab = PartyWindow.SelectedTabIndex;
+            PartyWindow.Bind(trainerPreview, pachimonPreviews);
+            PartyWindow.ShowTab(selectedTab);
         }
 
         public void ConfigureItemDrop(

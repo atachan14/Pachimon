@@ -182,6 +182,8 @@ namespace Pachimon.UI
         private SelectionPhase _selectionPhase;
         private int _claimedCount;
         private bool _isClosing;
+        private LayoutMode _layoutMode = LayoutMode.Expanded;
+        private float _layoutScale = 1f;
 
         private enum SelectionPhase
         {
@@ -235,6 +237,30 @@ namespace Pachimon.UI
             BodyText = bodyText;
         }
 
+        public void ApplyResponsiveLayout(ResponsiveUiLayout layout)
+        {
+            _layoutMode = layout.LayoutMode;
+            _layoutScale = layout.LayoutMode == LayoutMode.Compact
+                ? Mathf.Clamp(layout.TypographyScale, 1f, 1.6f)
+                : 1f;
+
+            ApplyRootInsets();
+            if (_runtimeRoot == null)
+            {
+                return;
+            }
+
+            foreach (var size in GetComponentsInChildren<ResponsiveLayoutElementSize>(true))
+            {
+                size.SetDisplayScale(_layoutScale);
+            }
+
+            foreach (var grid in GetComponentsInChildren<ResponsiveGridLayout>(true))
+            {
+                grid.SetDisplayScale(_layoutScale);
+            }
+        }
+
         public void Present(RewardOverlayContent content)
         {
             _content = content ?? throw new ArgumentNullException(nameof(content));
@@ -258,11 +284,7 @@ namespace Pachimon.UI
 
         private void EnsureRuntimeRoot()
         {
-            var rect = transform as RectTransform;
-            rect.anchorMin = Vector2.zero;
-            rect.anchorMax = Vector2.one;
-            rect.offsetMin = new Vector2(36f, 36f);
-            rect.offsetMax = new Vector2(-36f, -36f);
+            ApplyRootInsets();
 
             var background = GetComponent<Image>();
             if (background == null)
@@ -292,7 +314,12 @@ namespace Pachimon.UI
             rootObject.layer = gameObject.layer;
             _runtimeRoot = rootObject.GetComponent<RectTransform>();
             _runtimeRoot.SetParent(transform, false);
-            Stretch(_runtimeRoot, new Vector2(28f, 24f), new Vector2(-28f, -24f));
+            var inset = _layoutMode == LayoutMode.Compact ? 14f : 28f;
+            var verticalInset = _layoutMode == LayoutMode.Compact ? 12f : 24f;
+            Stretch(
+                _runtimeRoot,
+                new Vector2(inset, verticalInset),
+                new Vector2(-inset, -verticalInset));
         }
 
         private void PrepareMainContent()
@@ -401,9 +428,8 @@ namespace Pachimon.UI
                 new Color32(121, 75, 70, 255),
                 Color.white);
             var abandonLayout = _abandonButton.gameObject.AddComponent<LayoutElement>();
-            abandonLayout.preferredHeight = 48f;
-            abandonLayout.minHeight = 44f;
             abandonLayout.flexibleWidth = 1f;
+            ConfigureResponsiveHeight(abandonLayout, 44f, 48f);
         }
 
         private void CreateRewardButton(
@@ -419,9 +445,8 @@ namespace Pachimon.UI
                 RewardButtonColor,
                 Color.white);
             var layout = button.gameObject.AddComponent<LayoutElement>();
-            layout.preferredHeight = 58f;
-            layout.minHeight = 50f;
             layout.flexibleWidth = 1f;
+            ConfigureResponsiveHeight(layout, 50f, 58f);
             _rewardButtons[slot] = button;
         }
 
@@ -567,7 +592,8 @@ namespace Pachimon.UI
             var sourceGrid = CreateThreeColumnGrid(
                 "EnemyRewardGrid",
                 contentRect,
-                GetSourceGridHeight());
+                GetSourceGridHeight(),
+                _content.Sources.Count);
             foreach (var source in _content.Sources)
             {
                 BuildSourceColumn(sourceGrid, source);
@@ -598,7 +624,8 @@ namespace Pachimon.UI
             var grid = CreateThreeColumnGrid(
                 "RewardItemGrid",
                 contentRect,
-                150f);
+                150f,
+                _content.ItemChoices.Count);
             foreach (var choice in _content.ItemChoices)
             {
                 var capturedChoice = choice;
@@ -611,7 +638,10 @@ namespace Pachimon.UI
                     canClaim ? FooterButtonColor : DisabledTargetColor,
                     canClaim ? Color.white : Color.black);
                 button.interactable = canClaim;
-                button.gameObject.AddComponent<LayoutElement>().preferredHeight = 120f;
+                ConfigureResponsiveHeight(
+                    button.gameObject.AddComponent<LayoutElement>(),
+                    0f,
+                    120f);
                 _itemChoiceButtons.Add(new ItemChoiceButtonBinding(choice, button));
             }
 
@@ -686,7 +716,10 @@ namespace Pachimon.UI
                 17f,
                 FontStyles.Bold,
                 TextAlignmentOptions.Center);
-            name.gameObject.AddComponent<LayoutElement>().preferredHeight = 28f;
+            ConfigureResponsiveHeight(
+                name.gameObject.AddComponent<LayoutElement>(),
+                0f,
+                28f);
 
             var choices = _selectionKind == RewardSelectionKind.Skill
                 ? source.Skills
@@ -701,7 +734,10 @@ namespace Pachimon.UI
                     () => SelectChoice(capturedChoice),
                     new Color32(55, 71, 75, 255),
                     Color.white);
-                button.gameObject.AddComponent<LayoutElement>().preferredHeight = 34f;
+                ConfigureResponsiveHeight(
+                    button.gameObject.AddComponent<LayoutElement>(),
+                    0f,
+                    34f);
                 _choiceButtons.Add(new ChoiceButtonBinding(choice, button));
             }
         }
@@ -758,10 +794,17 @@ namespace Pachimon.UI
                 22f,
                 FontStyles.Bold,
                 TextAlignmentOptions.Center);
-            summary.gameObject.AddComponent<LayoutElement>().preferredHeight = 42f;
+            ConfigureResponsiveHeight(
+                summary.gameObject.AddComponent<LayoutElement>(),
+                0f,
+                42f);
 
             CreateSectionLabel(contentRect, "Player");
-            _targetGrid = CreateThreeColumnGrid("PlayerTargetGrid", contentRect, 210f);
+            _targetGrid = CreateThreeColumnGrid(
+                "PlayerTargetGrid",
+                contentRect,
+                210f,
+                _content.Targets.Count);
             RebuildTargetGrid();
             _selectionStatusText.text = "覚えさせるパチモンを選んでください";
             ConfigureSelectionFooter();
@@ -902,7 +945,10 @@ namespace Pachimon.UI
             layout.childForceExpandHeight = false;
 
             var label = button.GetComponentInChildren<TMP_Text>();
-            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 48f;
+            ConfigureResponsiveHeight(
+                label.gameObject.AddComponent<LayoutElement>(),
+                0f,
+                48f);
             return new TargetButtonBinding(button, graphic, label);
         }
 
@@ -1186,28 +1232,26 @@ namespace Pachimon.UI
         private RectTransform CreateThreeColumnGrid(
             string objectName,
             RectTransform parent,
-            float height)
+            float height,
+            int requestedColumnCount = 3)
         {
             var gridObject = new GameObject(
                 objectName,
                 typeof(RectTransform),
                 typeof(GridLayoutGroup),
-                typeof(LayoutElement));
+                typeof(LayoutElement),
+                typeof(ResponsiveGridLayout));
             gridObject.layer = gameObject.layer;
             var rect = gridObject.GetComponent<RectTransform>();
             rect.SetParent(parent, false);
-            var layoutElement = gridObject.GetComponent<LayoutElement>();
-            layoutElement.preferredHeight = height;
-            layoutElement.minHeight = height;
-
             var grid = gridObject.GetComponent<GridLayoutGroup>();
-            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-            grid.constraintCount = 3;
+            var columnCount = Mathf.Clamp(requestedColumnCount, 1, 3);
             grid.spacing = new Vector2(12f, 0f);
             grid.padding = new RectOffset(4, 4, 0, 0);
             grid.childAlignment = TextAnchor.UpperCenter;
-            var width = Mathf.Max(300f, _runtimeRoot.rect.width - 90f);
-            grid.cellSize = new Vector2((width - 32f) / 3f, height);
+            var responsiveGrid = gridObject.GetComponent<ResponsiveGridLayout>();
+            responsiveGrid.Configure(columnCount, 96f, height);
+            responsiveGrid.SetDisplayScale(_layoutScale);
             return rect;
         }
 
@@ -1220,7 +1264,10 @@ namespace Pachimon.UI
                 22f,
                 FontStyles.Bold,
                 TextAlignmentOptions.Left);
-            label.gameObject.AddComponent<LayoutElement>().preferredHeight = 34f;
+            ConfigureResponsiveHeight(
+                label.gameObject.AddComponent<LayoutElement>(),
+                0f,
+                34f);
         }
 
         private Image CreatePachimonGraphic(
@@ -1241,8 +1288,46 @@ namespace Pachimon.UI
             image.color = sprite != null ? Color.white : GameUiPalette.MissingGraphic;
             image.preserveAspect = true;
             image.raycastTarget = false;
-            graphicObject.GetComponent<LayoutElement>().preferredHeight = height;
+            ConfigureResponsiveHeight(
+                graphicObject.GetComponent<LayoutElement>(),
+                0f,
+                height);
             return image;
+        }
+
+        private void ApplyRootInsets()
+        {
+            var rect = transform as RectTransform;
+            if (rect == null)
+            {
+                return;
+            }
+
+            var inset = _layoutMode == LayoutMode.Compact ? 14f : 36f;
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.offsetMin = new Vector2(inset, inset);
+            rect.offsetMax = new Vector2(-inset, -inset);
+
+            if (_runtimeRoot != null)
+            {
+                var innerInset = _layoutMode == LayoutMode.Compact ? 14f : 28f;
+                var verticalInset = _layoutMode == LayoutMode.Compact ? 12f : 24f;
+                Stretch(
+                    _runtimeRoot,
+                    new Vector2(innerInset, verticalInset),
+                    new Vector2(-innerInset, -verticalInset));
+            }
+        }
+
+        private void ConfigureResponsiveHeight(
+            LayoutElement layoutElement,
+            float minimumHeight,
+            float preferredHeight)
+        {
+            var responsive = layoutElement.gameObject.AddComponent<ResponsiveLayoutElementSize>();
+            responsive.Configure(minimumHeight, preferredHeight);
+            responsive.SetDisplayScale(_layoutScale);
         }
 
         private static TMP_Text CreateText(

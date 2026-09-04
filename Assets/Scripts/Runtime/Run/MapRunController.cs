@@ -28,6 +28,9 @@ namespace Pachimon.Run
         private readonly HallOfFameScreen _hallOfFameScreen;
         private bool _canMoveToNextNode;
         private string _pendingNodeId;
+        private string _pendingEncounterSourceNodeId;
+        private string _pendingPostEncounterNodeId;
+        private string _completedPartyEncounterNodeId;
         private string _startNodeId;
         private string _startPreviewCandidateId;
         private StartNodeController _startNodeController;
@@ -69,6 +72,7 @@ namespace Pachimon.Run
             if (_mapOverlayView != null)
             {
                 _mapOverlayView.NodeSelected += SelectNextNode;
+                _mapOverlayView.PartyCandidatesSelected += ShowPartyEncounterCandidates;
                 _mapOverlayView.Closed += HandleMapClosed;
             }
         }
@@ -89,6 +93,10 @@ namespace Pachimon.Run
             _startPreviewCandidateId = null;
             _startNodeController = null;
             _canMoveToNextNode = false;
+            _pendingEncounterSourceNodeId = null;
+            _pendingPostEncounterNodeId = null;
+            _completedPartyEncounterNodeId = null;
+            _mapOverlayView?.SetCurrentPartyEncounterMarker(null);
             CancelNodeSelection();
             ApplyHeaderState();
             RefreshPlayerPartyPane();
@@ -103,7 +111,7 @@ namespace Pachimon.Run
                 return;
             }
 
-            var partyPreviews = Enumerable.Range(0, RunState.PartySize)
+            var partyPreviews = Enumerable.Range(0, RunState.MaxPartySize)
                 .Select(index => index < Context.RunState.PlayerPachimonIds.Count
                     ? BuildPachimonPreview(
                         Context.RunState.PlayerPachimonIds[index],
@@ -169,7 +177,7 @@ namespace Pachimon.Run
             if (Context == null
                 || item == null
                 || partyIndex < 0
-                || partyIndex >= RunState.PartySize)
+                || partyIndex >= RunState.MaxPartySize)
             {
                 return false;
             }
@@ -260,7 +268,7 @@ namespace Pachimon.Run
             if (Context == null
                 || item == null
                 || partyIndex < 0
-                || partyIndex >= RunState.PartySize)
+                || partyIndex >= RunState.MaxPartySize)
             {
                 return false;
             }
@@ -514,7 +522,7 @@ namespace Pachimon.Run
 
         public bool TryMoveToNextNode()
         {
-            var nextNodeIds = GetCurrentOutgoingNodeIds();
+            var nextNodeIds = GetSelectableOutgoingNodeIds();
             if (nextNodeIds.Count == 0)
             {
                 return false;
@@ -529,15 +537,45 @@ namespace Pachimon.Run
             var outgoingNodeIds = GetCurrentOutgoingNodeIds();
             if (!_canMoveToNextNode
                 || currentNode == null
-                || !outgoingNodeIds.Contains(targetNodeId))
+                || !outgoingNodeIds.Contains(targetNodeId)
+                || (_completedPartyEncounterNodeId != null
+                    && targetNodeId != _pendingPostEncounterNodeId))
             {
                 return false;
             }
 
             _gameRootView?.CloseItemPanel();
+            var encounter = FindPartyEncounterBetween(currentNode, targetNodeId);
+            if (encounter != null
+                && !Context.RunState.ResolvedNodeIds.Contains(encounter.NodeId))
+            {
+                _canMoveToNextNode = false;
+                _pendingNodeId = null;
+                _pendingEncounterSourceNodeId = currentNode.NodeId;
+                _pendingPostEncounterNodeId = targetNodeId;
+                if (_gameRootView?.LayoutMode == LayoutMode.Compact)
+                {
+                    _gameRootView.ShowCompactPane(CompactPane.Main);
+                }
+                ApplyMapOverlayState();
+                if (_mapOverlayView == null
+                    || !_mapOverlayView.PlayPartyEncounterApproach(
+                        encounter.NodeId,
+                        currentNode.NodeId,
+                        targetNodeId,
+                        () => EnterPartyEncounter(encounter.NodeId)))
+                {
+                    EnterPartyEncounter(encounter.NodeId);
+                }
+                return true;
+            }
+
             Context.RunState.CurrentNodeId = targetNodeId;
             _canMoveToNextNode = false;
             _pendingNodeId = null;
+            _pendingPostEncounterNodeId = null;
+            _completedPartyEncounterNodeId = null;
+            _mapOverlayView?.SetCurrentPartyEncounterMarker(null);
             ApplyHeaderState();
             ApplyMapOverlayState();
             _mapOverlayView?.Close();
@@ -547,6 +585,33 @@ namespace Pachimon.Run
             }
             ShowCurrentNode();
             return true;
+        }
+
+        private MapNode FindPartyEncounterBetween(MapNode sourceNode, string targetNodeId)
+        {
+            var targetNode = Context?.RunMap?.GetNode(targetNodeId);
+            if (sourceNode == null || targetNode == null)
+            {
+                return null;
+            }
+
+            return Context.RunMap.Nodes.Values.SingleOrDefault(node =>
+                node.Content is PartyEncounterNodeContent
+                && node.DisplayRowPosition > sourceNode.RowIndex
+                && node.DisplayRowPosition < targetNode.RowIndex);
+        }
+
+        private void EnterPartyEncounter(string encounterNodeId)
+        {
+            Context.RunState.CurrentNodeId = encounterNodeId;
+            ApplyHeaderState();
+            ApplyMapOverlayState();
+            _mapOverlayView?.Close();
+            if (_gameRootView?.LayoutMode == LayoutMode.Compact)
+            {
+                _gameRootView.ShowCompactPane(CompactPane.Main);
+            }
+            ShowCurrentNode();
         }
 
         private void SelectNextNode(string nodeId)
@@ -562,7 +627,7 @@ namespace Pachimon.Run
             _inspectedEnemyIds = Array.Empty<string>();
             _rightPaneShowsActiveBattle = false;
             var canMoveToNode = _canMoveToNextNode
-                && GetCurrentOutgoingNodeIds().Contains(nodeId);
+                && GetSelectableOutgoingNodeIds().Contains(nodeId);
             _pendingNodeId = canMoveToNode ? nodeId : null;
             _mapOverlayView?.SetSelectedNode(nodeId);
             ShowNodeSelectionDetails(node, canMoveToNode);
@@ -610,6 +675,18 @@ namespace Pachimon.Run
                         canMoveToNode,
                         eliteModifiers);
                     break;
+                case PartyEncounterNodeContent encounter:
+                    var encounterModifiers = EnemyTrainerModifierFactory.Create(node);
+                    ShowBattleNodeDetails(
+                        BuildTrainerPreview(
+                            encounter.TrainerProfile,
+                            null,
+                            node.RowIndex,
+                            encounterModifiers),
+                        encounter.EnemyPachimonInstanceIds,
+                        canMoveToNode,
+                        encounterModifiers);
+                    break;
                 case CityNodeContent city:
                     ShowCityNodeDetails(node, city, canMoveToNode);
                     break;
@@ -630,6 +707,22 @@ namespace Pachimon.Run
                     }
                     break;
             }
+        }
+
+        private void ShowPartyEncounterCandidates(string nodeId)
+        {
+            var node = Context?.RunMap?.GetNode(nodeId);
+            if (node?.Content is not PartyEncounterNodeContent encounter)
+            {
+                return;
+            }
+
+            _inspectedNodeId = nodeId;
+            _inspectedEnemyIds = Array.Empty<string>();
+            _rightPaneView?.ShowStartCandidatePreview(
+                encounter.CandidatePachimonInstanceIds
+                    .Select(candidateId => BuildPachimonPreview(candidateId, true))
+                    .ToArray());
         }
 
         private void ShowBattleNodeDetails(
@@ -675,7 +768,7 @@ namespace Pachimon.Run
                     Context.ItemCatalog,
                     Context.RunState,
                     ShowCityItemDetails,
-                    ConfirmNodeSelection,
+                    ConfirmCityNodeSelection,
                     CancelNodeSelection);
                 return;
             }
@@ -941,6 +1034,20 @@ namespace Pachimon.Run
             }
         }
 
+        private void ConfirmCityNodeSelection()
+        {
+            var targetNodeId = _pendingNodeId;
+            if (targetNodeId == null || !TryMoveToNode(targetNodeId))
+            {
+                CancelNodeSelection();
+                return;
+            }
+
+            // City setup refreshes RightPane after moving, so make MainPane the
+            // final Compact destination regardless of callback order.
+            _rightPaneView?.RequestMainPane();
+        }
+
         private void CancelNodeSelection()
         {
             _pendingNodeId = null;
@@ -989,7 +1096,7 @@ namespace Pachimon.Run
         private void ApplyMapOverlayState()
         {
             var selectableNodeIds = _canMoveToNextNode
-                ? GetCurrentOutgoingNodeIds()
+                ? GetSelectableOutgoingNodeIds()
                 : null;
             _mapOverlayView?.Render(
                 Context?.RunMap,
@@ -1044,6 +1151,10 @@ namespace Pachimon.Run
                     _mainPaneView.Show(_hallOfFameScreen);
                     ApplyHallOfFameNode(currentNode);
                     break;
+                case NodeType.PartyEncounter:
+                    _mainPaneView.Show(_battleScreen);
+                    ApplyPartyEncounterNode(currentNode);
+                    break;
                 default:
                     _mainPaneView.Show(_startScreen);
                     ApplyFallbackNode(currentNode);
@@ -1064,6 +1175,7 @@ namespace Pachimon.Run
                 NodeType.Elite => "四天王",
                 NodeType.Ghost => "ゴースト",
                 NodeType.HallOfFame => "殿堂入り",
+                NodeType.PartyEncounter => "仲間との出会い",
                 _ => node.NodeType.ToString(),
             };
         }
@@ -1105,6 +1217,13 @@ namespace Pachimon.Run
                     break;
                 case HallOfFameNodeContent:
                     builder.AppendLine("殿堂入り（仮実装）");
+                    break;
+                case PartyEncounterNodeContent encounter:
+                    builder.AppendLine(FormatTrainer(encounter.TrainerProfile));
+                    AppendEnemies(builder, encounter.EnemyPachimonInstanceIds);
+                    builder.AppendLine();
+                    builder.Append("加入候補: ")
+                        .Append(string.Join(", ", encounter.CandidatePachimonInstanceIds));
                     break;
                 default:
                     builder.AppendLine("詳細は未実装");
@@ -1227,7 +1346,12 @@ namespace Pachimon.Run
 
         private void RenderStartConfirmation(LogWindowView logWindow)
         {
-            logWindow.SetLogText(_startNodeController.Dialogue.ConfirmationPrompt);
+            var selectedName = _startNodeController.SelectedIds.Count == 1
+                ? BuildStartCandidateCard(_startNodeController.SelectedIds[0]).DisplayName
+                : null;
+            logWindow.SetLogText(string.IsNullOrEmpty(selectedName)
+                ? _startNodeController.Dialogue.ConfirmationPrompt
+                : $"{selectedName}でよろしいか");
             logWindow.ShowOptions(
                 new LogWindowOption("はい", () => _startNodeController.ConfirmSelection()),
                 new LogWindowOption("いいえ", () => _startNodeController.RestartSelection()));
@@ -1278,9 +1402,13 @@ namespace Pachimon.Run
             }
 
             var selectionOrder = _startNodeController.GetSelectionOrder(_startPreviewCandidateId);
-            var confirmLabel = selectionOrder > 0
-                ? $"{selectionOrder}匹目を取り消す"
-                : $"{_startNodeController.SelectedIds.Count + 1}匹目にする";
+            var confirmLabel = _startNodeController.SelectionCount == 1
+                ? selectionOrder > 0
+                    ? "選択を取り消す"
+                    : "このパチモンにする"
+                : selectionOrder > 0
+                    ? $"{selectionOrder}匹目を取り消す"
+                    : $"{_startNodeController.SelectedIds.Count + 1}匹目にする";
             _rightPaneView?.ShowStartCandidateSelection(
                 _startNodeController.CandidateIds
                     .Select(candidateId => BuildPachimonPreview(candidateId, true))
@@ -1718,6 +1846,104 @@ namespace Pachimon.Run
                 null);
         }
 
+        private void ApplyPartyEncounterNode(MapNode node)
+        {
+            if (node.Content is not PartyEncounterNodeContent content)
+            {
+                return;
+            }
+
+            StartBattle(
+                node,
+                content.EnemyPachimonInstanceIds,
+                content.TrainerProfile,
+                null,
+                () => BeginPartyRecruitment(node, content));
+        }
+
+        private void BeginPartyRecruitment(
+            MapNode node,
+            PartyEncounterNodeContent content)
+        {
+            _mainPaneView.Show(_startScreen);
+            _startNodeId = node.NodeId;
+            var isRival = content.Kind == PartyEncounterKind.Rival;
+            _startNodeController = new StartNodeController(
+                content.CandidatePachimonInstanceIds,
+                1,
+                new StartDialogueData(
+                    isRival
+                        ? "ライバルを倒したようじゃな。"
+                        : "パチパチ団を倒したようじゃな。",
+                    $"ここに{content.CandidatePachimonInstanceIds.Length}匹のパチモンがおる。\n新しい仲間を選びなさい。",
+                    "このパチモンでよろしいか",
+                    "新しい仲間が加わったぞ！"),
+                TryAddPartyMember,
+                CompletePartyEncounter);
+            _renderedStartNodeState = null;
+            _startPreviewCandidateId = null;
+            _startNodeController.Changed += RenderStartNode;
+            _startScreen.ShowCandidates(
+                content.CandidatePachimonInstanceIds
+                    .Select(BuildStartCandidateCard)
+                    .ToArray(),
+                ShowStartCandidateDetails);
+            RenderStartNode();
+        }
+
+        private void CompletePartyEncounter()
+        {
+            var encounterNode = GetCurrentNode();
+            var sourceNodeId = _pendingEncounterSourceNodeId;
+            var destinationNodeId = _pendingPostEncounterNodeId;
+            if (encounterNode?.Content is not PartyEncounterNodeContent
+                || Context.RunMap.GetNode(sourceNodeId) == null
+                || Context.RunMap.GetNode(destinationNodeId) == null)
+            {
+                throw new InvalidOperationException(
+                    "Party encounter completed without its pending route Nodes.");
+            }
+
+            ResolveCurrentLocation(encounterNode);
+            _pendingEncounterSourceNodeId = null;
+            _completedPartyEncounterNodeId = encounterNode.NodeId;
+            Context.RunState.CurrentNodeId = sourceNodeId;
+            _canMoveToNextNode = GetSelectableOutgoingNodeIds().Count > 0;
+            _pendingNodeId = null;
+            _mapOverlayView?.SetCurrentPartyEncounterMarker(encounterNode.NodeId);
+            ApplyHeaderState();
+            ApplyMapOverlayState();
+            _mapOverlayView?.Open();
+        }
+
+        private bool TryAddPartyMember(IReadOnlyList<string> candidateIds)
+        {
+            if (Context == null || candidateIds?.Count != 1)
+            {
+                return false;
+            }
+
+            var instance = Context.PachimonPool.Get(candidateIds[0]);
+            if (instance == null
+                || Context.RunState.PlayerPachimonIds
+                    .Select(Context.PachimonPool.Get)
+                    .Where(member => member != null)
+                    .Any(member => member.SpeciesId == instance.SpeciesId)
+                || !Context.RunState.TryAddPartyMember(instance.InstanceId))
+            {
+                return false;
+            }
+
+            var stats = PachimonStatService.Calculate(
+                instance,
+                Context.RunState.PlayerModifiers,
+                Context.PassiveStatModifierRegistry);
+            instance.SetCurrentHp(stats.MaxHp, stats.MaxHp);
+            instance.SetCurrentMn(stats.MaxMn, stats.MaxMn);
+            RefreshPlayerPartyPane();
+            return true;
+        }
+
         private void ApplyHallOfFameNode(MapNode node)
         {
             if (node.Content is not HallOfFameNodeContent)
@@ -1741,9 +1967,10 @@ namespace Pachimon.Run
             MapNode node,
             IReadOnlyList<string> enemyPachimonIds,
             TrainerProfile enemyTrainerProfile,
-            NodeReward nodeReward)
+            NodeReward nodeReward,
+            Action victoryContinuation = null)
         {
-            if (!Context.RunState.IsPartyConfirmed)
+            if (!Context.RunState.IsPartyInitialized)
             {
                 _mainPaneView.LogWindowView?.SetLogText(
                     "Player Partyが確定していないためBattleを開始できません。");
@@ -1786,7 +2013,11 @@ namespace Pachimon.Run
                 FocusBattlePaneUnit,
                 _gameRootView.ShowFieldEffectDetails,
                 _gameRootView.ShowWeatherDetails,
-                outcome => CompleteBattle(outcome, battleState, nodeReward));
+                outcome => CompleteBattle(
+                    outcome,
+                    battleState,
+                    nodeReward,
+                    victoryContinuation));
         }
 
         private void RefreshBattlePanes(
@@ -1846,7 +2077,8 @@ namespace Pachimon.Run
         private void CompleteBattle(
             BattleOutcome outcome,
             BattleState battleState,
-            NodeReward nodeReward)
+            NodeReward nodeReward,
+            Action victoryContinuation = null)
         {
             if (outcome != BattleOutcome.PlayerVictory)
             {
@@ -1865,6 +2097,12 @@ namespace Pachimon.Run
             _activeEnemyTrainerPreview = null;
             _rightPaneShowsActiveBattle = false;
             RefreshPlayerPartyPane();
+
+            if (victoryContinuation != null)
+            {
+                victoryContinuation();
+                return;
+            }
 
             if (nodeReward == null || _battleScreen.RewardOverlayView == null)
             {
@@ -2269,6 +2507,20 @@ namespace Pachimon.Run
                 .Distinct()
                 .OrderBy(nodeId => Context.RunMap.GetNode(nodeId)?.ColumnIndex ?? int.MaxValue)
                 .ToArray();
+        }
+
+        private IReadOnlyList<string> GetSelectableOutgoingNodeIds()
+        {
+            var outgoingNodeIds = GetCurrentOutgoingNodeIds();
+            if (_completedPartyEncounterNodeId == null
+                || string.IsNullOrEmpty(_pendingPostEncounterNodeId))
+            {
+                return outgoingNodeIds;
+            }
+
+            return outgoingNodeIds.Contains(_pendingPostEncounterNodeId)
+                ? new[] { _pendingPostEncounterNodeId }
+                : Array.Empty<string>();
         }
 
         private void ResolveCurrentLocation(MapNode currentNode)

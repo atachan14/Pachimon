@@ -21,6 +21,13 @@ namespace Pachimon.UI
 
     public sealed class StartCandidateCardView : MonoBehaviour
     {
+        private const float GraphicWidthRatio = 0.84f;
+        private const float GraphicHeightRatio = 0.68f;
+        private const float MinimumNameHeight = 40f;
+        private const float MaximumNameHeight = 80f;
+        private const float MinimumGraphicNameGap = 8f;
+        private const float MaximumGraphicNameGap = 24f;
+
         private static readonly Color SelectedGraphicColor =
             new(0.62f, 0.62f, 0.62f, 1f);
 
@@ -33,6 +40,11 @@ namespace Pachimon.UI
         private string _instanceId;
         private Action<string> _onClicked;
         private Material _grayscaleMaterial;
+
+        private void OnRectTransformDimensionsChange()
+        {
+            RefreshContentLayout();
+        }
 
         private void OnDestroy()
         {
@@ -77,6 +89,7 @@ namespace Pachimon.UI
             }
 
             SetFocused(false);
+            RefreshContentLayout();
         }
 
         public void Bind(StartCandidateCardContent content, Action<string> onClicked)
@@ -99,6 +112,75 @@ namespace Pachimon.UI
             }
 
             SetSelectionOrder(0);
+            RefreshContentLayout();
+        }
+
+        private void RefreshContentLayout()
+        {
+            if (transform is not RectTransform cardRect
+                || _frontGraphic?.rectTransform.parent is not RectTransform graphicArea
+                || _nameText == null)
+            {
+                return;
+            }
+
+            var cardSize = cardRect.rect.size;
+            if (cardSize.x <= 1f || cardSize.y <= 1f)
+            {
+                return;
+            }
+
+            var graphicSize = Mathf.Max(
+                1f,
+                Mathf.Min(
+                    cardSize.x * GraphicWidthRatio,
+                    cardSize.y * GraphicHeightRatio));
+            var nameHeight = Mathf.Clamp(
+                cardSize.y * 0.1f,
+                MinimumNameHeight,
+                MaximumNameHeight);
+            var gap = Mathf.Clamp(
+                cardSize.y * 0.02f,
+                MinimumGraphicNameGap,
+                MaximumGraphicNameGap);
+            var groupHeight = graphicSize + gap + nameHeight;
+            var nameCenterY = (-groupHeight * 0.5f) + (nameHeight * 0.5f);
+            var graphicCenterY = nameCenterY
+                + (nameHeight * 0.5f)
+                + gap
+                + (graphicSize * 0.5f);
+
+            SetCenteredRect(
+                graphicArea,
+                new Vector2(graphicSize, graphicSize),
+                new Vector2(0f, graphicCenterY));
+            SetCenteredRect(
+                _nameText.rectTransform,
+                new Vector2(cardSize.x * 0.92f, nameHeight),
+                new Vector2(0f, nameCenterY));
+
+            if (_selectionOrderText != null)
+            {
+                var orderHeight = nameHeight * 0.8f;
+                SetCenteredRect(
+                    _selectionOrderText.rectTransform,
+                    new Vector2(cardSize.x * 0.76f, orderHeight),
+                    new Vector2(
+                        0f,
+                        nameCenterY - (nameHeight * 0.5f) - (orderHeight * 0.5f)));
+            }
+        }
+
+        private static void SetCenteredRect(
+            RectTransform rect,
+            Vector2 size,
+            Vector2 position)
+        {
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.sizeDelta = size;
+            rect.anchoredPosition = position;
         }
 
         public void SetFocused(bool isFocused)

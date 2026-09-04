@@ -26,6 +26,8 @@ namespace Pachimon.Run
                         modifiers.AddBadge(eliteAttribute);
                     }
                     break;
+                case PartyEncounterNodeContent:
+                    break;
             }
 
             var profile = node?.Content switch
@@ -33,6 +35,7 @@ namespace Pachimon.Run
                 BattleNodeContent battle => battle.TrainerProfile,
                 GymNodeContent gym => gym.TrainerProfile,
                 EliteNodeContent elite => elite.TrainerProfile,
+                PartyEncounterNodeContent encounter => encounter.TrainerProfile,
                 _ => null,
             };
             EnemyTrainerScalingService.Apply(

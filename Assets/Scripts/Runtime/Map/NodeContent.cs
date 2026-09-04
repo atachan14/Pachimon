@@ -79,6 +79,32 @@ namespace Pachimon.Map
     {
     }
 
+    public enum PartyEncounterKind
+    {
+        Rival = 0,
+        PachipachiGang = 1,
+    }
+
+    public sealed class PartyEncounterNodeContent : NodeContent
+    {
+        public PartyEncounterNodeContent(
+            PartyEncounterKind kind,
+            string[] enemyPachimonInstanceIds,
+            string[] candidatePachimonInstanceIds,
+            TrainerProfile trainerProfile)
+        {
+            Kind = kind;
+            EnemyPachimonInstanceIds = enemyPachimonInstanceIds;
+            CandidatePachimonInstanceIds = candidatePachimonInstanceIds;
+            TrainerProfile = trainerProfile;
+        }
+
+        public PartyEncounterKind Kind { get; }
+        public string[] EnemyPachimonInstanceIds { get; }
+        public string[] CandidatePachimonInstanceIds { get; }
+        public TrainerProfile TrainerProfile { get; }
+    }
+
     public sealed class RestSpotNodeContent : NodeContent
     {
         public RestSpotNodeContent(int healPercent)

@@ -8,7 +8,7 @@ namespace Pachimon.Run
 {
     public sealed class RunState
     {
-        public const int PartySize = 3;
+        public const int MaxPartySize = 3;
 
         private readonly List<string> _playerPachimonIds = new();
 
@@ -36,26 +36,41 @@ namespace Pachimon.Run
 
         public IReadOnlyList<string> PlayerPachimonIds => _playerPachimonIds;
 
-        public bool IsPartyConfirmed => _playerPachimonIds.Count == PartySize;
+        public bool IsPartyInitialized => _playerPachimonIds.Count > 0;
+
+        public bool IsPartyFull => _playerPachimonIds.Count == MaxPartySize;
 
         public HashSet<string> ResolvedNodeIds { get; } = new();
 
         public bool TrySetInitialParty(IEnumerable<string> pachimonIds)
         {
-            if (IsPartyConfirmed || pachimonIds == null)
+            if (IsPartyInitialized || pachimonIds == null)
             {
                 return false;
             }
 
             var ids = pachimonIds.ToArray();
-            if (ids.Length != PartySize
+            if (ids.Length != 1
                 || ids.Any(string.IsNullOrWhiteSpace)
-                || ids.Distinct(StringComparer.Ordinal).Count() != PartySize)
+                || ids.Distinct(StringComparer.Ordinal).Count() != ids.Length)
             {
                 return false;
             }
 
             _playerPachimonIds.AddRange(ids);
+            return true;
+        }
+
+        public bool TryAddPartyMember(string pachimonId)
+        {
+            if (string.IsNullOrWhiteSpace(pachimonId)
+                || IsPartyFull
+                || _playerPachimonIds.Contains(pachimonId, StringComparer.Ordinal))
+            {
+                return false;
+            }
+
+            _playerPachimonIds.Add(pachimonId);
             return true;
         }
 

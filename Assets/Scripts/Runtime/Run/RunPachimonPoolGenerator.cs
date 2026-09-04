@@ -98,7 +98,8 @@ namespace Pachimon.Run
                         _statsGenerator.Generate(random, definition),
                         PachimonSubStatBindings.CreateRandom(
                             random,
-                            definition.InitialStats)));
+                            definition.InitialStats),
+                        definition.MinimumPartySize));
                 }
             }
 

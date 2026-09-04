@@ -1,5 +1,16 @@
 # Party Progression Implementation Plan
 
+## 実装状況
+
+- 2026-09-02: 基盤実装完了。Party/Battle/RestSpot/報酬を1～3体へ対応。
+- StartNodeを3候補から1体選択へ変更。
+- row10.5のライバル戦、row20.5のパチパチ団戦と、勝利後の6候補/9候補からの加入を追加。
+- 全18候補をMap通常配置より先に予約し、候補Speciesの重複を防止。
+- row1～10/11～20/21以降のEnemy人数を1/2/3体へ変更。
+- 序盤不適合Skill/Passiveへ最低Party人数を追加し、追加Skillを同属性1個へ変更。
+- Map上に戦闘相手と博士の個別クリック導線を追加。
+- Unity Editor上でのMap生成、実戦フロー、Compact表示は手動確認待ち。
+
 ## 調査結果
 
 Partyを`1体 -> 2体 -> 3体`へ段階的に増やす変更は、画面だけではなくRun、Battle、Map生成、Skill配布、報酬の前提に影響する。
@@ -80,8 +91,8 @@ UIの多くは3枠を常設して存在しない枠を隠せるため、Domain�
 
 ### 変更方針
 
-- row10と11の間、row20と21の間に必ず通過する固定Encounterを追加する。
-- `row10.5`と`row20.5`は表示位置であり、既存の整数`RowIndex`へ小数を混ぜない。
+- row10から11、row20から21への既存Edgeを維持し、その通過時に必ず発生するEncounterを追加する。
+- `row10.5`と`row20.5`は表示位置であり、経路をEncounter Nodeへ集約せず、選択済みの行き先を戦闘・加入完了後まで保持する。
 - `RowIndex`は進行度、敵補正、Skill配布の基準として維持する。
 - `MapNode`へ表示専用の順序または座標を追加し、`MapLayoutCalculator`だけがそれを参照する。
 - Node種別はRivalとパチパチ団で別々に増やさず、汎用の`PartyEncounter`と`PartyEncounterKind`で表現する。

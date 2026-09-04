@@ -12,8 +12,6 @@ namespace Pachimon.Map
 {
     public sealed class MapGenerator
     {
-        private const int StartCandidateCount = 9;
-        private const int PartySize = 3;
         private const int MinimumCityEdgeCount = 2;
 
         private readonly MapGenerationSettings _settings;
@@ -60,9 +58,11 @@ namespace Pachimon.Map
             PlaceNonAdjacentNodes(rows, nodes, random, NodeType.Event, _settings.EventNodeCount);
             FillBattleNodes(rows);
             AssignRewardsAndTrainers(rows, random);
-            AssignPachimon(rows, nodes, pachimonPool, random);
+            var partyProgression = ReservePartyProgression(pachimonPool, random);
+            AssignPachimon(rows, nodes, pachimonPool, partyProgression, random);
 
             var map = BuildRunMap(rows);
+            AddPartyEncounters(map, pachimonPool, partyProgression, random);
             OrderNodePartiesByEffectiveDurability(map, pachimonPool);
             var skillDistributor = new MapSkillDistributor(
                 _skillCatalog,
@@ -522,20 +522,28 @@ namespace Pachimon.Map
             IReadOnlyList<List<NodeBuilder>> rows,
             IReadOnlyDictionary<string, NodeBuilder> nodes,
             RunPachimonPool pachimonPool,
+            PartyProgressionReservation partyProgression,
             Random random)
         {
             var slots = CreatePachimonSlots(rows);
-            if (slots.Count != pachimonPool.Instances.Count)
+            if (slots.Count + partyProgression.ReservedInstanceIds.Count
+                > pachimonPool.Instances.Count)
             {
                 throw new MapGenerationException(
-                    $"Map has {slots.Count} Pachimon slots, but the pool contains "
+                    $"Map requires {slots.Count} Pachimon slots, but the pool contains only "
                     + $"{pachimonPool.Instances.Count} instances.");
             }
 
             Dictionary<PlacementSlot, string> assignments = null;
             for (var attempt = 0; attempt < _settings.PlacementAttemptLimit; attempt++)
             {
-                if (TryAssignPachimon(slots, nodes, pachimonPool, random, out assignments))
+                if (TryAssignPachimon(
+                        slots,
+                        nodes,
+                        pachimonPool,
+                        partyProgression.ReservedInstanceIds,
+                        random,
+                        out assignments))
                 {
                     break;
                 }
@@ -558,8 +566,8 @@ namespace Pachimon.Map
                 {
                     case NodeType.Start:
                         node.Content = new StartNodeContent(
-                            assignmentsByNode[node.NodeId],
-                            PartySize);
+                            partyProgression.StartCandidateIds,
+                            1);
                         break;
                     case NodeType.Battle:
                         node.Content = new BattleNodeContent(
@@ -633,21 +641,162 @@ namespace Pachimon.Map
                 BattleNodeContent battle => battle.EnemyPachimonInstanceIds,
                 GymNodeContent gym => gym.EnemyPachimonInstanceIds,
                 EliteNodeContent elite => elite.EnemyPachimonInstanceIds,
+                PartyEncounterNodeContent encounter => encounter.EnemyPachimonInstanceIds,
                 _ => null,
             };
+        }
+
+        private void AddPartyEncounters(
+            RunMap map,
+            RunPachimonPool pachimonPool,
+            PartyProgressionReservation partyProgression,
+            Random random)
+        {
+            var profileFactory = new TrainerProfileFactory(
+                _trainerStyleCatalog,
+                _trainerNameCatalog,
+                random);
+
+            AddPartyEncounter(
+                map,
+                pachimonPool,
+                profileFactory,
+                PartyEncounterKind.Rival,
+                PartyProgressionRules.FirstExpansionAfterRow,
+                partyProgression.RivalEnemyIds,
+                partyProgression.RivalCandidateIds);
+            AddPartyEncounter(
+                map,
+                pachimonPool,
+                profileFactory,
+                PartyEncounterKind.PachipachiGang,
+                PartyProgressionRules.SecondExpansionAfterRow,
+                partyProgression.GangEnemyIds,
+                partyProgression.GangCandidateIds);
+        }
+
+        private static void AddPartyEncounter(
+            RunMap map,
+            RunPachimonPool pachimonPool,
+            TrainerProfileFactory profileFactory,
+            PartyEncounterKind kind,
+            int afterRow,
+            string[] enemyIds,
+            string[] candidateIds)
+        {
+            var enemies = enemyIds.Select(pachimonPool.Get).ToArray();
+            var theme = TrainerThemeResolver.FromAttribute(
+                (PachimonAttribute)((int)enemies[0].AllocationType - 1));
+            var profile = profileFactory.Create(TrainerRole.Normal, theme);
+            var encounterId = kind == PartyEncounterKind.Rival
+                ? "encounter_rival"
+                : "encounter_pachipachi_gang";
+            var encounter = new MapNode(
+                encounterId,
+                afterRow + 1,
+                0,
+                NodeType.PartyEncounter,
+                new PartyEncounterNodeContent(
+                    kind,
+                    enemyIds,
+                    candidateIds,
+                    profile),
+                afterRow + 0.5f);
+
+            // This node stores the mandatory transition event, but deliberately
+            // stays outside the route graph so the original edge choice remains.
+            map.Nodes.Add(encounterId, encounter);
+        }
+
+        private static PartyProgressionReservation ReservePartyProgression(
+            RunPachimonPool pachimonPool,
+            Random random)
+        {
+            var available = pachimonPool.Instances.ToList();
+            var candidateSpeciesIds = new HashSet<int>();
+            var startCandidates = TakeDistinctSpeciesInstances(
+                available,
+                PartyProgressionRules.StartCandidateCount,
+                1,
+                candidateSpeciesIds,
+                random);
+            candidateSpeciesIds.UnionWith(startCandidates.Select(item => item.SpeciesId));
+            var rivalCandidates = TakeDistinctSpeciesInstances(
+                available,
+                PartyProgressionRules.RivalCandidateCount,
+                2,
+                candidateSpeciesIds,
+                random);
+            candidateSpeciesIds.UnionWith(rivalCandidates.Select(item => item.SpeciesId));
+            var gangCandidates = TakeDistinctSpeciesInstances(
+                available,
+                PartyProgressionRules.GangCandidateCount,
+                3,
+                candidateSpeciesIds,
+                random);
+
+            var rivalEnemies = TakeDistinctSpeciesInstances(
+                available,
+                1,
+                1,
+                new HashSet<int>(),
+                random);
+            var gangEnemies = TakeDistinctSpeciesInstances(
+                available,
+                2,
+                2,
+                new HashSet<int>(),
+                random);
+            return new PartyProgressionReservation(
+                startCandidates.Select(item => item.InstanceId).ToArray(),
+                rivalCandidates.Select(item => item.InstanceId).ToArray(),
+                gangCandidates.Select(item => item.InstanceId).ToArray(),
+                rivalEnemies.Select(item => item.InstanceId).ToArray(),
+                gangEnemies.Select(item => item.InstanceId).ToArray());
+        }
+
+        private static PachimonInstance[] TakeDistinctSpeciesInstances(
+            ICollection<PachimonInstance> available,
+            int count,
+            int minimumPartySize,
+            ISet<int> excludedSpeciesIds,
+            Random random)
+        {
+            var selected = available
+                .Where(instance => instance.MinimumPartySize <= minimumPartySize
+                    && !excludedSpeciesIds.Contains(instance.SpeciesId))
+                .GroupBy(instance => instance.SpeciesId)
+                .Select(group => group.OrderBy(_ => random.Next()).First())
+                .OrderBy(_ => random.Next())
+                .Take(count)
+                .ToArray();
+            if (selected.Length != count)
+            {
+                throw new MapGenerationException(
+                    $"Could not reserve {count} distinct Species for Party progression.");
+            }
+
+            foreach (var instance in selected)
+            {
+                available.Remove(instance);
+            }
+            return selected;
         }
 
         private bool TryAssignPachimon(
             IReadOnlyList<PlacementSlot> slots,
             IReadOnlyDictionary<string, NodeBuilder> nodes,
             RunPachimonPool pachimonPool,
+            ISet<string> reservedInstanceIds,
             Random random,
             out Dictionary<PlacementSlot, string> assignments)
         {
             var workingAssignments = new Dictionary<PlacementSlot, string>();
             assignments = null;
             var remainingSlots = slots.ToList();
-            var remainingInstances = pachimonPool.Instances.ToList();
+            var remainingInstances = pachimonPool.Instances
+                .Where(instance => !reservedInstanceIds.Contains(instance.InstanceId))
+                .ToList();
 
             var leagueNodes = slots.Select(slot => slot.Node)
                 .Where(node => node.NodeType == NodeType.Gym || node.NodeType == NodeType.Elite)
@@ -661,10 +810,13 @@ namespace Pachimon.Map
             {
                 var type = GetLeagueAllocationType(node);
                 var aceSlot = remainingSlots.Single(slot => slot.Node == node && slot.Index == 0);
+                var requireMatchingType =
+                    PartyProgressionRules.GetPartySizeForRow(node.RowIndex) == 1;
                 var ace = SelectAce(
                     remainingInstances,
                     aceSlot,
                     type,
+                    requireMatchingType,
                     workingAssignments,
                     pachimonPool,
                     nodes,
@@ -677,11 +829,12 @@ namespace Pachimon.Map
                 }
             }
 
-            // Gym and Elite parties each receive two additional matching-type members.
+            // League parties fill every slot after their matching-type ace.
             foreach (var node in leagueNodes)
             {
                 var type = GetLeagueAllocationType(node);
-                for (var slotIndex = 1; slotIndex < PartySize; slotIndex++)
+                var partySize = PartyProgressionRules.GetPartySizeForRow(node.RowIndex);
+                for (var slotIndex = 1; slotIndex < partySize; slotIndex++)
                 {
                     var slot = remainingSlots.Single(item => item.Node == node && item.Index == slotIndex);
                     if (!TryAssignMatchingType(
@@ -728,20 +881,7 @@ namespace Pachimon.Map
                 }
             }
 
-            // Start candidates are random, followed by every unfilled enemy slot.
-            var startSlots = remainingSlots
-                .Where(slot => slot.Node.NodeType == NodeType.Start)
-                .OrderBy(slot => slot.Index)
-                .ToArray();
             if (!TryAssignRandomSlots(
-                    startSlots,
-                    workingAssignments,
-                    remainingSlots,
-                    remainingInstances,
-                    pachimonPool,
-                    nodes,
-                    random)
-                || !TryAssignRandomSlots(
                     remainingSlots.ToArray(),
                     workingAssignments,
                     remainingSlots,
@@ -754,7 +894,7 @@ namespace Pachimon.Map
                 return false;
             }
 
-            if (workingAssignments.Count != slots.Count || remainingInstances.Count != 0)
+            if (workingAssignments.Count != slots.Count)
             {
                 return false;
             }
@@ -767,6 +907,7 @@ namespace Pachimon.Map
             IEnumerable<PachimonInstance> instances,
             PlacementSlot slot,
             AllocationType type,
+            bool requireMatchingType,
             IEnumerable<KeyValuePair<PlacementSlot, string>> assignments,
             RunPachimonPool pachimonPool,
             IReadOnlyDictionary<string, NodeBuilder> nodes,
@@ -775,6 +916,8 @@ namespace Pachimon.Map
             foreach (var rule in SpeciesPlacementRules)
             {
                 var selected = instances
+                    .Where(instance => !requireMatchingType
+                        || instance.AllocationType == type)
                     .Where(instance => CanAssign(
                         instance,
                         slot,
@@ -884,6 +1027,12 @@ namespace Pachimon.Map
             IReadOnlyDictionary<string, NodeBuilder> nodes,
             SpeciesPlacementRule rule)
         {
+            if (instance.MinimumPartySize
+                > PartyProgressionRules.GetPartySizeForRow(slot.Node.RowIndex))
+            {
+                return false;
+            }
+
             foreach (var assignment in assignments)
             {
                 var assigned = pachimonPool.Get(assignment.Value);
@@ -982,7 +1131,6 @@ namespace Pachimon.Map
         private List<PlacementSlot> CreatePachimonSlots(IReadOnlyList<List<NodeBuilder>> rows)
         {
             var slots = new List<PlacementSlot>(RunPachimonPoolGenerator.PoolSize);
-            AddSlots(slots, rows[0][0], StartCandidateCount);
 
             foreach (var node in rows.SelectMany(row => row))
             {
@@ -990,7 +1138,10 @@ namespace Pachimon.Map
                     || node.NodeType == NodeType.Gym
                     || node.NodeType == NodeType.Elite)
                 {
-                    AddSlots(slots, node, PartySize);
+                    AddSlots(
+                        slots,
+                        node,
+                        PartyProgressionRules.GetPartySizeForRow(node.RowIndex));
                 }
             }
 
@@ -1113,10 +1264,10 @@ namespace Pachimon.Map
                 var incomingCount = map.Nodes.Values.Count(node =>
                     !memberIds.Contains(node.NodeId)
                     && node.NextNodeIds.Any(memberIds.Contains));
-                var outgoingCount = members
-                    .SelectMany(node => node.NextNodeIds)
-                    .Where(nodeId => !memberIds.Contains(nodeId))
-                    .Distinct()
+                var outgoingCount = GetEffectiveCityOutgoingNodeIds(
+                        map,
+                        members,
+                        memberIds)
                     .Count();
                 if (incomingCount < MinimumCityEdgeCount
                     || outgoingCount < MinimumCityEdgeCount)
@@ -1133,17 +1284,19 @@ namespace Pachimon.Map
             ValidateCityStockDistribution(map);
 
             var reachable = TraverseForward(map, map.StartNodeId);
-            if (reachable.Count != map.Nodes.Count)
+            var traversableNodeCount = map.Nodes.Values.Count(
+                node => node.NodeType != NodeType.PartyEncounter);
+            if (reachable.Count != traversableNodeCount)
             {
                 throw new MapGenerationException(
-                    $"Only {reachable.Count} of {map.Nodes.Count} nodes are reachable from Start.");
+                    $"Only {reachable.Count} of {traversableNodeCount} traversable nodes are reachable from Start.");
             }
 
             var leagueGateId = map.Rows[_settings.LeagueGateRow].NodeIds[0];
             var nodesReachingLeagueGate = TraverseBackward(map, leagueGateId);
-            var expectedPreGateNodeCount = map.Rows
-                .Where(row => row.RowIndex <= _settings.LeagueGateRow)
-                .Sum(row => row.NodeIds.Count);
+            var expectedPreGateNodeCount = map.Nodes.Values.Count(
+                node => node.RowIndex <= _settings.LeagueGateRow
+                    && node.NodeType != NodeType.PartyEncounter);
             if (nodesReachingLeagueGate.Count != expectedPreGateNodeCount)
             {
                 throw new MapGenerationException(
@@ -1153,7 +1306,11 @@ namespace Pachimon.Map
 
             foreach (var node in map.Nodes.Values)
             {
-                var maxEdges = node.NodeType == NodeType.Start ? 3 : 2;
+                var maxEdges = node.NodeType switch
+                {
+                    NodeType.Start => 3,
+                    _ => 2,
+                };
                 if (node.NextNodeIds.Count > maxEdges)
                 {
                     throw new MapGenerationException(
@@ -1162,15 +1319,28 @@ namespace Pachimon.Map
             }
 
             var assignedIds = GetAssignedPachimonIds(map).ToArray();
-            if (assignedIds.Length != pachimonPool.Instances.Count
-                || assignedIds.Distinct().Count() != pachimonPool.Instances.Count)
+            if (assignedIds.Length > pachimonPool.Instances.Count
+                || assignedIds.Distinct().Count() != assignedIds.Length
+                || assignedIds.Any(instanceId => pachimonPool.Get(instanceId) == null))
             {
                 throw new MapGenerationException("Pachimon assignment is incomplete or contains duplicates.");
             }
 
             ValidateSpeciesNodeSeparation(map, pachimonPool);
+            ValidatePartyProgressionCandidates(map, pachimonPool);
             ValidatePachimonAllocation(map, pachimonPool);
             ValidateEnemyPartyOrder(map, pachimonPool);
+        }
+
+        private static IEnumerable<string> GetEffectiveCityOutgoingNodeIds(
+            RunMap map,
+            IEnumerable<MapNode> cityMembers,
+            ISet<string> cityMemberIds)
+        {
+            return cityMembers
+                .SelectMany(node => node.NextNodeIds)
+                .Where(nodeId => !cityMemberIds.Contains(nodeId))
+                .Distinct();
         }
 
         private void ValidateCityStock(string cityGroupId, IReadOnlyList<MapNode> members)
@@ -1541,6 +1711,7 @@ namespace Pachimon.Map
                     BattleNodeContent battle => battle.EnemyPachimonInstanceIds,
                     GymNodeContent gym => gym.EnemyPachimonInstanceIds,
                     EliteNodeContent elite => elite.EnemyPachimonInstanceIds,
+                    PartyEncounterNodeContent encounter => encounter.EnemyPachimonInstanceIds,
                     _ => null,
                 };
                 if (enemyIds == null)
@@ -1650,7 +1821,9 @@ namespace Pachimon.Map
 
                 return instance.AllocationType == expectedType;
             });
-            var requiredCount = PartySize - 1;
+            var requiredCount = instanceIds.Count == 1
+                ? 1
+                : instanceIds.Count - 1;
             if (matchingCount < requiredCount)
             {
                 throw new MapGenerationException(
@@ -1885,17 +2058,77 @@ namespace Pachimon.Map
         {
             foreach (var node in map.Nodes.Values)
             {
-                var speciesIds = new HashSet<int>();
-                foreach (var instanceId in GetAssignedPachimonIds(node))
+                ValidateDistinctSpecies(
+                    GetEnemyPachimonIds(node),
+                    node.NodeId,
+                    pachimonPool);
+
+                if (node.Content is PartyEncounterNodeContent encounter)
                 {
-                    var instance = pachimonPool.Get(instanceId);
-                    if (!speciesIds.Add(instance.SpeciesId))
-                    {
-                        throw new MapGenerationException(
-                            $"Species {instance.SpeciesId} was assigned twice "
-                            + $"to node {node.NodeId}.");
-                    }
+                    ValidateDistinctSpecies(
+                        encounter.CandidatePachimonInstanceIds,
+                        node.NodeId,
+                        pachimonPool);
                 }
+            }
+        }
+
+        private static void ValidateDistinctSpecies(
+            IEnumerable<string> instanceIds,
+            string nodeId,
+            RunPachimonPool pachimonPool)
+        {
+            var speciesIds = new HashSet<int>();
+            foreach (var instanceId in instanceIds)
+            {
+                var instance = pachimonPool.Get(instanceId);
+                if (instance != null && !speciesIds.Add(instance.SpeciesId))
+                {
+                    throw new MapGenerationException(
+                        $"Species {instance.SpeciesId} was assigned twice "
+                        + $"to node {nodeId}.");
+                }
+            }
+        }
+
+        private static IEnumerable<string> GetEnemyPachimonIds(MapNode node)
+        {
+            return node.Content switch
+            {
+                BattleNodeContent battle => battle.EnemyPachimonInstanceIds,
+                GymNodeContent gym => gym.EnemyPachimonInstanceIds,
+                EliteNodeContent elite => elite.EnemyPachimonInstanceIds,
+                PartyEncounterNodeContent encounter => encounter.EnemyPachimonInstanceIds,
+                _ => Array.Empty<string>(),
+            };
+        }
+
+        private static void ValidatePartyProgressionCandidates(
+            RunMap map,
+            RunPachimonPool pachimonPool)
+        {
+            var candidateIds = map.Nodes.Values
+                .SelectMany(node => node.Content switch
+                {
+                    StartNodeContent start => start.CandidatePachimonInstanceIds,
+                    PartyEncounterNodeContent encounter =>
+                        encounter.CandidatePachimonInstanceIds,
+                    _ => Array.Empty<string>(),
+                })
+                .ToArray();
+            var expectedCount = PartyProgressionRules.StartCandidateCount
+                + PartyProgressionRules.RivalCandidateCount
+                + PartyProgressionRules.GangCandidateCount;
+            var speciesIds = candidateIds
+                .Select(instanceId => pachimonPool.Get(instanceId)?.SpeciesId ?? 0)
+                .ToArray();
+            if (candidateIds.Length != expectedCount
+                || candidateIds.Distinct(StringComparer.Ordinal).Count() != expectedCount
+                || speciesIds.Any(speciesId => speciesId <= 0)
+                || speciesIds.Distinct().Count() != expectedCount)
+            {
+                throw new MapGenerationException(
+                    "Party progression requires 18 unique candidate Species and Instances.");
             }
         }
 
@@ -1922,6 +2155,10 @@ namespace Pachimon.Map
                     break;
                 case EliteNodeContent elite:
                     foreach (var id in elite.EnemyPachimonInstanceIds) yield return id;
+                    break;
+                case PartyEncounterNodeContent encounter:
+                    foreach (var id in encounter.EnemyPachimonInstanceIds) yield return id;
+                    foreach (var id in encounter.CandidatePachimonInstanceIds) yield return id;
                     break;
             }
         }
@@ -2162,6 +2399,36 @@ namespace Pachimon.Map
             public NodeBuilder Node { get; }
 
             public int Index { get; }
+        }
+
+        private sealed class PartyProgressionReservation
+        {
+            public PartyProgressionReservation(
+                string[] startCandidateIds,
+                string[] rivalCandidateIds,
+                string[] gangCandidateIds,
+                string[] rivalEnemyIds,
+                string[] gangEnemyIds)
+            {
+                StartCandidateIds = startCandidateIds;
+                RivalCandidateIds = rivalCandidateIds;
+                GangCandidateIds = gangCandidateIds;
+                RivalEnemyIds = rivalEnemyIds;
+                GangEnemyIds = gangEnemyIds;
+                ReservedInstanceIds = startCandidateIds
+                    .Concat(rivalCandidateIds)
+                    .Concat(gangCandidateIds)
+                    .Concat(rivalEnemyIds)
+                    .Concat(gangEnemyIds)
+                    .ToHashSet(StringComparer.Ordinal);
+            }
+
+            public string[] StartCandidateIds { get; }
+            public string[] RivalCandidateIds { get; }
+            public string[] GangCandidateIds { get; }
+            public string[] RivalEnemyIds { get; }
+            public string[] GangEnemyIds { get; }
+            public HashSet<string> ReservedInstanceIds { get; }
         }
 
         private enum SpeciesPlacementRule

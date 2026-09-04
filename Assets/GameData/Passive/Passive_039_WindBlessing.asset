@@ -8,6 +8,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Pachimon.Passives.WindBlessingPassiveAsset
   _passiveId: 39
   _displayName: 風の加護
+  _minimumPartySize: 2
   _description: "自身がShieldを得たとき、他の生存味方へValueの{value:shieldPercent}%、効果時間の{value:durationPercent}%のShieldを付与する。"
   _sharedShieldPercent: 20
   _durationPercent: 100

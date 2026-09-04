@@ -20,6 +20,7 @@ namespace Pachimon.UI
         private StartCandidateWindowView _startCandidateWindow;
         private CityShopWindowView _cityWindow;
         private LayoutMode _layoutMode = LayoutMode.Expanded;
+        private float _uiScale = 1f;
 
         private Action _onConfirm;
         private Action _onCancel;
@@ -63,7 +64,8 @@ namespace Pachimon.UI
             Action<int> onTabSelected,
             string confirmLabel,
             Action onConfirm,
-            Action onCancel)
+            Action onCancel,
+            bool showFooter = true)
         {
             EnsureStartCandidateWindow();
             gameObject.SetActive(true);
@@ -73,7 +75,7 @@ namespace Pachimon.UI
                 candidateSelections,
                 selectedIndex,
                 onTabSelected);
-            ConfigureFooter(true, onConfirm, onCancel, confirmLabel, "キャンセル");
+            ConfigureFooter(showFooter, onConfirm, onCancel, confirmLabel, "キャンセル");
         }
 
         public void ShowSimple(
@@ -125,11 +127,14 @@ namespace Pachimon.UI
         {
             _layoutMode = layoutMode;
             _startCandidateWindow?.ApplyLayoutMode(layoutMode);
+            _cityWindow?.ApplyLayoutMode(layoutMode);
         }
 
         public void ApplyUiScale(float scale)
         {
             var resolvedScale = Mathf.Max(1f, scale);
+            _uiScale = resolvedScale;
+            _cityWindow?.ApplyUiScale(resolvedScale);
             var footerLayout = _footer != null
                 ? _footer.GetComponent<LayoutElement>()
                 : null;
@@ -209,6 +214,8 @@ namespace Pachimon.UI
                 ? _battleWindow.transform.parent
                 : transform;
             _cityWindow = CityShopWindowView.CreateRuntime(windowParent);
+            _cityWindow.ApplyLayoutMode(_layoutMode);
+            _cityWindow.ApplyUiScale(_uiScale);
         }
 
         private static void SetButtonLabel(Button button, string label)

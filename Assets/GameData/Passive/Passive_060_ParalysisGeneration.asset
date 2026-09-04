@@ -15,4 +15,5 @@ MonoBehaviour:
   _passiveId: 60
   _displayName: "\u3057\u3073\u308C\u767A\u96FB"
   _description: "\u9EBB\u75FAValue\u306E{value:electricRatio}%\u3092{icon:Electric}\u96FB\u6C17\u3078\u52A0\u7B97\u3059\u308B\u3002"
+  _minimumPartySize: 1
   _electricFromParalysisRatio: 50

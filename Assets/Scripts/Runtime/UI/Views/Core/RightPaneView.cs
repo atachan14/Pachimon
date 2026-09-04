@@ -83,6 +83,21 @@ namespace Pachimon.UI
             ContentShown?.Invoke(true);
         }
 
+        public void ShowStartCandidatePreview(
+            IReadOnlyList<PachimonPreviewContent> previews)
+        {
+            NodeSelectionWindow?.ShowStartCandidates(
+                previews,
+                Array.Empty<bool>(),
+                0,
+                null,
+                string.Empty,
+                null,
+                null,
+                false);
+            ContentShown?.Invoke(true);
+        }
+
         public void ShowSimpleNodeSelection(
             string title,
             string details,
@@ -155,7 +170,8 @@ namespace Pachimon.UI
                 null,
                 null,
                 null);
-            ContentShown?.Invoke(true);
+            // A lineup refresh must not pull Compact view away from the shop.
+            ContentShown?.Invoke(false);
         }
 
         public void ClearNodeSelection()

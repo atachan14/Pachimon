@@ -41,6 +41,9 @@ namespace Pachimon.Data
         public int FixedSkillId => _fixedSkill != null ? _fixedSkill.SkillId : 0;
         public int PassiveId => _passive != null ? _passive.PassiveId : 0;
         public PachimonInitialStats InitialStats => _initialStats;
+        public int MinimumPartySize => Mathf.Max(
+            _fixedSkill != null ? _fixedSkill.MinimumPartySize : 1,
+            _passive != null ? _passive.MinimumPartySize : 1);
 
         public void CollectValidationErrors(
             ICollection<string> errors,

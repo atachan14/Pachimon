@@ -16,6 +16,7 @@ MonoBehaviour:
   _displayName: 風化の風
   _allocationType: 7
   _isMapAssignable: 1
+  _minimumPartySize: 2
   _baseStartupTicks: 100
   _baseRecoveryTicks: 100
   _baseCooldownTicks: 300

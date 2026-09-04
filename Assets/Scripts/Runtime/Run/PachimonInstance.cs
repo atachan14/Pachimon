@@ -25,7 +25,8 @@ namespace Pachimon.Run
             int fixedSkillId,
             int fixedPassiveId,
             PachimonStats stats,
-            PachimonSubStatBindings subStatBindings = null)
+            PachimonSubStatBindings subStatBindings = null,
+            int minimumPartySize = 1)
         {
             if (string.IsNullOrWhiteSpace(instanceId))
             {
@@ -47,6 +48,7 @@ namespace Pachimon.Run
             AllocationType = allocationType;
             FixedSkillId = fixedSkillId;
             FixedPassiveId = fixedPassiveId;
+            MinimumPartySize = Math.Clamp(minimumPartySize, 1, 3);
             Stats = stats ?? throw new ArgumentNullException(nameof(stats));
             SubStatBindings = subStatBindings ?? PachimonSubStatBindings.CreateDefault();
             CurrentHp = Stats.MaxHp;
@@ -64,6 +66,8 @@ namespace Pachimon.Run
         public int FixedSkillId { get; }
 
         public int FixedPassiveId { get; }
+
+        public int MinimumPartySize { get; }
 
         public PachimonStats Stats { get; }
 

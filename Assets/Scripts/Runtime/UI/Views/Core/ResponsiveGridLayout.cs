@@ -14,6 +14,8 @@ namespace Pachimon.UI
         private GridLayoutGroup _grid;
         private LayoutElement _layoutElement;
         private float _displayScale = 1f;
+        private float _lastAvailableWidth = float.NaN;
+        private int _lastActiveChildCount = -1;
 
         public void Configure(int fixedColumnCount, float minimumCellWidth, float cellHeight)
         {
@@ -26,11 +28,6 @@ namespace Pachimon.UI
         public void SetDisplayScale(float displayScale)
         {
             var resolvedScale = Mathf.Max(1f, displayScale);
-            if (Mathf.Approximately(_displayScale, resolvedScale))
-            {
-                return;
-            }
-
             _displayScale = resolvedScale;
             RefreshLayout();
         }
@@ -40,6 +37,24 @@ namespace Pachimon.UI
         private void OnRectTransformDimensionsChange() => RefreshLayout();
         private void OnTransformChildrenChanged() => RefreshLayout();
 
+        private void LateUpdate()
+        {
+            _grid ??= GetComponent<GridLayoutGroup>();
+            var rect = transform as RectTransform;
+            if (_grid == null || rect == null)
+            {
+                return;
+            }
+
+            var availableWidth = GetAvailableWidth(rect);
+            var activeChildCount = GetActiveChildCount();
+            if (!Mathf.Approximately(_lastAvailableWidth, availableWidth)
+                || _lastActiveChildCount != activeChildCount)
+            {
+                RefreshLayout();
+            }
+        }
+
         public void RefreshLayout()
         {
             _grid ??= GetComponent<GridLayoutGroup>();
@@ -47,7 +62,15 @@ namespace Pachimon.UI
             var rect = transform as RectTransform;
             if (_grid == null || _layoutElement == null || rect == null) return;
 
-            var availableWidth = Mathf.Max(1f, rect.rect.width - _grid.padding.horizontal);
+            // A responsive grid consumes the width assigned by its parent. If
+            // GridLayoutGroup reports its calculated cell width as a preferred
+            // width, ContentSizeFitter creates a feedback loop that makes the
+            // section wider every time the surrounding pane changes size.
+            _layoutElement.minWidth = 0f;
+            _layoutElement.preferredWidth = 0f;
+            _layoutElement.flexibleWidth = 1f;
+
+            var availableWidth = GetAvailableWidth(rect);
             var columns = _fixedColumnCount > 0
                 ? _fixedColumnCount
                 : Mathf.Max(1, Mathf.FloorToInt(
@@ -61,11 +84,9 @@ namespace Pachimon.UI
             var scaledCellHeight = _cellHeight * _displayScale;
             _grid.cellSize = new Vector2(cellWidth, scaledCellHeight);
 
-            var activeChildren = 0;
-            foreach (Transform child in transform)
-            {
-                if (child.gameObject.activeSelf) activeChildren++;
-            }
+            var activeChildren = GetActiveChildCount();
+            _lastAvailableWidth = availableWidth;
+            _lastActiveChildCount = activeChildren;
 
             var rows = Mathf.CeilToInt(activeChildren / (float)columns);
             var preferredHeight = _grid.padding.vertical
@@ -78,6 +99,25 @@ namespace Pachimon.UI
                 _layoutElement.flexibleHeight = 0f;
                 LayoutRebuilder.MarkLayoutForRebuild(rect);
             }
+        }
+
+        private float GetAvailableWidth(RectTransform rect)
+        {
+            return Mathf.Max(1f, rect.rect.width - _grid.padding.horizontal);
+        }
+
+        private int GetActiveChildCount()
+        {
+            var count = 0;
+            foreach (Transform child in transform)
+            {
+                if (child.gameObject.activeSelf)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }

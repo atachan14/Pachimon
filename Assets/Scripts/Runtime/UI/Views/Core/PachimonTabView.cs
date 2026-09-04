@@ -195,13 +195,6 @@ namespace Pachimon.UI
 
     public sealed class PachimonTabView : MonoBehaviour
     {
-        private const float ResourceGaugeHeight = 34f;
-        private const float SectionTitleHeight = 28f;
-        private const float PachimonTextScale = 1.2f;
-        private const float GraphicAreaHeight = 300f;
-        private const float GraphicSize = 280f;
-        private const float CompactGraphicScale = 2f;
-        private const float NameHpSpacing = 10f;
         private static readonly string[] ScaledSectionNames =
         {
             "StatusSection",
@@ -270,24 +263,21 @@ namespace Pachimon.UI
         private RectTransform _runtimeMnBar;
         private Image _runtimeMnFill;
         private PachimonPreviewContent _boundPreview = PachimonPreviewContent.Hidden;
+        private ResponsiveUiLayout _responsiveLayout;
+        private bool _hasResponsiveLayout;
         public RectTransform GraphicRect => _frontGraphic?.rectTransform;
         public event Action<PachimonAbilityPreview, PachimonPreviewContent>
             AbilityDetailsRequested;
         public event Action<PachimonStatusPreview> StatusDetailsRequested;
 
-        public void ApplyUiScale(float scale)
+        public void ApplyResponsiveLayout(ResponsiveUiLayout layout)
         {
-            var resolvedScale = Mathf.Max(1f, scale);
-            var contentScale = resolvedScale > 1f
-                ? resolvedScale * PachimonTextScale
-                : 1f;
-            var compactGraphicScale = resolvedScale > 1f
-                ? CompactGraphicScale
-                : 1f;
-            ApplyGraphicScale(compactGraphicScale);
-            ApplyNameHpSpacing(resolvedScale > 1f ? NameHpSpacing : 0f);
-            ApplyPreferredHeight(_hpText, ResourceGaugeHeight * contentScale);
-            ApplyPreferredHeight(_mnText, ResourceGaugeHeight * contentScale);
+            _responsiveLayout = layout;
+            _hasResponsiveLayout = true;
+            ApplyGraphicSize(layout.GraphicSize, layout.GraphicAreaHeight);
+            ApplyNameHpSpacing(layout.NameHpSpacing);
+            ApplyPreferredHeight(_hpText, layout.ResourceGaugeHeight);
+            ApplyPreferredHeight(_mnText, layout.ResourceGaugeHeight);
 
             foreach (var text in GetComponentsInChildren<TMP_Text>(true))
             {
@@ -298,17 +288,17 @@ namespace Pachimon.UI
 
                 var typography = text.GetComponent<ResponsiveTypographySize>()
                     ?? text.gameObject.AddComponent<ResponsiveTypographySize>();
-                typography.Apply(text, contentScale);
+                typography.Apply(text, layout.ContentScale);
             }
 
             foreach (var grid in GetComponentsInChildren<ResponsiveGridLayout>(true))
             {
-                grid?.SetDisplayScale(contentScale);
+                grid?.SetDisplayScale(layout.ContentScale);
             }
 
             foreach (var slot in _statSlots)
             {
-                slot?.ApplyUiScale(resolvedScale);
+                slot?.ApplyUiScale(layout.TypographyScale);
             }
 
             foreach (var sectionName in ScaledSectionNames)
@@ -322,11 +312,11 @@ namespace Pachimon.UI
 
                 ApplyPreferredHeight(
                     title,
-                    Mathf.Max(SectionTitleHeight * contentScale, title.fontSize * 1.35f));
+                    Mathf.Max(layout.SectionTitleHeight, title.fontSize * 1.35f));
             }
         }
 
-        private void ApplyGraphicScale(float scale)
+        private void ApplyGraphicSize(float graphicSize, float areaHeight)
         {
             if (_frontGraphic == null)
             {
@@ -339,13 +329,13 @@ namespace Pachimon.UI
             {
                 var layout = graphicArea.GetComponent<LayoutElement>()
                     ?? graphicArea.gameObject.AddComponent<LayoutElement>();
-                layout.minHeight = GraphicAreaHeight * scale;
-                layout.preferredHeight = GraphicAreaHeight * scale;
+                layout.minHeight = areaHeight;
+                layout.preferredHeight = areaHeight;
             }
 
             graphicRect.sizeDelta = new Vector2(
-                GraphicSize * scale,
-                GraphicSize * scale);
+                graphicSize,
+                graphicSize);
         }
 
         private void ApplyNameHpSpacing(float height)
@@ -593,8 +583,10 @@ namespace Pachimon.UI
 
             RebuildEquipmentChips(revealed, preview.Equipment);
             RebuildEngravingChips(revealed, preview.Engravings);
-            var gameRoot = GetComponentInParent<GameRootView>();
-            ApplyUiScale(gameRoot != null ? gameRoot.CurrentUiScale : 1f);
+            if (_hasResponsiveLayout)
+            {
+                ApplyResponsiveLayout(_responsiveLayout);
+            }
         }
 
         private void RebuildEquipmentChips(
